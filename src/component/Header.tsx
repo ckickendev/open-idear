@@ -6,6 +6,7 @@ export default function Header() {
       <a href="javascript:void(0)" className="hidden max-sm:block"><img src="https://readymadeui.com/readymadeui-short.svg" alt="logo" className='w-8' />
       </a>
 
+
       
 
       <div id="collapseMenu"
