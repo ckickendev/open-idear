@@ -1,4 +1,14 @@
 import { useState } from "react";
+import axios from "axios";
+import CONFIG from "./config";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema } from "./validate";
+
+type LoginFormInputs = {
+    username: string;
+    password: string;
+};
 
 interface DataAuthen {
     isAuthenFormDisplay: number;
@@ -6,7 +16,38 @@ interface DataAuthen {
 }
 
 export const LoginPage = ({ isAuthenFormDisplay, setIsAuthenFromDisplay }: any) => {
+    const ROOT_BACKEND = CONFIG.REACT_APP_ROOT_BACKEND;
+    const [loginInfo, setLoginInfo] = useState({ email: "", password: "" });
     const [mode, setMode] = useState(isAuthenFormDisplay);
+    const [errorSv, setErrorSv] = useState("");
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<LoginFormInputs>({
+        resolver: zodResolver(loginSchema),
+    });
+
+    const onSubmit = async (data: LoginFormInputs, event: any) => {
+        event.preventDefault();
+        console.log("event:", event);
+        console.log("Validated Data:", data);
+        event.preventDefault();
+        console.log("event:", event);
+        console.log("Validated Data:", data);
+        try {
+            const res = await axios.post(`${ROOT_BACKEND}/auth/login`, loginInfo);
+            if (res.data) {
+                localStorage.setItem("access_token", res.data.data.access_token);
+            }
+            return;
+        }
+        catch (err: any) {
+            setErrorSv(err?.response?.data?.error || err?.message);
+        }
+    };
+
     return (
 
         <div className="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full flex justify-center items-center bg-gray-50/50">
@@ -14,7 +55,7 @@ export const LoginPage = ({ isAuthenFormDisplay, setIsAuthenFromDisplay }: any) 
                 <div className="relative p-4 w-full max-w-md max-h-full bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
                     <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center cursor-pointer dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="static-modal" onClick={() => setIsAuthenFromDisplay(0)}>
                         <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
                         </svg>
                         <span className="sr-only">Close modal</span>
                     </button>
@@ -32,15 +73,17 @@ export const LoginPage = ({ isAuthenFormDisplay, setIsAuthenFromDisplay }: any) 
 
                     <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
                         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-                            <form className="space-y-6" action="#" method="POST">
+                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" action="#" method="POST">
                                 <div>
                                     <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                                         Email address
                                     </label>
                                     <div className="mt-1">
-                                        <input id="email" name="email" type="email" autoComplete="email" required
+                                        <input id="email" type="email" autoComplete="email" required
                                             className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                            placeholder="Enter your email address" />
+                                            placeholder="Enter your email address"
+                                            {...register("username")} />
+                                        {errors.username && <p className="text-red-500">{errors.username.message}</p>}
                                     </div>
                                 </div>
 
@@ -49,9 +92,11 @@ export const LoginPage = ({ isAuthenFormDisplay, setIsAuthenFromDisplay }: any) 
                                         Password
                                     </label>
                                     <div className="mt-1">
-                                        <input id="password" name="password" type="password" autoComplete="current-password" required
+                                        <input id="password" type="password" autoComplete="current-password" required
                                             className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                            placeholder="Enter your password" />
+                                            placeholder="Enter your password"
+                                            {...register("password")} />
+                                        {errors.password && <p className="text-red-500">{errors.password.message}</p>}
                                     </div>
                                 </div>
 
@@ -70,7 +115,7 @@ export const LoginPage = ({ isAuthenFormDisplay, setIsAuthenFromDisplay }: any) 
                                         </a>
                                     </div>
                                 </div>
-
+                                {errorSv && <p className="text-red-500">{errorSv}</p>}
                                 <div>
                                     <button type="submit"
                                         className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -121,7 +166,7 @@ export const LoginPage = ({ isAuthenFormDisplay, setIsAuthenFromDisplay }: any) 
                 <div className="relative p-4 w-full max-w-md max-h-full bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
                     <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center cursor-pointer dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="static-modal" onClick={() => setIsAuthenFromDisplay(0)}>
                         <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                            <path stroke="currentColor" strokeLinecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
                         </svg>
                         <span className="sr-only">Close modal</span>
                     </button>
@@ -176,7 +221,7 @@ export const LoginPage = ({ isAuthenFormDisplay, setIsAuthenFromDisplay }: any) 
                                 <div className="mt-4 text-center">
                                     <p className="text-gray-500 text-sm">
                                         Have your account?
-                                        <p onClick={() => setMode(1)} className="text-blue-500 font-medium hover:underline cursor-pointer">Login Now</p>
+                                        <span onClick={() => setMode(1)} className="text-blue-500 font-medium hover:underline cursor-pointer">Login Now</span>
                                     </p>
                                 </div>
                             </div>
