@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DataAuthen, loginSchema } from "./authentication";
 import { SignUp } from "./SignUp";
+import LoadingComponent from "../common/Loading";
 
 type LoginFormInputs = {
     username: string;
@@ -53,17 +54,8 @@ export const LoginPage = ({ setIsAuthenFromDisplay }: DataAuthen) => {
             {mode == 1 ?
                 <div className="relative p-4 w-full max-w-md max-h-full bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
 
-                    {isLoading &&
-                        <div className="absolute right-0 bottom-0 w-full h-full z-1 bg-gray-300/30">
-                            <div className="absolute right-1/2 bottom-1/2 transform translate-x-1/2 translate-y-1/2">
-                                <div className="p-4 bg-gradient-to-tr animate-spin from-green-500 to-blue-500 via-purple-500 rounded-full">
-                                    <div className="bg-gray-800/30 rounded-full">
-                                        <div className="w-24 h-24 rounded-full"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    }
+                    <LoadingComponent isLoading={isLoading} />
+
                     <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center cursor-pointer dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="static-modal" onClick={() => setIsAuthenFromDisplay(false)}>
                         <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
                             <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
