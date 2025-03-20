@@ -15,6 +15,7 @@ export const LoginPage = ({ setIsAuthenFromDisplay }: DataAuthen) => {
     const ROOT_BACKEND = CONFIG.REACT_APP_ROOT_BACKEND;
     const [mode, setMode] = useState(1);
     const [errorSv, setErrorSv] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
     const {
         register,
@@ -26,6 +27,8 @@ export const LoginPage = ({ setIsAuthenFromDisplay }: DataAuthen) => {
 
     const onSubmit = async (data: LoginFormInputs, event: any) => {
         event.preventDefault();
+        setIsLoading(true);
+
         console.log("event:", event);
         console.log("Validated Data:", data);
         event.preventDefault();
@@ -39,6 +42,7 @@ export const LoginPage = ({ setIsAuthenFromDisplay }: DataAuthen) => {
             return;
         }
         catch (err: any) {
+            setIsLoading(false);
             setErrorSv(err?.response?.data?.error || err?.message);
         }
     };
@@ -48,6 +52,18 @@ export const LoginPage = ({ setIsAuthenFromDisplay }: DataAuthen) => {
         <div className="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full flex justify-center items-center bg-gray-50/50">
             {mode == 1 ?
                 <div className="relative p-4 w-full max-w-md max-h-full bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+
+                    {isLoading &&
+                        <div className="absolute right-0 bottom-0 w-full h-full z-1 bg-gray-300/30">
+                            <div className="absolute right-1/2 bottom-1/2 transform translate-x-1/2 translate-y-1/2">
+                                <div className="p-4 bg-gradient-to-tr animate-spin from-green-500 to-blue-500 via-purple-500 rounded-full">
+                                    <div className="bg-gray-800/30 rounded-full">
+                                        <div className="w-24 h-24 rounded-full"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
                     <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center cursor-pointer dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="static-modal" onClick={() => setIsAuthenFromDisplay(false)}>
                         <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
                             <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
@@ -157,7 +173,7 @@ export const LoginPage = ({ setIsAuthenFromDisplay }: DataAuthen) => {
                             </div>
                         </div>
                     </div>
-                </div> : <SignUp setMode={setMode} setIsAuthenFromDisplay={setIsAuthenFromDisplay}  />
+                </div> : <SignUp setMode={setMode} setIsAuthenFromDisplay={setIsAuthenFromDisplay} />
             }
         </div>
     )
