@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import { LoginPage } from "./authen/Login";
+import { AuthenPage } from "./authen/AuthenPage";
 
 
 export default function Header() {
@@ -58,7 +58,7 @@ export default function Header() {
         </div>
       </div>
 
-      {isAuthenFormDisplay ? <LoginPage setIsAuthenFromDisplay={setIsAuthenFromDisplay} /> : <></>}
+      {isAuthenFormDisplay ? <AuthenPage setIsAuthenFromDisplay={setIsAuthenFromDisplay} /> : <></>}
     </div>
   </header>
 }

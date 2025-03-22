@@ -1,8 +1,10 @@
-import { z } from "zod";
+import { boolean, z } from "zod";
 
 const password = new RegExp(
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/
 );
+
+export const REACT_APP_ROOT_BACKEND = "http://localhost:5001/";
 
 export const loginSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
