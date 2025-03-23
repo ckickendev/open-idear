@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { DataAuthen, loginSchema } from "./authentication";
 import { SignUp } from "./SignUp";
 import Login from "./Login";
@@ -13,10 +11,10 @@ export const AuthenPage = ({ setIsAuthenFromDisplay }: DataAuthen) => {
     const renderCore = () => {
         switch (authenState) {
             case 1: {
-                return <Login setAuthenState={setAuthenState} isLoading={isLoading} setIsLoading={isLoading} setIsAuthenFromDisplay={setIsAuthenFromDisplay} />;
+                return <Login setAuthenState={setAuthenState} isLoading={isLoading} setIsLoading={setIsLoading} setIsAuthenFromDisplay={setIsAuthenFromDisplay} />;
             }
             case 2: {
-                return <SignUp setAuthenState={setAuthenState} isLoading={isLoading} setIsLoading={isLoading} setIsAuthenFromDisplay={setIsAuthenFromDisplay} />;
+                return <SignUp setAuthenState={setAuthenState} isLoading={isLoading} setIsLoading={setIsLoading} setIsAuthenFromDisplay={setIsAuthenFromDisplay} />;
             }
             // case 3: {
             //     return <ResetPassword changeAuthen={changeAuthen} />;
