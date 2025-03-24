@@ -113,7 +113,6 @@ export const SignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
                                     placeholder="Enter your password"
                                     {...register("password")} />
                                 {errors.password && <p className="text-red-500">{errors.password.message}</p>}
-
                             </div>
                         </div>
                         <div>
