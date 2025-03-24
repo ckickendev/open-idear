@@ -14,12 +14,11 @@ type SignUpInputs = {
 
 type ModalAuthen = {
     setAuthenState: any,
-    isLoading: boolean,
     setIsLoading: any,
     setIsAuthenFromDisplay: any
 };
 
-export const SignUp = ({ setAuthenState, isLoading, setIsLoading, setIsAuthenFromDisplay }: ModalAuthen) => {
+export const SignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAuthen) => {
     const ROOT_BACKEND = CONFIG.REACT_APP_ROOT_BACKEND;
     const [errorSv, setErrorSv] = useState("");
     const {

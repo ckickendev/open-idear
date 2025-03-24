@@ -7,7 +7,7 @@ export default function Header() {
   const [isAuthenFormDisplay, setIsAuthenFromDisplay] = useState(false);
 
   return <header className='flex border-b border-gray-300 py-3 px-4 sm:px-10 bg-white min-h-[65px] tracking-wide relative z-50'>
-    <div className='flex flex-wrap items-center gap-4 max-w-screen-xl mx-auto w-full'>
+    {/* <div className='flex flex-wrap items-center gap-4 max-w-screen-xl mx-auto w-full'>
       <a href="javascript:void(0)" className="max-sm:hidden"><img src="https://readymadeui.com/readymadeui.svg" alt="logo" className='w-[134px]' />
       </a>
       <a href="javascript:void(0)" className="hidden max-sm:block"><img src="https://readymadeui.com/readymadeui-short.svg" alt="logo" className='w-8' />
@@ -54,11 +54,11 @@ export default function Header() {
         </div>
         <div className="flex flex-row ">
           <button type="button" className="cursor-pointer focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-xl text-sm px-5 py-2.5 m-2  dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900" onClick={() => setIsAuthenFromDisplay(true)}>Get Started</button>
-          {/* <button type="button" className="cursor-pointer focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-xl text-sm px-5 py-2.5 me-2 m-2  dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Login</button> */}
+          <button type="button" className="cursor-pointer focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-xl text-sm px-5 py-2.5 me-2 m-2  dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Login</button>
         </div>
       </div>
 
       {isAuthenFormDisplay ? <AuthenPage setIsAuthenFromDisplay={setIsAuthenFromDisplay} /> : <></>}
-    </div>
+    </div> */}
   </header>
 }

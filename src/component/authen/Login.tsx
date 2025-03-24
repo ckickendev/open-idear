@@ -11,12 +11,11 @@ type LoginFormInputs = {
 
 type ModalAuthen = {
     setAuthenState: any,
-    isLoading: boolean,
     setIsLoading: any,
     setIsAuthenFromDisplay: any
 };
 
-const Login = ({ setAuthenState, isLoading, setIsLoading, setIsAuthenFromDisplay }: ModalAuthen) => {
+const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAuthen) => {
     const [errorSv, setErrorSv] = useState("");
 
     const {
