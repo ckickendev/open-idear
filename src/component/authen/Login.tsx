@@ -5,7 +5,7 @@ import axios from "axios";
 import { useState } from "react";
 
 type LoginFormInputs = {
-    username: string;
+    account: string;
     password: string;
 };
 
@@ -29,7 +29,7 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
     const onSubmit = async (data: LoginFormInputs, event: any) => {
         event.preventDefault();
         setIsLoading(true);
-
+        console.log(data);
         event.preventDefault();
         try {
             const res = await axios.post(`${REACT_APP_ROOT_BACKEND}/auth/login`, data);
@@ -53,6 +53,9 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
             <span className="sr-only">Close modal</span>
         </button>
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
+            <div className="flex items-center justify-center">
+                <img className="w-[152px] h-[100px]" src="/logo.png" alt="open-trash" />
+            </div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                 Sign in to your account
             </h2>
@@ -69,14 +72,14 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" action="#" method="POST">
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                            Email address
+                            Username or Email
                         </label>
                         <div className="mt-1">
                             <input id="email" type="email" autoComplete="email" required
                                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                placeholder="Enter your email address"
-                                {...register("username")} />
-                            {errors.username && <p className="text-red-500">{errors.username.message}</p>}
+                                placeholder="Enter your email or username"
+                                {...register("account")} />
+                            {errors.account && <p className="text-red-500">{errors.account.message}</p>}
                         </div>
                     </div>
 

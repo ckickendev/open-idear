@@ -1,12 +1,12 @@
 
 export default function Footer() {
-    return (<footer className="px-3 pt-4 lg:px-9 border-t-2 bg-gray-50">
-        <div className="grid gap-10 row-gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-4">
+    return (<footer className="px-3 mx-auto pt-4 lg:px-9 border-t-2 bg-gray-50 flex justify-center items-center flex-col">
+        <div className="container px-4 grid gap-10 row-gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-4">
 
             <div className="sm:col-span-2">
                 <a href="#" className="inline-flex items-center">
                     <img src="https://mcqmate.com/public/images/logos/60x60.png" alt="logo" className="h-8 w-8" />
-                        <span className="ml-2 text-xl font-bold tracking-wide text-gray-800">Company Name</span>
+                    <span className="ml-2 text-xl font-bold tracking-wide text-gray-800">Company Name</span>
                 </a>
                 <div className="mt-6 lg:max-w-xl">
                     <p className="text-sm text-gray-800">

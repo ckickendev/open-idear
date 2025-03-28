@@ -3,6 +3,7 @@ import { DataAuthen, loginSchema } from "./authentication";
 import { SignUp } from "./SignUp";
 import Login from "./Login";
 import LoadingComponent from "../common/Loading";
+import ConfirmSignUp from "./ConfirmSignUp";
 
 export const AuthenPage = ({ setIsAuthenFromDisplay }: DataAuthen) => {
     const [authenState, setAuthenState] = useState(1);
@@ -15,6 +16,9 @@ export const AuthenPage = ({ setIsAuthenFromDisplay }: DataAuthen) => {
             }
             case 2: {
                 return <SignUp setAuthenState={setAuthenState} setIsLoading={setIsLoading} setIsAuthenFromDisplay={setIsAuthenFromDisplay} />;
+            }
+            case 3: {
+                return <ConfirmSignUp setAuthenState={setAuthenState} setIsLoading={setIsLoading} setIsAuthenFromDisplay={setIsAuthenFromDisplay} />
             }
             default: {
                 return <></>

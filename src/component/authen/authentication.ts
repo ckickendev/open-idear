@@ -4,14 +4,16 @@ const password = new RegExp(
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/
 );
 
-export const REACT_APP_ROOT_BACKEND = "http://localhost:5001/";
+export const REACT_APP_ROOT_BACKEND = "http://localhost:5001";
 
 export const loginSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
+  account: z.string().min(3, "Email must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters").regex(password, {
     message: 'Your password must contain uppercase letter, number and character',
   }),
 });
+
+
 
 export const signUpSchema = z.object({
   email: z.string().min(6, "Username must be at least 6 characters"),

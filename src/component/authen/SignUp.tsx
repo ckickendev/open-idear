@@ -1,7 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signUpSchema } from "./authentication";
-import CONFIG from "./config";
+import { REACT_APP_ROOT_BACKEND, signUpSchema } from "./authentication";
 import axios from "axios";
 import { useState } from "react";
 
@@ -19,7 +18,7 @@ type ModalAuthen = {
 };
 
 export const SignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAuthen) => {
-    const ROOT_BACKEND = CONFIG.REACT_APP_ROOT_BACKEND;
+    const ROOT_BACKEND = REACT_APP_ROOT_BACKEND;
     const [errorSv, setErrorSv] = useState("");
     const {
         register,
@@ -32,18 +31,11 @@ export const SignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
     const onSubmit = async (data: SignUpInputs, event: any) => {
         setIsLoading(true);
         event.preventDefault();
-        console.log("event:", event);
-        console.log("Validated Data:", data);
-        event.preventDefault();
-        console.log("event:", event);
-        console.log("Validated Data:", data);
         try {
             const res = await axios.post(`${ROOT_BACKEND}/auth/register`, data);
             localStorage.setItem("user_signup", res.data.user);
-            if (res.data) {
-                localStorage.setItem("access_token", res.data.data.access_token);
-                setIsLoading(false);
-            }
+            setIsLoading(false);
+            setAuthenState(3);
             return;
         }
         catch (err: any) {
@@ -62,10 +54,13 @@ export const SignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
             </button>
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="text-center">
-                    <h1 className="text-2xl font-semibold text-blue-600 flex items-center justify-center">
+                    <div className="flex items-center justify-center">
+                        <img className="w-[152px] h-[100px]" src="/logo.png" alt="open-trash" />
+                    </div>
+                    {/* <h1 className="text-2xl font-semibold text-blue-600 flex items-center justify-center">
                         <span className="text-3xl font-bold">Open</span>
                         Trash
-                    </h1>
+                    </h1> */}
                     <p className="text-gray-500 text-sm mt-1">
                         Share your idea and knowledge
                     </p>
