@@ -106,7 +106,7 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
                         </div>
 
                         <div className="text-sm">
-                            <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                            <a href="#" className="font-medium text-blue-600 hover:text-blue-500" onClick={() => setAuthenState(4)}>
                                 Forgot your password?
                             </a>
                         </div>

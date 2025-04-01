@@ -1,3 +1,4 @@
+import { ForgotPassword } from './ForgotPassword';
 import { boolean, z } from "zod";
 
 const password = new RegExp(
@@ -7,7 +8,7 @@ const password = new RegExp(
 export const REACT_APP_ROOT_BACKEND = "http://localhost:5001";
 
 export const loginSchema = z.object({
-  account: z.string().min(3, "Email must be at least 3 characters"),
+  account: z.string().min(6, "Email or username must be at least 6 characters"),
   password: z.string().min(6, "Password must be at least 6 characters").regex(password, {
     message: 'Your password must contain uppercase letter, number and character',
   }),
@@ -31,6 +32,10 @@ export const signUpSchema = z.object({
     });
   }
 });
+
+export const forgotPasswordSchema = z.object({
+  account: z.string().min(6, "Email or username must be at least 6 characters"),
+})
 
 export interface DataAuthen {
   setIsAuthenFromDisplay: any;

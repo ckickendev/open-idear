@@ -26,8 +26,13 @@ const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
         event.preventDefault();
         setIsLoading(true);
 
+        if (!inputRef1.current || !inputRef2.current || !inputRef3.current || !inputRef4.current || !inputRef5.current || !inputRef6.current) {
+            setIsLoading("All field must not null");
+            return;
+        }
         const token = inputRef1.current.value + inputRef2.current.value + inputRef3.current.value
             + inputRef4.current.value + inputRef5.current.value + inputRef6.current.value;
+
         if (!new RegExp(`^[0-9]{${6}}$`).test(token)) {
             setErrorSv("Your token is not valid format, please enter again");
             setIsLoading(false);
@@ -100,12 +105,12 @@ const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
             return
         }
         const digits = text.split('')
-        inputRef1.current.value = digits[0];
-        inputRef2.current.value = digits[1];
-        inputRef3.current.value = digits[2];
-        inputRef4.current.value = digits[3];
-        inputRef5.current.value = digits[4];
-        inputRef6.current.value = digits[5];
+        inputRef1.current!.value = digits[0];
+        inputRef2.current!.value = digits[1];
+        inputRef3.current!.value = digits[2];
+        inputRef4.current!.value = digits[3];
+        inputRef5.current!.value = digits[4];
+        inputRef6.current!.value = digits[5];
 
         submit.current.focus()
     }

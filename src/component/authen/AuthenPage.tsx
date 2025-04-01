@@ -4,9 +4,10 @@ import { SignUp } from "./SignUp";
 import Login from "./Login";
 import LoadingComponent from "../common/Loading";
 import ConfirmSignUp from "./ConfirmSignUp";
+import { ForgotPassword } from "./ForgotPassword";
 
 export const AuthenPage = ({ setIsAuthenFromDisplay }: DataAuthen) => {
-    const [authenState, setAuthenState] = useState(3);
+    const [authenState, setAuthenState] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
 
     const renderCore = () => {
@@ -19,6 +20,9 @@ export const AuthenPage = ({ setIsAuthenFromDisplay }: DataAuthen) => {
             }
             case 3: {
                 return <ConfirmSignUp setAuthenState={setAuthenState} setIsLoading={setIsLoading} setIsAuthenFromDisplay={setIsAuthenFromDisplay} />
+            }
+            case 4: {
+                return <ForgotPassword setAuthenState={setAuthenState} setIsLoading={setIsLoading} setIsAuthenFromDisplay={setIsAuthenFromDisplay} />
             }
             default: {
                 return <></>
