@@ -74,10 +74,10 @@ export const ForgotPassword = ({ setAuthenState, setIsLoading, setIsAuthenFromDi
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" action="#" method="POST">
                             <div>
                                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                    Your account address
+                                    Your account:
                                 </label>
                                 <div className="mt-1">
-                                    <input id="email" type="email" autoComplete="email" required
+                                    <input id="account" required
                                         className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                         placeholder="Enter your email or username"
                                         {...register("account")} />
@@ -111,7 +111,7 @@ export const ForgotPassword = ({ setAuthenState, setIsLoading, setIsAuthenFromDi
 
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                         stroke-width="1.5" stroke="currentColor" className="w-6 h-6">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                        <path strokeLinecap="round" strokeLinejoin="round"
                                             d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                                     </svg>
                                 </div>
