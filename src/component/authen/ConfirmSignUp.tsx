@@ -56,7 +56,6 @@ const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
                 localStorage.removeItem("user_signup");
                 setIsLoading(true);
                 setTimeout(() => {
-
                     setAuthenState(1);
                     setIsLoading(false);
                 }, 5000);
