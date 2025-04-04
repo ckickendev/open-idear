@@ -30,7 +30,7 @@ export const ForgotPassword = ({ setAuthenState, setIsLoading, setIsAuthenFromDi
         setIsLoading(true);
         event.preventDefault();
         try {
-            const res = await axios.post(`${ROOT_BACKEND}/auth/resetpassword`, data);
+            const res = await axios.post(`${ROOT_BACKEND}/auth/sendEmailResetPassword`, data);
             setEmailSent(res.data.email);
             setIsLoading(false);
             return;
@@ -73,8 +73,8 @@ export const ForgotPassword = ({ setAuthenState, setIsLoading, setIsAuthenFromDi
                     <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" action="#" method="POST">
                             <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                    Your account:
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 text-lg">
+                                    Please enter your account name or your email, we will send you an email to verify
                                 </label>
                                 <div className="mt-1">
                                     <input id="account" required
