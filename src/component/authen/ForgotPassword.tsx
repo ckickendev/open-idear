@@ -54,10 +54,6 @@ export const ForgotPassword = ({ setAuthenState, setIsLoading, setIsAuthenFromDi
                     <div className="flex items-center justify-center">
                         <img className="w-[152px] h-[100px]" src="/logo.png" alt="open-trash" />
                     </div>
-                    {/* <h1 className="text-2xl font-semibold text-blue-600 flex items-center justify-center">
-                        <span className="text-3xl font-bold">Open</span>
-                        Trash
-                    </h1> */}
                     <p className="text-gray-500 text-sm mt-1">
                         Share your idea and knowledge
                     </p>
