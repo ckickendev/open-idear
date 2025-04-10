@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 export default function Banner() {
     return (
         <>
@@ -25,7 +23,7 @@ export default function Banner() {
                     </button>
                 </div>
             </div> */}
-            <section className="overflow-hidden w-full">
+            <section className="relative overflow-hidden w-full flex flex-col items-center">
                 <div className="w-full">
                     <img
                         className="w-full"
@@ -35,13 +33,19 @@ export default function Banner() {
                         alt='image'
                     />
                 </div>
-                <div className="flex flex-row flex-nowrap items-center gap-4 max-w-screen-xl mx-auto w-full">
-                    <h1 className="homepage_banner-heading mb-4 ng-tns-c71-0">OpenIdear</h1>
-                    <div className="homepage_banner-detail mb-4 ng-tns-c71-0"> Viết - Chia sẻ - Kết nối - Chiêm nghiệm
-                        Tất cả tại Spiderum </div>
-                    <div className="flex ng-tns-c71-0">
-                        <a href="javascript:;" className="button button-secondary homepage_banner-button button-round ng-tns-c71-0">Đăng bài viết</a>
-                    </div>
+                <div className="absolute top-1 flex flex-col flex-nowrap justify-center items-center  gap-4 max-w-screen-xl mx-auto w-full h-full">
+                    <h1 className="text-4xl font-semibold text-gray-900 flex items-center justify-center">
+                        <span className="text-7xl text-blue-600 font-bold">Open</span>
+                        IdeaR
+                    </h1>
+                    <div className="text-4xl font-semibold text-gray-900 flex items-center justify-center"> Speak out and share your idea</div>
+                    <a href="./create"
+                        className="flex items-center gap-2 py-3.5 px-7 rounded-full bg-blue-600 shadow-md text-white font-semibold hover:bg-red-600">Create post <svg width="17" height="12" viewBox="0 0 17 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M1.5 6L14.8333 6M10.6667 11L15.0774 6.58926C15.3552 6.31148 15.4941 6.17259 15.4941 6C15.4941 5.82741 15.3552 5.68852 15.0774 5.41074L10.6667 1"
+                                stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </a>
                 </div>
 
             </section>

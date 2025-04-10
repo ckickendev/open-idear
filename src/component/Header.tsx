@@ -13,7 +13,7 @@ export default function Header() {
         </a>
         <h1 className="text-2xl font-semibold text-blue-600 flex items-center justify-center">
           <span className="text-3xl font-bold">Open</span>
-          Trash
+          IdeaR
         </h1>
       </div>
 
