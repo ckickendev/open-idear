@@ -1,29 +1,29 @@
 import { ChevronUp } from "lucide-react";
 import "@styles/globals.css";
+import Logo from "../common/Logo";
 
-const Article = ({ title, description, author, time }: any) => {
+const Article = ({ category, description, author, time, image }: any) => {
   return (
     <>
-      <div className="col-span-1">
+      <div className="col-span-1 h-full border-b-1 border-gray-300 pt-4 pb-4">
         <div className="h-32 bg-gray-200 rounded overflow-hidden relative">
-          <div className="absolute top-2 right-2 bg-blue-600 p-1 rounded">
-            <ChevronUp className="text-white" size={16} />
+          <div className="absolute top-2 right-2 p-1 rounded">
+            <Logo />
           </div>
           <img
-            src="/api/placeholder/200/150"
+            src={image}
             alt="Roulette wheel"
             className="w-full h-full object-cover"
           />
         </div>
-        <div className="input_con">
-          <input className="input" />
-        </div>
 
         <div className="mt-2">
-          <div className="text-blue-600 font-semibold text-sm">{title}</div>
-          <h3 className="font-bold text-sm">{description}</h3>
-          <div className="flex items-center text-xs text-gray-600 mt-1 ">
-            <span className="font-medium">{author}</span>
+          <div className="text-blue-600 font-semibold text-sm cursor-pointer hover:underline">
+            {category}
+          </div>
+          <h3 className="font-bold text-sm cursor-pointer hover:underline">{description}</h3>
+          <div className="flex items-center text-xs text-gray-600 dark:text-white mt-1 ">
+            <span className="font-medium cursor-pointer hover:underline">{author}</span>
             <span className="mx-1">•</span>
             <span>{time}</span>
           </div>

@@ -1,3 +1,5 @@
+import Guide from "@/component/Guide/Guide";
+import HotPost from "@/component/hot_post/HotPost";
 import LastestFeature from "@/component/lastest_feature/LastestFeature";
 import Image from "next/image";
 
@@ -7,6 +9,8 @@ export default function Home() {
     <div className="flex items-center justify-items-center font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col flex-nowrap items-center gap-4 max-w-screen-xl mx-auto w-full row-start-2 items-center sm:items-start">
         <LastestFeature />
+        <HotPost />
+        <Guide />
       </main>
     </div>
   );
