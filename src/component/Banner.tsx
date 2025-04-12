@@ -28,8 +28,6 @@ export default function Banner() {
                     <img
                         className="w-full"
                         src={"/banner/banner_standard.png"} //src === "/upload/catalog/1644916867663.jpg"
-                        object-fill
-                        object-cover
                         alt='image'
                     />
                 </div>
