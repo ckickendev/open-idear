@@ -9,7 +9,12 @@ import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline'
 import { NodeViewWrapper } from '@tiptap/react';
+import { Extension } from '@tiptap/core';
 import Head from 'next/head';
+import Paragraph from '@tiptap/extension-paragraph';
+
+import "./edit.css";
+import Logo from '@/component/common/Logo';
 
 // Make sure to add these dependencies to your package.json:
 // yarn add @tiptap/react @tiptap/starter-kit @tiptap/extension-image @tiptap/extension-placeholder @tiptap/extension-link @tiptap/extension-text-align
@@ -56,6 +61,96 @@ const DraggableElement: React.FC<DraggableElementProps> = ({ type, label, icon }
   );
 };
 
+const HardBreakExtension = Extension.create({
+  name: 'customHardBreak',
+
+  addKeyboardShortcuts() {
+    return {
+      // Override the default Enter key behavior
+      Enter: ({ editor }) => {
+        // Split the node and create a new paragraph
+        // editor.commands.splitBlock();
+        editor.commands.setHardBreak();
+        return true;
+      },
+      // Keep Shift+Enter as soft break if needed
+      'Shift-Enter': () => {
+        return this.editor.commands.setHardBreak();
+      },
+    };
+  },
+});
+
+const SelectionExtension = Extension.create({
+  name: 'selection',
+
+  addKeyboardShortcuts() {
+    return {
+      // Add Delete and Backspace key handling
+      'Delete': ({ editor }) => {
+        if (editor.isActive('image')) {
+          editor.chain().deleteSelection().run();
+          return true;
+        }
+        return false;
+      },
+      'Backspace': ({ editor }) => {
+        if (editor.isActive('image') || editor.isActive('heading') ||
+          editor.isActive('blockquote') || editor.isActive('codeBlock')) {
+          editor.chain().deleteSelection().run();
+          return true;
+        }
+        return false;
+      },
+    };
+  },
+});
+
+const FloatingToolbar: React.FC = () => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const elements = [
+    { type: "paragraph", label: "Paragraph", icon: "¶" },
+    { type: "heading1", label: "Heading 1", icon: "H1" },
+    { type: "heading2", label: "Heading 2", icon: "H2" },
+    { type: "heading3", label: "Heading 3", icon: "H3" },
+    { type: "image", label: "Image", icon: "🖼️" },
+    { type: "link", label: "Link", icon: "🔗" },
+    { type: "blockquote", label: "Blockquote", icon: "❝" },
+    { type: "codeBlock", label: "Code Block", icon: "<>" }
+  ];
+
+  return (
+    <div
+      className="fixed left-4 top-1/4 z-50"
+      onMouseEnter={() => setIsExpanded(true)}
+      onMouseLeave={() => setIsExpanded(false)}
+    >
+      <div className="bg-white rounded-lg shadow-lg p-2 border border-gray-200">
+        {!isExpanded ? (
+          <div className="flex items-center justify-center w-12 h-12 text-white rounded-full cursor-pointer">
+            <Logo className="w-full h-full" />
+          </div>
+        ) : (
+          <div className="p-2 min-w-[180px]">
+            <h3 className="font-medium mb-2 text-gray-700">Elements</h3>
+            <div className="space-y-2">
+              {elements.map((element) => (
+                <DraggableElement
+                  key={element.type}
+                  type={element.type}
+                  label={element.label}
+                  icon={element.icon}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default function CreatePost() {
   const [previewMode, setPreviewMode] = useState(false);
   const [postTitle, setPostTitle] = useState('Untitled Post');
@@ -64,6 +159,13 @@ export default function CreatePost() {
   const editor = useEditor({
     extensions: [
       StarterKit,
+      Paragraph.configure({
+        HTMLAttributes: {
+          class: 'pb-2 pt-2 mb-4 mt-4',
+        },
+      }),
+      HardBreakExtension,
+      SelectionExtension,
       Image.configure({
         inline: false,
         allowBase64: true,
@@ -92,7 +194,7 @@ export default function CreatePost() {
     content: '',
     editorProps: {
       attributes: {
-        class: 'prose prose-lg focus:outline-none min-h-[300px] max-w-none',
+        class: 'edit-container prose prose-lg focus:outline-none min-h-[300px] max-w-none',
       },
     },
   });
@@ -131,6 +233,8 @@ export default function CreatePost() {
     },
     [editor]
   );
+
+
 
   const insertElementAtPosition = (type: string, position: number) => {
     if (!editor) return;
@@ -260,22 +364,10 @@ export default function CreatePost() {
 
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Element sidebar */}
-          <div className="lg:w-1/4 bg-white p-4 rounded shadow">
-            <h2 className="text-lg font-medium mb-4">Elements</h2>
-            <div>
-              <DraggableElement type="paragraph" label="Paragraph" icon="¶" />
-              <DraggableElement type="heading1" label="Heading 1" icon="H1" />
-              <DraggableElement type="heading2" label="Heading 2" icon="H2" />
-              <DraggableElement type="heading3" label="Heading 3" icon="H3" />
-              <DraggableElement type="image" label="Image" icon="🖼️" />
-              <DraggableElement type="link" label="Link" icon="🔗" />
-              <DraggableElement type="blockquote" label="Blockquote" icon="❝" />
-              <DraggableElement type="codeBlock" label="Code Block" icon="<>" />
-            </div>
-          </div>
+          <FloatingToolbar />
 
           {/* Editor area */}
-          <div className="lg:w-3/4 flex flex-col">
+          <div className="lg:w-full flex flex-col">
             <div className="bg-white rounded shadow mb-4">
               <div className="border-b border-gray-200 p-4 flex justify-between items-center">
                 <h2 className="text-lg font-medium">
