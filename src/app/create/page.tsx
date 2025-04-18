@@ -153,7 +153,7 @@ const FloatingToolbar: React.FC = () => {
 
 export default function CreatePost() {
   const [previewMode, setPreviewMode] = useState(false);
-  const [postTitle, setPostTitle] = useState('Untitled Post');
+  const [postTitle, setPostTitle] = useState('');
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
   const editor = useEditor({
@@ -345,13 +345,13 @@ export default function CreatePost() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Create New Post</h1>
+      <div className="container text-center mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-gray-600 mb-6">Create New Post</h1>
 
         <div className="mb-6">
-          <label htmlFor="post-title" className="block mb-2 font-medium">
+          {/* <label htmlFor="post-title" className="block mb-2 font-medium">
             Post Title
-          </label>
+          </label> */}
           <input
             id="post-title"
             type="text"
