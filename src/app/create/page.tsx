@@ -15,51 +15,9 @@ import Paragraph from '@tiptap/extension-paragraph';
 
 import "./edit.css";
 import Logo from '@/component/common/Logo';
-
-// Make sure to add these dependencies to your package.json:
-// yarn add @tiptap/react @tiptap/starter-kit @tiptap/extension-image @tiptap/extension-placeholder @tiptap/extension-link @tiptap/extension-text-align
-
-interface ToolbarItemProps {
-  icon: string;
-  title: string;
-  action: () => void;
-}
-
-const ToolbarItem: React.FC<ToolbarItemProps> = ({ icon, title, action }) => {
-  return (
-    <button
-      onClick={action}
-      className="p-2 hover:bg-gray-200 rounded transition-colors"
-      title={title}
-    >
-      {icon}
-    </button>
-  );
-};
-
-interface DraggableElementProps {
-  type: string;
-  label: string;
-  icon?: string;
-}
-
-const DraggableElement: React.FC<DraggableElementProps> = ({ type, label, icon }) => {
-  const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData('application/reactflow', type);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  return (
-    <div
-      draggable
-      onDragStart={handleDragStart}
-      className="flex items-center p-3 mb-2 bg-gray-100 rounded cursor-move hover:bg-gray-200 transition-colors"
-    >
-      <span className="mr-2">{icon}</span>
-      <span>{label}</span>
-    </div>
-  );
-};
+import Toolbar from './ToolBar';
+import DraggableElement from './DragableElement';
+import Instruction from './Instruction';
 
 const HardBreakExtension = Extension.create({
   name: 'customHardBreak',
@@ -262,7 +220,17 @@ export default function CreatePost() {
         const url = prompt('Enter URL:', 'https://example.com');
         const text = prompt('Enter link text:', 'Link text');
         if (url && text) {
-          editor.chain().focus().insertContentAt(position, `<a href="${url}">${text}</a>`).run();
+          // Instead of inserting HTML content which creates a new element
+          // Focus at the position, then use the built-in setLink command
+          editor
+            .chain()
+            .focus()
+            .insertContentAt(position, text)
+            .setTextSelection({ from: position, to: position + text.length })
+            .setLink({ href: url })
+            // Move cursor after the link to ensure new content is not part of the link
+            .setTextSelection(position + text.length)
+            .run();
         }
         break;
       case 'blockquote':
@@ -277,56 +245,6 @@ export default function CreatePost() {
   };
 
   // Editor toolbar components
-  const Toolbar = ({ editor }: { editor: Editor | null }) => {
-    if (!editor) return null;
-
-    return (
-      <div className="border-b border-gray-200 p-2 flex flex-wrap gap-1">
-        <ToolbarItem
-          icon="B"
-          title="Bold"
-          action={() => editor.chain().focus().toggleBold().run()}
-        />
-        <ToolbarItem
-          icon="I"
-          title="Italic"
-          action={() => editor.chain().focus().toggleItalic().run()}
-        />
-        <ToolbarItem
-          icon="U"
-          title="Underline"
-          action={() => editor.chain().focus().toggleUnderline().run()}
-        />
-        <div className="border-r border-gray-300 mx-1"></div>
-        <ToolbarItem
-          icon="≡"
-          title="Align Left"
-          action={() => editor.chain().focus().setTextAlign('left').run()}
-        />
-        <ToolbarItem
-          icon="≡"
-          title="Align Center"
-          action={() => editor.chain().focus().setTextAlign('center').run()}
-        />
-        <ToolbarItem
-          icon="≡"
-          title="Align Right"
-          action={() => editor.chain().focus().setTextAlign('right').run()}
-        />
-        <div className="border-r border-gray-300 mx-1"></div>
-        <ToolbarItem
-          icon="•"
-          title="Bullet List"
-          action={() => editor.chain().focus().toggleBulletList().run()}
-        />
-        <ToolbarItem
-          icon="1."
-          title="Ordered List"
-          action={() => editor.chain().focus().toggleOrderedList().run()}
-        />
-      </div>
-    );
-  };
 
   const savePost = () => {
     if (!editor) return;
@@ -345,8 +263,11 @@ export default function CreatePost() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="container text-center mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-600 mb-6">Create New Post</h1>
+      <div className="container mx-auto px-4 py-8">
+        <div className='w-full flex items-center justify-center mb-2'>
+          <h1 className="text-3xl font-bold text-gray-600 mb-6">Create New Post</h1>
+
+        </div>
 
         <div className="mb-6">
           {/* <label htmlFor="post-title" className="block mb-2 font-medium">
@@ -410,16 +331,7 @@ export default function CreatePost() {
               </div>
             </div>
 
-            <div className="bg-white rounded shadow p-4">
-              <h2 className="text-lg font-medium mb-2">Instructions</h2>
-              <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                <li>Drag elements from the sidebar into the editor area</li>
-                <li>Click on elements to edit their content</li>
-                <li>Use the toolbar to format your text</li>
-                <li>Switch to Preview mode to see how your post will look</li>
-                <li>Click Save Post when you're finished</li>
-              </ul>
-            </div>
+            <Instruction />
           </div>
         </div>
       </div>
