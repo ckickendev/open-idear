@@ -86,12 +86,16 @@ const FloatingToolbar: React.FC = () => {
     >
       <div className="bg-white rounded-lg shadow-lg p-2 border border-gray-200">
         {!isExpanded ? (
-          <div className="flex items-center justify-center w-12 h-12 text-white rounded-full cursor-pointer">
-            <Logo className="w-full h-full" />
+          <div className="flex items-center justify-center w-full h-full rounded-full cursor-pointer">
+            <Logo className="w-12 h-full" />
+            <h1 className='text-xl text-gray-600'>Select elements</h1>
           </div>
         ) : (
-          <div className="p-2 min-w-[180px]">
-            <h3 className="font-medium mb-2 text-gray-700">Elements</h3>
+          <div className="p-2 min-w-[180px] w-full">
+            <div className='d-flex items-center justify-center'>
+              <h3 className="mb-2 text-gray-700 text-center">Elements</h3>
+            </div>
+
             <div className="space-y-2">
               {elements.map((element) => (
                 <DraggableElement
@@ -270,9 +274,6 @@ export default function CreatePost() {
         </div>
 
         <div className="mb-6">
-          {/* <label htmlFor="post-title" className="block mb-2 font-medium">
-            Post Title
-          </label> */}
           <input
             id="post-title"
             type="text"
