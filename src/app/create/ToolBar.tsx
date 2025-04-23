@@ -1,20 +1,25 @@
+import HoverTooltip from '@/component/common/TooltipNote';
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
+import { AlignCenter, AlignLeft, AlignRight, Bold, Italic, List, ListOrdered, Underline } from 'lucide-react';
 
 interface ToolbarItemProps {
-    icon: string;
     title: string;
     action: () => void;
+    children?: React.ReactNode;
 }
 
-const ToolbarItem: React.FC<ToolbarItemProps> = ({ icon, title, action }) => {
+const ToolbarItem: React.FC<ToolbarItemProps> = ({ children, title, action }) => {
     return (
-        <button
-            onClick={action}
-            className="p-2 hover:bg-gray-200 rounded transition-colors"
-            title={title}
-        >
-            {icon}
-        </button>
+        <HoverTooltip tooltipText={title}>
+            <button
+                onClick={action}
+                className="p-2 rounded transition-colors cursor-pointer"
+            // title={title}
+            >
+                {children}
+            </button>
+        </HoverTooltip>
+
     );
 };
 
@@ -25,47 +30,55 @@ const Toolbar = ({ editor }: { editor: Editor | null }) => {
     return (
         <div className="border-b border-gray-200 p-2 flex flex-wrap gap-1">
             <ToolbarItem
-                icon="B"
                 title="Bold"
                 action={() => editor.chain().focus().toggleBold().run()}
-            />
+            >
+                <Bold />
+            </ToolbarItem>
             <ToolbarItem
-                icon="I"
                 title="Italic"
                 action={() => editor.chain().focus().toggleItalic().run()}
-            />
+            >
+                <Italic />
+            </ToolbarItem>
             <ToolbarItem
-                icon="U"
                 title="Underline"
                 action={() => editor.chain().focus().toggleUnderline().run()}
-            />
+            >
+                <Underline />
+            </ToolbarItem>
             <div className="border-r border-gray-300 mx-1"></div>
             <ToolbarItem
-                icon="≡"
                 title="Align Left"
                 action={() => editor.chain().focus().setTextAlign('left').run()}
-            />
+            >
+                <AlignLeft />
+            </ToolbarItem>
             <ToolbarItem
-                icon="≡"
                 title="Align Center"
                 action={() => editor.chain().focus().setTextAlign('center').run()}
-            />
+            >
+                <AlignCenter />
+            </ToolbarItem>
             <ToolbarItem
-                icon="≡"
                 title="Align Right"
                 action={() => editor.chain().focus().setTextAlign('right').run()}
-            />
+            >
+                <AlignRight />
+            </ToolbarItem>
             <div className="border-r border-gray-300 mx-1"></div>
             <ToolbarItem
-                icon="•"
                 title="Bullet List"
                 action={() => editor.chain().focus().toggleBulletList().run()}
-            />
+            >
+                <List />
+            </ToolbarItem>
             <ToolbarItem
-                icon="1."
                 title="Ordered List"
                 action={() => editor.chain().focus().toggleOrderedList().run()}
-            />
+            >
+                <ListOrdered />
+            </ToolbarItem>
         </div>
     );
 };

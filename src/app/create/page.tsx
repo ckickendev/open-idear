@@ -260,14 +260,14 @@ export default function CreatePost() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Head>
         <title>Create New Post</title>
         <meta name="description" content="Create a new post with our drag and drop editor" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 ">
         <div className='w-full flex items-center justify-center mb-2'>
           <h1 className="text-3xl font-bold text-gray-600 mb-6">Create New Post</h1>
 
@@ -279,12 +279,12 @@ export default function CreatePost() {
             type="text"
             value={postTitle}
             onChange={(e) => setPostTitle(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="pr-10 input w-full rounded-lg pt-2 pb-2 pl-2 border border-gray-500 focus:outline-none focus:border-red-500"
             placeholder="Enter post title"
           />
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col lg:flex-row gap-6 outline-none border-2 border-gray-100 shadow-md hover:outline-none focus:ring-teal-200 focus:border-teal-200">
           {/* Element sidebar */}
           <FloatingToolbar />
 
