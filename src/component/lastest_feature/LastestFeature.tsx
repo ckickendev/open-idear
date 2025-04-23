@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { ChevronRight, ChevronUp } from "lucide-react";
 import Article from "./Article";
 import Logo from "../common/Logo";
-import ListFeature from "./ListFeature";
 
 const LastestFeature = () => {
   const [selectFeature, setSelectFeature] = useState(0);

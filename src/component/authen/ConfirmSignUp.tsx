@@ -13,13 +13,13 @@ type ModalAuthen = {
 };
 
 const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAuthen) => {
-    const inputRef1 = useRef(null);
-    const inputRef2 = useRef(null);
-    const inputRef3 = useRef(null);
-    const inputRef4 = useRef(null);
-    const inputRef5 = useRef(null);
-    const inputRef6 = useRef(null);
-    const submit = useRef(null);
+    const inputRef1 = useRef<HTMLInputElement>(null);
+    const inputRef2 = useRef<HTMLInputElement>(null);
+    const inputRef3 = useRef<HTMLInputElement>(null);
+    const inputRef4 = useRef<HTMLInputElement>(null);
+    const inputRef5 = useRef<HTMLInputElement>(null);
+    const inputRef6 = useRef<HTMLInputElement>(null);
+    const submit = useRef<HTMLButtonElement>(null);
     const [errorSv, setErrorSv] = useState("");
 
     const onSubmit = async (event: any) => {
@@ -74,23 +74,23 @@ const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
             if (index < 6) {
                 switch (index) {
                     case 1:
-                        inputRef2.current.focus();
+                        inputRef2.current?.focus();
                         break
                     case 2:
-                        inputRef3.current.focus();
+                        inputRef3.current?.focus();
                         break;
                     case 3:
-                        inputRef4.current.focus();
+                        inputRef4.current?.focus();
                         break;
                     case 4:
-                        inputRef5.current.focus();
+                        inputRef5.current?.focus();
                         break;
                     case 5:
-                        inputRef6.current.focus();
+                        inputRef6.current?.focus();
                         break;
                 }
             } else {
-                submit.current.focus();
+                submit.current?.focus();
             }
         }
     }
@@ -111,7 +111,7 @@ const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
         inputRef5.current!.value = digits[4];
         inputRef6.current!.value = digits[5];
 
-        submit.current.focus()
+        submit.current?.focus()
     }
 
     return <>

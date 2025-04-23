@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 
 const UploadImage = () => {
-    const [resource, setResource] = useState(undefined);
+    const [resource, setResource] = useState<string | undefined>(undefined);
 
     return (
         <div className='flex justify-center items-center w-full h-full'>
@@ -11,7 +11,9 @@ const UploadImage = () => {
                 signatureEndpoint="/api/image_upload"
                 onSuccess={(result, { widget }) => {
                     console.log(result);
-                    setResource(result?.info?.url);  // { public_id, secure_url, etc }
+                    if (typeof result?.info !== 'string') {
+                        setResource(result?.info?.url);  // { public_id, secure_url, etc }
+                    }
                     widget.close();
                 }}
 
