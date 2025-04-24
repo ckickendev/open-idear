@@ -8,7 +8,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline'
-import { NodeViewWrapper } from '@tiptap/react';
+import TextStyle from '@tiptap/extension-text-style'
 import { Extension } from '@tiptap/core';
 import Head from 'next/head';
 import Paragraph from '@tiptap/extension-paragraph';
@@ -18,6 +18,7 @@ import Logo from '@/component/common/Logo';
 import Toolbar from './ToolBar';
 import DraggableElement from './DragableElement';
 import Instruction from './Instruction';
+import Color from '@tiptap/extension-color';
 
 const HardBreakExtension = Extension.create({
   name: 'customHardBreak',
@@ -38,6 +39,12 @@ const HardBreakExtension = Extension.create({
     };
   },
 });
+
+Color.configure({
+  types: ['textStyle'],
+})
+
+
 
 const SelectionExtension = Extension.create({
   name: 'selection',
@@ -121,6 +128,8 @@ export default function CreatePost() {
   const editor = useEditor({
     extensions: [
       StarterKit,
+      TextStyle,
+      Color,
       Paragraph.configure({
         HTMLAttributes: {
           class: 'pb-2 pt-2 mb-4 mt-4',
@@ -289,10 +298,10 @@ export default function CreatePost() {
           <FloatingToolbar />
 
           {/* Editor area */}
-          <div className="lg:w-full flex flex-col">
-            <div className="bg-white rounded shadow mb-4">
-              <div className="border-b border-gray-200 p-4 flex justify-between items-center">
-                <h2 className="text-lg font-medium">
+          <div className="lg:w-full h-screen flex flex-col justify-between items-center">
+            <div className="bg-white mb-4">
+              <div className="border-b border-gray-200 p-4 flex justify-between items-center text-center">
+                <h2 className="text-3xl font-medium ">
                   {previewMode ? 'Preview' : 'Editor'}
                 </h2>
                 <div className="flex gap-2">
@@ -315,7 +324,7 @@ export default function CreatePost() {
 
               <div
                 ref={editorContainerRef}
-                className="p-6"
+                className="p-6 w-6xl"
                 onDragOver={previewMode ? undefined : handleDragOver}
                 onDrop={previewMode ? undefined : handleDrop}
               >

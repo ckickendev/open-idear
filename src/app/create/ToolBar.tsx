@@ -1,6 +1,6 @@
 import HoverTooltip from '@/component/common/TooltipNote';
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
-import { AlignCenter, AlignLeft, AlignRight, Bold, Italic, List, ListOrdered, Underline } from 'lucide-react';
+import { AlignCenter, AlignLeft, AlignRight, Bold, Italic, List, ListOrdered, LucideCloudMoonRain, Underline } from 'lucide-react';
 
 interface ToolbarItemProps {
     title: string;
@@ -78,6 +78,49 @@ const Toolbar = ({ editor }: { editor: Editor | null }) => {
                 action={() => editor.chain().focus().toggleOrderedList().run()}
             >
                 <ListOrdered />
+            </ToolbarItem>
+            <ToolbarItem
+                title="Color: RED"
+                action={() => editor.chain().focus().setColor('#F98181').run()}
+            >
+                <div className='bg-red-900 w-[24px] h-[24px]'>
+                </div>
+            </ToolbarItem>
+
+            <ToolbarItem
+                title="Color: BLACK"
+                action={() => editor.chain().focus().setColor('#000000').run()}
+            >
+                <div className='bg-black w-[24px] h-[24px]'>
+                </div>
+            </ToolbarItem>
+            <ToolbarItem
+                title="Color: WHITE"
+                action={() => editor.chain().focus().setColor('#FFFFFF').run()}
+            >
+                <div className='bg-white rouder border w-[24px] h-[24px]'>
+                </div>
+            </ToolbarItem>
+            <ToolbarItem
+                title="Color: BLUE"
+                action={() => editor.chain().focus().setColor('#0000FF').run()}
+            >
+                <div className='bg-blue-900 w-[24px] h-[24px]'>
+                </div>
+            </ToolbarItem>
+            <ToolbarItem
+                title="Color: GREEN"
+                action={() => editor.chain().focus().setColor('#B9F18D').run()}
+            >
+                <div className='bg-green-900 w-[24px] h-[24px]'>
+                </div>
+            </ToolbarItem>
+            <ToolbarItem
+                title="Color: GRAY"
+                action={() => editor.chain().focus().setColor('#808080').run()}
+            >
+                <div className='bg-gray-900 w-[24px] h-[24px]'>
+                </div>
             </ToolbarItem>
         </div>
     );

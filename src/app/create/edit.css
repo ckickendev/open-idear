@@ -10,4 +10,37 @@
         padding-bottom: calc(var(--spacing) * 2);
         padding-top: calc(var(--spacing) * 2);
     }
+
+    h1 {
+        font-size: var(--text-6xl);
+        line-height: var(--text-6xl--line-height);
+        margin-bottom: calc(var(--spacing) * 2);
+    }
+
+
+    h2 {
+        font-size: var(--text-4xl);
+        line-height: var(--text-4xl--line-height);
+        margin-bottom: calc(var(--spacing) * 2);
+    }
+
+
+    h3 {
+        font-size: var(--text-3xl);
+        line-height: var(--text-3xl--line-height);
+        margin-bottom: calc(var(--spacing) * 2);
+    }  
+
+    h4 {
+        font-size: var(--text-2xl);
+        line-height: var(--text-2xl--line-height);
+        margin-bottom: calc(var(--spacing) * 2);
+    }
+
+    h5 {
+        font-size: var(--text-1xl);
+        line-height: var(--text-1xl--line-height);
+        margin-bottom: calc(var(--spacing) * 2);
+    }
+
 }
