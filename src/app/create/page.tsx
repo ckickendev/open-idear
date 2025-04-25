@@ -19,6 +19,7 @@ import Toolbar from './ToolBar';
 import DraggableElement from './DragableElement';
 import Instruction from './Instruction';
 import Color from '@tiptap/extension-color';
+import { MessageCircleQuestion } from 'lucide-react';
 
 const HardBreakExtension = Extension.create({
   name: 'customHardBreak',
@@ -124,6 +125,7 @@ export default function CreatePost() {
   const [previewMode, setPreviewMode] = useState(false);
   const [postTitle, setPostTitle] = useState('');
   const editorContainerRef = useRef<HTMLDivElement>(null);
+  const [instructionDis, setInstructionDis] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -278,8 +280,14 @@ export default function CreatePost() {
 
       <div className="container mx-auto px-4 py-8 ">
         <div className='w-full flex items-center justify-center mb-2'>
-          <h1 className="text-3xl font-bold text-gray-600 mb-6">Create New Post</h1>
+          <h1 className="text-3xl font-bold text-gray-600">Create New Post</h1>
+          <div className='relative'>
+            <MessageCircleQuestion className=' m-2'
+              onMouseEnter={() => setInstructionDis(true)}
+              onMouseLeave={() => setInstructionDis(false)} />
+            {instructionDis && <Instruction />}
 
+          </div>
         </div>
 
         <div className="mb-6">
@@ -341,7 +349,6 @@ export default function CreatePost() {
               </div>
             </div>
 
-            <Instruction />
           </div>
         </div>
       </div>

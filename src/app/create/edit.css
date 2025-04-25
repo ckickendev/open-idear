@@ -12,7 +12,7 @@
     }
 
     h1 {
-        font-size: var(--text-6xl);
+        font-size: 3rem;
         line-height: var(--text-6xl--line-height);
         margin-bottom: calc(var(--spacing) * 2);
     }

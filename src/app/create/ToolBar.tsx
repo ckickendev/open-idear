@@ -89,7 +89,7 @@ const Toolbar = ({ editor }: { editor: Editor | null }) => {
 
             <ToolbarItem
                 title="Color: BLACK"
-                action={() => editor.chain().focus().setColor('#000000').run()}
+                action={() => editor.chain().focus().setColor('#171717').run()}
             >
                 <div className='bg-black w-[24px] h-[24px]'>
                 </div>
