@@ -28,7 +28,7 @@ const Toolbar = ({ editor }: { editor: Editor | null }) => {
     if (!editor) return null;
 
     return (
-        <div className="border-b border-gray-200 p-2 flex flex-wrap gap-1">
+        <div className="w-full border-b border-gray-200 p-2 flex justify-center items-center flex-wrap gap-1">
             <ToolbarItem
                 title="Bold"
                 action={() => editor.chain().focus().toggleBold().run()}

@@ -278,7 +278,7 @@ export default function CreatePost() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="container mx-auto px-4 py-8 ">
+      <div className="mx-auto px-4 py-8 flex flex-col items-center justify-center">
         <div className='w-full flex items-center justify-center mb-2'>
           <h1 className="text-3xl font-bold text-gray-600">Create New Post</h1>
           <div className='relative'>
@@ -290,7 +290,7 @@ export default function CreatePost() {
           </div>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 w-1/3">
           <input
             id="post-title"
             type="text"
@@ -306,9 +306,9 @@ export default function CreatePost() {
           <FloatingToolbar />
 
           {/* Editor area */}
-          <div className="lg:w-full h-screen flex flex-col justify-between items-center">
-            <div className="bg-white mb-4">
-              <div className="border-b border-gray-200 p-4 flex justify-between items-center text-center">
+          <div className="w-screen h-screen flex flex-col justify-between items-center">
+            <div className="w-full bg-white mb-4 flex flex-col items-center">
+              <div className="w-full border-b border-gray-200 p-4 flex justify-between items-center">
                 <h2 className="text-3xl font-medium ">
                   {previewMode ? 'Preview' : 'Editor'}
                 </h2>
@@ -332,7 +332,7 @@ export default function CreatePost() {
 
               <div
                 ref={editorContainerRef}
-                className="p-6 w-6xl"
+                className="p-6 w-3xl h-auto"
                 onDragOver={previewMode ? undefined : handleDragOver}
                 onDrop={previewMode ? undefined : handleDrop}
               >
