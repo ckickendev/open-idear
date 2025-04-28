@@ -20,6 +20,7 @@ import DraggableElement from './DragableElement';
 import Instruction from './Instruction';
 import Color from '@tiptap/extension-color';
 import { MessageCircleQuestion } from 'lucide-react';
+import FloatingToolbar from './FloatingToolbar';
 
 const HardBreakExtension = Extension.create({
   name: 'customHardBreak',
@@ -60,66 +61,17 @@ const SelectionExtension = Extension.create({
         }
         return false;
       },
-      'Backspace': ({ editor }) => {
-        if (editor.isActive('image') || editor.isActive('heading') ||
-          editor.isActive('blockquote') || editor.isActive('codeBlock')) {
-          editor.chain().deleteSelection().run();
-          return true;
-        }
-        return false;
-      },
+      // 'Backspace': ({ editor }) => {
+      //   if (editor.isActive('image') || editor.isActive('heading') ||
+      //     editor.isActive('blockquote') || editor.isActive('codeBlock')) {
+      //     editor.chain().deleteSelection().run();
+      //     return true;
+      //   }
+      //   return false;
+      // },
     };
   },
 });
-
-const FloatingToolbar: React.FC = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const elements = [
-    { type: "paragraph", label: "Paragraph", icon: "¶" },
-    { type: "heading1", label: "Heading 1", icon: "H1" },
-    { type: "heading2", label: "Heading 2", icon: "H2" },
-    { type: "heading3", label: "Heading 3", icon: "H3" },
-    { type: "image", label: "Image", icon: "🖼️" },
-    { type: "link", label: "Link", icon: "🔗" },
-    { type: "blockquote", label: "Blockquote", icon: "❝" },
-    { type: "codeBlock", label: "Code Block", icon: "<>" }
-  ];
-
-  return (
-    <div
-      className="fixed left-4 top-1/4 z-50"
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
-    >
-      <div className="bg-white rounded-lg shadow-lg p-2 border border-gray-200">
-        {!isExpanded ? (
-          <div className="flex items-center justify-center w-full h-full rounded-full cursor-pointer">
-            <Logo className="w-12 h-full" />
-            <h1 className='text-xl text-gray-600'>Select elements</h1>
-          </div>
-        ) : (
-          <div className="p-2 min-w-[180px] w-full">
-            <div className='d-flex items-center justify-center'>
-              <h3 className="mb-2 text-gray-700 text-center">Elements</h3>
-            </div>
-
-            <div className="space-y-2">
-              {elements.map((element) => (
-                <DraggableElement
-                  key={element.type}
-                  type={element.type}
-                  label={element.label}
-                  icon={element.icon}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
 
 export default function CreatePost() {
   const [previewMode, setPreviewMode] = useState(false);
@@ -308,7 +260,7 @@ export default function CreatePost() {
           {/* Editor area */}
           <div className="w-screen h-screen flex flex-col justify-between items-center">
             <div className="w-full bg-white mb-4 flex flex-col items-center">
-              <div className="w-full border-b border-gray-200 p-4 flex justify-between items-center">
+              <div className="w-full border-b border-gray-200 p-4 flex justify-around items-center">
                 <h2 className="text-3xl font-medium ">
                   {previewMode ? 'Preview' : 'Editor'}
                 </h2>
@@ -332,12 +284,12 @@ export default function CreatePost() {
 
               <div
                 ref={editorContainerRef}
-                className="p-6 w-3xl h-auto"
+                className="p-6 w-3xl h-auto border-2 border-dotted"
                 onDragOver={previewMode ? undefined : handleDragOver}
                 onDrop={previewMode ? undefined : handleDrop}
               >
                 {previewMode ? (
-                  <div className="prose max-w-none">
+                  <div className="prose max-w-none preview-container">
                     <h1 className="text-3xl font-bold mb-6">{postTitle}</h1>
                     {editor && (
                       <div dangerouslySetInnerHTML={{ __html: editor.getHTML() }} />
