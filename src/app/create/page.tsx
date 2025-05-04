@@ -14,13 +14,13 @@ import Head from 'next/head';
 import Paragraph from '@tiptap/extension-paragraph';
 
 import "./edit.css";
-import Logo from '@/component/common/Logo';
 import Toolbar from './ToolBar';
 import DraggableElement from './DragableElement';
 import Instruction from './Instruction';
 import Color from '@tiptap/extension-color';
 import { MessageCircleQuestion } from 'lucide-react';
 import FloatingToolbar from './FloatingToolbar';
+import CodeBlock from '@tiptap/extension-code-block';
 
 const HardBreakExtension = Extension.create({
   name: 'customHardBreak',
@@ -32,7 +32,12 @@ const HardBreakExtension = Extension.create({
         // Split the node and create a new paragraph
         // editor.commands.splitBlock();
         editor.commands.setHardBreak();
+        if (editor.isActive('codeBlock')) {
+          console.log('codeBlock');
+
+        }
         return true;
+
       },
       // Keep Shift+Enter as soft break if needed
       'Shift-Enter': () => {
@@ -61,14 +66,14 @@ const SelectionExtension = Extension.create({
         }
         return false;
       },
-      // 'Backspace': ({ editor }) => {
-      //   if (editor.isActive('image') || editor.isActive('heading') ||
-      //     editor.isActive('blockquote') || editor.isActive('codeBlock')) {
-      //     editor.chain().deleteSelection().run();
-      //     return true;
-      //   }
-      //   return false;
-      // },
+      'Backspace': ({ editor }) => {
+        if (editor.isActive('image') || editor.isActive('heading') ||
+          editor.isActive('blockquote') || editor.isActive('codeBlock')) {
+          editor.chain().deleteSelection().run();
+          return true;
+        }
+        return false;
+      },
     };
   },
 });
@@ -83,6 +88,10 @@ export default function CreatePost() {
     extensions: [
       StarterKit,
       TextStyle,
+      CodeBlock.configure({
+        exitOnArrowDown: false,
+        defaultLanguage: 'plaintext',
+      }),
       Color,
       Paragraph.configure({
         HTMLAttributes: {
@@ -114,12 +123,12 @@ export default function CreatePost() {
         HTMLAttributes: {
           class: 'underline',
         },
-      })
+      }),
     ],
     content: '',
     editorProps: {
       attributes: {
-        class: 'edit-container prose prose-lg focus:outline-none min-h-[300px] max-w-none',
+        class: 'edit-container prose prose-lg focus:outline-none max-w-none',
       },
     },
   });
@@ -204,7 +213,7 @@ export default function CreatePost() {
         editor.chain().focus().insertContentAt(position, '<blockquote>Add a quote here</blockquote>').run();
         break;
       case 'codeBlock':
-        editor.chain().focus().insertContentAt(position, '<pre><code>// Your code here</code></pre>').run();
+        editor.chain().focus().insertContentAt(position, '<pre><code>// insert code here</code></pre>').run();
         break;
       default:
         break;
@@ -284,21 +293,41 @@ export default function CreatePost() {
 
               <div
                 ref={editorContainerRef}
-                className="p-6 w-3xl h-auto border-2 border-dotted"
+                className="p-6 w-3xl min-h-full editor-end"
                 onDragOver={previewMode ? undefined : handleDragOver}
                 onDrop={previewMode ? undefined : handleDrop}
               >
                 {previewMode ? (
                   <div className="prose max-w-none preview-container">
+
                     <h1 className="text-3xl font-bold mb-6">{postTitle}</h1>
                     {editor && (
                       <div dangerouslySetInnerHTML={{ __html: editor.getHTML() }} />
                     )}
                   </div>
                 ) : (
-                  editor && <EditorContent editor={editor} />
+                  editor && <>
+                    <div className="control-group">
+                      <div className="button-group">
+                        <button
+                          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                          className={editor.isActive('codeBlock') ? 'is-active' : ''}
+                        >
+                          Toggle code block
+                        </button>
+                        <button
+                          onClick={() => editor.chain().focus().setCodeBlock().run()}
+                          disabled={editor.isActive('codeBlock')}
+                        >
+                          Set code block
+                        </button>
+                      </div>
+                    </div>
+                    <EditorContent editor={editor} />
+                  </>
                 )}
               </div>
+              <p>End</p>
             </div>
 
           </div>
