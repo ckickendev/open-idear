@@ -5,4 +5,4 @@ const authenticationStore = create((set) => ({
     setCurrentUser: () => set((user) => ({ currentUser: user })),
 }));
 
-export default useStore;
+export default authenticationStore;

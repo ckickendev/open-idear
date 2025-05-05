@@ -15,12 +15,12 @@ import Paragraph from '@tiptap/extension-paragraph';
 
 import "./edit.css";
 import Toolbar from './ToolBar';
-import DraggableElement from './DragableElement';
 import Instruction from './Instruction';
 import Color from '@tiptap/extension-color';
 import { MessageCircleQuestion } from 'lucide-react';
 import FloatingToolbar from './FloatingToolbar';
 import CodeBlock from '@tiptap/extension-code-block';
+import contentStore from '@/store/ContentStore';
 
 const HardBreakExtension = Extension.create({
   name: 'customHardBreak',
@@ -31,13 +31,13 @@ const HardBreakExtension = Extension.create({
       Enter: ({ editor }) => {
         // Split the node and create a new paragraph
         // editor.commands.splitBlock();
-        editor.commands.setHardBreak();
+
         if (editor.isActive('codeBlock')) {
           console.log('codeBlock');
-
+          return false;
         }
+        editor.commands.setHardBreak();
         return true;
-
       },
       // Keep Shift+Enter as soft break if needed
       'Shift-Enter': () => {
@@ -66,31 +66,40 @@ const SelectionExtension = Extension.create({
         }
         return false;
       },
-      'Backspace': ({ editor }) => {
-        if (editor.isActive('image') || editor.isActive('heading') ||
-          editor.isActive('blockquote') || editor.isActive('codeBlock')) {
-          editor.chain().deleteSelection().run();
-          return true;
-        }
-        return false;
-      },
+      // 'Backspace': ({ editor }) => {
+      //   if (editor.isActive('image') || editor.isActive('heading') ||
+      //     editor.isActive('blockquote') || editor.isActive('codeBlock')) {
+      //     editor.chain().deleteSelection().run();
+      //     return true;
+      //   }
+      //   return false;
+      // },
     };
   },
 });
 
 export default function CreatePost() {
   const [previewMode, setPreviewMode] = useState(false);
-  const [postTitle, setPostTitle] = useState('');
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const [instructionDis, setInstructionDis] = useState(false);
+  const title = contentStore((state) => state.title);
+  const content = contentStore((state) => state.content);
+  const setTitle = contentStore((state) => state.setTitle);
+  const setContent = contentStore((state) => state.setContent);
+
+  const [postTitle, setPostTitle] = useState(title);
 
   const editor = useEditor({
     extensions: [
       StarterKit,
       TextStyle,
       CodeBlock.configure({
-        exitOnArrowDown: false,
+        exitOnArrowDown: true, // Allow exiting code block with down arrow at the end
+        exitOnTripleEnter: true, // Exit after three consecutive Enter presses
         defaultLanguage: 'plaintext',
+        HTMLAttributes: {
+          class: 'my-code-block p-4 bg-gray-100 rounded',
+        },
       }),
       Color,
       Paragraph.configure({
@@ -125,7 +134,7 @@ export default function CreatePost() {
         },
       }),
     ],
-    content: '',
+    content: content,
     editorProps: {
       attributes: {
         class: 'edit-container prose prose-lg focus:outline-none max-w-none',
@@ -227,6 +236,8 @@ export default function CreatePost() {
 
     const content = editor.getHTML();
     console.log({ title: postTitle, content });
+    setTitle(postTitle);
+    setContent(content);
     alert('Post saved successfully!');
     // In a real app, you would send this to your API
   };
@@ -255,7 +266,7 @@ export default function CreatePost() {
           <input
             id="post-title"
             type="text"
-            value={postTitle}
+            value={postTitle.toString()}
             onChange={(e) => setPostTitle(e.target.value)}
             className="pr-10 input w-full rounded-lg pt-2 pb-2 pl-2 border border-gray-500 focus:outline-none focus:border-red-500"
             placeholder="Enter post title"
@@ -307,22 +318,6 @@ export default function CreatePost() {
                   </div>
                 ) : (
                   editor && <>
-                    <div className="control-group">
-                      <div className="button-group">
-                        <button
-                          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-                          className={editor.isActive('codeBlock') ? 'is-active' : ''}
-                        >
-                          Toggle code block
-                        </button>
-                        <button
-                          onClick={() => editor.chain().focus().setCodeBlock().run()}
-                          disabled={editor.isActive('codeBlock')}
-                        >
-                          Set code block
-                        </button>
-                      </div>
-                    </div>
                     <EditorContent editor={editor} />
                   </>
                 )}
