@@ -21,6 +21,10 @@ import { MessageCircleQuestion } from 'lucide-react';
 import FloatingToolbar from './FloatingToolbar';
 import CodeBlock from '@tiptap/extension-code-block';
 import contentStore from '@/store/ContentStore';
+import axios from 'axios';
+import { useSearchParams, usePathname, useRouter } from 'next/navigation';
+
+import { getHeadersToken } from '@/api/authentication';
 
 const HardBreakExtension = Extension.create({
   name: 'customHardBreak',
@@ -79,6 +83,13 @@ const SelectionExtension = Extension.create({
 });
 
 export default function CreatePost() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  const id = searchParams.get('id')
+
+
   const [previewMode, setPreviewMode] = useState(false);
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const [instructionDis, setInstructionDis] = useState(false);
@@ -86,6 +97,7 @@ export default function CreatePost() {
   const content = contentStore((state) => state.content);
   const setTitle = contentStore((state) => state.setTitle);
   const setContent = contentStore((state) => state.setContent);
+
 
   const [postTitle, setPostTitle] = useState(title);
 
@@ -231,14 +243,30 @@ export default function CreatePost() {
 
   // Editor toolbar components
 
-  const savePost = () => {
+  const savePost = async () => {
     if (!editor) return;
 
     const content = editor.getHTML();
     console.log({ title: postTitle, content });
     setTitle(postTitle);
     setContent(content);
-    alert('Post saved successfully!');
+
+    const headers = getHeadersToken();
+
+    axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}post/create`, {
+      title: postTitle,
+      content: content,
+      headers
+    }).then((res) => {
+      console.log(res.data);
+      const params = new URLSearchParams()
+      params.set('id', res.data.post._id)
+      router.push(`${pathname}?${params.toString()}`)
+      alert('Post saved successfully!');
+    }).catch((err) => {
+      const errorMessage = err?.response?.data?.error || err?.message;
+      alert(errorMessage);
+    });
     // In a real app, you would send this to your API
   };
 
