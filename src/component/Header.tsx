@@ -1,10 +1,33 @@
 "use client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { AuthenPage } from "./authen/AuthenPage";
+import authenticationStore from "@/store/AuthenticationStore";
+import Profile from "./authen/Profile";
+import axios from "axios";
+import { getHeadersToken } from "@/api/authentication";
 
 
 export default function Header() {
   const [isAuthenFormDisplay, setIsAuthenFromDisplay] = useState(false);
+  const authenUser = authenticationStore((state) => state.currentUser);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        const headers = getHeadersToken();
+
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}auth/whoAmI`, { headers });
+        if (res.status === 200) {
+          console.log("User info: ", res.data.userInfo);
+
+          authenticationStore.setState({ currentUser: res.data.userInfo });
+        }
+      }
+    };
+    fetchUser();
+  }, []);
+
 
   return <header className='flex border-b border-gray-300 py-3 px-4 sm:px-10 bg-white tracking-wide relative z-50'>
     <div className='flex flex-row flex-nowrap items-center gap-4 max-w-screen-xl mx-auto w-full'>
@@ -56,10 +79,13 @@ export default function Header() {
             </svg>
           </button>
         </form>
-        <div className="flex flex-row ">
-          <button type="button" className="cursor-pointer focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-xl text-sm px-5 py-2.5 m-2  dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900" onClick={() => setIsAuthenFromDisplay(true)}>Get Started</button>
-          <button type="button" className="cursor-pointer focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-xl text-sm px-5 py-2.5 me-2 m-2  dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Login</button>
-        </div>
+        {authenUser?._id ? <Profile /> :
+          <div className="flex flex-row">
+            <button type="button" className="cursor-pointer focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-xl text-sm px-5 py-2.5 m-2  dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900" onClick={() => setIsAuthenFromDisplay(true)}>Get Started</button>
+            <button type="button" className="cursor-pointer focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-xl text-sm px-5 py-2.5 me-2 m-2  dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Login</button>
+          </div>
+        }
+
       </div>
 
       {isAuthenFormDisplay ? <AuthenPage setIsAuthenFromDisplay={setIsAuthenFromDisplay} /> : <></>}

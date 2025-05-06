@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { loginSchema, REACT_APP_ROOT_BACKEND } from "./authentication";
 import axios from "axios";
 import { useState } from "react";
+import authenticationStore from "@/store/AuthenticationStore";
 
 type LoginFormInputs = {
     account: string;
@@ -16,6 +17,7 @@ type ModalAuthen = {
 };
 
 const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAuthen) => {
+    const setCurrentUser = authenticationStore((state) => state.setCurrentUser);
     const [errorSv, setErrorSv] = useState("");
 
     const {
@@ -35,7 +37,10 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
             const res = await axios.post(`${REACT_APP_ROOT_BACKEND}/auth/login`, data);
             if (res.data) {
                 localStorage.setItem("access_token", res.data.data.access_token);
+                setCurrentUser(res.data.data.user);
                 setIsLoading(false);
+                setIsAuthenFromDisplay(false);
+                setAuthenState(0);
             }
             return;
         }
