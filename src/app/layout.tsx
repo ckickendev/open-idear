@@ -5,6 +5,8 @@ import "./globals.css";
 import Header from "@/component/Header";
 import Footer from "@/component/Footer";
 import Banner from "@/component/Banner";
+import LoadingComponent from "@/component/common/Loading";
+import loadingStore from "@/store/LoadingStore";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +35,7 @@ export default function RootLayout({
       >
         <Header />
         {children}
-        <Footer /> 
+        <Footer />
       </body>
     </html>
   );

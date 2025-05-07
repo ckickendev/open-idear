@@ -25,82 +25,45 @@ import axios from 'axios';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 
 import { getHeadersToken } from '@/api/authentication';
-
-const HardBreakExtension = Extension.create({
-  name: 'customHardBreak',
-
-  addKeyboardShortcuts() {
-    return {
-      // Override the default Enter key behavior
-      Enter: ({ editor }) => {
-        // Split the node and create a new paragraph
-        // editor.commands.splitBlock();
-
-        if (editor.isActive('codeBlock')) {
-          console.log('codeBlock');
-          return false;
-        }
-        editor.commands.setHardBreak();
-        return true;
-      },
-      // Keep Shift+Enter as soft break if needed
-      'Shift-Enter': () => {
-        return this.editor.commands.setHardBreak();
-      },
-    };
-  },
-});
-
-Color.configure({
-  types: ['textStyle'],
-})
-
-
-
-const SelectionExtension = Extension.create({
-  name: 'selection',
-
-  addKeyboardShortcuts() {
-    return {
-      // Add Delete and Backspace key handling
-      'Delete': ({ editor }) => {
-        if (editor.isActive('image')) {
-          editor.chain().deleteSelection().run();
-          return true;
-        }
-        return false;
-      },
-      // 'Backspace': ({ editor }) => {
-      //   if (editor.isActive('image') || editor.isActive('heading') ||
-      //     editor.isActive('blockquote') || editor.isActive('codeBlock')) {
-      //     editor.chain().deleteSelection().run();
-      //     return true;
-      //   }
-      //   return false;
-      // },
-    };
-  },
-});
+import LoadingComponent from '@/component/common/Loading';
+import loadingStore from '@/store/LoadingStore';
 
 export default function CreatePost() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  const id = searchParams.get('id')
+  const idPost = searchParams.get('id')
 
+  useEffect(() => {
+    const fetchPostData = async () => {
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        const headers = getHeadersToken();
 
-  const [previewMode, setPreviewMode] = useState(false);
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}post/getPost?postId=${idPost}`, { headers });
+        if (res.status === 200) {
+          console.log("Post data: ", res.data.post);
+
+          setPostTitle(res.data.post.title);
+          setContent(res.data.post.content);
+        }
+      }
+    };
+    fetchPostData();
+  }, []);
+
   const editorContainerRef = useRef<HTMLDivElement>(null);
+  const [previewMode, setPreviewMode] = useState(false);
   const [instructionDis, setInstructionDis] = useState(false);
   const title = contentStore((state) => state.title);
-  const content = contentStore((state) => state.content);
+  // const [content, setContent] = useState("");
   const setTitle = contentStore((state) => state.setTitle);
-  const setContent = contentStore((state) => state.setContent);
-
-
   const [postTitle, setPostTitle] = useState(title);
-
+  const isLoading = loadingStore((state) => state.isLoading);
+  const changeLoad = loadingStore((state) => state.changeLoad);
+  const [content, setContent] = useState("");
+  
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -146,13 +109,20 @@ export default function CreatePost() {
         },
       }),
     ],
-    content: content,
+    content: "",
     editorProps: {
       attributes: {
         class: 'edit-container prose prose-lg focus:outline-none max-w-none',
       },
     },
   });
+
+  if (editor) {
+    editor.on('beforeCreate', ({ editor }) => {
+      editor.commands.setContent(content);
+    });
+  }
+  
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -249,9 +219,27 @@ export default function CreatePost() {
     const content = editor.getHTML();
     console.log({ title: postTitle, content });
     setTitle(postTitle);
-    setContent(content);
 
+    changeLoad();
     const headers = getHeadersToken();
+
+    if (idPost) {
+      axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}post/update`, {
+        postId: idPost,
+        title: postTitle,
+        content: content,
+        headers
+      }).then((res) => {
+        console.log(res.data);
+        changeLoad();
+        alert('Post updated successfully!');
+      }).catch((err) => {
+        const errorMessage = err?.response?.data?.error || err?.message;
+        changeLoad();
+        alert(errorMessage);
+      });
+      return;
+    }
 
     axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}post/create`, {
       title: postTitle,
@@ -262,16 +250,18 @@ export default function CreatePost() {
       const params = new URLSearchParams()
       params.set('id', res.data.post._id)
       router.push(`${pathname}?${params.toString()}`)
+      changeLoad();
       alert('Post saved successfully!');
     }).catch((err) => {
       const errorMessage = err?.response?.data?.error || err?.message;
+      changeLoad();
       alert(errorMessage);
     });
-    // In a real app, you would send this to your API
   };
 
   return (
     <div className="min-h-screen bg-white">
+      <LoadingComponent isLoading={isLoading} />
       <Head>
         <title>Create New Post</title>
         <meta name="description" content="Create a new post with our drag and drop editor" />
@@ -359,3 +349,55 @@ export default function CreatePost() {
     </div>
   );
 }
+
+const HardBreakExtension = Extension.create({
+  name: 'customHardBreak',
+
+  addKeyboardShortcuts() {
+    return {
+      // Override the default Enter key behavior
+      Enter: ({ editor }) => {
+
+        if (editor.isActive('codeBlock')) {
+          console.log('codeBlock');
+          return false;
+        }
+        editor.commands.setHardBreak();
+        return true;
+      },
+      // Keep Shift+Enter as soft break if needed
+      'Shift-Enter': () => {
+        return this.editor.commands.setHardBreak();
+      },
+    };
+  },
+});
+
+Color.configure({
+  types: ['textStyle'],
+})
+
+const SelectionExtension = Extension.create({
+  name: 'selection',
+
+  addKeyboardShortcuts() {
+    return {
+      // Add Delete and Backspace key handling
+      'Delete': ({ editor }) => {
+        if (editor.isActive('image')) {
+          editor.chain().deleteSelection().run();
+          return true;
+        }
+        return false;
+      },
+      // 'Backspace': ({ editor }) => {
+      //   if (editor.isActive('image') || editor.isActive('heading') ||
+      //     editor.isActive('blockquote') || editor.isActive('codeBlock')) {
+      //     editor.chain().deleteSelection().run();
+      //     return true;
+      //   }
+      //   return false;
+      // },
+    };
+  },
+});
