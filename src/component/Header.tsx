@@ -17,7 +17,7 @@ export default function Header() {
       if (token) {
         const headers = getHeadersToken();
 
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}auth/whoAmI`, { headers });
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}auth/getProfile`, { headers });
         if (res.status === 200) {
           console.log("User info: ", res.data.userInfo);
 

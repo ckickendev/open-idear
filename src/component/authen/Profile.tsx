@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { User, Settings, HelpCircle, Moon, MessageSquare, LogOut } from 'lucide-react';
+import authenticationStore from '@/store/AuthenticationStore';
 
 export default function Profile() {
     const [isOpen, setIsOpen] = useState(false);
+    const userInfo = authenticationStore((state) => state.currentUser);
 
     return (
         <div className="text-white p-6 flex flex-col items-center cursor-pointer relative">
@@ -12,7 +14,7 @@ export default function Profile() {
                     onClick={() => setIsOpen(!isOpen)}
                     className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-blue-500 hover:opacity-90"
                 >
-                    <img src="/api/placeholder/40/40" alt="Profile" className="cursor-pointer w-full h-full object-cover" />
+                    <img src={userInfo.avatar} alt="Profile" className="cursor-pointer w-full h-full object-cover" />
                 </button>
 
                 {/* Badge - can be used for notifications */}

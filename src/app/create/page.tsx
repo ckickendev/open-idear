@@ -35,35 +35,39 @@ export default function CreatePost() {
 
   const idPost = searchParams.get('id')
 
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+  const [previewMode, setPreviewMode] = useState(false);
+  const [instructionDis, setInstructionDis] = useState(false);
+  const title = contentStore((state) => state.title);
+  const setTitle = contentStore((state) => state.setTitle);
+  const [postTitle, setPostTitle] = useState(title);
+  const isLoading = loadingStore((state) => state.isLoading);
+  const changeLoad = loadingStore((state) => state.changeLoad);
+  const [content, setContent] = useState("");
+
+
   useEffect(() => {
     const fetchPostData = async () => {
       const token = localStorage.getItem("access_token");
       if (token) {
         const headers = getHeadersToken();
 
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}post/getPost?postId=${idPost}`, { headers });
-        if (res.status === 200) {
-          console.log("Post data: ", res.data.post);
+        try {
+          const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}post/getPost?postId=${idPost}`, { headers });
+          if (res.status === 200) {
+            console.log("Post data: ", res.data.post);
 
-          setPostTitle(res.data.post.title);
-          setContent(res.data.post.content);
+            setPostTitle(res.data.post.title);
+            setContent(res.data.post.content);
+          }
+        } catch (error) {
+          alert('Error fetching user data');
         }
       }
     };
     fetchPostData();
   }, []);
 
-  const editorContainerRef = useRef<HTMLDivElement>(null);
-  const [previewMode, setPreviewMode] = useState(false);
-  const [instructionDis, setInstructionDis] = useState(false);
-  const title = contentStore((state) => state.title);
-  // const [content, setContent] = useState("");
-  const setTitle = contentStore((state) => state.setTitle);
-  const [postTitle, setPostTitle] = useState(title);
-  const isLoading = loadingStore((state) => state.isLoading);
-  const changeLoad = loadingStore((state) => state.changeLoad);
-  const [content, setContent] = useState("");
-  
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -109,7 +113,7 @@ export default function CreatePost() {
         },
       }),
     ],
-    content: "",
+    content: content,
     editorProps: {
       attributes: {
         class: 'edit-container prose prose-lg focus:outline-none max-w-none',
@@ -117,12 +121,12 @@ export default function CreatePost() {
     },
   });
 
-  if (editor) {
-    editor.on('beforeCreate', ({ editor }) => {
+  useEffect(() => {
+    if (editor && content) {
+      console.log('Setting content:', content);
       editor.commands.setContent(content);
-    });
-  }
-  
+    }
+  }, [content, editor]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();

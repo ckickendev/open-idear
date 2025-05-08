@@ -1,13 +1,33 @@
 import { create } from 'zustand';
 
+interface UserData {
+    _id: String,
+    username: String,
+    email: String,
+    role: Number,
+    activate: Boolean,
+    createdAt: Date,
+    bio: String,
+    avatar: string,
+}
+
 interface AuthenState {
-    currentUser: any;
+    currentUser: UserData;
     setCurrentUser: (user: any) => void;
 }
 
 const authenticationStore = create<AuthenState>((set) => ({
-    currentUser: {},
-    setCurrentUser: (user: any) => set(() => {
+    currentUser: {
+        _id: "",
+        username: "",
+        email: "",
+        role: 0,
+        activate: false,
+        createdAt: new Date(),
+        bio: "",
+        avatar: "",
+    },
+    setCurrentUser: (user: UserData) => set(() => {
         console.log("User set to: ", user);
         return { currentUser: user };
     }),
