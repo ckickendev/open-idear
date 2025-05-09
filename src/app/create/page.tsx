@@ -52,11 +52,11 @@ export default function CreatePost() {
       if (token) {
         const headers = getHeadersToken();
 
+        if (!idPost) return;
+
         try {
           const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}post/getPost?postId=${idPost}`, { headers });
           if (res.status === 200) {
-            console.log("Post data: ", res.data.post);
-
             setPostTitle(res.data.post.title);
             setContent(res.data.post.content);
           }

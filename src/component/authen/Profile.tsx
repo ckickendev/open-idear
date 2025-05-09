@@ -7,7 +7,7 @@ export default function Profile() {
     const userInfo = authenticationStore((state) => state.currentUser);
 
     return (
-        <div className="text-white p-6 flex flex-col items-center cursor-pointer relative">
+        <div className="text-white p-6 flex flex-col items-center relative">
             {/* Profile Circle Icon */}
             <div className="relative cursor-pointer">
                 <button
@@ -30,29 +30,25 @@ export default function Profile() {
                     <div className="p-4 border-b border-gray-700">
                         <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
-                                <img src="/api/placeholder/40/40" alt="Profile" className="w-full h-full object-cover" />
+                                <img src={userInfo.avatar} alt="Profile" className="w-full h-full object-cover" />
                             </div>
                             <div>
-                                <p className="font-medium">Nguyễn Văn Đức Độ</p>
+                                <p className="text-xl font-medium">{userInfo.username}</p>
+                                <p className="text-sm text-gray-300">{userInfo.email}</p>
+
                             </div>
                         </div>
 
-                        <div className="mt-3 flex items-center space-x-2">
-                            <div className="w-6 h-6 rounded-full bg-gray-700 overflow-hidden">
-                                <img src="/api/placeholder/24/24" alt="Group" className="w-full h-full object-cover" />
-                            </div>
-                            <p className="text-sm text-gray-300">Better Future</p>
-                        </div>
                     </div>
 
                     {/* Menu Items */}
                     <div className="py-1">
-                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700">
+                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
                             <User size={20} className="text-gray-400" />
-                            <span>Xem tất cả trang cá nhân</span>
+                            <span>Trang cá nhân</span>
                         </button>
 
-                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700">
+                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
                             <Settings size={20} className="text-gray-400" />
                             <span>Cài đặt và quyền riêng tư</span>
                             <span className="ml-auto text-gray-400">
@@ -62,7 +58,7 @@ export default function Profile() {
                             </span>
                         </button>
 
-                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700">
+                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
                             <HelpCircle size={20} className="text-gray-400" />
                             <span>Trợ giúp và hỗ trợ</span>
                             <span className="ml-auto text-gray-400">
@@ -72,7 +68,7 @@ export default function Profile() {
                             </span>
                         </button>
 
-                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700">
+                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
                             <Moon size={20} className="text-gray-400" />
                             <span>Màn hình & trợ năng</span>
                             <span className="ml-auto text-gray-400">
@@ -82,15 +78,14 @@ export default function Profile() {
                             </span>
                         </button>
 
-                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700">
+                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
                             <MessageSquare size={20} className="text-gray-400" />
                             <div>
                                 <span>Đóng góp ý kiến</span>
-                                <span className="block text-xs text-gray-400">CTRL B</span>
                             </div>
                         </button>
 
-                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700">
+                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
                             <LogOut size={20} className="text-gray-400" />
                             <span>Đăng xuất</span>
                         </button>
@@ -98,7 +93,7 @@ export default function Profile() {
 
                     {/* Footer */}
                     <div className="px-4 py-3 text-xs text-gray-400 border-t border-gray-700">
-                        <p>Quyền riêng tư · Điều khoản · Quảng cáo · Lựa chọn quảng cáo · Cookie · Xem thêm · Meta © 2025</p>
+                        <p>Quyền riêng tư · Điều khoản · Quảng cáo · Lựa chọn quảng cáo · Cookie · Đăng bài </p>
                     </div>
                 </div>
             )}
