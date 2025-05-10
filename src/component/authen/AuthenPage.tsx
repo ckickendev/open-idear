@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { DataAuthen, loginSchema } from "./authentication";
 import { SignUp } from "./SignUp";
 import Login from "./Login";
 import LoadingComponent from "../common/Loading";
 import ConfirmSignUp from "./ConfirmSignUp";
 import { ForgotPassword } from "./ForgotPassword";
+import authenFormStore from "@/store/AuthenFormStore";
 
-export const AuthenPage = ({ setIsAuthenFromDisplay }: DataAuthen) => {
-    const [authenState, setAuthenState] = useState(1);
+export const AuthenPage = () => {
+    const setIsAuthenFromDisplay = authenFormStore((state) => state.setIsAuthenFromDisplay);
+    const authenState = authenFormStore((state) => state.state);
+    const setAuthenState = authenFormStore((state) => state.setState);
     const [isLoading, setIsLoading] = useState(false);
 
     const renderCore = () => {

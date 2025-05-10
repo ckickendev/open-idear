@@ -53,6 +53,3 @@ export const forgotPasswordSchema = z.object({
   account: z.string().min(6, "Email or username must be at least 6 characters"),
 })
 
-export interface DataAuthen {
-  setIsAuthenFromDisplay: any;
-}

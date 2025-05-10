@@ -1,10 +1,31 @@
 import { useState } from 'react';
 import { User, Settings, HelpCircle, Moon, MessageSquare, LogOut } from 'lucide-react';
 import authenticationStore from '@/store/AuthenticationStore';
+import Link from 'next/link';
+import { log } from 'console';
 
 export default function Profile() {
     const [isOpen, setIsOpen] = useState(false);
     const userInfo = authenticationStore((state) => state.currentUser);
+
+    const logout = () => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        authenticationStore.setState({
+            currentUser: {
+                _id: "",
+                username: "",
+                email: "",
+                role: 0,
+                activate: false,
+                createdAt: new Date(),
+                bio: "",
+                avatar: "",
+            }
+        });
+        setIsOpen(false);
+        window.location.href = '/';
+    }
 
     return (
         <div className="text-white p-6 flex flex-col items-center relative">
@@ -43,49 +64,56 @@ export default function Profile() {
 
                     {/* Menu Items */}
                     <div className="py-1">
-                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
-                            <User size={20} className="text-gray-400" />
-                            <span>Trang cá nhân</span>
-                        </button>
+                        <Link href="/profile">
+                            <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
+                                <User size={20} className="text-gray-400" />
+                                <span>Trang cá nhân</span>
+                            </button>
+                        </Link>
 
-                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
-                            <Settings size={20} className="text-gray-400" />
-                            <span>Cài đặt và quyền riêng tư</span>
-                            <span className="ml-auto text-gray-400">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="9 18 15 12 9 6" />
-                                </svg>
-                            </span>
-                        </button>
+                        <Link href="/settings">
+                            <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
+                                <Settings size={20} className="text-gray-400" />
+                                <span>Cài đặt và quyền riêng tư</span>
+                                <span className="ml-auto text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="9 18 15 12 9 6" />
+                                    </svg>
+                                </span>
+                            </button>
+                        </Link>
 
-                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
-                            <HelpCircle size={20} className="text-gray-400" />
-                            <span>Trợ giúp và hỗ trợ</span>
-                            <span className="ml-auto text-gray-400">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="9 18 15 12 9 6" />
-                                </svg>
-                            </span>
-                        </button>
-
-                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
-                            <Moon size={20} className="text-gray-400" />
-                            <span>Màn hình & trợ năng</span>
-                            <span className="ml-auto text-gray-400">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="9 18 15 12 9 6" />
-                                </svg>
-                            </span>
-                        </button>
-
-                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
-                            <MessageSquare size={20} className="text-gray-400" />
-                            <div>
-                                <span>Đóng góp ý kiến</span>
-                            </div>
-                        </button>
-
-                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
+                        <Link href="/help">
+                            <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
+                                <HelpCircle size={20} className="text-gray-400" />
+                                <span>Trợ giúp và hỗ trợ</span>
+                                <span className="ml-auto text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="9 18 15 12 9 6" />
+                                    </svg>
+                                </span>
+                            </button>
+                        </Link >
+                        <Link href="/support">
+                            <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
+                                <Moon size={20} className="text-gray-400" />
+                                <span>Màn hình & trợ năng</span>
+                                <span className="ml-auto text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="9 18 15 12 9 6" />
+                                    </svg>
+                                </span>
+                            </button>
+                        </Link>
+                        <Link href="/contribute">
+                            <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
+                                <MessageSquare size={20} className="text-gray-400" />
+                                <div>
+                                    <span>Đóng góp ý kiến</span>
+                                </div>
+                            </button>
+                        </Link>
+                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer" onClick={logout}>
                             <LogOut size={20} className="text-gray-400" />
                             <span>Đăng xuất</span>
                         </button>
