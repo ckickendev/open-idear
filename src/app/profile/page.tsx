@@ -1,10 +1,12 @@
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import authenticationStore from '@/store/AuthenticationStore';
 import ProfileInfo from '@/component/authen/ProfileInfo';
-import { BookHeart, Pencil, PencilLine, SquarePen } from 'lucide-react';
+import { BookHeart, BookText, ChartColumnStacked, CircleHelp, Heart, LogOut, Pen, Pencil, PencilLine, Settings, ShoppingCart, SquarePen, Star, UserRoundPen } from 'lucide-react';
+import { getHeadersToken } from '@/api/authentication';
+import axios from 'axios';
 
 // Define types
 interface CourseCard {
@@ -17,24 +19,61 @@ interface CourseCard {
     totalLessons?: number;
 }
 
+interface PostCard {
+    id: string;
+    title: string;
+    image: string;
+    rating: number;
+    progress?: number;
+    completedLessons?: number;
+    totalLessons?: number;
+}
+
 const ProfileDashboard: React.FC = () => {
     const authenUser = authenticationStore((state) => state.currentUser);
     const [postType, setPostType] = React.useState<number>(1);
+    const [selectId, setSelectId] = React.useState<string>("profile");
+    const [allPosts, setAllPosts] = React.useState<PostCard[]>([]);
+
+    console.log("authenUser: ", authenUser);
+    
 
     const router = useRouter();
 
+    useEffect(() => {
+        // Fetch all posts from the server
+        const fetchPosts = async () => {
+            try {
+                const token = localStorage.getItem("access_token");
+                if (token) {
+                    const headers = getHeadersToken();
+
+                    const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}post/getPostByAuthor?userId=${authenUser._id}`, { headers });
+                    if (res.status === 200) {
+                        console.log("posts info: ", res.data);
+                        setAllPosts(res.data.posts);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching posts:', error);
+            }
+        };
+
+        fetchPosts();
+    }, []);
+
     // Navigation items
     const navItems = [
-        { id: 'profile', icon: '📊', text: 'Tổng quan' },
-        { id: 'user-info', icon: '👤', text: 'Thông tin của tôi' },
-        { id: 'posts', icon: '🎓', text: 'Tất cả bài viết' },
-        { id: 'wishlist', icon: '📑', text: 'Danh sách yêu thích' },
-        { id: 'ratings', icon: '⭐', text: 'Đánh giá của tôi' },
-        { id: 'courses', icon: '📝', text: 'Khóa học của tôi' },
-        { id: 'orders', icon: '🛒', text: 'Lịch sử đơn hàng' },
-        { id: 'faq', icon: '❓', text: 'Hỏi & đáp' },
-        { id: 'settings', icon: '⚙️', text: 'Cài đặt' },
-        { id: 'logout', icon: '🚪', text: 'Đăng xuất' }
+        { id: 'profile', icon: <ChartColumnStacked />, text: 'Tổng quan' },
+        { id: 'user-info', icon: <UserRoundPen />, text: 'Thông tin của tôi' },
+        { id: 'posts', icon: <Pen />, text: 'Tất cả bài viết' },
+        { id: 'wishlist', icon: <Heart />, text: 'Danh sách yêu thích' },
+        { id: 'ratings', icon: <Star />, text: 'Đánh giá của tôi' },
+        { id: 'courses', icon: <BookText />, text: 'Khóa học của tôi' },
+        { id: 'orders', icon: <ShoppingCart />, text: 'Lịch sử đơn hàng' },
+        { id: 'faq', icon: <CircleHelp />, text: 'Hỏi & đáp' },
+        { id: 'settings', icon: <Settings />, text: 'Cài đặt' },
+        { id: 'logout', icon: <LogOut />, text: 'Đăng xuất' }
     ];
 
     // Course stats
@@ -68,42 +107,7 @@ const ProfileDashboard: React.FC = () => {
 
     // Handle click on navigation item
     const handleNavClick = (itemId: string) => {
-        switch (itemId) {
-            case 'overview':
-                router.push('/profile');
-                break;
-            case 'profile':
-                router.push('/user-info');
-                break;
-            case 'courses':
-                router.push('/my-courses');
-                break;
-            case 'wishlist':
-                router.push('/wishlist');
-                break;
-            case 'ratings':
-                router.push('/ratings');
-                break;
-            case 'assessments':
-                router.push('/assessments');
-                break;
-            case 'orders':
-                router.push('/order-history');
-                break;
-            case 'faq':
-                router.push('/faq');
-                break;
-            case 'settings':
-                router.push('/settings');
-                break;
-            case 'logout':
-                // Implement logout logic here
-                console.log('Logging out...');
-                router.push('/login');
-                break;
-            default:
-                break;
-        }
+        setSelectId(itemId);
     };
 
     // Handle click on course card
@@ -151,7 +155,7 @@ const ProfileDashboard: React.FC = () => {
                                         <button
                                             onClick={() => handleNavClick(item.id)}
                                             className={`w-full flex items-center px-4 py-3 mb-1 rounded-md cursor-pointer transition-colors
-                                ${item.id === 'overview' ? 'bg-blue-800 text-white' : 'hover:bg-gray-100'}`}
+                                ${item.id === selectId ? 'bg-blue-800 text-white' : 'hover:bg-gray-100'}`}
                                         >
                                             <span className="mr-3">{item.icon}</span>
                                             <span>{item.text}</span>
@@ -187,6 +191,7 @@ const ProfileDashboard: React.FC = () => {
                         <div>
                             <h2 className="text-lg font-semibold mb-4">Bài viết của bạn</h2>
                             <div className="space-y-4">
+                                { }
                                 {currentCourses.map(course => (
                                     <div
                                         key={course.id}

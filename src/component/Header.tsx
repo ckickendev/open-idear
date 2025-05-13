@@ -4,7 +4,6 @@ import { AuthenPage } from "./authen/AuthenPage";
 import Profile from "./authen/Profile";
 import axios from "axios";
 import { getHeadersToken } from "@/api/authentication";
-import { set } from "react-hook-form";
 import authenFormStore from "@/store/AuthenFormStore";
 import authenticationStore from "@/store/AuthenticationStore";
 
@@ -38,7 +37,7 @@ export default function Header() {
   return <header className='flex border-b border-gray-300 py-3 px-4 sm:px-10 bg-white tracking-wide relative z-50'>
     <div className='flex flex-row flex-nowrap items-center gap-4 max-w-screen-xl mx-auto w-full'>
       <div className="flex items-center flex-1">
-        <a href="#" className="max-sm:hidden"><img src="https://res.cloudinary.com/dhc6z8uix/image/upload/v1743690388/wik95ksifmrudkbfmzom.png" alt="logo" className='w-[134px]' />
+        <a href="/" className="max-sm:hidden"><img src="https://res.cloudinary.com/dhc6z8uix/image/upload/v1743690388/wik95ksifmrudkbfmzom.png" alt="logo" className='w-[134px]' />
         </a>
         <h1 className="text-2xl font-semibold text-blue-600 flex items-center justify-center">
           <span className="text-3xl font-bold">Open</span>

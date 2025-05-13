@@ -46,7 +46,7 @@ export default function Profile() {
 
             {/* Dropdown Menu */}
             {isOpen && (
-                <div className="mt-2 min-w-72 max-w-80 bg-gray-800 rounded-lg shadow-lg absolute top-16 right-6 overflow-hidden">
+                <div className="mt-2 min-w-72 max-w-80 bg-gray-800 rounded-lg shadow-lg absolute top-16 right-6 overflow-hidden" onClick={() => setIsOpen(false)}>
                     {/* User Info Section */}
                     <div className="p-4 border-b border-gray-700">
                         <div className="flex items-center space-x-3">
@@ -64,7 +64,7 @@ export default function Profile() {
 
                     {/* Menu Items */}
                     <div className="py-1">
-                        <Link href="/profile">
+                        <Link href={`/profile`}>
                             <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
                                 <User size={20} className="text-gray-400" />
                                 <span>Trang cá nhân</span>
