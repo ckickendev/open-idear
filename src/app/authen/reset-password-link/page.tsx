@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { REACT_APP_ROOT_BACKEND, resetPassSchema } from "@/component/authen/authentication";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
 
 type ResetPassForm = {
     password: string;
@@ -112,7 +113,7 @@ const ConfirmResetPassword = () => {
                             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                                 <div className="text-center">
                                     <div className="flex items-center justify-center">
-                                        <img className="w-[152px] h-[100px]" src="/logo.png" alt="open-trash" />
+                                        <Image src="/logo.png" alt="open-idear" width={152} height={100} />
                                     </div>
                                 </div>
                             </div>

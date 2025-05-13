@@ -39,8 +39,8 @@ export default function Header() {
       <div className="flex items-center flex-1">
         <a href="/" className="max-sm:hidden"><img src="https://res.cloudinary.com/dhc6z8uix/image/upload/v1743690388/wik95ksifmrudkbfmzom.png" alt="logo" className='w-[134px]' />
         </a>
-        <h1 className="text-2xl font-semibold text-blue-600 flex items-center justify-center">
-          <span className="text-3xl font-bold">Open</span>
+        <h1 className="text-2xl font-semibold text-gray-900 flex items-center justify-center">
+          <span className="text-4xl text-blue-600 font-bold">Open</span>
           IdeaR
         </h1>
       </div>

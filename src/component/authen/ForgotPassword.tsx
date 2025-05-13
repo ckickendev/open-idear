@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { forgotPasswordSchema, REACT_APP_ROOT_BACKEND, signUpSchema } from "./authentication";
 import axios from "axios";
 import { useState } from "react";
+import Image from "next/image";
 
 type ForgotPasswordInputs = {
     account: string,
@@ -52,7 +53,7 @@ export const ForgotPassword = ({ setAuthenState, setIsLoading, setIsAuthenFromDi
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="text-center">
                     <div className="flex items-center justify-center">
-                        <img className="w-[152px] h-[100px]" src="/logo.png" alt="open-trash" />
+                        <Image src="/logo.png" alt="open-idear" width={152} height={100} />
                     </div>
                     <p className="text-gray-500 text-sm mt-1">
                         Share your idea and knowledge

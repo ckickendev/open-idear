@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { REACT_APP_ROOT_BACKEND, signUpSchema } from "./authentication";
 import axios from "axios";
 import { useState } from "react";
+import Image from "next/image";
 
 type SignUpInputs = {
     email: string,
@@ -55,7 +56,7 @@ export const SignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="text-center">
                     <div className="flex items-center justify-center">
-                        <img className="w-[152px] h-[100px]" src="/logo.png" alt="open-trash" />
+                        <Image src="/logo.png" alt="open-idear" width={152} height={100} />
                     </div>
                     {/* <h1 className="text-2xl font-semibold text-blue-600 flex items-center justify-center">
                         <span className="text-3xl font-bold">Open</span>

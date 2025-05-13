@@ -1,8 +1,7 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { loginSchema, REACT_APP_ROOT_BACKEND } from "./authentication";
 import axios from "axios";
 import { useRef, useState } from "react";
+import Image from "next/image";
 
 
 
@@ -123,7 +122,7 @@ const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
         </button>
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
             <div className="flex items-center justify-center">
-                <img className="w-[152px] h-[100px]" src="/logo.png" alt="open-trash" />
+                <Image src="/logo.png" alt="open-idear" width={152} height={100} />
             </div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                 Confirm your email
