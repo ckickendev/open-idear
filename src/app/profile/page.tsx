@@ -48,7 +48,7 @@ const ProfileDashboard: React.FC = () => {
                 if (token) {
                     const headers = getHeadersToken();
 
-                    const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}post/getPostByAuthor?userId=${authenUser._id}`, { headers });
+                    const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor?userId=${authenUser._id}`, { headers });
                     if (res.status === 200) {
                         console.log("posts info: ", res.data);
                         setAllPosts(res.data.posts);

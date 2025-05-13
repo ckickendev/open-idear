@@ -55,7 +55,7 @@ export default function CreatePost() {
         if (!idPost) return;
 
         try {
-          const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}post/getPost?postId=${idPost}`, { headers });
+          const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPost?postId=${idPost}`, { headers });
           if (res.status === 200) {
             setPostTitle(res.data.post.title);
             setContent(res.data.post.content);
@@ -228,7 +228,7 @@ export default function CreatePost() {
     const headers = getHeadersToken();
 
     if (idPost) {
-      axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}post/update`, {
+      axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/update`, {
         postId: idPost,
         title: postTitle,
         content: content,
@@ -245,7 +245,7 @@ export default function CreatePost() {
       return;
     }
 
-    axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}post/create`, {
+    axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/create`, {
       title: postTitle,
       content: content,
       headers

@@ -19,10 +19,12 @@ export default function Header() {
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("access_token");
+      console.log(process.env.NEXT_PUBLIC_ROOT_BACKEND);
+      
       if (token) {
         const headers = getHeadersToken();
 
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}auth/getProfile`, { headers });
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/auth/getProfile`, { headers });
         if (res.status === 200) {
           console.log("User info: ", res.data.userInfo);
 

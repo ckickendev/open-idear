@@ -5,7 +5,7 @@ const password = new RegExp(
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/
 );
 
-export const REACT_APP_ROOT_BACKEND = "http://localhost:5001";
+export const REACT_APP_ROOT_BACKEND = process.env.NEXT_PUBLIC_ROOT_BACKEND;
 
 export const loginSchema = z.object({
   account: z.string().min(6, "Email or username must be at least 6 characters"),
