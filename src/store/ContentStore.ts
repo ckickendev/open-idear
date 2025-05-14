@@ -18,7 +18,11 @@ const contentStore = create<ContentState>((set) => ({
             { title: title }
         )
     }),
-    setContent: (content) => set(() => ({ content: content })),
+    setContent: (content) => set(() => {
+        return (
+            { content: content }
+        )
+    } ),
     postList: [],
     setPostList: (postList) => set(() => ({ postList: postList })),
 }));

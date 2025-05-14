@@ -1,5 +1,4 @@
 'use client'
-// pages/create-post.tsx
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -37,12 +36,14 @@ export default function CreatePost() {
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [instructionDis, setInstructionDis] = useState(false);
+
   const title = contentStore((state) => state.title);
   const setTitle = contentStore((state) => state.setTitle);
-  const [postTitle, setPostTitle] = useState(title);
+  const content = contentStore((state) => state.content);
+  const setContent = contentStore((state) => state.setContent);
+
   const isLoading = loadingStore((state) => state.isLoading);
   const changeLoad = loadingStore((state) => state.changeLoad);
-  const [content, setContent] = useState("");
   const [idPost, setIdPost] = useState<string | null>(null);
 
 
@@ -53,14 +54,21 @@ export default function CreatePost() {
         const headers = getHeadersToken();
 
         const idPost = searchParams.get('id');
+        console.log("id ne : ", idPost);
+
         setIdPost(idPost);
-        if (!idPost) return;
+        if (!idPost) {
+          setTitle("");
+          setContent("");
+          console.log("content: ", content);
+
+          return;
+        }
 
         try {
           const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPost?postId=${idPost}`, { headers });
           if (res.status === 200) {
             setTitle(res.data.post.title);
-            setPostTitle(res.data.post.title);
             setContent(res.data.post.content);
           }
         } catch (error) {
@@ -125,10 +133,10 @@ export default function CreatePost() {
   });
 
   useEffect(() => {
-    if (editor && content) {
-      console.log('Setting content:', content);
+    if (editor) {
       editor.commands.setContent(content);
     }
+
   }, [content, editor]);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -224,8 +232,7 @@ export default function CreatePost() {
     if (!editor) return;
 
     const content = editor.getHTML();
-    console.log({ title: postTitle, content });
-    setTitle(postTitle);
+    console.log({ title: title, content });
 
     changeLoad();
     const headers = getHeadersToken();
@@ -233,7 +240,7 @@ export default function CreatePost() {
     if (idPost) {
       axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/update`, {
         postId: idPost,
-        title: postTitle,
+        title: title,
         content: content,
         headers
       }).then((res) => {
@@ -249,7 +256,7 @@ export default function CreatePost() {
     }
 
     axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/create`, {
-      title: postTitle,
+      title: title,
       content: content,
       headers
     }).then((res) => {
@@ -291,8 +298,8 @@ export default function CreatePost() {
           <input
             id="post-title"
             type="text"
-            value={postTitle.toString()}
-            onChange={(e) => setPostTitle(e.target.value)}
+            value={title.toString()}
+            onChange={(e) => setTitle(e.target.value)}
             className="pr-10 input w-full rounded-lg pt-2 pb-2 pl-2 border border-gray-500 focus:outline-none focus:border-red-500"
             placeholder="Enter post title"
           />
@@ -336,7 +343,7 @@ export default function CreatePost() {
                 {previewMode ? (
                   <div className="prose max-w-none preview-container">
 
-                    <h1 className="text-3xl font-bold mb-6">{postTitle}</h1>
+                    <h1 className="text-3xl font-bold mb-6">{title}</h1>
                     {editor && (
                       <div dangerouslySetInnerHTML={{ __html: editor.getHTML() }} />
                     )}
