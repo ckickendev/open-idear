@@ -20,7 +20,7 @@ export default function Header() {
     const fetchUser = async () => {
       const token = localStorage.getItem("access_token");
       console.log(process.env.NEXT_PUBLIC_ROOT_BACKEND);
-      
+
       if (token) {
         const headers = getHeadersToken();
 
@@ -33,7 +33,7 @@ export default function Header() {
       }
     };
     fetchUser();
-  }, []);
+  }, [authenUser?._id]);
 
 
   return <header className='flex border-b border-gray-300 py-3 px-4 sm:px-10 bg-white tracking-wide relative z-50'>

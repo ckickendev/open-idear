@@ -1,7 +1,7 @@
 interface DraggableElementProps {
     type: string;
     label: string;
-    icon?: string;
+    icon?: any;
 }
 
 const DraggableElement: React.FC<DraggableElementProps> = ({ type, label, icon }) => {

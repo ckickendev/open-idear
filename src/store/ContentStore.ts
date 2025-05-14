@@ -5,6 +5,8 @@ interface ContentState {
     content: String,
     setTitle: (title: String) => void,
     setContent: (content: String) => void
+    postList: any[],
+    setPostList: (postList: any[]) => void
 }
 
 
@@ -12,13 +14,13 @@ const contentStore = create<ContentState>((set) => ({
     title: "",
     content: "",
     setTitle: (title) => set(() => {
-        console.log("Title set to: ", title);
-
         return (
             { title: title }
         )
     }),
     setContent: (content) => set(() => ({ content: content })),
+    postList: [],
+    setPostList: (postList) => set(() => ({ postList: postList })),
 }));
 
 export default contentStore;

@@ -27,13 +27,12 @@ import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import { getHeadersToken } from '@/api/authentication';
 import LoadingComponent from '@/component/common/Loading';
 import loadingStore from '@/store/LoadingStore';
+import PostLists from './PostLists';
 
 export default function CreatePost() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-
-  const idPost = searchParams.get('id')
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const [previewMode, setPreviewMode] = useState(false);
@@ -44,6 +43,7 @@ export default function CreatePost() {
   const isLoading = loadingStore((state) => state.isLoading);
   const changeLoad = loadingStore((state) => state.changeLoad);
   const [content, setContent] = useState("");
+  const [idPost, setIdPost] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -52,11 +52,14 @@ export default function CreatePost() {
       if (token) {
         const headers = getHeadersToken();
 
+        const idPost = searchParams.get('id');
+        setIdPost(idPost);
         if (!idPost) return;
 
         try {
           const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPost?postId=${idPost}`, { headers });
           if (res.status === 200) {
+            setTitle(res.data.post.title);
             setPostTitle(res.data.post.title);
             setContent(res.data.post.content);
           }
@@ -66,7 +69,7 @@ export default function CreatePost() {
       }
     };
     fetchPostData();
-  }, []);
+  }, [searchParams, pathname]);
 
   const editor = useEditor({
     extensions: [
@@ -272,9 +275,9 @@ export default function CreatePost() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="mx-auto px-4 py-8 flex flex-col items-center justify-center">
+      <div className="mx-auto py-8 flex flex-col items-center justify-center">
         <div className='w-full flex items-center justify-center mb-2'>
-          <h1 className="text-3xl font-bold text-gray-600">Create New Post</h1>
+          <h1 className="text-3xl font-bold text-gray-600">{!idPost ? "Create new post" : "Edit your post"}</h1>
           <div className='relative'>
             <MessageCircleQuestion className=' m-2'
               onMouseEnter={() => setInstructionDis(true)}
@@ -295,12 +298,12 @@ export default function CreatePost() {
           />
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 outline-none border-2 border-gray-100 shadow-md hover:outline-none focus:ring-teal-200 focus:border-teal-200">
-          {/* Element sidebar */}
-          <FloatingToolbar />
+        <div className="w-full flex flex-col lg:flex-row outline-none border-2 border-gray-100 shadow-md hover:outline-none focus:ring-teal-200 focus:border-teal-200">
+          {/*All posts*/}
+          <PostLists />
 
           {/* Editor area */}
-          <div className="w-screen h-screen flex flex-col justify-between items-center">
+          <div className="w-full h-screen flex flex-col justify-between items-center">
             <div className="w-full bg-white mb-4 flex flex-col items-center">
               <div className="w-full border-b border-gray-200 p-4 flex justify-around items-center">
                 <h2 className="text-3xl font-medium ">
@@ -348,6 +351,9 @@ export default function CreatePost() {
             </div>
 
           </div>
+
+          {/* Element sidebar */}
+          <FloatingToolbar />
         </div>
       </div>
     </div>
