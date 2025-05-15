@@ -28,6 +28,9 @@ import LoadingComponent from '@/component/common/Loading';
 import loadingStore from '@/store/LoadingStore';
 import PostLists from './PostLists';
 
+import HtmlEditor, { RawHtmlExtension } from './HtmlEditor';
+
+
 export default function CreatePost() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -45,7 +48,6 @@ export default function CreatePost() {
   const isLoading = loadingStore((state) => state.isLoading);
   const changeLoad = loadingStore((state) => state.changeLoad);
   const [idPost, setIdPost] = useState<string | null>(null);
-
 
   useEffect(() => {
     const fetchPostData = async () => {
@@ -123,6 +125,7 @@ export default function CreatePost() {
           class: 'underline',
         },
       }),
+      RawHtmlExtension,
     ],
     content: content,
     editorProps: {
@@ -313,15 +316,16 @@ export default function CreatePost() {
           <div className="w-full h-screen flex flex-col justify-between items-center">
             <div className="w-full bg-white mb-4 flex flex-col items-center">
               <div className="w-full border-b border-gray-200 p-4 flex justify-around items-center">
-                <h2 className="text-3xl font-medium ">
+                <h2 className="text-3xl font-medium text-center ">
                   {previewMode ? 'Preview' : 'Editor'}
+
                 </h2>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setPreviewMode(!previewMode)}
                     className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
                   >
-                    {previewMode ? 'Edit' : 'Preview'}
+                    {previewMode ? 'Edit' : 'Click to Preview'}
                   </button>
                   <button
                     onClick={savePost}
@@ -329,10 +333,18 @@ export default function CreatePost() {
                   >
                     Save Post
                   </button>
+
                 </div>
               </div>
 
-              {!previewMode && editor && <Toolbar editor={editor} />}
+              {!previewMode && editor &&
+                <>
+                  <div className="w-full px-6 mt-2 flex items-center justify-center">
+                    <HtmlEditor editor={editor} />
+                  </div>
+                  <Toolbar editor={editor} />
+                </>
+              }
 
               <div
                 ref={editorContainerRef}
@@ -364,6 +376,7 @@ export default function CreatePost() {
         </div>
       </div>
     </div>
+
   );
 }
 
