@@ -6,7 +6,9 @@ interface ContentState {
     setTitle: (title: String) => void,
     setContent: (content: String) => void
     postList: any[],
-    setPostList: (postList: any[]) => void
+    setPostList: (postList: any[]) => void,
+    modeHTML: boolean,
+    setModeHTML: (mode: boolean) => void,
 }
 
 
@@ -22,9 +24,11 @@ const contentStore = create<ContentState>((set) => ({
         return (
             { content: content }
         )
-    } ),
+    }),
     postList: [],
     setPostList: (postList) => set(() => ({ postList: postList })),
+    modeHTML: false,
+    setModeHTML: (mode) => set(() => ({ modeHTML: mode }))
 }));
 
 export default contentStore;

@@ -44,6 +44,8 @@ export default function CreatePost() {
   const setTitle = contentStore((state) => state.setTitle);
   const content = contentStore((state) => state.content);
   const setContent = contentStore((state) => state.setContent);
+  const modeHTML = contentStore((state) => state.modeHTML);
+  const setModeHTML = contentStore((state) => state.setModeHTML);
 
   const isLoading = loadingStore((state) => state.isLoading);
   const changeLoad = loadingStore((state) => state.changeLoad);
@@ -315,40 +317,29 @@ export default function CreatePost() {
           {/* Editor area */}
           <div className="w-full h-screen flex flex-col justify-between items-center">
             <div className="w-full bg-white mb-4 flex flex-col items-center">
-              <div className="w-full border-b border-gray-200 p-4 flex justify-around items-center">
-                <h2 className="text-3xl font-medium text-center ">
-                  {previewMode ? 'Preview' : 'Editor'}
-
-                </h2>
+              <div className="w-full p-4 flex justify-around items-center">
                 <div className="flex gap-2">
-                  <button
+                  {modeHTML || <button
                     onClick={() => setPreviewMode(!previewMode)}
-                    className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+                    className="px-8 py-4 bg-red-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
                   >
-                    {previewMode ? 'Edit' : 'Click to Preview'}
-                  </button>
-                  <button
-                    onClick={savePost}
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                  >
-                    Save Post
-                  </button>
-
+                    {previewMode ? 'Return to edit' : 'Click to Preview'}
+                  </button>}
                 </div>
               </div>
 
               {!previewMode && editor &&
                 <>
-                  <div className="w-full px-6 mt-2 flex items-center justify-center">
+                  <div className="w-full mt-2 flex items-center justify-center">
                     <HtmlEditor editor={editor} />
                   </div>
-                  <Toolbar editor={editor} />
+                  {modeHTML || <Toolbar editor={editor} />}
                 </>
               }
 
-              <div
+              {modeHTML || <div
                 ref={editorContainerRef}
-                className="p-6 w-3xl min-h-full editor-end"
+                className="p-6 w-4xl min-h-full editor-end"
                 onDragOver={previewMode ? undefined : handleDragOver}
                 onDrop={previewMode ? undefined : handleDrop}
               >
@@ -366,9 +357,19 @@ export default function CreatePost() {
                   </>
                 )}
               </div>
-              <p>End</p>
-            </div>
+              }
 
+              <div className="flex gap-2 mb-4 mt-4 w-full justify-end">
+                {title && <button
+                  onClick={savePost}
+                  className="px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                >
+                  Save Post
+                </button>}
+
+              </div>
+
+            </div>
           </div>
 
           {/* Element sidebar */}

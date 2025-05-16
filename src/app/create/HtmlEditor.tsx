@@ -51,10 +51,13 @@ const formatHtml = (html: any) => {
 };
 
 import { Editor } from '@tiptap/react';
+import contentStore from '@/store/ContentStore';
 
 const HtmlEditor = ({ editor }: { editor: Editor | null }) => {
     const [rawHtml, setRawHtml] = useState('');
     const [showHtmlEditor, setShowHtmlEditor] = useState(false);
+    const modeHTML = contentStore((state) => state.modeHTML);
+    const setModeHTML = contentStore((state) => state.setModeHTML);
 
     interface RawHtmlChangeEvent extends React.ChangeEvent<HTMLTextAreaElement> { }
 
@@ -66,6 +69,7 @@ const HtmlEditor = ({ editor }: { editor: Editor | null }) => {
         if (editor) {
             editor.commands.setContent(rawHtml);
             setShowHtmlEditor(false);
+            setModeHTML(!modeHTML);
         }
     };
 
@@ -83,8 +87,9 @@ const HtmlEditor = ({ editor }: { editor: Editor | null }) => {
                     onClick={() => {
                         syncWithEditor();
                         setShowHtmlEditor(!showHtmlEditor);
+                        setModeHTML(!modeHTML);
                     }}
-                    className="px-3 py-1 bg-blue-500 text-white hover:bg-blue-300 rounded text-xl text-gray-700 cursor-pointer"
+                    className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
                 >
                     {showHtmlEditor ? 'Hide HTML' : 'Transfer to HTML Mode'}
                 </button>
@@ -92,7 +97,7 @@ const HtmlEditor = ({ editor }: { editor: Editor | null }) => {
                 {showHtmlEditor && (
                     <button
                         onClick={applyHtml}
-                        className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xl"
+                        className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
                     >
                         Apply HTML
                     </button>
@@ -100,11 +105,11 @@ const HtmlEditor = ({ editor }: { editor: Editor | null }) => {
             </div>
 
             {showHtmlEditor && (
-                <div className="w-full mb-4 flex flex-col items-center">
+                <div className="w-full mb-4 mt-20 flex flex-col items-center ">
                     <textarea
                         value={rawHtml}
                         onChange={handleRawHtmlChange}
-                        className="w-2/3 h-64 font-mono text-sm p-3 border border-gray-300 rounded-md 
+                        className="w-full min-h-[300px] font-mono text-sm p-3 border border-gray-300 rounded-md 
                       whitespace-pre bg-gray-50 shadow-inner
                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
                       hover:border-gray-400 transition-colors duration-200"
