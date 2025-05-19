@@ -1,42 +1,41 @@
 'use client';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import authenticationStore from '@/store/AuthenticationStore';
 import ProfileInfo from '@/component/authen/ProfileInfo';
-import { BookHeart, BookText, ChartColumnStacked, CircleHelp, Heart, LogOut, Pen, Pencil, PencilLine, Settings, ShoppingCart, SquarePen, Star, UserRoundPen } from 'lucide-react';
+import { BookHeart, Bookmark, BookText, ChartColumnStacked, CircleHelp, Heart, LogOut, Pen, Pencil, PencilLine, Settings, ShoppingCart, SquarePen, Star, UserRoundPen } from 'lucide-react';
 import { getHeadersToken } from '@/api/authentication';
 import axios from 'axios';
 
 // Define types
-interface CourseCard {
-    id: string;
+interface AllYourPost {
+    content: string;
+    // updateAt: Date;
+    // likes: number;
+    published?: boolean;
+    slug?: string;
     title: string;
+    // views: number;
+    // _id: string;
     image: string;
-    rating: number;
-    progress?: number;
-    completedLessons?: number;
-    totalLessons?: number;
+    category: string;
+    // rate: number;
+    author: any;
+    categoryType: string;
+    readTime: string;
 }
 
-interface PostCard {
-    id: string;
-    title: string;
-    image: string;
-    rating: number;
-    progress?: number;
-    completedLessons?: number;
-    totalLessons?: number;
-}
+//  updateAt, likes, views, _id, rate
 
 const ProfileDashboard: React.FC = () => {
-    const authenUser = authenticationStore((state) => state.currentUser);
+    const currentUser = authenticationStore((state) => state.currentUser);
     const [postType, setPostType] = React.useState<number>(1);
     const [selectId, setSelectId] = React.useState<string>("profile");
-    const [allPosts, setAllPosts] = React.useState<PostCard[]>([]);
+    const [allPosts, setAllPosts] = React.useState<AllYourPost[]>([]);
 
-    console.log("authenUser: ", authenUser);
-    
+    console.log("currentUser: ", currentUser);
+
 
     const router = useRouter();
 
@@ -48,7 +47,7 @@ const ProfileDashboard: React.FC = () => {
                 if (token) {
                     const headers = getHeadersToken();
 
-                    const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor?userId=${authenUser._id}`, { headers });
+                    const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor?userId=${currentUser._id}`, { headers });
                     if (res.status === 200) {
                         console.log("posts info: ", res.data);
                         setAllPosts(res.data.posts);
@@ -83,36 +82,14 @@ const ProfileDashboard: React.FC = () => {
         { id: 3, icon: <BookHeart />, count: 1, text: 'Bài viết đã thích' }
     ];
 
-    // Courses in progress
-    const currentCourses: CourseCard[] = [
-        {
-            id: 'tiktok-affiliate',
-            title: 'Workshop: 3 tháng 30 tỷ doanh thu Affiliate – Chinh phục mọi tệp khách hàng Tiktok',
-            image: '/courses/tiktok-affiliate.jpg',
-            rating: 5.0,
-            completedLessons: 0,
-            totalLessons: 13,
-            progress: 0
-        },
-        {
-            id: 'davinci-resolve',
-            title: 'Khóa Học Futur Creators – Làm Chủ Davinci Resolve Cùng Kevin Mach',
-            image: '/courses/davinci-resolve.jpg',
-            rating: 5.0,
-            completedLessons: 34,
-            totalLessons: 105,
-            progress: 32
-        }
-    ];
-
     // Handle click on navigation item
     const handleNavClick = (itemId: string) => {
         setSelectId(itemId);
     };
 
     // Handle click on course card
-    const handleCourseClick = (courseId: string) => {
-        router.push(`/course/${courseId}`);
+    const handleViewPost = (postId: string) => {
+        router.push(`/post/${postId}`);
     };
 
     const handlePostTypeClick = (postTypeId: number) => {
@@ -191,43 +168,8 @@ const ProfileDashboard: React.FC = () => {
                         <div>
                             <h2 className="text-lg font-semibold mb-4">Bài viết của bạn</h2>
                             <div className="space-y-4">
-                                { }
-                                {currentCourses.map(course => (
-                                    <div
-                                        key={course.id}
-                                        onClick={() => handleCourseClick(course.id)}
-                                        className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                                    >
-                                        <div className="flex">
-                                            <div className="w-48 h-32 bg-gray-200 relative">
-                                                {/* Replace with actual image */}
-                                                <div className="w-full h-full flex items-center justify-center bg-gray-300">
-                                                    [Course Image]
-                                                </div>
-                                            </div>
-                                            <div className="p-4 flex-1">
-                                                <div className="flex mb-1">
-                                                    {[...Array(5)].map((_, i) => (
-                                                        <span key={i} className="text-yellow-400">★</span>
-                                                    ))}
-                                                    <span className="ml-1">{course.rating.toFixed(2)}</span>
-                                                </div>
-                                                <h3 className="font-medium mb-2">{course.title}</h3>
-                                                <div className="text-sm text-gray-600">
-                                                    Bài học đã hoàn thành: {course.completedLessons} của {course.totalLessons} bài học
-                                                </div>
-                                                <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                                                    <div
-                                                        className="bg-purple-600 h-2 rounded-full"
-                                                        style={{ width: `${course.progress}%` }}
-                                                    ></div>
-                                                </div>
-                                                <div className="text-right text-sm text-gray-600 mt-1">
-                                                    {course.progress}% hoàn thành
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                {allPosts.map((post, index) => (
+                                    <ArticleCard image={post.image} category='QUAN ĐIỂM · TRANH LUẬN' categoryType='primary' title={post.title} content={post.content} author={null} readTime="5 phut" />
                                 ))}
                             </div>
                         </div>
@@ -237,5 +179,92 @@ const ProfileDashboard: React.FC = () => {
         </div>
     );
 };
+
+
+function ArticleCard({
+    image = "/api/placeholder/400/240",
+    category = "QUAN ĐIỂM · TRANH LUẬN",
+    categoryType = "primary",
+    title = "Muốn hoàn thành 42km trong 1 giải chạy thì phải chạy được 42km trong 1 tuần trước đã",
+    content = "Trong những ngày luyện tập bình thường, tôi cố gắng nhắc.",
+    author = {
+        name: "Nhung",
+        verified: true,
+        avatarUrl: "/api/placeholder/32/32"
+    },
+    readTime = "5 phút đọc",
+}: AllYourPost) {
+    const [bookmarked, setBookmarked] = useState(false);
+
+    return (
+        <div className="flex max-w-2xl rounded-lg overflow-hidden bg-white shadow-sm border border-gray-100">
+            {/* Left side - Image */}
+            <div className="w-1/3">
+                <img
+                    src={image}
+                    alt={title}
+                    className="object-cover h-full w-full"
+                />
+            </div>
+
+            {/* Right side - Content */}
+            <div className="w-2/3 p-4 flex flex-col justify-between">
+                {/* Header */}
+                <div className="mb-2">
+                    <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center space-x-2">
+                            <span className={`text-xs font-semibold ${categoryType === 'primary' ? 'text-green-800' : 'text-blue-600'
+                                }`}>
+                                {category}
+                            </span>
+                            <span className="text-xs text-gray-500">{readTime}</span>
+                        </div>
+                        <button
+                            onClick={() => setBookmarked(!bookmarked)}
+                            className="text-gray-400 hover:text-gray-600"
+                        >
+                            <Bookmark
+                                size={18}
+                                fill={bookmarked ? "currentColor" : "none"}
+                            />
+                        </button>
+                    </div>
+
+                    <h2 className="text-lg font-bold leading-tight mb-2">{title}</h2>
+                    {content && (
+                        <p className="text-sm text-gray-600 line-clamp-2">"{content}"</p>
+                    )}
+                </div>
+
+                {/* Author */}
+                {author && (
+                    <div className="flex items-center mt-2">
+                        {author.avatarUrl && (
+                            <img
+                                src={author.avatarUrl}
+                                alt={author.name}
+                                className="w-6 h-6 rounded-full mr-2"
+                            />
+                        )}
+                        <div className="flex items-center">
+                            <span className="text-sm font-medium">{author.name}</span>
+                            {author.verified && (
+                                <span className="ml-1 text-blue-500">
+                                    <svg
+                                        className="w-4 h-4 inline-block"
+                                        viewBox="0 0 24 24"
+                                        fill="currentColor"
+                                    >
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+                                    </svg>
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
 
 export default ProfileDashboard;

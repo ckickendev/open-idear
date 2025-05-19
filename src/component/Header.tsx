@@ -13,13 +13,13 @@ export default function Header() {
   const setIsAuthenFromDisplay = authenFormStore((state) => state.setIsAuthenFromDisplay);
   const setStateAuthen = authenFormStore((state) => state.setState);
 
-  const authenUser = authenticationStore((state) => state.currentUser);
+  const currentUser = authenticationStore((state) => state.currentUser);
+  const setCurrentUser = authenticationStore((state) => state.setCurrentUser);
 
 
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("access_token");
-      console.log(process.env.NEXT_PUBLIC_ROOT_BACKEND);
 
       if (token) {
         const headers = getHeadersToken();
@@ -27,13 +27,12 @@ export default function Header() {
         const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/auth/getProfile`, { headers });
         if (res.status === 200) {
           console.log("User info: ", res.data.userInfo);
-
-          authenticationStore.setState({ currentUser: res.data.userInfo });
+          setCurrentUser(res.data.userInfo);
         }
       }
     };
     fetchUser();
-  }, [authenUser?._id]);
+  }, [currentUser._id]);
 
 
   return <header className='flex border-b border-gray-300 py-3 px-4 sm:px-10 bg-white tracking-wide relative z-50'>
@@ -86,7 +85,7 @@ export default function Header() {
             </svg>
           </button>
         </form>
-        {authenUser?._id ? <Profile /> :
+        {currentUser?._id ? <Profile /> :
           <div className="flex flex-row">
             <button type="button" className="cursor-pointer focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-xl text-sm px-5 py-2.5 m-2  dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900" onClick={() => {
               setIsAuthenFromDisplay(true)

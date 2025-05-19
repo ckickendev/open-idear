@@ -12,6 +12,8 @@ interface UserData {
 }
 
 interface AuthenState {
+    currentUserID: string;
+    setCurrentUserID: (userID: string) => void;
     currentUser: UserData;
     setCurrentUser: (user: any) => void;
 }
@@ -27,6 +29,11 @@ const authenticationStore = create<AuthenState>((set) => ({
         bio: "",
         avatar: "",
     },
+    currentUserID: "",
+    setCurrentUserID: (userID: string) => set(() => {
+        console.log("User ID set to: ", userID);
+        return { currentUserID: userID };
+    }),
     setCurrentUser: (user: UserData) => set(() => {
         console.log("User set to: ", user);
         return { currentUser: user };
