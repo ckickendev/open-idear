@@ -53,10 +53,10 @@ export default function CreatePost() {
 
   useEffect(() => {
     const fetchPostData = async () => {
+      changeLoad();
       const token = localStorage.getItem("access_token");
       if (token) {
         const headers = getHeadersToken();
-
         const idPost = searchParams.get('id');
         console.log("id ne : ", idPost);
 
@@ -65,7 +65,7 @@ export default function CreatePost() {
           setTitle("");
           setContent("");
           console.log("content: ", content);
-
+          changeLoad();
           return;
         }
 
@@ -74,9 +74,11 @@ export default function CreatePost() {
           if (res.status === 200) {
             setTitle(res.data.post.title);
             setContent(res.data.post.content);
+            changeLoad();
           }
         } catch (error) {
           alert('Error fetching user data');
+          changeLoad();
         }
       }
     };
@@ -315,7 +317,7 @@ export default function CreatePost() {
           <PostLists />
 
           {/* Editor area */}
-          <div className="w-full h-screen flex flex-col justify-between items-center">
+          <div className="w-full flex flex-col justify-between items-center">
             <div className="w-full bg-white mb-4 flex flex-col items-center">
               <div className="w-full p-4 flex justify-around items-center">
                 <div className="flex gap-2">
@@ -339,7 +341,7 @@ export default function CreatePost() {
 
               {modeHTML || <div
                 ref={editorContainerRef}
-                className="p-6 w-4xl min-h-full editor-end"
+                className="p-6 w-4xl min-h-screen editor-end"
                 onDragOver={previewMode ? undefined : handleDragOver}
                 onDrop={previewMode ? undefined : handleDrop}
               >

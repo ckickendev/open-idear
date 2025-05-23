@@ -10,31 +10,27 @@ import axios from 'axios';
 
 // Define types
 interface AllYourPost {
-    content: string;
-    // updateAt: Date;
-    // likes: number;
-    published?: boolean;
-    slug?: string;
-    title: string;
-    // views: number;
     // _id: string;
-    image: string;
-    category: string;
-    // rate: number;
+    title: string;
+    slug?: string;
+    content: string;
     author: any;
-    categoryType: string;
+    category: string;
+    published?: boolean;
+    // views: number;
+    // likes: number;
     readTime: string;
+    // updateAt: Date;
+    image: string;
 }
 
 //  updateAt, likes, views, _id, rate
 
 const ProfileDashboard: React.FC = () => {
-    const currentUser = authenticationStore((state) => state.currentUser);
     const [postType, setPostType] = React.useState<number>(1);
     const [selectId, setSelectId] = React.useState<string>("profile");
     const [allPosts, setAllPosts] = React.useState<AllYourPost[]>([]);
 
-    console.log("currentUser: ", currentUser);
 
 
     const router = useRouter();
@@ -47,7 +43,7 @@ const ProfileDashboard: React.FC = () => {
                 if (token) {
                     const headers = getHeadersToken();
 
-                    const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor?userId=${currentUser._id}`, { headers });
+                    const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor`, { headers });
                     if (res.status === 200) {
                         console.log("posts info: ", res.data);
                         setAllPosts(res.data.posts);
@@ -169,7 +165,7 @@ const ProfileDashboard: React.FC = () => {
                             <h2 className="text-lg font-semibold mb-4">Bài viết của bạn</h2>
                             <div className="space-y-4">
                                 {allPosts.map((post, index) => (
-                                    <ArticleCard image={post.image} category='QUAN ĐIỂM · TRANH LUẬN' categoryType='primary' title={post.title} content={post.content} author={null} readTime="5 phut" />
+                                    <ArticleCard image={post.image} category='QUAN ĐIỂM · TRANH LUẬN' title={post.title} content={post.content} author={post.author} readTime="5 phut" />
                                 ))}
                             </div>
                         </div>
@@ -184,13 +180,11 @@ const ProfileDashboard: React.FC = () => {
 function ArticleCard({
     image = "/api/placeholder/400/240",
     category = "QUAN ĐIỂM · TRANH LUẬN",
-    categoryType = "primary",
     title = "Muốn hoàn thành 42km trong 1 giải chạy thì phải chạy được 42km trong 1 tuần trước đã",
     content = "Trong những ngày luyện tập bình thường, tôi cố gắng nhắc.",
     author = {
         name: "Nhung",
-        verified: true,
-        avatarUrl: "/api/placeholder/32/32"
+        avatar: "/api/placeholder/32/32"
     },
     readTime = "5 phút đọc",
 }: AllYourPost) {
@@ -213,7 +207,7 @@ function ArticleCard({
                 <div className="mb-2">
                     <div className="flex justify-between items-center mb-2">
                         <div className="flex items-center space-x-2">
-                            <span className={`text-xs font-semibold ${categoryType === 'primary' ? 'text-green-800' : 'text-blue-600'
+                            <span className={`text-xs font-semibold ${category === 'primary' ? 'text-green-800' : 'text-blue-600'
                                 }`}>
                                 {category}
                             </span>
