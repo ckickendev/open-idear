@@ -177,26 +177,16 @@ const ProfileDashboard: React.FC = () => {
 };
 
 
-function ArticleCard({
-    image = "/api/placeholder/400/240",
-    category = "QUAN ĐIỂM · TRANH LUẬN",
-    title = "Muốn hoàn thành 42km trong 1 giải chạy thì phải chạy được 42km trong 1 tuần trước đã",
-    content = "Trong những ngày luyện tập bình thường, tôi cố gắng nhắc.",
-    author = {
-        name: "Nhung",
-        avatar: "/api/placeholder/32/32"
-    },
-    readTime = "5 phút đọc",
-}: AllYourPost) {
+function ArticleCard(data: AllYourPost) {
     const [bookmarked, setBookmarked] = useState(false);
 
     return (
-        <div className="flex max-w-2xl rounded-lg overflow-hidden bg-white shadow-sm border border-gray-100">
+        <div className="flex w-full rounded-lg overflow-hidden bg-white shadow-sm border border-gray-100">
             {/* Left side - Image */}
             <div className="w-1/3">
                 <img
-                    src={image}
-                    alt={title}
+                    src={data.image}
+                    alt={data.title}
                     className="object-cover h-full w-full"
                 />
             </div>
@@ -207,11 +197,11 @@ function ArticleCard({
                 <div className="mb-2">
                     <div className="flex justify-between items-center mb-2">
                         <div className="flex items-center space-x-2">
-                            <span className={`text-xs font-semibold ${category === 'primary' ? 'text-green-800' : 'text-blue-600'
+                            <span className={`text-xs font-semibold ${data.category === 'primary' ? 'text-green-800' : 'text-blue-600'
                                 }`}>
-                                {category}
+                                {data.category}
                             </span>
-                            <span className="text-xs text-gray-500">{readTime}</span>
+                            <span className="text-xs text-gray-500">{data.readTime}</span>
                         </div>
                         <button
                             onClick={() => setBookmarked(!bookmarked)}
@@ -224,25 +214,25 @@ function ArticleCard({
                         </button>
                     </div>
 
-                    <h2 className="text-lg font-bold leading-tight mb-2">{title}</h2>
-                    {content && (
-                        <p className="text-sm text-gray-600 line-clamp-2">"{content}"</p>
+                    <h2 className="text-lg font-bold leading-tight mb-2">{data.title}</h2>
+                    {data.content && (
+                        <p className="text-sm text-gray-600 line-clamp-2">"{data.content}"</p>
                     )}
                 </div>
 
                 {/* Author */}
-                {author && (
+                {data.author && (
                     <div className="flex items-center mt-2">
-                        {author.avatarUrl && (
+                        {data.author.avatarUrl && (
                             <img
-                                src={author.avatarUrl}
-                                alt={author.name}
+                                src={data.author.avatarUrl}
+                                alt={data.author.name}
                                 className="w-6 h-6 rounded-full mr-2"
                             />
                         )}
                         <div className="flex items-center">
-                            <span className="text-sm font-medium">{author.name}</span>
-                            {author.verified && (
+                            <span className="text-sm font-medium">{data.author.name}</span>
+                            {data.author.verified && (
                                 <span className="ml-1 text-blue-500">
                                     <svg
                                         className="w-4 h-4 inline-block"
