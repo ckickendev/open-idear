@@ -1,8 +1,8 @@
+'use client';
 import { Edit, Eye, EyeOff, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 const Post = () => {
-
     const togglePostStatus = (id: string) => {
         setPosts(posts.map(post =>
             post.id === id

@@ -1,3 +1,4 @@
+'use client';
 import { Ban, Check, Edit, Search, User } from "lucide-react";
 import { useState } from "react";
 

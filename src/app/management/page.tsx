@@ -17,10 +17,13 @@ import Category from './Category';
 import Post from './Post';
 import Report from './Report';
 import UserList from './UserList';
+import LoadingComponent from '@/component/common/Loading';
+import loadingStore from '@/store/LoadingStore';
 
 const AdminDashboard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [activeTab, setActiveTab] = useState('posts');
+    const [activeTab, setActiveTab] = useState('categories');
+    const isLoading = loadingStore(state => state.isLoading);
 
     const menuItems = [
         { id: 'categories', label: 'Danh mục', icon: Folder },
@@ -121,6 +124,7 @@ const AdminDashboard = () => {
 
                 {/* Content */}
                 <main className="flex-1 p-6 overflow-auto">
+                    <LoadingComponent isLoading={isLoading} />
                     {renderContent()}
                 </main>
             </div>

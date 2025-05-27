@@ -1,9 +1,15 @@
+'use client';
+import LoadingComponent from "@/component/common/Loading";
+import loadingStore from "@/store/LoadingStore";
+import axios from "axios";
 import { Edit, Filter, Plus, Search, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { set } from "react-hook-form";
 
 type CategoryType = {
-    id: string;
+    _id: string;
     name: string;
+    slug: string;
     description: string;
     postCount: number;
     createdAt: string;
@@ -15,69 +21,96 @@ const Category = () => {
     const [modalType, setModalType] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedItem, setSelectedItem] = useState<CategoryType | null>(null);
+    const [categories, setCategories] = useState<CategoryType[]>([]);
+
+    const changeLoad = loadingStore((state) => state.changeLoad);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                changeLoad();
+                const token = localStorage.getItem("access_token");
+                if (token) {
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                    const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category`);
+                    console.log(response.data.categories);
+
+                    setCategories(response.data.categories);
+                    changeLoad();
+                }
+
+            } catch (error) {
+                err?.response?.data?.error || err?.message
+                changeLoad();
+                console.error('Error fetching categories:', error);
+            }
+        };
+        fetchCategories();
+    }, []);
 
     const [formData, setFormData] = useState({
+        _id: '',
         name: '',
+        slug: '',
         description: '',
-        icon: ''
     });
 
-    const [categories, setCategories] = useState<CategoryType[]>([
-        { id: '1', name: 'Công nghệ', description: 'Ý tưởng về công nghệ và đổi mới', postCount: 25, createdAt: '2024-01-15' },
-        { id: '2', name: 'Kinh doanh', description: 'Ý tưởng khởi nghiệp và kinh doanh', postCount: 18, createdAt: '2024-01-10' },
-        { id: '3', name: 'Giáo dục', description: 'Cải tiến trong giáo dục', postCount: 12, createdAt: '2024-01-20' },
-        { id: '4', name: 'Y tế', description: 'Ý tưởng về sức khỏe và y tế', postCount: 8, createdAt: '2024-01-25' },
-    ]);
+
     const openModal = (type: any, item: CategoryType | null = null) => {
         setModalType(type);
         setSelectedItem(item);
         if (item) {
             setFormData({
+                _id: item._id,
                 name: item.name || '',
+                slug: item.slug,
                 description: item.description || '',
-                icon: item.icon || ''
             });
         } else {
-            setFormData({ name: '', description: '', icon: '' });
+            setFormData({ _id: '', name: '', slug: '', description: '' });
         }
         setShowModal(true);
     };
     const closeModal = () => {
         setShowModal(false);
         setSelectedItem(null);
-        setFormData({ name: '', description: '', icon: '' });
+        setFormData({ _id: '', name: '', slug: '', description: '' });
     };
-    const handleAddCategory = () => {
+    const handleAddCategory = async () => {
         if (formData.name.trim()) {
-            const newCategory = {
-                id: Date.now().toString(),
-                name: formData.name,
-                description: formData.description,
-                postCount: 0,
-                createdAt: new Date().toISOString().split('T')[0]
-            };
-            setCategories([...categories, newCategory]);
-            setFormData({ name: '', description: '', icon: '' });
-            setShowModal(false);
+            try {
+                const newCategory = await axios.post('/api/categories', {
+                    name: formData.name,
+                    slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
+                    description: formData.description,
+                });
+                setCategories([...categories, newCategory.data]);
+                setFormData({ _id: '', name: '', slug: '', description: '' });
+                setShowModal(false);
+            } catch (error) {
+                console.error('Error adding category:', error);
+                alert('Đã xảy ra lỗi khi thêm danh mục. Vui lòng thử lại.');
+            }
+
         }
     };
     const handleEditCategory = () => {
         setCategories(categories.map(cat =>
-            cat.id === selectedItem?.id
+            cat._id === selectedItem?._id
                 ? { ...cat, name: formData.name, description: formData.description }
                 : cat
         ));
-        setFormData({ name: '', description: '', icon: '' });
+        setFormData({ _id: '', name: '', slug: '', description: '' });
         setShowModal(false);
         setSelectedItem(null);
     };
     const handleDeleteCategory = (id: string) => {
         if (window.confirm('Bạn có chắc chắn muốn xóa danh mục này?')) {
-            setCategories(categories.filter(cat => cat.id !== id));
+            setCategories(categories.filter(cat => cat._id !== id));
         }
     };
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 relative">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-900">Quản lý Danh mục</h1>
                 <button
@@ -122,7 +155,7 @@ const Category = () => {
                         {categories.filter(cat =>
                             cat.name.toLowerCase().includes(searchTerm.toLowerCase())
                         ).map((category, index) => (
-                            <tr key={category.id} className="hover:bg-gray-50">
+                            <tr key={category._id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-sm font-medium text-gray-900">{category.name}</div>
@@ -145,7 +178,7 @@ const Category = () => {
                                             <Edit size={16} />
                                         </button>
                                         <button
-                                            onClick={() => handleDeleteCategory(category.id)}
+                                            onClick={() => handleDeleteCategory(category._id)}
                                             className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
                                         >
                                             <Trash2 size={16} />
@@ -159,7 +192,7 @@ const Category = () => {
             </div>
 
             {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-gray-500/50 bg-opacity-70 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-semibold">
@@ -202,12 +235,12 @@ const Category = () => {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Icon (tùy chọn)
+                                    Slug
                                 </label>
                                 <input
                                     type="text"
-                                    value={formData.icon}
-                                    onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                                    value={formData.slug}
+                                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     placeholder="Tên icon hoặc emoji..."
                                 />
