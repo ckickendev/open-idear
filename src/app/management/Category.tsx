@@ -1,4 +1,5 @@
 'use client';
+import convertDate from "@/common/datetime";
 import LoadingComponent from "@/component/common/Loading";
 import alertStore from "@/store/AlertStore";
 import loadingStore from "@/store/LoadingStore";
@@ -14,7 +15,6 @@ type CategoryType = {
     description: string;
     postCount: number;
     createdAt: string;
-    icon?: string;
 };
 
 const Category = () => {
@@ -37,7 +37,7 @@ const Category = () => {
                 if (token) {
                     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                     const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category`);
-                    console.log(response.data.categories);
+                    console.log("response", response);
 
                     setCategories(response.data.categories);
                     changeLoad();
@@ -93,7 +93,7 @@ const Category = () => {
                     slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
                     description: formData.description,
                 });
-                setCategories([...categories, newCategory.data]);
+                setCategories([...categories, newCategory.data.category]);
                 setFormData({ _id: '', name: '', slug: '', description: '' });
                 setShowModal(false);
 
@@ -111,17 +111,59 @@ const Category = () => {
         }
     };
     const handleEditCategory = () => {
-        setCategories(categories.map(cat =>
-            cat._id === selectedItem?._id
-                ? { ...cat, name: formData.name, description: formData.description }
-                : cat
-        ));
-        setFormData({ _id: '', name: '', slug: '', description: '' });
-        setShowModal(false);
-        setSelectedItem(null);
+        changeLoad();
+        if (!formData.name.trim()) {
+            setType('error');
+            setMessage('Tên danh mục không được để trống');
+            changeLoad();
+            return;
+        }
+
+        const updatedCategory = {
+            _id: selectedItem?._id,
+            name: formData.name,
+            slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
+            description: formData.description,
+        };
+
+        const token = localStorage.getItem("access_token");
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category/update/${selectedItem?._id}`, updatedCategory)
+            .then(response => {
+                setCategories(categories.map(cat =>
+                    cat._id === selectedItem?._id ? response.data.category : cat
+                ));
+                setFormData({ _id: '', name: '', slug: '', description: '' });
+                setShowModal(false);
+                setSelectedItem(null);
+
+                setType('info');
+                setMessage('Cập nhật danh mục thành công');
+                changeLoad();
+            })
+            .catch(error => {
+                setType('error');
+                setMessage(error?.response?.data?.error || error?.message);
+                changeLoad();
+            });
+
     };
     const handleDeleteCategory = (id: string) => {
         if (window.confirm('Bạn có chắc chắn muốn xóa danh mục này?')) {
+            changeLoad();
+            const token = localStorage.getItem("access_token");
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            axios.delete(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category/delete/${id}`)
+                .then(response => {
+                    setType('info');
+                    setMessage('Xóa danh mục thành công');
+                    changeLoad();
+                })
+                .catch(error => {
+                    setType('error');
+                    setMessage(error?.response?.data?.error || error?.message);
+                    changeLoad();
+                });
             setCategories(categories.filter(cat => cat._id !== id));
         }
     };
@@ -146,7 +188,7 @@ const Category = () => {
                         placeholder="Tìm kiếm danh mục..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
                     />
                 </div>
                 <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition-colors">
@@ -184,18 +226,18 @@ const Category = () => {
                                         {category.postCount} bài
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{category.createdAt}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{convertDate(category.createdAt)}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 ">
                                         <button
                                             onClick={() => openModal('edit', category)}
-                                            className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                                            className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 cursor-pointer"
                                         >
                                             <Edit size={16} />
                                         </button>
                                         <button
                                             onClick={() => handleDeleteCategory(category._id)}
-                                            className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                                            className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer"
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -231,7 +273,7 @@ const Category = () => {
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
                                     placeholder="Nhập tên danh mục..."
                                 />
                             </div>
@@ -244,7 +286,7 @@ const Category = () => {
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     rows={3}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
                                     placeholder="Nhập mô tả cho danh mục..."
                                 />
                             </div>
@@ -257,7 +299,7 @@ const Category = () => {
                                     type="text"
                                     value={formData.slug}
                                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
                                     placeholder="Tên icon hoặc emoji..."
                                 />
                             </div>

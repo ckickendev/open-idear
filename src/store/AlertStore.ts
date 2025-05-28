@@ -11,7 +11,7 @@ interface AlertState {
 
 const alertStore = create<AlertState>((set) => ({
     type: "",
-    setType: (type: 'info' | 'success' | 'error' | 'warning' | '' ) => set(() => ({ type })),
+    setType: (type: 'info' | 'success' | 'error' | 'warning' | '') => set(() => ({ type })),
     isAlertDisplay: false,
     changeStateAlert: () => set((state) =>
         ({ isAlertDisplay: !state.isAlertDisplay })
