@@ -19,6 +19,8 @@ import Report from './Report';
 import UserList from './UserList';
 import LoadingComponent from '@/component/common/Loading';
 import loadingStore from '@/store/LoadingStore';
+import Notification from '@/component/common/Notification';
+import alertStore from '@/store/AlertStore';
 
 const AdminDashboard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -50,6 +52,7 @@ const AdminDashboard = () => {
 
     return (
         <div className="flex h-screen bg-gray-100">
+            <Notification />
             {/* Sidebar */}
             <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white shadow-lg transition-all duration-300 flex flex-col`}>
                 <div className="p-4 border-b">

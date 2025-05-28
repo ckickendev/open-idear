@@ -1,5 +1,6 @@
 'use client';
 import LoadingComponent from "@/component/common/Loading";
+import alertStore from "@/store/AlertStore";
 import loadingStore from "@/store/LoadingStore";
 import axios from "axios";
 import { Edit, Filter, Plus, Search, Trash2, X } from "lucide-react";
@@ -23,6 +24,9 @@ const Category = () => {
     const [selectedItem, setSelectedItem] = useState<CategoryType | null>(null);
     const [categories, setCategories] = useState<CategoryType[]>([]);
 
+    const setType = alertStore((state) => state.setType);
+    const setMessage = alertStore((state) => state.setMessage);
+
     const changeLoad = loadingStore((state) => state.changeLoad);
 
     useEffect(() => {
@@ -39,8 +43,9 @@ const Category = () => {
                     changeLoad();
                 }
 
-            } catch (error) {
-                err?.response?.data?.error || err?.message
+            } catch (error: any) {
+                setType('error');
+                setMessage(error?.response?.data?.error || error?.message)
                 changeLoad();
                 console.error('Error fetching categories:', error);
             }
@@ -76,10 +81,14 @@ const Category = () => {
         setSelectedItem(null);
         setFormData({ _id: '', name: '', slug: '', description: '' });
     };
+
     const handleAddCategory = async () => {
+        changeLoad();
         if (formData.name.trim()) {
             try {
-                const newCategory = await axios.post('/api/categories', {
+                const token = localStorage.getItem("access_token");
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                const newCategory = await axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category/create`, {
                     name: formData.name,
                     slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
                     description: formData.description,
@@ -87,9 +96,16 @@ const Category = () => {
                 setCategories([...categories, newCategory.data]);
                 setFormData({ _id: '', name: '', slug: '', description: '' });
                 setShowModal(false);
-            } catch (error) {
-                console.error('Error adding category:', error);
-                alert('Đã xảy ra lỗi khi thêm danh mục. Vui lòng thử lại.');
+
+                setType('info');
+                setMessage('Thêm danh mục thành công');
+                changeLoad();
+            } catch (error: any) {
+                setShowModal(false);
+
+                setType('error');
+                setMessage(error?.response?.data?.error || error?.message);
+                changeLoad();
             }
 
         }
