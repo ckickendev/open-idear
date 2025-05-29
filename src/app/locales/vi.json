@@ -1,0 +1,10 @@
+{
+  "component": {
+    "header": {
+      "getstarted": "Bắt đầu ngay",
+      "login": "Đăng nhập"
+    },
+    "footer": "Khóa học",
+    "banner": ""
+  }
+}

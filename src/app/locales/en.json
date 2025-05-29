@@ -1,0 +1,10 @@
+{
+  "component": {
+    "header": {
+      "getstarted": "Get Started",
+      "login": "Login"
+    },
+    "footer": "Course",
+    "banner": ""
+  }
+}

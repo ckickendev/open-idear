@@ -7,8 +7,12 @@ import { getHeadersToken } from "@/api/authentication";
 import authenFormStore from "@/store/AuthenFormStore";
 import authenticationStore from "@/store/AuthenticationStore";
 
+import { useTranslation } from "@/app/hook/useTranslation";
+import LanguageSelector from "./LanguageSelector";
 
 export default function Header() {
+  const { t } = useTranslation()
+
   const isAuthenFormDisplay = authenFormStore((state) => state.isAuthenFormDisplay);
   const setIsAuthenFromDisplay = authenFormStore((state) => state.setIsAuthenFromDisplay);
   const setStateAuthen = authenFormStore((state) => state.setState);
@@ -90,17 +94,18 @@ export default function Header() {
             <button type="button" className="cursor-pointer focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-xl text-sm px-5 py-2.5 m-2  dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900" onClick={() => {
               setIsAuthenFromDisplay(true)
               setStateAuthen(2);
-            }}>Get Started</button>
+            }}>{t('component.header.getstarted')}</button>
             <button type="button" className="cursor-pointer focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-xl text-sm px-5 py-2.5 me-2 m-2  dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900" onClick={() => {
               setIsAuthenFromDisplay(true);
               setStateAuthen(1);
-            }}>Login</button>
+            }}>{t('component.header.login')}</button>
           </div>
         }
 
       </div>
 
       {isAuthenFormDisplay ? <AuthenPage /> : <></>}
+      <LanguageSelector />
     </div>
   </header>
 }
