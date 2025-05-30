@@ -2,9 +2,18 @@
   "component": {
     "header": {
       "getstarted": "Bắt đầu ngay",
-      "login": "Đăng nhập"
+      "login": "Đăng nhập",
+      "search": "Tìm kiếm",
+      "home" : "Trang chủ",
+      "course": "Khóa học"
     },
-    "footer": "Khóa học",
+    "footer": {
+      "description" : "OpenTrashTech là nền tảng mở dành cho mọi người chia sẻ ý tưởng, kiến thức, dịch vụ và công nghệ. Chúng tôi giúp kết nối cộng đồng đam mê sáng tạo và hỗ trợ kiếm tiền qua các liên kết affiliate. Cùng nhau chia sẻ và lan tỏa giá trị \nTham gia cộng đồng chia sẻ – Đăng bài viết của bạn ngay hôm nay!",
+      "contact": "Liên hệ",
+      "ava" : "CHUNG TÔI CŨNG CÓ MẶT TRÊN",
+      "hotcourse": "Khóa học nổi bật",
+      "hottoppic": "Chủ đề nổi bật"
+    },
     "banner": ""
   }
 }

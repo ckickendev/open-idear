@@ -6,14 +6,17 @@ import Header from "@/component/Header";
 import Footer from "@/component/Footer";
 import { Suspense } from "react";
 
+// Fix 1: Add display: 'swap' to prevent layout shift
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: 'swap', // Add this to prevent hydration mismatch
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: 'swap', // Add this to prevent hydration mismatch
 });
 
 export const metadata: Metadata = {
@@ -30,8 +33,9 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning={true} // Temporary fix to suppress font-related hydration warnings
       >
-        <Suspense>
+        <Suspense fallback={<div>Loading...</div>}>
           <Header />
           {children}
           <Footer />

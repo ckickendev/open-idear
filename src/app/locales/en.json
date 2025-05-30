@@ -2,9 +2,18 @@
   "component": {
     "header": {
       "getstarted": "Get Started",
-      "login": "Login"
+      "login": "Login",
+      "search": "Search",
+      "home" : "Home",
+      "course": "Courses"
     },
-    "footer": "Course",
+    "footer": {
+      "description" : "OpenTrashTech is an open platform where everyone can share ideas, knowledge, services, and technology. We connect a creative community and support earning through affiliate links. Let’s share and spread value together! Join the sharing community – Post your content today!",
+      "contact": "Contact",
+      "ava" : "COMPANY IS ALSO AVAILABLE ON",
+      "hotcourse": "Featured Courses",
+      "hottoppic": "Featured Topics"
+    },
     "banner": ""
   }
 }

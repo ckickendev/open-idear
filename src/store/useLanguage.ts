@@ -1,13 +1,21 @@
 import { create } from "zustand";
 
-type Language = "vi" | "en";
-
 interface LanguageState {
-  lang: Language;
-  setLang: (lang: Language) => void;
+  lang: string;
+  setLang: (lang: string) => void;
 }
 
+const defaultLang =
+  typeof window !== "undefined"
+    ? localStorage.getItem("language") || "en"
+    : "en";
+
 export const useLanguageStore = create<LanguageState>((set) => ({
-  lang: "vi",
-  setLang: (lang) => set({ lang }),
+  lang: defaultLang,
+  setLang: (lang) => {
+    set({ lang });
+    if (typeof window !== "undefined") {
+      localStorage.setItem("language", lang);
+    }
+  },
 }));

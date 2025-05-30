@@ -9,9 +9,10 @@ import authenticationStore from "@/store/AuthenticationStore";
 
 import { useTranslation } from "@/app/hook/useTranslation";
 import LanguageSelector from "./LanguageSelector";
+import Link from "next/link";
 
 export default function Header() {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
 
   const isAuthenFormDisplay = authenFormStore((state) => state.isAuthenFormDisplay);
   const setIsAuthenFromDisplay = authenFormStore((state) => state.setIsAuthenFromDisplay);
@@ -56,34 +57,29 @@ export default function Header() {
         <ul
           className='lg:flex lg:ml-14 lg:gap-x-5 max-lg:space-y-3 max-lg:fixed max-lg:bg-white max-lg:w-1/2 max-lg:min-w-[300px] max-lg:top-0 max-lg:left-0 max-lg:p-6 max-lg:h-full max-lg:shadow-md max-lg:overflow-auto z-50'>
           <li className='mb-6 hidden max-lg:block'>
-            <a href="javascript:void(0)"><img src="https://readymadeui.com/readymadeui.svg" alt="logo" className='w-36' />
+            <a href="#"><img src="https://readymadeui.com/readymadeui.svg" alt="logo" className='w-36' />
             </a>
           </li>
           <li className='max-lg:border-b max-lg:py-3 px-3'>
-            <a href='javascript:void(0)'
-              className='font-medium lg:hover:text-blue-700 text-blue-700 block text-[15px]'>Home</a>
+            <Link href='/' className='font-medium lg:hover:text-blue-700 text-slate-900 block text-[15px]'>{t('component.header.home')}</Link>
+            {/* <a href='#'
+              className='font-medium lg:hover:text-blue-700 text-blue-700 block text-[15px]'>{t('component.header.home')}</a> */}
           </li>
-          <li className='max-lg:border-b max-lg:py-3 px-3'><a href='javascript:void(0)'
-            className='font-medium lg:hover:text-blue-700 text-slate-900 block text-[15px]'>Team</a>
+          <li className='max-lg:border-b max-lg:py-3 px-3'>
+            <Link href='/course' className='font-medium lg:hover:text-blue-700 text-slate-900 block text-[15px]'>{t('component.header.course')}</Link>
+            {/* <a href='#'
+            className='font-medium lg:hover:text-blue-700 text-slate-900 block text-[15px]'>{t('component.header.course')}</a> */}
           </li>
-          <li className='max-lg:border-b max-lg:py-3 px-3'><a href='javascript:void(0)'
-            className='font-medium lg:hover:text-blue-700 text-slate-900 block text-[15px]'>Feature</a>
-          </li>
-          <li className='max-lg:border-b max-lg:py-3 px-3'><a href='javascript:void(0)'
-            className='font-medium lg:hover:text-blue-700 text-slate-900 block text-[15px]'>Blog</a>
-          </li>
-          <li className='max-lg:border-b max-lg:py-3 px-3'><a href='javascript:void(0)'
-            className='font-medium lg:hover:text-blue-700 text-slate-900 block text-[15px]'>About</a>
-          </li>
+          
         </ul>
       </div>
 
       <div className='flex flex-1 items-center justify-center gap-4 ml-auto'>
         <form action="https://tailwindflex.com/search" className="flex flex-1 relative w-[300px]">
-          <input className="pr-10 input w-full rounded-lg pt-2 pb-2 pl-2 border border-gray-500 focus:outline-none focus:border-red-500" type="search" name="q" placeholder="Search" />
+          <input className="pr-10 input w-full rounded-lg pt-2 pb-2 pl-2 border border-gray-500 focus:outline-none focus:border-red-500" type="search" name="q" placeholder={t('component.header.search')} />
 
           <button type="submit" className="absolute top-0 right-0 mt-3 mr-4 text-gray-400 dark:text-gray-200">
-            <span className="sr-only">Search</span>
+            <span className="sr-only">{t('component.header.search')}</span>
             <svg className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 56.966 56.966" xmlSpace="preserve">
               <path d="M55.146,51.887L41.588,37.786c3.486-4.144,5.396-9.358,5.396-14.786c0-12.682-10.318-23-23-23s-23,10.318-23,23  s10.318,23,23,23c4.761,0,9.298-1.436,13.177-4.162l13.661,14.208c0.571,0.593,1.339,0.92,2.162,0.92  c0.779,0,1.518-0.297,2.079-0.837C56.255,54.982,56.293,53.08,55.146,51.887z M23.984,6c9.374,0,17,7.626,17,17s-7.626,17-17,17  s-17-7.626-17-17S14.61,6,23.984,6z"></path>
             </svg>

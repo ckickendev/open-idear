@@ -4,7 +4,7 @@ import { useLanguageStore } from "@/store/useLanguage";
 
 const LanguageSelector = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const lang = useLanguageStore((store) => store.lang);
   const setLang = useLanguageStore((store) => store.setLang);
@@ -26,7 +26,7 @@ const LanguageSelector = () => {
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (event: any) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
@@ -36,7 +36,7 @@ const LanguageSelector = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLanguageSelect = (langKey: any) => {
+  const handleLanguageSelect = (langKey: "vi" | "en") => {
     setLang(langKey);
     setIsOpen(false);
     // Here you would typically trigger a language change event
@@ -97,7 +97,7 @@ const LanguageSelector = () => {
         {Object.entries(languages).map(([key, language]) => (
           <button
             key={key}
-            onClick={() => handleLanguageSelect(key)}
+            onClick={() => handleLanguageSelect(key as "vi" | "en")}
             className={`
                     w-full flex items-center gap-2 px-3 py-2
                     hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50
