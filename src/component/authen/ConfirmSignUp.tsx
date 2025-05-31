@@ -2,6 +2,7 @@ import { loginSchema, REACT_APP_ROOT_BACKEND } from "./authentication";
 import axios from "axios";
 import { useRef, useState } from "react";
 import Image from "next/image";
+import { useTranslation } from "@/app/hook/useTranslation";
 
 
 
@@ -20,6 +21,8 @@ const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
     const inputRef6 = useRef<HTMLInputElement>(null);
     const submit = useRef<HTMLButtonElement>(null);
     const [errorSv, setErrorSv] = useState("");
+
+    const { t } = useTranslation();
 
     const onSubmit = async (event: any) => {
         event.preventDefault();
@@ -118,14 +121,14 @@ const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
             <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
             </svg>
-            <span className="sr-only">Close modal</span>
+            <span className="sr-only">{t('component.authen.confirm_signup.close')}</span>
         </button>
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
             <div className="flex items-center justify-center">
                 <Image src="/logo.png" alt="open-idear" width={152} height={100} />
             </div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Confirm your email
+                {t('component.authen.confirm_signup.confirm')}
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600 max-w">
                 Check your email and enter code here

@@ -3,8 +3,10 @@ import React, { useState } from "react";
 import { ChevronRight, ChevronUp } from "lucide-react";
 import Article from "./Article";
 import Logo from "../common/Logo";
+import { useTranslation } from "@/app/hook/useTranslation";
 
 const LastestFeature = () => {
+  const { t } = useTranslation();
   const [selectFeature, setSelectFeature] = useState(0);
   const feature = [
     "All Features",
@@ -119,7 +121,7 @@ const LastestFeature = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
             <h2 className="font-bold text-xl text-gray-800 mr-6">
-              Latest Features
+              {t('component.lastest_feature.last')}
             </h2>
             <div className="border-b-4 border-blue-500 w-12 absolute mt-10"></div>
 
@@ -148,7 +150,7 @@ const LastestFeature = () => {
             <div className="m-8 w-2/5">
               <div className="flex items-center mb-2">
                 <Logo />
-                <span className="font-semibold">Lastest Post</span>
+                <span className="font-semibold">{t('component.lastest_feature.newest')}</span>
               </div>
 
               <div className="text-blue-600 font-semibold text-sm mb-2 cursor-pointer hover:underline">

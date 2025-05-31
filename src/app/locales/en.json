@@ -1,18 +1,40 @@
 {
   "component": {
+    "authen": {
+      "login": "Login",
+      "register": "Register",
+      "email": "Email",
+      "password": "Password",
+      "confirm_password": "Confirm Password",
+      "forgot_password": "Forgot Password?",
+      "remember_me": "Remember Me",
+      "login_with_google": "Login with Google",
+      "login_with_facebook": "Login with Facebook",
+      "register_success": "Registration successful! Please log in.",
+      "login_success": "Login successful!",
+      "logout_success": "Logout successful!",
+      "confirm_signup": {
+        "close" : "Close modal",
+        "confirm": "Confirm your email"
+      }
+    },
     "header": {
       "getstarted": "Get Started",
       "login": "Login",
       "search": "Search",
-      "home" : "Home",
+      "home": "Home",
       "course": "Courses"
     },
     "footer": {
-      "description" : "OpenTrashTech is an open platform where everyone can share ideas, knowledge, services, and technology. We connect a creative community and support earning through affiliate links. Let’s share and spread value together! Join the sharing community – Post your content today!",
+      "description": "OpenTrashTech is an open platform where everyone can share ideas, knowledge, services, and technology. We connect a creative community and support earning through affiliate links. Let’s share and spread value together! Join the sharing community – Post your content today!",
       "contact": "Contact",
-      "ava" : "COMPANY IS ALSO AVAILABLE ON",
+      "ava": "COMPANY IS ALSO AVAILABLE ON",
       "hotcourse": "Featured Courses",
       "hottoppic": "Featured Topics"
+    },
+    "lastest_feature": {
+      "last": "Recent Posts",
+      "newest": "Latest Articles"
     },
     "banner": ""
   }

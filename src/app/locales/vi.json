@@ -1,5 +1,19 @@
 {
   "component": {
+    "authen":  {
+      "login": "Đăng nhập",
+      "register": "Đăng ký",
+      "email": "Email",
+      "password": "Mật khẩu",
+      "confirm_password": "Xác nhận mật khẩu",
+      "forgot_password": "Quên mật khẩu?",
+      "remember_me": "Ghi nhớ đăng nhập",
+      "login_with_google": "Đăng nhập bằng Google",
+      "login_with_facebook": "Đăng nhập bằng Facebook",
+      "register_success": "Đăng ký thành công! Vui lòng đăng nhập.",
+      "login_success": "Đăng nhập thành công!",
+      "logout_success": "Đăng xuất thành công!"
+    },
     "header": {
       "getstarted": "Bắt đầu ngay",
       "login": "Đăng nhập",
@@ -14,6 +28,14 @@
       "hotcourse": "Khóa học nổi bật",
       "hottoppic": "Chủ đề nổi bật"
     },
+    "lastest_feature" : {
+      "last": "Post gần đây",
+      "newest" : "Bài viết mới nhất"
+    },
     "banner": ""
+  },
+  "app" : {
+    
   }
+
 }
