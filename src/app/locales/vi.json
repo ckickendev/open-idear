@@ -1,6 +1,6 @@
 {
   "component": {
-    "authen":  {
+    "authen": {
       "login": "Đăng nhập",
       "register": "Đăng ký",
       "email": "Email",
@@ -18,24 +18,27 @@
       "getstarted": "Bắt đầu ngay",
       "login": "Đăng nhập",
       "search": "Tìm kiếm",
-      "home" : "Trang chủ",
+      "home": "Trang chủ",
       "course": "Khóa học"
     },
     "footer": {
-      "description" : "OpenTrashTech là nền tảng mở dành cho mọi người chia sẻ ý tưởng, kiến thức, dịch vụ và công nghệ. Chúng tôi giúp kết nối cộng đồng đam mê sáng tạo và hỗ trợ kiếm tiền qua các liên kết affiliate. Cùng nhau chia sẻ và lan tỏa giá trị \nTham gia cộng đồng chia sẻ – Đăng bài viết của bạn ngay hôm nay!",
+      "description": "OpenTrashTech là nền tảng mở dành cho mọi người chia sẻ ý tưởng, kiến thức, dịch vụ và công nghệ. Chúng tôi giúp kết nối cộng đồng đam mê sáng tạo và hỗ trợ kiếm tiền qua các liên kết affiliate. Cùng nhau chia sẻ và lan tỏa giá trị \nTham gia cộng đồng chia sẻ – Đăng bài viết của bạn ngay hôm nay!",
       "contact": "Liên hệ",
-      "ava" : "CHUNG TÔI CŨNG CÓ MẶT TRÊN",
+      "ava": "CHUNG TÔI CŨNG CÓ MẶT TRÊN",
       "hotcourse": "Khóa học nổi bật",
       "hottoppic": "Chủ đề nổi bật"
     },
-    "lastest_feature" : {
+    "lastest_feature": {
       "last": "Post gần đây",
-      "newest" : "Bài viết mới nhất"
+      "newest": "Bài viết mới nhất"
     },
-    "banner": ""
-  },
-  "app" : {
-    
+    "banner": {
+      "title" : "Chia sẻ và nói lên tiếng nói của bạn",
+      "create" : "Tạo bài viết"
+    },
+    "hotPost": {
+      "title": "Nổi bật trong tháng",
+      "moreDes": "Xem TOP 10 bài viết"
+    }
   }
-
 }

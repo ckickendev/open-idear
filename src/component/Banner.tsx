@@ -1,4 +1,9 @@
+'use client';
+
+import { useTranslation } from "@/app/hook/useTranslation";
+
 export default function Banner() {
+    const { t } = useTranslation();
     return (
         <>
             {/* <div className="relative isolate flex items-center gap-x-6 overflow-hidden bg-gray-50 px-6 py-2.5 sm:px-3.5 sm:before:flex-1">
@@ -36,9 +41,9 @@ export default function Banner() {
                         <span className="text-7xl text-blue-600 font-bold">Open</span>
                         IdeaR
                     </h1>
-                    <div className="text-4xl font-semibold text-gray-900 flex items-center justify-center"> Speak out and share your idea</div>
+                    <div className="text-4xl font-semibold text-gray-900 flex items-center justify-center">{t("component.banner.title")}</div>
                     <a href="./create"
-                        className="flex items-center gap-2 py-3.5 px-7 rounded-full bg-blue-600 shadow-md text-white font-semibold hover:bg-red-600">Create post <svg width="17" height="12" viewBox="0 0 17 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        className="flex items-center gap-2 py-3.5 px-7 rounded-full bg-blue-600 shadow-md text-white font-semibold hover:bg-red-600">{t("component.banner.create")}<svg width="17" height="12" viewBox="0 0 17 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path
                                 d="M1.5 6L14.8333 6M10.6667 11L15.0774 6.58926C15.3552 6.31148 15.4941 6.17259 15.4941 6C15.4941 5.82741 15.3552 5.68852 15.0774 5.41074L10.6667 1"
                                 stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

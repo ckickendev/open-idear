@@ -1,12 +1,13 @@
+'use client';
+
 import React from "react";
-import Image from "next/image";
 import {
   Clock,
   Bookmark,
   User,
   CheckCircle,
-  FireExtinguisher,
 } from "lucide-react";
+import { useTranslation } from "@/app/hook/useTranslation";
 
 interface Author {
   name: string;
@@ -79,15 +80,16 @@ const articles: Article[] = [
 ];
 
 const HotPost: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-bold text-xl text-gray-800 mr-6">
-          Nổi bật trong tháng
+          {t("component.hotPost.title")}
         </h2>
         <div className="border-b-4 border-blue-500 w-12 absolute mt-10"></div>
         <button className="text-gray-600 hover:text-gray-900 text-sm cursor-pointer hover:underline">
-          Xem TOP 10 bài viết
+          {t("component.hotPost.moreDes")}
         </button>
       </div>
 

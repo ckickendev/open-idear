@@ -36,6 +36,13 @@
       "last": "Recent Posts",
       "newest": "Latest Articles"
     },
-    "banner": ""
+    "banner": {
+      "title" : "Speak out and share your idea",
+      "create" : "Create post"
+    },
+    "hotPost": {
+      "title": "Hot This Month",
+      "moreDes": "View TOP 10 Posts"
+    }
   }
 }

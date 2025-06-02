@@ -62,13 +62,9 @@ export default function Header() {
           </li>
           <li className='max-lg:border-b max-lg:py-3 px-3'>
             <Link href='/' className='font-medium lg:hover:text-blue-700 text-slate-900 block text-[15px]'>{t('component.header.home')}</Link>
-            {/* <a href='#'
-              className='font-medium lg:hover:text-blue-700 text-blue-700 block text-[15px]'>{t('component.header.home')}</a> */}
           </li>
           <li className='max-lg:border-b max-lg:py-3 px-3'>
             <Link href='/course' className='font-medium lg:hover:text-blue-700 text-slate-900 block text-[15px]'>{t('component.header.course')}</Link>
-            {/* <a href='#'
-            className='font-medium lg:hover:text-blue-700 text-slate-900 block text-[15px]'>{t('component.header.course')}</a> */}
           </li>
           
         </ul>
