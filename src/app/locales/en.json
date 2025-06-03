@@ -1,12 +1,10 @@
 {
   "component": {
     "authen": {
-      "login": "Login",
       "register": "Register",
       "email": "Email",
       "password": "Password",
       "confirm_password": "Confirm Password",
-      "forgot_password": "Forgot Password?",
       "remember_me": "Remember Me",
       "login_with_google": "Login with Google",
       "login_with_facebook": "Login with Facebook",
@@ -14,8 +12,53 @@
       "login_success": "Login successful!",
       "logout_success": "Logout successful!",
       "confirm_signup": {
-        "close" : "Close modal",
-        "confirm": "Confirm your email"
+        "share": "Share your idea and knowledge",
+        "confirm": "Confirm your email",
+        "check_email": "Please check your email and enter code to confirm your account",
+        "or": "Or you can skip",
+        "now": "right now",
+        "account": "Account",
+        "did": "Didn't receive code?",
+        "resend": "Resend code"
+      },
+      "forgotPass": {
+        "close": "Close modal",
+        "des": "Speak out and share your idea",
+        "title": "Forgot your password",
+        "content": "Please enter your account name or your email, we will send you an email to verify",
+        "content_placeholder": "Enter your email or username",
+        "sendEmail": "Send email",
+        "have": "Have your account?",
+        "login_now": "Login now"
+      },
+      "login": {
+        "close": "Close modal",
+        "title": "Sign in to your account",
+        "create": "Or create an account",
+        "useroremail": "Username or Email",
+        "useroremail_placeholder": "Enter your username or email",
+        "password": "Password",
+        "password_placeholder": "Enter your password",
+        "remember": "Remember me",
+        "forgot": "Forgot password?",
+        "signIn": "Sign In",
+        "continue": "Or continue with"
+      },
+      "signUp": {
+        "close": "Close modal",
+        "des": "Speak out and share your idea",
+        "title": "Register your account",
+        "email": "Email address",
+        "email_placeholder": "Enter your email address",
+        "username": "Username",
+        "username_placeholder": "Enter your username",
+        "password": "Password",
+        "password_placeholder": "Enter your password",
+        "confirm_password": "Confirm Password",
+        "confirm_password_placeholder": "Re-enter your password",
+        "su": "Sign Up",
+        "have_account": "Already have an account?",
+        "lg_now": "Login now"
       }
     },
     "header": {
@@ -34,11 +77,12 @@
     },
     "lastest_feature": {
       "last": "Recent Posts",
-      "newest": "Latest Articles"
+      "newest": "Latest Articles",
+      "more": "View More"
     },
     "banner": {
-      "title" : "Speak out and share your idea",
-      "create" : "Create post"
+      "title": "Speak out and share your idea",
+      "create": "Create post"
     },
     "hotPost": {
       "title": "Hot This Month",

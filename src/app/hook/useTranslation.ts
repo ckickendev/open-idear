@@ -8,7 +8,7 @@ const translations = {
 };
 
 export function useTranslation() {
-  const lang = useLanguageStore((state) => state.lang);
+  const lang = useLanguageStore((state) => state.lang) as keyof typeof translations;
   const t = (key: string) => {
     const keys = key.split(".");
     let value: any = translations[lang];

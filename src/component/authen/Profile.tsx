@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { User, Settings, HelpCircle, Moon, MessageSquare, LogOut } from 'lucide-react';
 import authenticationStore from '@/store/AuthenticationStore';
 import Link from 'next/link';
-import { log } from 'console';
 
 export default function Profile() {
     const [isOpen, setIsOpen] = useState(false);

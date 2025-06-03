@@ -5,6 +5,7 @@ import axios from "axios";
 import { useState } from "react";
 import authenticationStore from "@/store/AuthenticationStore";
 import Image from "next/image";
+import { useTranslation } from "@/app/hook/useTranslation";
 
 type LoginFormInputs = {
     account: string;
@@ -18,6 +19,7 @@ type ModalAuthen = {
 };
 
 const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAuthen) => {
+    const { t } = useTranslation();
     const setCurrentUser = authenticationStore((state) => state.setCurrentUser);
     const [errorSv, setErrorSv] = useState("");
 
@@ -56,19 +58,18 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
             <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
             </svg>
-            <span className="sr-only">Close modal</span>
+            <span className="sr-only">{t("component.authen.login.close")}</span>
         </button>
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
             <div className="flex items-center justify-center">
                 <Image src="/logo.png" alt="open-idear" width={152} height={100} />
             </div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Sign in to your account
+                {t("component.authen.login.title")}
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600 max-w">
-                Or
                 <span onClick={() => setAuthenState(2)} className="font-medium text-blue-600 hover:text-blue-500 cursor-pointer">
-                    &nbsp; create an account
+                    &nbsp;{t("component.authen.login.create")}
                 </span>
             </p>
         </div>
@@ -78,12 +79,12 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" action="#" method="POST">
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                            Username or Email
+                            {t("component.authen.login.useroremail")}
                         </label>
                         <div className="mt-1">
                             <input id="email" type="email" autoComplete="email" required
                                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                placeholder="Enter your email or username"
+                                placeholder={t("component.authen.login.useroremail_placeholder")}
                                 {...register("account")} />
                             {errors.account && <p className="text-red-500">{errors.account.message}</p>}
                         </div>
@@ -91,12 +92,12 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
 
                     <div>
                         <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                            Password
+                            {t("component.authen.login.password")}
                         </label>
                         <div className="mt-1">
                             <input id="password" type="password" autoComplete="current-password" required
                                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                placeholder="Enter your password"
+                                placeholder={t("component.authen.login.password_placeholder")}
                                 {...register("password")} />
                             {errors.password && <p className="text-red-500">{errors.password.message}</p>}
                         </div>
@@ -107,13 +108,13 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
                             <input id="remember_me" name="remember_me" type="checkbox"
                                 className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
                             <label htmlFor="remember_me" className="ml-2 block text-sm text-gray-900">
-                                Remember me
+                                {t("component.authen.login.remember")}
                             </label>
                         </div>
 
                         <div className="text-sm">
                             <a href="#" className="font-medium text-blue-600 hover:text-blue-500" onClick={() => setAuthenState(4)}>
-                                Forgot your password?
+                                {t("component.authen.login.forgot")}
                             </a>
                         </div>
                     </div>
@@ -121,7 +122,7 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
                     <div>
                         <button type="submit"
                             className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            Sign in
+                            {t("component.authen.login.signIn")}
                         </button>
                     </div>
                 </form>
@@ -133,7 +134,7 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
                         </div>
                         <div className="relative flex justify-center text-sm">
                             <span className="px-2 bg-gray-100 text-gray-500">
-                                Or continue with
+                                {t("component.authen.login.continue")}
                             </span>
                         </div>
                     </div>

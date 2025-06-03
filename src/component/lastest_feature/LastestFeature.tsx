@@ -129,7 +129,7 @@ const LastestFeature = () => {
           </div>
 
           <div className="flex items-center">
-            <span className="font-semibold">More</span>
+            <span className="font-semibold">{t('component.lastest_feature.more')}</span>
             <ChevronRight className="ml-1" size={20} />
           </div>
         </div>

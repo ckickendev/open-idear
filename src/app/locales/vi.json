@@ -1,7 +1,6 @@
 {
   "component": {
     "authen": {
-      "login": "Đăng nhập",
       "register": "Đăng ký",
       "email": "Email",
       "password": "Mật khẩu",
@@ -12,7 +11,50 @@
       "login_with_facebook": "Đăng nhập bằng Facebook",
       "register_success": "Đăng ký thành công! Vui lòng đăng nhập.",
       "login_success": "Đăng nhập thành công!",
-      "logout_success": "Đăng xuất thành công!"
+      "logout_success": "Đăng xuất thành công!",
+      "confirm_signup": {
+        "share": "Share your idea and knowledge",
+        "confirm": "Xác nhận email của bạn"
+      },
+      "forgotPass": {
+        "close": "Đóng modal",
+        "des": "Chia sẻ và nói lên tiếng nói của bạn",
+        "title": "Quên mật khẩu ?",
+        "content": "Vui lòng nhập tên tài khoản hoặc email của bạn, chúng tôi sẽ gửi email xác nhận đến bạn",
+        "content_placeholder": "Nhập tên tài khoản hoặc email của bạn",
+        "sendEmail": "Gửi email",
+        "have": "Bạn đã có tài khoản?",
+        "login_now": "Đăng nhập ngay"
+      },
+      "login": {
+        "close": "Đóng modal",
+        "title": "Đăng nhập vào tài khoản của bạn",
+        "create": "Hoặc tạo tài khoản",
+        "useroremail": "Tên người dùng hoặc Email",
+        "useroremail_placeholder": "Nhập tên người dùng hoặc email",
+        "password": "Mật khẩu",
+        "password_placeholder": "Nhập mật khẩu của bạn",
+        "remember": "Ghi nhớ đăng nhập",
+        "forgot": "Quên mật khẩu?",
+        "signIn": "Đăng nhập",
+        "continue": "Hoặc đăng nhập với"
+      },
+      "signUp": {
+        "close": "Đóng modal",
+        "des": "Chia sẻ và nói lên tiếng nói của bạn",
+        "title": "Đăng ký tài khoản của bạn",
+        "email": "Địa chỉ email",
+        "email_placeholder": "Nhập địa chỉ email của bạn",
+        "username": "Tên người dùng",
+        "username_placeholder": "Nhập tên người dùng của bạn",
+        "password": "Mật khẩu",
+        "password_placeholder": "Nhập mật khẩu của bạn",
+        "confirm_password": "Xác nhận mật khẩu",
+        "confirm_password_placeholder": "Nhập lại mật khẩu của bạn",
+        "su": "Đăng ký",
+        "have_account": "Bạn đã có tài khoản?",
+        "lg_now": "Đăng nhập ngay"
+      }
     },
     "header": {
       "getstarted": "Bắt đầu ngay",
@@ -30,11 +72,12 @@
     },
     "lastest_feature": {
       "last": "Post gần đây",
-      "newest": "Bài viết mới nhất"
+      "newest": "Bài viết mới nhất",
+      "more": "Xem thêm"
     },
     "banner": {
-      "title" : "Chia sẻ và nói lên tiếng nói của bạn",
-      "create" : "Tạo bài viết"
+      "title": "Chia sẻ và nói lên tiếng nói của bạn",
+      "create": "Tạo bài viết"
     },
     "hotPost": {
       "title": "Nổi bật trong tháng",

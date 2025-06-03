@@ -1,10 +1,8 @@
-import { loginSchema, REACT_APP_ROOT_BACKEND } from "./authentication";
+import { REACT_APP_ROOT_BACKEND } from "./authentication";
 import axios from "axios";
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { useTranslation } from "@/app/hook/useTranslation";
-
-
 
 type ModalAuthen = {
     setAuthenState: any,
@@ -13,6 +11,7 @@ type ModalAuthen = {
 };
 
 const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAuthen) => {
+
     const inputRef1 = useRef<HTMLInputElement>(null);
     const inputRef2 = useRef<HTMLInputElement>(null);
     const inputRef3 = useRef<HTMLInputElement>(null);
@@ -131,12 +130,12 @@ const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
                 {t('component.authen.confirm_signup.confirm')}
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600 max-w">
-                Check your email and enter code here
+                {t('component.authen.confirm_signup.check_email')}
             </p>
             <p className="mt-2 text-center text-sm text-gray-600 max-w">
-                Or you can skip
+                {t('component.authen.confirm_signup.check')}
                 <span onClick={() => setAuthenState(2)} className="font-medium text-blue-600 hover:text-blue-500 cursor-pointer">
-                    &nbsp; right now
+                    &nbsp; {t('component.authen.confirm_signup.now')}
                 </span>
             </p>
         </div>
@@ -189,10 +188,10 @@ const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
                         onClick={onSubmit}
                         ref={submit}
                         className="w-full inline-flex justify-center whitespace-nowrap rounded-lg bg-indigo-500 px-3.5 py-2.5 text-sm font-medium text-white shadow-sm shadow-indigo-950/10 hover:bg-indigo-600 focus:outline-none focus:bg-red focus:ring focus:ring-indigo-300 focus-visible:outline-none focus-visible:ring focus-visible:ring-indigo-300 transition-colors duration-150">Verify
-                        Account</button>
+                        {t('component.authen.confirm_signup.account')}</button>
                 </div>
             </form>
-            <div className="text-sm text-slate-500 mt-4">Didn't receive code? <a className="font-medium text-indigo-500 hover:text-indigo-600" href="#0">Resend</a></div>
+            <div className="text-sm text-slate-500 mt-4">{t('component.authen.confirm_signup.did')} <a className="font-medium text-indigo-500 hover:text-indigo-600" href="#0">{t('component.authen.confirm_signup.resend')}</a></div>
         </div>
 
     </>
