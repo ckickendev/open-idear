@@ -9,16 +9,14 @@ const translations = {
 
 export function useTranslation() {
   const lang = useLanguageStore((state) => state.lang);
-  if (lang === "vi" || lang === "en") {
-    const t = (key: string) => {
-      const keys = key.split(".");
-      let value: any = translations[lang];
-      for (const k of keys) {
-        value = value?.[k];
-      }
-      return value ?? key; // fallback nếu không có key
-    };
-    return { t, lang };
-  }
+  const t = (key: string) => {
+    const keys = key.split(".");
+    let value: any = translations[lang];
+    for (const k of keys) {
+      value = value?.[k];
+    }
+    return value ?? key; // fallback nếu không có key
+  };
+  return { t, lang };
 
 }

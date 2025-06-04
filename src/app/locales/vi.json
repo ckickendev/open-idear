@@ -83,5 +83,30 @@
       "title": "Nổi bật trong tháng",
       "moreDes": "Xem TOP 10 bài viết"
     }
+  },
+  "management": {
+    "category": {
+      "title": "Quản lý danh mục",
+      "add": "Thêm danh mục mới",
+      "find": "Tìm kiếm danh mục...",
+      "display": "Hiển thị",
+      "cate": "danh mục",
+      "number": "STT",
+      "name": "Tên danh mục",
+      "description": "Mô tả",
+      "numberPost": "Số bài viết",
+      "createDate": "Ngày tạo",
+      "action": "Hành động",
+      "previous": "Trước",
+      "next": "Sau",
+      "cancel": "Hủy",
+      "add_success" : "Thêm danh mục thành công!",
+      "no_name_empty" : "Tên danh mục không được để trống!",
+      "update_success" : "Cập nhật danh mục thành công!",
+      "are_you_sure_delete" : "Bạn có chắc chắn muốn xóa danh mục này không?",
+      "delete_success" : "Xóa danh mục thành công!",
+      "input_name" : "Nhập tên danh mục",
+      "input_description" : "Nhập mô tả danh mục"
+    }
   }
 }
