@@ -1,12 +1,10 @@
 'use client';
 import convertDate from "@/common/datetime";
-import LoadingComponent from "@/component/common/Loading";
 import alertStore from "@/store/AlertStore";
 import loadingStore from "@/store/LoadingStore";
 import axios from "axios";
 import { Edit, Filter, Plus, Search, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { use, useEffect, useState } from "react";
-import { set } from "react-hook-form";
+import { useEffect, useState } from "react";
 import { useTranslation } from "../hook/useTranslation";
 
 type CategoryType = {
@@ -43,7 +41,6 @@ const Category = () => {
                 if (token) {
                     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                     const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category`);
-                    console.log("response", response);
 
                     setCategories(response.data.categories);
                     changeLoad();
