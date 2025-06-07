@@ -104,7 +104,7 @@ const Notification: React.FC<NotificationProps> = ({
                     className="ml-3 flex-shrink-0 p-1 rounded-full hover:bg-gray-200/50 transition-colors duration-200"
                     aria-label="Close notification"
                 >
-                    <X className="w-4 h-4" />
+                    <X className="w-4 h-4 cursor-pointer" />
                 </button>
             </div>
         </div>

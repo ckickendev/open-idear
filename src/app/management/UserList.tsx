@@ -50,6 +50,10 @@ const UserList = () => {
 
                     setUsers(response.data.users);
                     changeLoad();
+                } else {
+                    setType('error');
+                    setMessage("Authentication error !");
+                    changeLoad();
                 }
 
             } catch (error: any) {

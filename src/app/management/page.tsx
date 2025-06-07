@@ -20,7 +20,6 @@ import UserList from './UserList';
 import LoadingComponent from '@/component/common/Loading';
 import loadingStore from '@/store/LoadingStore';
 import Notification from '@/component/common/Notification';
-import alertStore from '@/store/AlertStore';
 
 const AdminDashboard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);

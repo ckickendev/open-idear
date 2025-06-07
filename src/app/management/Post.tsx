@@ -53,6 +53,10 @@ const Post = () => {
 
                     setPosts(response.data.posts);
                     changeLoad();
+                } else {
+                    setType('error');
+                    setMessage("Authentication error !");
+                    changeLoad();
                 }
             } catch (error: any) {
                 setType('error');

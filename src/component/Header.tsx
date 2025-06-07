@@ -4,7 +4,6 @@ import { AuthenPage } from "./authen/AuthenPage";
 import Profile from "./authen/Profile";
 import axios from "axios";
 import { getHeadersToken } from "@/api/authentication";
-import authenFormStore from "@/store/AuthenFormStore";
 import authenticationStore from "@/store/AuthenticationStore";
 
 import { useTranslation } from "@/app/hook/useTranslation";
@@ -14,9 +13,9 @@ import Link from "next/link";
 export default function Header() {
   const { t } = useTranslation();
 
-  const isAuthenFormDisplay = authenFormStore((state) => state.isAuthenFormDisplay);
-  const setIsAuthenFromDisplay = authenFormStore((state) => state.setIsAuthenFromDisplay);
-  const setStateAuthen = authenFormStore((state) => state.setState);
+  const isAuthenFormDisplay = authenticationStore((state) => state.isAuthenFormDisplay);
+  const setIsAuthenFromDisplay = authenticationStore((state) => state.setIsAuthenFromDisplay);
+  const setStateAuthen = authenticationStore((state) => state.setState);
 
   const currentUser = authenticationStore((state) => state.currentUser);
   const setCurrentUser = authenticationStore((state) => state.setCurrentUser);

@@ -6,7 +6,7 @@ const LanguageSelector = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const lang = useLanguageStore((store) => store.lang);
+  const lang = useLanguageStore((store) => store.lang) as "vi" | "en";
   const setLang = useLanguageStore((store) => store.setLang);
   
   const languages = {

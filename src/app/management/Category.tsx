@@ -44,6 +44,10 @@ const Category = () => {
 
                     setCategories(response.data.categories);
                     changeLoad();
+                } else {
+                    setType('error');
+                    setMessage("Authentication error !");
+                    changeLoad();
                 }
 
             } catch (error: any) {

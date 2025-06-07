@@ -4,12 +4,13 @@ import Login from "./Login";
 import LoadingComponent from "../common/Loading";
 import ConfirmSignUp from "./ConfirmSignUp";
 import { ForgotPassword } from "./ForgotPassword";
-import authenFormStore from "@/store/AuthenFormStore";
+import authenticationStore from "@/store/AuthenticationStore";
+
 
 export const AuthenPage = () => {
-    const setIsAuthenFromDisplay = authenFormStore((state) => state.setIsAuthenFromDisplay);
-    const authenState = authenFormStore((state) => state.state);
-    const setAuthenState = authenFormStore((state) => state.setState);
+    const setIsAuthenFromDisplay = authenticationStore((state) => state.setIsAuthenFromDisplay);
+    const authenState = authenticationStore((state) => state.state);
+    const setAuthenState = authenticationStore((state) => state.setState);
     const [isLoading, setIsLoading] = useState(false);
 
     const renderCore = () => {
