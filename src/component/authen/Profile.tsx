@@ -14,11 +14,13 @@ export default function Profile() {
             currentUser: {
                 _id: "",
                 username: "",
+                name: "",
                 email: "",
                 role: 0,
                 activate: false,
                 createdAt: new Date(),
                 bio: "",
+                background: "",
                 avatar: "",
             }
         });

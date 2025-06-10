@@ -1,21 +1,25 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 interface LanguageState {
   lang: string;
   setLang: (lang: string) => void;
+  initializeLang: () => void;
 }
 
-const defaultLang =
-  typeof window !== "undefined"
-    ? localStorage.getItem("language") || "en"
-    : "en";
-
 export const useLanguageStore = create<LanguageState>((set) => ({
-  lang: defaultLang,
+  lang: 'en', // default value for SSR
   setLang: (lang) => {
     set({ lang });
-    if (typeof window !== "undefined") {
-      localStorage.setItem("language", lang);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('language', lang);
+    }
+  },
+  initializeLang: () => {
+    if (typeof window !== 'undefined') {
+      const savedLang = localStorage.getItem('language');
+      if (savedLang) {
+        set({ lang: savedLang });
+      }
     }
   },
 }));

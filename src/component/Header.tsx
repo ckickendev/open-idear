@@ -9,6 +9,7 @@ import authenticationStore from "@/store/AuthenticationStore";
 import { useTranslation } from "@/app/hook/useTranslation";
 import LanguageSelector from "./LanguageSelector";
 import Link from "next/link";
+import { useLanguageStore } from "@/store/useLanguage";
 
 export default function Header() {
   const { t } = useTranslation();
@@ -20,6 +21,11 @@ export default function Header() {
   const currentUser = authenticationStore((state) => state.currentUser);
   const setCurrentUser = authenticationStore((state) => state.setCurrentUser);
 
+   const initializeLang = useLanguageStore((state) => state.initializeLang);
+
+  useEffect(() => {
+    initializeLang(); // initialize from localStorage on mount
+  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {

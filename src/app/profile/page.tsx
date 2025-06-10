@@ -165,7 +165,7 @@ const ProfileDashboard: React.FC = () => {
                             <h2 className="text-lg font-semibold mb-4">Bài viết của bạn</h2>
                             <div className="space-y-4">
                                 {allPosts.map((post, index) => (
-                                    <ArticleCard image={post.image} category='QUAN ĐIỂM · TRANH LUẬN' title={post.title} content={post.content} author={post.author} readTime="5 phut" />
+                                    <ArticleCard key={index} image={post.image} category='QUAN ĐIỂM · TRANH LUẬN' title={post.title} content={post.content} author={post.author} readTime="5 phut" />
                                 ))}
                             </div>
                         </div>
