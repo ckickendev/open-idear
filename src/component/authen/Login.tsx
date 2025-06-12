@@ -21,6 +21,7 @@ type ModalAuthen = {
 const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAuthen) => {
     const { t } = useTranslation();
     const setCurrentUser = authenticationStore((state) => state.setCurrentUser);
+    const setCurrentUserId = authenticationStore((state) => state.setCurrentUserID);
     const [errorSv, setErrorSv] = useState("");
 
     const {
@@ -41,6 +42,7 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
             if (res.data) {
                 localStorage.setItem("access_token", res.data.data.access_token);
                 setCurrentUser(res.data.data.user);
+                setCurrentUserId(res.data.data.user._id);
                 setIsLoading(false);
                 setIsAuthenFromDisplay(false);
                 setAuthenState(0);

@@ -1,3 +1,4 @@
+import convertDate from "@/common/datetime";
 import authenticationStore from "@/store/AuthenticationStore";
 
 const ProfileInformation = () => {
@@ -12,52 +13,41 @@ const ProfileInformation = () => {
                 {/* Profile Information */}
                 <div className="space-y-6">
                     {/* Registration Date */}
-                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                        <span className="text-gray-600 font-medium">Ngày đăng ký</span>
-                        <span className="text-gray-800">25/08/2024, 10:44</span>
+                    <div className="flex items-center py-3 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium w-1/4">Ngày đăng ký</span>
+                        <span className="text-gray-800">{convertDate(currentUser.createdAt.toString())}</span>
                     </div>
 
-                    {/* Last Name */}
-                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                        <span className="text-gray-600 font-medium">Họ</span>
-                        <span className="text-gray-800">Do</span>
-                    </div>
-
-                    {/* First Name */}
-                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                        <span className="text-gray-600 font-medium">Tên</span>
-                        <span className="text-gray-800">Nguyen</span>
+                    {/* Name */}
+                    <div className="flex items-center py-3 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium w-1/4">Họ Tên</span>
+                        <span className="text-gray-800">{currentUser.name}</span>
                     </div>
 
                     {/* Username */}
-                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                        <span className="text-gray-600 font-medium">Tên người dùng</span>
-                        <span className="text-blue-600">thesoonafugmailcom</span>
+                    <div className="flex items-center py-3 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium w-1/4">Tên người dùng</span>
+                        <span className="text-gray-800">{currentUser.username}</span>
                     </div>
 
                     {/* Email */}
-                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                        <span className="text-gray-600 font-medium">Email</span>
-                        <span className="text-blue-600">thesoonafu@gmail.com</span>
-                    </div>
-
-                    {/* Phone Number */}
-                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                        <span className="text-gray-600 font-medium">Số điện thoại</span>
-                        <span className="text-gray-400">-</span>
-                    </div>
-
-                    {/* Skills/Profession */}
-                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                        <span className="text-gray-600 font-medium">Kỹ năng/Nghề nghiệp</span>
-                        <span className="text-gray-400">-</span>
+                    <div className="flex items-center py-3 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium w-1/4">Email</span>
+                        <span className="text-blue-600">{currentUser.email}</span>
                     </div>
 
                     {/* Biography */}
-                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                        <span className="text-gray-600 font-medium">Tiểu sử</span>
-                        <span className="text-gray-400">-</span>
+                    <div className="flex items-center py-3 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium w-1/4">Tiểu sử</span>
+                        <span className="text-gray-400">{currentUser.bio ? currentUser.bio : "---"}</span>
                     </div>
+
+                    {/* Skills/Profession */}
+                    <div className="flex items-center py-3 border-b border-gray-100">
+                        <span className="text-gray-600 font-medium w-1/4">Trạng thái tài khoản</span>
+                        <span className="text-gray-400">{currentUser.activate ? "Đã kích hoạt" : "Chưa kích hoạt"}</span>
+                    </div>
+
                 </div>
 
                 {/* Membership Section */}

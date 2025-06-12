@@ -29,7 +29,7 @@ interface PostInterface {
 
 const ProfileDashboard: React.FC = () => {
     const [postType, setPostType] = React.useState<number>(1);
-    const [selectId, setSelectId] = React.useState<string>("profile");
+    const [selectId, setSelectId] = React.useState<string>("overview");
     const [displayPost, setDisplayPost] = React.useState<PostInterface[]>([]);
     const [titlePost, setTitlePost] = useState("Bài viết của bạn");
 
