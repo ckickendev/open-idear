@@ -7,9 +7,10 @@ import ProfileInfo from '@/component/authen/ProfileInfo';
 import { BookHeart, Bookmark, BookText, ChartColumnStacked, CircleHelp, Heart, LogOut, Pen, Pencil, PencilLine, Settings, ShoppingCart, SquarePen, Star, UserRoundPen } from 'lucide-react';
 import { getHeadersToken } from '@/api/authentication';
 import axios from 'axios';
+import ProfileInformation from './ProfileInformation';
 
 // Define types
-interface AllYourPost {
+interface PostInterface {
     // _id: string;
     title: string;
     slug?: string;
@@ -29,9 +30,14 @@ interface AllYourPost {
 const ProfileDashboard: React.FC = () => {
     const [postType, setPostType] = React.useState<number>(1);
     const [selectId, setSelectId] = React.useState<string>("profile");
-    const [allPosts, setAllPosts] = React.useState<AllYourPost[]>([]);
+    const [displayPost, setDisplayPost] = React.useState<PostInterface[]>([]);
+    const [titlePost, setTitlePost] = useState("Bài viết của bạn");
 
+    const [allPosts, setAllPosts] = React.useState<PostInterface[]>([]);
+    const [allUnfinishPosts, setAllUnfinishPosts] = React.useState<PostInterface[]>([]);
+    const [allLikePost, setAllLikePost] = React.useState<PostInterface[]>([]);
 
+    const currentUserID = authenticationStore((state) => state.currentUserID)
 
     const router = useRouter();
 
@@ -47,6 +53,18 @@ const ProfileDashboard: React.FC = () => {
                     if (res.status === 200) {
                         console.log("posts info: ", res.data);
                         setAllPosts(res.data.posts);
+                        setDisplayPost(res.data.posts);
+
+                        setAllUnfinishPosts(() => {
+                            return res.data.posts.filter((e: PostInterface) => {
+                                return e.published === false;
+                            });
+                        });
+                    }
+
+                    const resLike = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getLikeByUser/${currentUserID}`);
+                    if (res.status === 200) {
+                        setAllLikePost(resLike.data.posts);
                     }
                 }
             } catch (error) {
@@ -59,7 +77,7 @@ const ProfileDashboard: React.FC = () => {
 
     // Navigation items
     const navItems = [
-        { id: 'profile', icon: <ChartColumnStacked />, text: 'Tổng quan' },
+        { id: 'overview', icon: <ChartColumnStacked />, text: 'Tổng quan' },
         { id: 'user-info', icon: <UserRoundPen />, text: 'Thông tin của tôi' },
         { id: 'posts', icon: <Pen />, text: 'Tất cả bài viết' },
         { id: 'wishlist', icon: <Heart />, text: 'Danh sách yêu thích' },
@@ -69,13 +87,6 @@ const ProfileDashboard: React.FC = () => {
         { id: 'faq', icon: <CircleHelp />, text: 'Hỏi & đáp' },
         { id: 'settings', icon: <Settings />, text: 'Cài đặt' },
         { id: 'logout', icon: <LogOut />, text: 'Đăng xuất' }
-    ];
-
-    // Course stats
-    const postTypeStats = [
-        { id: 1, icon: <SquarePen />, count: 3, text: 'Tất cả bài viết của bạn' },
-        { id: 2, icon: <PencilLine />, count: 2, text: 'Bài viết chưa hoàn thành' },
-        { id: 3, icon: <BookHeart />, count: 1, text: 'Bài viết đã thích' }
     ];
 
     // Handle click on navigation item
@@ -90,6 +101,18 @@ const ProfileDashboard: React.FC = () => {
 
     const handlePostTypeClick = (postTypeId: number) => {
         setPostType(postTypeId);
+
+        if (postTypeId == 1) {
+            setTitlePost("Bài viết của bạn");
+            setDisplayPost(allPosts);
+        } else if (postTypeId == 2) {
+            setTitlePost("Bài viết chưa hoàn thành");
+            setDisplayPost(allUnfinishPosts);
+        } else {
+            setTitlePost("Bài viết đã thích");
+            setDisplayPost(allLikePost);
+        }
+
     };
 
     return (
@@ -120,7 +143,7 @@ const ProfileDashboard: React.FC = () => {
 
                 <div className="flex border-t-1 border-gray-500 pt-4">
                     {/* Sidebar */}
-                    <div className="w-64 bg-white shadow-sm rounded-lg pt-2 mr-6">
+                    <div className="w-64 h-full bg-white shadow-sm rounded-lg pt-2 mr-6">
                         <nav>
                             <ul>
                                 {navItems.map(item => (
@@ -128,7 +151,7 @@ const ProfileDashboard: React.FC = () => {
                                         <button
                                             onClick={() => handleNavClick(item.id)}
                                             className={`w-full flex items-center px-4 py-3 mb-1 rounded-md cursor-pointer transition-colors
-                                ${item.id === selectId ? 'bg-blue-800 text-white' : 'hover:bg-gray-100'}`}
+                                            ${item.id === selectId ? 'bg-blue-800 text-white' : 'hover:bg-gray-100'}`}
                                         >
                                             <span className="mr-3">{item.icon}</span>
                                             <span>{item.text}</span>
@@ -139,37 +162,60 @@ const ProfileDashboard: React.FC = () => {
                         </nav>
                     </div>
 
-                    {/* Main content */}
-                    <div className="flex-1 m-l-4 p-6 bg-white rounded-lg shadow-sm">
+                    {selectId == 'overview' && <div className="flex-1 m-l-4 p-6 bg-white rounded-lg shadow-sm">
                         <div className="flex items-center justify-between mb-6">
                             <h1 className="text-xl font-bold">Tổng Quan</h1>
                         </div>
 
                         {/* Stats */}
                         <div className="grid grid-cols-3 gap-4 mb-8">
-                            {postTypeStats.map(post => (
-                                <div
-                                    key={post.id}
-                                    onClick={() => handlePostTypeClick(post.id)}
-                                    className="bg-white border-1 border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-shadow"
-                                >
-                                    <div className="bg-purple-200 rounded-full text-purple-500 text-4xl p-4 mb-2 cir">{post.icon}</div>
-                                    <div className="text-4xl font-bold mb-1">{post.count}</div>
-                                    <div className="text-sm text-center text-gray-600">{post.text}</div>
-                                </div>
-                            ))}
+                            <div
+                                onClick={() => handlePostTypeClick(1)}
+                                className="bg-white border-1 border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-shadow"
+                            >
+                                <div className="bg-purple-200 rounded-full text-purple-500 text-4xl p-4 mb-2 cir"><SquarePen /></div>
+                                <div className="text-4xl font-bold mb-1">{allPosts.length}</div>
+                                <div className="text-sm text-center text-gray-600">Tất cả bài viết của bạn</div>
+                            </div>
+                            <div
+                                onClick={() => handlePostTypeClick(2)}
+                                className="bg-white border-1 border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-shadow"
+                            >
+                                <div className="bg-purple-200 rounded-full text-purple-500 text-4xl p-4 mb-2 cir"><PencilLine /></div>
+                                <div className="text-4xl font-bold mb-1">{allUnfinishPosts.length}</div>
+                                <div className="text-sm text-center text-gray-600">Bài viết chưa hoàn thành</div>
+                            </div>
+                            <div
+                                onClick={() => handlePostTypeClick(3)}
+                                className="bg-white border-1 border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-shadow"
+                            >
+                                <div className="bg-purple-200 rounded-full text-purple-500 text-4xl p-4 mb-2 cir"><BookHeart /></div>
+                                <div className="text-4xl font-bold mb-1">{allLikePost.length}</div>
+                                <div className="text-sm text-center text-gray-600">Bài viết đã thích</div>
+                            </div>
                         </div>
 
                         {/* In Progress Courses */}
                         <div>
-                            <h2 className="text-lg font-semibold mb-4">Bài viết của bạn</h2>
+                            <h2 className="text-lg font-semibold mb-4">{titlePost}</h2>
                             <div className="space-y-4">
-                                {allPosts.map((post, index) => (
-                                    <ArticleCard key={index} image={post.image} category='QUAN ĐIỂM · TRANH LUẬN' title={post.title} content={post.content} author={post.author} readTime="5 phut" />
+                                {displayPost.length == 0 && <h1 className='text-xxl font-semibold mb-4'>No record</h1>}
+                                {displayPost.map((post, index) => (
+                                    <ArticleCard key={index}
+                                        image={post.image}
+                                        category={post.category}
+                                        title={post.title}
+                                        content={post.content}
+                                        author={post.author}
+                                        readTime="5 phut"
+                                    />
                                 ))}
                             </div>
                         </div>
-                    </div>
+                    </div>}
+
+
+                    {selectId == 'user-info' && <ProfileInformation />}
                 </div>
             </div>
         </div>
@@ -177,7 +223,7 @@ const ProfileDashboard: React.FC = () => {
 };
 
 
-function ArticleCard(data: AllYourPost) {
+function ArticleCard(data: PostInterface) {
     const [bookmarked, setBookmarked] = useState(false);
 
     return (
@@ -193,7 +239,6 @@ function ArticleCard(data: AllYourPost) {
 
             {/* Right side - Content */}
             <div className="w-2/3 p-4 flex flex-col justify-between">
-                {/* Header */}
                 <div className="mb-2">
                     <div className="flex justify-between items-center mb-2">
                         <div className="flex items-center space-x-2">

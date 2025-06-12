@@ -10,17 +10,16 @@ import alertStore from '@/store/AlertStore';
 import loadingStore from '@/store/LoadingStore';
 
 const ProfileInfo = () => {
-    const currentUser = authenticationStore((state) => state.currentUser);
     const [showAvatarUpload, setShowAvatarUpload] = useState(false);
     const [showBackgroundUpload, setShowBackgroundUpload] = useState(false);
 
     const setType = alertStore((state) => state.setType);
     const setMessage = alertStore((state) => state.setMessage);
     const changeLoad = loadingStore((state) => state.changeLoad);
+    const updateCurrentUser = authenticationStore((state) => state.updateCurrentUser);
+    const currentUser = authenticationStore((state) => state.currentUser);
 
     const handleBackgroundChangeClick = () => {
-        console.log(1);
-
         setShowBackgroundUpload((state) => !state);
     };
 
@@ -44,9 +43,6 @@ const ProfileInfo = () => {
         // For example: trigger file input or open upload modal
     };
 
-
-    const { updateCurrentUser } = authenticationStore.getState();
-
     return (
         <div className="w-full bg-white rounded-lg shadow">
             {/* Cover Image & Profile Section */}
@@ -56,7 +52,7 @@ const ProfileInfo = () => {
                         <div className="opacity-80">
                             <div className="bg-black flex items-center justify-center">
                                 <img
-                                    src={currentUser.background || "https://codetheweb.blog/assets/img/posts/css-advanced-background-images/cover.jpg"}
+                                    src={currentUser.background}
                                     alt="cover-image"
                                     className="object-fill w-full h-100"
                                 />
@@ -83,15 +79,19 @@ const ProfileInfo = () => {
                                         changeLoad();
                                         const token = localStorage.getItem("access_token");
                                         if (token) {
-                                            // axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                                            // await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/updateImage`, {
-                                            //     avatar: result?.info?.url
-                                            // });
-                                            updateCurrentUser({ background: result?.info?.url })
-                                            setShowBackgroundUpload(false);
+                                            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                                            const res = await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/updateImage`, {
+                                                background: result?.info?.url
+                                            });
+                                            if (res.status == 200) {
+                                                setType('info');
+                                                setMessage('Update successfully');
+                                                updateCurrentUser({ background: result?.info?.url })
+                                                setShowBackgroundUpload(false);
+                                            }
                                         } else {
                                             setType('error');
-                                            setMessage("Authentication error !");
+                                            setMessage("Error !");
                                             changeLoad();
                                         }
                                     } catch (error: any) {
@@ -150,12 +150,16 @@ const ProfileInfo = () => {
                                                 changeLoad();
                                                 const token = localStorage.getItem("access_token");
                                                 if (token) {
-                                                    // axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                                                    // await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/updateImage`, {
-                                                    //     avatar: result?.info?.url
-                                                    // });
-                                                    updateCurrentUser({ avatar: result?.info?.url })
-                                                    setShowAvatarUpload(false);
+                                                    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                                                    const res = await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/updateImage`, {
+                                                        avatar: result?.info?.url
+                                                    });
+                                                    if (res.status == 200) {
+                                                        setType('info');
+                                                        setMessage('Update successfully');
+                                                        updateCurrentUser({ avatar: result?.info?.url })
+                                                        setShowAvatarUpload(false);
+                                                    }
                                                 } else {
                                                     setType('error');
                                                     setMessage("Authentication error !");
@@ -173,7 +177,12 @@ const ProfileInfo = () => {
                                 >
                                     {({ open }) => {
                                         function handleOnClick() {
+                                            console.log(1);
+
                                             open();
+
+                                            console.log(2);
+
                                         }
                                         return (
                                             <div className="rounded-md w-full">
@@ -205,12 +214,6 @@ const ProfileInfo = () => {
                                 <p className="text-gray-700">{currentUser.email}</p>
                                 <div className="flex items-center gap-1 text-gray-500 text-sm mt-1">
                                     <span>{currentUser.bio ?? "No bio"}</span>
-                                    <span className="mx-1">·</span>
-                                    <span className="text-blue-600 hover:underline cursor-pointer ">
-                                        <a href={"/my-info"} className='text-red-800'>
-                                            Edit contact info
-                                        </a>
-                                    </span>
                                 </div>
                             </div>
                         </div>
