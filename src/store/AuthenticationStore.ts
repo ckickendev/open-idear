@@ -8,7 +8,7 @@ interface UserData {
     role: Number,
     activate: Boolean,
     createdAt: Date,
-    bio: String,
+    bio: string,
     background: string,
     avatar: string,
 }
