@@ -60,7 +60,7 @@ const Post = () => {
                 }
             } catch (error: any) {
                 setType('error');
-                setMessage(error?.response?.data?.error || error?.message);
+                setMessage(error?.response?.data?.message || error?.message);
                 changeLoad();
                 console.error('Error fetching posts:', error);
             }
@@ -156,7 +156,7 @@ const Post = () => {
             changeLoad();
         } catch (error: any) {
             setType('error');
-            setMessage(error?.response?.data?.error || error?.message);
+            setMessage(error?.response?.data?.message || error?.message);
             changeLoad();
         }
     };
@@ -175,7 +175,7 @@ const Post = () => {
                 })
                 .catch(error => {
                     setType('error');
-                    setMessage(error?.response?.data?.error || error?.message);
+                    setMessage(error?.response?.data?.message || error?.message);
                     changeLoad();
                 });
 

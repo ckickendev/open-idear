@@ -64,7 +64,7 @@ const ProfileInformation = () => {
                     data
                 });
                 console.log("ressss");
-                
+
                 if (res.status == 200) {
                     setType('info');
                     setMessage('Update successfully');
@@ -76,7 +76,7 @@ const ProfileInformation = () => {
             }
         } catch (error: any) {
             setType('error');
-            setMessage(error?.response?.data?.error || error?.message);
+            setMessage(error?.response?.data?.message || error?.message);
             console.error('Error fetching categories:', error);
         } finally {
             setIsLoading(false);

@@ -4,13 +4,22 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import authenticationStore from '@/store/AuthenticationStore';
 import ProfileInfo from '@/component/authen/ProfileInfo';
-import { BookHeart, Bookmark, BookText, ChartColumnStacked, CircleHelp, Heart, LogOut, Pen, Pencil, PencilLine, Settings, ShoppingCart, SquarePen, Star, UserRoundPen } from 'lucide-react';
+import { BookHeart, Bookmark, BookText, ChartColumnStacked, CircleHelp, Heart, LogOut, Pen, PencilLine, Settings, ShoppingCart, SquarePen, Star, UserRoundPen } from 'lucide-react';
 import { getHeadersToken } from '@/api/authentication';
 import axios from 'axios';
 import ProfileInformation from './ProfileInformation';
+import PostInformation from './PostInformation';
+import loadingStore from '@/store/LoadingStore';
+import LoadingComponent from '@/component/common/Loading';
+import LikeInformation from './LikeInformation';
+import YourRating from './YourRating';
+import YourCourse from './YourCourse';
+import YourHistory from './YourHistory';
+import AskQuestion from './AskQuestion';
+import SettingProfile from './Setting';
 
 // Define types
-interface PostInterface {
+export interface PostInterface {
     // _id: string;
     title: string;
     slug?: string;
@@ -37,7 +46,9 @@ const ProfileDashboard: React.FC = () => {
     const [allUnfinishPosts, setAllUnfinishPosts] = React.useState<PostInterface[]>([]);
     const [allLikePost, setAllLikePost] = React.useState<PostInterface[]>([]);
 
-    const currentUserID = authenticationStore((state) => state.currentUserID)
+    const currentUser = authenticationStore((state) => state.currentUser);
+    const isLoading = loadingStore(state => state.isLoading);
+    const changeLoad = loadingStore((state) => state.changeLoad);
 
     const router = useRouter();
 
@@ -45,6 +56,7 @@ const ProfileDashboard: React.FC = () => {
         // Fetch all posts from the server
         const fetchPosts = async () => {
             try {
+                changeLoad()
                 const token = localStorage.getItem("access_token");
                 if (token) {
                     const headers = getHeadersToken();
@@ -62,13 +74,15 @@ const ProfileDashboard: React.FC = () => {
                         });
                     }
 
-                    const resLike = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getLikeByUser/${currentUserID}`);
-                    if (res.status === 200) {
+                    const resLike = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getLikeByUser/${currentUser._id}`);
+                    if (resLike.status === 200) {
                         setAllLikePost(resLike.data.posts);
                     }
                 }
             } catch (error) {
                 console.error('Error fetching posts:', error);
+            } finally {
+                changeLoad();
             }
         };
 
@@ -117,6 +131,7 @@ const ProfileDashboard: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <LoadingComponent isLoading={isLoading} />
             {/* Header */}
             <header className="bg-white shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center">
@@ -201,7 +216,7 @@ const ProfileDashboard: React.FC = () => {
                             <div className="space-y-4">
                                 {displayPost.length == 0 && <h1 className='text-xxl font-semibold mb-4'>No record</h1>}
                                 {displayPost.map((post, index) => (
-                                    <ArticleCard key={index}
+                                    <PostElement key={index}
                                         image={post.image}
                                         category={post.category}
                                         title={post.title}
@@ -216,6 +231,13 @@ const ProfileDashboard: React.FC = () => {
 
 
                     {selectId == 'user-info' && <ProfileInformation />}
+                    {selectId == 'posts' && <PostInformation />}
+                    {selectId == 'wishlist' && <LikeInformation />}
+                    {selectId == 'ratings' && <YourRating />}
+                    {selectId == 'courses' && <YourCourse />}
+                    {selectId == 'orders' && <YourHistory />}
+                    {selectId == 'faq' && <AskQuestion />}
+                    {selectId == 'settings' && <SettingProfile />}
                 </div>
             </div>
         </div>
@@ -223,7 +245,7 @@ const ProfileDashboard: React.FC = () => {
 };
 
 
-function ArticleCard(data: PostInterface) {
+export function PostElement(data: PostInterface) {
     const [bookmarked, setBookmarked] = useState(false);
 
     return (

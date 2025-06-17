@@ -6,6 +6,7 @@ import axios from "axios";
 import { Edit, Filter, Plus, Search, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "../hook/useTranslation";
+import { log } from "console";
 
 type CategoryType = {
     _id: string;
@@ -43,18 +44,17 @@ const Category = () => {
                     const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category`);
 
                     setCategories(response.data.categories);
-                    changeLoad();
                 } else {
                     setType('error');
                     setMessage("Authentication error !");
-                    changeLoad();
                 }
 
             } catch (error: any) {
                 setType('error');
-                setMessage(error?.response?.data?.error || error?.message)
-                changeLoad();
+                setMessage(error?.response?.data?.message || error?.message)
                 console.error('Error fetching categories:', error);
+            } finally {
+                changeLoad();
             }
         };
         fetchCategories();
@@ -166,16 +166,14 @@ const Category = () => {
                 });
                 setCategories([...categories, newCategory.data.category]);
                 setFormData({ _id: '', name: '', slug: '', description: '' });
-                setShowModal(false);
 
                 setType('info');
                 setMessage(t('management.category.add_success'));
-                changeLoad();
             } catch (error: any) {
-                setShowModal(false);
-
                 setType('error');
-                setMessage(error?.response?.data?.error || error?.message);
+                setMessage(error?.response?.data?.message || error?.message);
+            } finally {
+                setShowModal(false);
                 changeLoad();
             }
         }
@@ -205,18 +203,17 @@ const Category = () => {
                     cat._id === selectedItem?._id ? response.data.category : cat
                 ));
                 setFormData({ _id: '', name: '', slug: '', description: '' });
-                setShowModal(false);
                 setSelectedItem(null);
 
                 setType('info');
                 setMessage(t('management.category.update_success'));
-                changeLoad();
             })
             .catch(error => {
                 setType('error');
-                setMessage(error?.response?.data?.error || error?.message);
-                changeLoad();
+                setMessage(error?.response?.data?.message || error?.message);
             });
+        setShowModal(false);
+        changeLoad();
     };
 
     const handleDeleteCategory = (id: string) => {
@@ -232,7 +229,7 @@ const Category = () => {
                 })
                 .catch(error => {
                     setType('error');
-                    setMessage(error?.response?.data?.error || error?.message);
+                    setMessage(error?.response?.data?.message || error?.message);
                     changeLoad();
                 });
 

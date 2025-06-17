@@ -58,7 +58,7 @@ const UserList = () => {
 
             } catch (error: any) {
                 setType('error');
-                setMessage(error?.response?.data?.error || error?.message)
+                setMessage(error?.response?.data?.message || error?.message)
                 changeLoad();
                 console.error('Error fetching users:', error);
             }
@@ -193,7 +193,7 @@ const UserList = () => {
             } catch (error: any) {
                 setShowModal(false);
                 setType('error');
-                setMessage(error?.response?.data?.error || error?.message);
+                setMessage(error?.response?.data?.message || error?.message);
                 changeLoad();
             }
         }
@@ -235,7 +235,7 @@ const UserList = () => {
             })
             .catch(error => {
                 setType('error');
-                setMessage(error?.response?.data?.error || error?.message);
+                setMessage(error?.response?.data?.message || error?.message);
                 changeLoad();
             });
     };
@@ -253,7 +253,7 @@ const UserList = () => {
                 })
                 .catch(error => {
                     setType('error');
-                    setMessage(error?.response?.data?.error || error?.message);
+                    setMessage(error?.response?.data?.message || error?.message);
                     changeLoad();
                 });
 
@@ -295,7 +295,7 @@ const UserList = () => {
             changeLoad();
         } catch (error: any) {
             setType('error');
-            setMessage(error?.response?.data?.error || error?.message);
+            setMessage(error?.response?.data?.message || error?.message);
             changeLoad();
         }
     };
