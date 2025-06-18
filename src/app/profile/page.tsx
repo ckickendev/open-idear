@@ -23,7 +23,8 @@ export interface PostInterface {
     // _id: string;
     title: string;
     slug?: string;
-    content: string;
+    content?: string;
+    text?: string;
     author: any;
     category: string;
     published?: boolean;
@@ -220,7 +221,7 @@ const ProfileDashboard: React.FC = () => {
                                         image={post.image}
                                         category={post.category}
                                         title={post.title}
-                                        content={post.content}
+                                        content={post.text}
                                         author={post.author}
                                         readTime="5 phut"
                                     />
@@ -228,7 +229,6 @@ const ProfileDashboard: React.FC = () => {
                             </div>
                         </div>
                     </div>}
-
 
                     {selectId == 'user-info' && <ProfileInformation />}
                     {selectId == 'posts' && <PostInformation />}

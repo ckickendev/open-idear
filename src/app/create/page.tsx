@@ -30,7 +30,6 @@ import PostLists from './PostLists';
 
 import HtmlEditor, { RawHtmlExtension } from './HtmlEditor';
 
-
 export default function CreatePost() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -58,7 +57,6 @@ export default function CreatePost() {
       if (token) {
         const headers = getHeadersToken();
         const idPost = searchParams.get('id');
-        console.log("id ne : ", idPost);
 
         setIdPost(idPost);
         if (!idPost) {
@@ -238,8 +236,11 @@ export default function CreatePost() {
   const savePost = async () => {
     if (!editor) return;
 
+    const text = editor.getText().replace(/\n/g, '');
     const content = editor.getHTML();
-    console.log({ title: title, content });
+
+    console.log("Saving post with text: ", text);
+    
 
     changeLoad();
     const headers = getHeadersToken();
@@ -248,6 +249,7 @@ export default function CreatePost() {
       axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/update`, {
         postId: idPost,
         title: title,
+        text: text,
         content: content,
         headers
       }).then((res) => {
@@ -264,6 +266,7 @@ export default function CreatePost() {
 
     axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/create`, {
       title: title,
+      text: text,
       content: content,
       headers
     }).then((res) => {
@@ -282,7 +285,7 @@ export default function CreatePost() {
 
   return (
     <div className="min-h-screen bg-white">
-      <LoadingComponent isLoading={isLoading} />
+
       <Head>
         <title>Create New Post</title>
         <meta name="description" content="Create a new post with our drag and drop editor" />
@@ -345,6 +348,7 @@ export default function CreatePost() {
                 onDragOver={previewMode ? undefined : handleDragOver}
                 onDrop={previewMode ? undefined : handleDrop}
               >
+                <LoadingComponent isLoading={isLoading} />
                 {previewMode ? (
                   <div className="prose max-w-none preview-container">
 
@@ -392,7 +396,6 @@ const HardBreakExtension = Extension.create({
       Enter: ({ editor }) => {
 
         if (editor.isActive('codeBlock')) {
-          console.log('codeBlock');
           return false;
         }
         editor.commands.setHardBreak();

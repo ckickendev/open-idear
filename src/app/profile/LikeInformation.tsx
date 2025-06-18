@@ -48,7 +48,7 @@ const LikeInformation = () => {
                             image={post.image}
                             category={post.category}
                             title={post.title}
-                            content={post.content}
+                            content={post.text}
                             author={post.author}
                             readTime="5 phut"
                         />

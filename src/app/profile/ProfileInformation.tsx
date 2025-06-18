@@ -60,6 +60,7 @@ const ProfileInformation = () => {
             const token = localStorage.getItem("access_token");
             if (token) {
                 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                
                 const res = await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/updateProfile`, {
                     data
                 });
@@ -68,7 +69,7 @@ const ProfileInformation = () => {
                 if (res.status == 200) {
                     setType('info');
                     setMessage('Update successfully');
-                    updateCurrentUser({ bio: data.bio, name: data.name })
+                    updateCurrentUser({ bio: data.bio, name: data.name });
                 }
             } else {
                 setType('error');
