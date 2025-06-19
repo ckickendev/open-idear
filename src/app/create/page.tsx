@@ -39,6 +39,8 @@ export default function CreatePost() {
   const [previewMode, setPreviewMode] = useState(false);
   const [instructionDis, setInstructionDis] = useState(false);
 
+  const [onPublic, setOnPublic] = useState(false);
+
   const title = contentStore((state) => state.title);
   const setTitle = contentStore((state) => state.setTitle);
   const content = contentStore((state) => state.content);
@@ -179,8 +181,6 @@ export default function CreatePost() {
     [editor]
   );
 
-
-
   const insertElementAtPosition = (type: string, position: number) => {
     if (!editor) return;
 
@@ -231,8 +231,11 @@ export default function CreatePost() {
     }
   };
 
-  // Editor toolbar components
+  const onPublicPage = () => {
+    setOnPublic((prev) => !prev);
+  }
 
+  // Editor toolbar components
   const savePost = async () => {
     if (!editor) return;
 
@@ -240,7 +243,7 @@ export default function CreatePost() {
     const content = editor.getHTML();
 
     console.log("Saving post with text: ", text);
-    
+
 
     changeLoad();
     const headers = getHeadersToken();
@@ -366,12 +369,36 @@ export default function CreatePost() {
               }
 
               <div className="flex gap-2 mb-4 mt-4 w-full justify-end">
-                {title && <button
-                  onClick={savePost}
-                  className="px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
-                >
-                  Save Post
-                </button>}
+                {title ?
+                  <>
+                    <button
+                      onClick={onPublicPage}
+                      className="px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                    >
+                      Public
+                    </button>
+                    <button
+                      onClick={savePost}
+                      className="px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                    >
+                      Save Draft
+                    </button>
+                  </>
+                  :
+                  <>
+                    <button
+                      className="px-8 py-4 bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
+                    >
+                      Public
+                    </button>
+                    <button
+                      className="px-8 py-4 bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
+                    >
+                      Save Draft
+                    </button>
+                  </>
+
+                }
 
               </div>
 
