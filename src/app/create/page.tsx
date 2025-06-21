@@ -14,7 +14,6 @@ import Paragraph from '@tiptap/extension-paragraph';
 
 import "./edit.css";
 import Toolbar from './ToolBar';
-import Instruction from './Instruction';
 import Color from '@tiptap/extension-color';
 import { MessageCircleQuestion } from 'lucide-react';
 import FloatingToolbar from './FloatingToolbar';
@@ -29,6 +28,7 @@ import loadingStore from '@/store/LoadingStore';
 import PostLists from './PostLists';
 
 import HtmlEditor, { RawHtmlExtension } from './HtmlEditor';
+import Instruction from './Instruction';
 
 export default function CreatePost() {
   const router = useRouter();
@@ -288,7 +288,7 @@ export default function CreatePost() {
 
   return (
     <div className="min-h-screen bg-white">
-
+      <Instruction display={instructionDis} />
       <Head>
         <title>Create New Post</title>
         <meta name="description" content="Create a new post with our drag and drop editor" />
@@ -300,10 +300,8 @@ export default function CreatePost() {
           <h1 className="text-3xl font-bold text-gray-600">{!idPost ? "Create new post" : "Edit your post"}</h1>
           <div className='relative'>
             <MessageCircleQuestion className=' m-2'
-              onMouseEnter={() => setInstructionDis(true)}
-              onMouseLeave={() => setInstructionDis(false)} />
-            {instructionDis && <Instruction />}
-
+              onClick={() => setInstructionDis(true)}
+            />
           </div>
         </div>
 
