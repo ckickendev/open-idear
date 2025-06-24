@@ -19,7 +19,7 @@ export default function Instruction({ display }: any) {
         {/* Header dots indicator */}
 
         {/* Main Tutorial Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-white rounded-t-2xl border-b-4 border-gray-400 shadow-xl overflow-hidden">
           <div className="flex justify-center mb-8 pt-8">
             <div className="flex space-x-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -98,7 +98,7 @@ export default function Instruction({ display }: any) {
         {/* Content sections */}
         <div className="space-y-6">
           {/* Section 1 */}
-          <div className="bg-white rounded-xl p-6 shadow-md">
+          <div className="bg-white rounded-b-xl p-6 shadow-md">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
               <BookOpen className="w-6 h-6 mr-2 text-blue-500" />
               PHẦN 1: SPIDERUM LÀ GÌ?
@@ -145,7 +145,7 @@ export default function Instruction({ display }: any) {
     <div className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header dots indicator */}
-        <div className="flex justify-center mb-8 pt-8">
+        <div className="flex justify-center mb-8 pt-8 ">
           <div className="flex space-x-2">
             <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -155,7 +155,7 @@ export default function Instruction({ display }: any) {
         </div>
 
         {/* Main Editor Tutorial Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+        <div className="bg-white rounded-t-2xl shadow-xl border-b-4 border-gray-400">
           <div className="bg-gradient-to-r from-blue-200 to-blue-300 p-8 relative">
             {/* Character mascot */}
             <div className="absolute top-4 right-8">
@@ -273,7 +273,7 @@ export default function Instruction({ display }: any) {
         </div>
 
         {/* Content Guide Section */}
-        <div className="bg-white rounded-xl shadow-md p-8">
+        <div className="bg-white rounded-b- xl shadow-md p-8">
           <h2 className="text-xl font-bold text-gray-800 mb-6">
             PHẦN 2: HỖ TRỢ TRÌNH BÀY BÀI VIẾT CHUYÊN NGHIỆP
           </h2>
