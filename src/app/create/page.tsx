@@ -288,7 +288,7 @@ export default function CreatePost() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Instruction display={instructionDis} />
+      <Instruction display={instructionDis} setInstructionDis={setInstructionDis} />
       <Head>
         <title>Create New Post</title>
         <meta name="description" content="Create a new post with our drag and drop editor" />
