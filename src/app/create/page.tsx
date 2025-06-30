@@ -29,6 +29,7 @@ import PostLists from './PostLists';
 
 import HtmlEditor, { RawHtmlExtension } from './HtmlEditor';
 import Instruction from './Instruction';
+import { useInstructionStore } from '@/store/useInstruction';
 
 export default function CreatePost() {
   const router = useRouter();
@@ -37,7 +38,6 @@ export default function CreatePost() {
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const [previewMode, setPreviewMode] = useState(false);
-  const [instructionDis, setInstructionDis] = useState(false);
 
   const [onPublic, setOnPublic] = useState(false);
 
@@ -50,6 +50,9 @@ export default function CreatePost() {
 
   const isLoading = loadingStore((state) => state.isLoading);
   const changeLoad = loadingStore((state) => state.changeLoad);
+
+  const setDisplayInstructions = useInstructionStore((state) => state.setDisplayInstructions);
+
   const [idPost, setIdPost] = useState<string | null>(null);
 
   useEffect(() => {
@@ -288,7 +291,7 @@ export default function CreatePost() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Instruction display={instructionDis} setInstructionDis={setInstructionDis} />
+      <Instruction />
       <Head>
         <title>Create New Post</title>
         <meta name="description" content="Create a new post with our drag and drop editor" />
@@ -300,7 +303,7 @@ export default function CreatePost() {
           <h1 className="text-3xl font-bold text-gray-600">{!idPost ? "Create new post" : "Edit your post"}</h1>
           <div className='relative'>
             <MessageCircleQuestion className=' m-2'
-              onClick={() => setInstructionDis(true)}
+              onClick={() => setDisplayInstructions(true)}
             />
           </div>
         </div>
