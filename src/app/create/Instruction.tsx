@@ -1,15 +1,20 @@
 import React, { useState } from "react";
 import { ChevronRight, BookOpen, Lightbulb, User, Coffee } from "lucide-react";
+import { useInstructionStore } from "@/store/useInstruction";
 
-export default function Instruction({ display, setInstructionDis }: any) {
-  const [currentPage, setCurrentPage] = useState(1);
+export default function Instruction() {
+  const displayInstructions = useInstructionStore((state) => state.displayInstructions);
+  const setDisplayInstructions = useInstructionStore((state) => state.setDisplayInstructions);
+
+  const currentPage = useInstructionStore((state) => state.currentPage);
+  const setCurrentPage = useInstructionStore((state) => state.setCurrentPage);
 
   const handleContinue = () => {
-    setCurrentPage(2);
+    setCurrentPage(currentPage + 1);
   };
 
   const handleBack = () => {
-    setCurrentPage(1);
+    setCurrentPage(currentPage - 1);
   };
 
   // Page 1 - Tutorial Overview
@@ -263,7 +268,7 @@ export default function Instruction({ display, setInstructionDis }: any) {
                 </button>
               </div>
               <button
-                onClick={() => setCurrentPage(3)}
+                onClick={() => handleContinue}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
               >
                 Tiếp tục
@@ -300,8 +305,8 @@ export default function Instruction({ display, setInstructionDis }: any) {
         <div className="flex justify-center mb-8 pt-8 ">
           <div className="flex space-x-2">
             <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
             <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
             <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
           </div>
         </div>
@@ -367,7 +372,7 @@ export default function Instruction({ display, setInstructionDis }: any) {
                 </button>
               </div>
               <button
-                onClick={() => setCurrentPage(4)}
+                onClick={() => handleContinue}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
               >
                 Tiếp tục
@@ -404,9 +409,9 @@ export default function Instruction({ display, setInstructionDis }: any) {
         <div className="flex justify-center mb-8 pt-8 ">
           <div className="flex space-x-2">
             <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
           </div>
         </div>
 
@@ -471,7 +476,7 @@ export default function Instruction({ display, setInstructionDis }: any) {
                 </button>
               </div>
               <button
-                onClick={() => setCurrentPage(5)}
+                onClick={() => handleContinue}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
               >
                 Tiếp tục
@@ -503,12 +508,12 @@ export default function Instruction({ display, setInstructionDis }: any) {
 
   return (
     <>
-      {display || (
+      {displayInstructions && (
         <div className="w-full h-full fixed top-0 right-0 left-0 bg-gray-200/70 z-100">
           {currentPage === 1 && <Page1 />}
           {currentPage === 2 && <Page2 />}
           {currentPage === 3 && <Page3 />}
-          {currentPage === 3 && <Page4 />}
+          {currentPage === 4 && <Page4 />}
           {currentPage === 5 && (
             <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center">
               <div className="text-center">
@@ -519,7 +524,7 @@ export default function Instruction({ display, setInstructionDis }: any) {
                   Bạn đã hoàn thành hướng dẫn cơ bản
                 </p>
                 <button
-                  onClick={() => setInstructionDis(false)}
+                  onClick={() => setDisplayInstructions(false)}
                   className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200"
                 >
                   Quay lại đầu
