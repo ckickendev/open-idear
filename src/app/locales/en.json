@@ -113,5 +113,11 @@
       "input_name": "Input description",
       "input_description": "Input description of category"
     }
+  },
+  "create": {
+    "ins": {
+      "skip": "Skip",
+      "next": "Next"
+    }
   }
 }

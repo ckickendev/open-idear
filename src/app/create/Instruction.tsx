@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ChevronRight, BookOpen, Lightbulb, User, Coffee } from "lucide-react";
 import { useInstructionStore } from "@/store/useInstruction";
+import { useTranslation } from "../hook/useTranslation";
 
 export default function Instruction() {
   const displayInstructions = useInstructionStore((state) => state.displayInstructions);
@@ -8,6 +9,8 @@ export default function Instruction() {
 
   const currentPage = useInstructionStore((state) => state.currentPage);
   const setCurrentPage = useInstructionStore((state) => state.setCurrentPage);
+
+  const { t } = useTranslation();
 
   const handleContinue = () => {
     setCurrentPage(currentPage + 1);
@@ -85,15 +88,17 @@ export default function Instruction() {
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <h3 className="text-gray-600 text-sm font-medium mb-2">
-                  Bỏ qua hướng dẫn
-                </h3>
+                <button className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2 cursor-pointer"
+                  onClick={() => setDisplayInstructions(false)}
+                >
+                  Skip
+                </button>
               </div>
               <button
                 onClick={handleContinue}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2 cursor-pointer"
               >
-                <span>Tiếp tục</span>
+                <span>Continue</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -106,19 +111,15 @@ export default function Instruction() {
           <div className="bg-white rounded-b-xl p-6 shadow-md">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
               <BookOpen className="w-6 h-6 mr-2 text-blue-500" />
-              PHẦN 1: SPIDERUM LÀ GÌ?
+              PART 1: WHAT IS OPENIDEAR ?
             </h2>
             <div className="text-gray-700 space-y-3">
               <p>
-                Spiderum là nền tảng viết lách, chia sẻ và thảo luận văn minh
-                dành cho người Việt với gần 100,000 thành viên, hơn 40,000 bài
-                viết cùng hơn 12 triệu người truy cập và theo dõi liên tục đến
-                6/2021
+                OpenIdear is an open platform where everyone can share ideas, knowledge, services, and technology. We connect a creative community and support earning through affiliate links.
+                Let’s share and spread value together!
               </p>
               <p className="bg-red-50 p-3 rounded-lg border-l-4 border-red-300">
-                Ở Spiderum, bạn có thể đọc và tương tác với những bài viết đầy
-                ấy chính cống đóng góp, đồng thời cất lên tiếng nói của chính
-                mình thông qua những bài viết của bạn thân.
+                Join the sharing community – Post your content today!
               </p>
             </div>
           </div>
@@ -187,7 +188,7 @@ export default function Instruction() {
 
             <div className="pr-20">
               <h1 className="text-2xl font-bold text-gray-800 mb-6">
-                Hướng dẫn sử dụng Spiderum
+                Tool in the OpenIdeaR
               </h1>
 
               {/* Mock Editor Interface */}
@@ -259,19 +260,19 @@ export default function Instruction() {
               <div className="flex space-x-4">
                 <button
                   onClick={handleBack}
-                  className="text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200"
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer"
                 >
-                  Quay lại
+                  Back
                 </button>
-                <button className="text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200">
-                  Bỏ qua hướng dẫn
+                <button className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer" onClick={() => setDisplayInstructions(false)}>
+                  Skip
                 </button>
               </div>
               <button
                 onClick={() => handleContinue}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer"
               >
-                Tiếp tục
+                Continue
               </button>
             </div>
           </div>
@@ -280,7 +281,7 @@ export default function Instruction() {
         {/* Content Guide Section */}
         <div className="bg-white rounded-b- xl shadow-md p-8">
           <h2 className="text-xl font-bold text-gray-800 mb-6">
-            PHẦN 2: HỖ TRỢ TRÌNH BÀY BÀI VIẾT CHUYÊN NGHIỆP
+            PART 2: SUPPORT PROFESSIONAL POST LAYOUT
           </h2>
 
           <div className="space-y-4 text-gray-700">

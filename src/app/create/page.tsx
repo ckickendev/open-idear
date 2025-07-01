@@ -15,7 +15,7 @@ import Paragraph from '@tiptap/extension-paragraph';
 import "./edit.css";
 import Toolbar from './ToolBar';
 import Color from '@tiptap/extension-color';
-import { MessageCircleQuestion } from 'lucide-react';
+import { ChevronDown, MessageCircleQuestion, Plus } from 'lucide-react';
 import FloatingToolbar from './FloatingToolbar';
 import CodeBlock from '@tiptap/extension-code-block';
 import contentStore from '@/store/ContentStore';
@@ -409,6 +409,82 @@ export default function CreatePost() {
           {/* Element sidebar */}
           <FloatingToolbar />
         </div>
+        {/* Public page */}
+        {onPublic && <div className="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full flex justify-center items-center bg-gray-50/70">
+          <div className='relative p-4 w-full max-w-xl max-h-full bg-white shadow sm:rounded-xl sm:px-10 flex flex-col items-center justify-center py-12 sm:px-6 lg:px-8'>
+            <h1 className="text-3xl font-bold text-gray-600 mb-4">Public Post</h1>
+            <div className="w-full mb-4">
+              <div className="prose max-w-none">
+                <div className=" mx-auto p-6 bg-white">
+                  {/* Title Section */}
+                  <div className="mb-6">
+                    <h2 className="text-lg font-medium text-gray-800 mb-2">
+                      Desciption <span className="text-gray-400 italic">(no required but we recommend it for SEO)</span>
+                    </h2>
+                    <div className="border border-gray-300 rounded-md p-3 min-h-[100px] bg-white">
+                      {/* Empty text area */}
+                    </div>
+                  </div>
+
+                  {/* Series Section */}
+                  <div className="mb-6">
+                    <h2 className="text-base font-medium text-gray-800 mb-3">Series</h2>
+
+                    {/* Dropdown */}
+                    <div className="relative mb-4">
+                      <button
+                        className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-left flex items-center justify-between hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <ChevronDown className="h-4 w-4 text-gray-500" />
+                      </button>
+
+                      
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 mt-3">
+                        <button className="px-4 py-2 text-gray-600 hover:text-gray-800 focus:outline-none">
+                          Hoặc
+                        </button>
+                        <button className="flex items-center gap-1 px-4 py-2 text-blue-600 hover:text-blue-700 focus:outline-none">
+                          <Plus className="h-4 w-4" />
+                          Tạo mới
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Category Selection */}
+                  <div className="mb-6">
+                    <h3 className="text-base font-medium text-gray-800 mb-3">Chọn danh mục</h3>
+
+                    {/* Add Category Button */}
+                    <button className="border-2 border-dashed border-gray-300 rounded-lg px-4 py-3 text-gray-500 hover:border-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-2">
+                      <Plus className="h-4 w-4" />
+                      Thêm danh mục
+                    </button>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3">
+                    <button className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      Quay lại
+                    </button>
+                    <button className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      Tạo
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setOnPublic(false)}
+              className="px-8 py-4 bg-red-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+        </div>}
+
       </div>
     </div>
 
