@@ -1,9 +1,10 @@
 import React, { useEffect } from "react";
-import { PostElement, PostInterface } from "./page";
+import { PostInterface } from "./page";
 import { getHeadersToken } from "@/api/authentication";
 import axios from "axios";
 import loadingStore from "@/store/LoadingStore";
 import authenticationStore from "@/store/AuthenticationStore";
+import PostElement from "./PostElement";
 
 const LikeInformation = () => {
     const [likePosts, setLikePosts] = React.useState<PostInterface[]>([]);
