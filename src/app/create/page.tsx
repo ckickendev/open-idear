@@ -30,6 +30,7 @@ import PostLists from './PostLists';
 import HtmlEditor, { RawHtmlExtension } from './HtmlEditor';
 import Instruction from './Instruction';
 import { useInstructionStore } from '@/store/useInstruction';
+import authenticationStore from '@/store/AuthenticationStore';
 
 export default function CreatePost() {
   const router = useRouter();
@@ -53,6 +54,7 @@ export default function CreatePost() {
 
   const [idPost, setIdPost] = useState<string | null>(null);
 
+  const [isPublic, setIsPublic] = useState(false);
   const [onPublic, setOnPublic] = useState(false);
   const [onCreateNewSeries, setCreateNewSeries] = useState(false);
 
@@ -78,6 +80,7 @@ export default function CreatePost() {
           if (res.status === 200) {
             setTitle(res.data.post.title);
             setContent(res.data.post.content);
+            setIsPublic(res.data.post.published);
             changeLoad();
           }
         } catch (error) {
@@ -375,7 +378,7 @@ export default function CreatePost() {
                   <>
                     <button
                       onClick={onPublicPage}
-                      className="px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                      className={`px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer ${isPublic ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       Public
                     </button>
