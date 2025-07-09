@@ -56,15 +56,42 @@ export default function CreatePost() {
 
   const [isPublic, setIsPublic] = useState(false);
   const [onPublic, setOnPublic] = useState(false);
+  const [category, setCategory] = useState([]);
   const [onCreateNewSeries, setCreateNewSeries] = useState(false);
 
   useEffect(() => {
-    const fetchPostData = async () => {
+    const fetchPreData = async () => {
       changeLoad();
       const token = localStorage.getItem("access_token");
       if (token) {
         const headers = getHeadersToken();
         const idPost = searchParams.get('id');
+
+        // Get category
+        try {
+          const resCategory = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category`, { headers });
+          console.log("resCategory: ", resCategory);
+
+          if (resCategory.status === 200) {
+            setCategory(resCategory.data.categories);
+          }
+        } catch (error) {
+          alert('Error fetching user data');
+          changeLoad();
+        }
+
+        // Get series 
+        try {
+          const resCategory = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category`, { headers });
+          console.log("resCategory: ", resCategory);
+
+          if (resCategory.status === 200) {
+            setCategory(resCategory.data.categories);
+          }
+        } catch (error) {
+          alert('Error fetching user data');
+          changeLoad();
+        }
 
         setIdPost(idPost);
         if (!idPost) {
@@ -81,15 +108,18 @@ export default function CreatePost() {
             setTitle(res.data.post.title);
             setContent(res.data.post.content);
             setIsPublic(res.data.post.published);
-            changeLoad();
           }
         } catch (error) {
           alert('Error fetching user data');
           changeLoad();
         }
+
+
+
+        changeLoad();
       }
     };
-    fetchPostData();
+    fetchPreData();
   }, [searchParams, pathname]);
 
   const editor = useEditor({
@@ -330,16 +360,6 @@ export default function CreatePost() {
           {/* Editor area */}
           <div className="w-full flex flex-col justify-between items-center">
             <div className="w-full bg-white mb-4 flex flex-col items-center">
-              <div className="w-full p-4 flex justify-around items-center">
-                <div className="flex gap-2">
-                  {modeHTML || <button
-                    onClick={() => setPreviewMode(!previewMode)}
-                    className="px-8 py-4 bg-red-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
-                  >
-                    {previewMode ? 'Return to edit' : 'Click to Preview'}
-                  </button>}
-                </div>
-              </div>
 
               {!previewMode && editor &&
                 <>
@@ -374,33 +394,59 @@ export default function CreatePost() {
               }
 
               <div className="fixed bottom-5 right-5 flex flex-col gap-3 z-50 md:flex-row">
+                <div className="w-full p-4 flex justify-around items-center">
+                  <div className="flex gap-2">
+                    {modeHTML || <button
+                      onClick={() => setPreviewMode(!previewMode)}
+                      className="px-8 py-4 bg-red-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                    >
+                      {previewMode ? 'Return to edit' : 'Click to Preview'}
+                    </button>}
+                  </div>
+                </div>
                 {title ?
                   <>
-                    <button
-                      onClick={onPublicPage}
-                      className={`px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer ${isPublic ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      Public
-                    </button>
-                    <button
-                      onClick={savePost}
-                      className="px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
-                    >
-                      Save Draft
-                    </button>
+                    <div className="w-full p-4 flex justify-around items-center">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={onPublicPage}
+                          className={`w-full px-8 py-2 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer ${isPublic ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          Public
+                        </button>
+                      </div>
+                    </div>
+                    <div className="w-full p-4 flex justify-around items-center">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={savePost}
+                          className="px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                        >
+                          Save Draft
+                        </button>
+                      </div>
+                    </div>
                   </>
                   :
                   <>
-                    <button
-                      className="px-8 py-4 bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
-                    >
-                      Public
-                    </button>
-                    <button
-                      className="px-8 py-4 bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
-                    >
-                      Save Draft
-                    </button>
+                    <div className="w-full p-4 flex justify-around items-center">
+                      <div className="flex gap-2">
+                        <button
+                          className="px-8 py-4 bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
+                        >
+                          Public
+                        </button>
+                      </div>
+                    </div>
+                    <div className="w-full p-4 flex justify-around items-center">
+                      <div className="flex gap-2">
+                        <button
+                          className="px-8 py-4 bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
+                        >
+                          Save Draft
+                        </button>
+                      </div>
+                    </div>
                   </>
 
                 }
@@ -483,15 +529,14 @@ export default function CreatePost() {
 
                   {/* Category Selection */}
                   <div className="mb-6">
-                    <h3 className="text-base font-medium text-gray-800 mb-3">Chọn danh mục</h3>
+                    <h2 className="text-sm font-medium text-gray-800 mb-3">Category</h2>
 
                     {/* Add Category Button */}
                     <select id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                      <option selected>No Select</option>
-                      <option value="US">United States</option>
-                      <option value="CA">Canada</option>
-                      <option value="FR">France</option>
-                      <option value="DE">Germany</option>
+                      <option>No Select</option>
+                      {category && category.map((cat: any) => (
+                        <option key={cat._id} value={cat._id}>{cat.name}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
