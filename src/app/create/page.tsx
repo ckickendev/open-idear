@@ -49,6 +49,8 @@ export default function CreatePost() {
 
   const isLoading = loadingStore((state) => state.isLoading);
   const changeLoad = loadingStore((state) => state.changeLoad);
+  const showHtmlEditor = contentStore((state) => state.showHtmlEditor);
+  const setShowHtmlEditor = contentStore((state) => state.setShowHtmlEditor);
 
   const setDisplayInstructions = useInstructionStore((state) => state.setDisplayInstructions);
 
@@ -57,6 +59,7 @@ export default function CreatePost() {
   const [isPublic, setIsPublic] = useState(false);
   const [onPublic, setOnPublic] = useState(false);
   const [category, setCategory] = useState([]);
+  const [rawHtml, setRawHtml] = useState('');
   const [onCreateNewSeries, setCreateNewSeries] = useState(false);
 
   useEffect(() => {
@@ -272,6 +275,54 @@ export default function CreatePost() {
     setOnPublic((prev) => !prev);
   }
 
+  const applyHtml = () => {
+    if (editor) {
+      editor.commands.setContent(rawHtml);
+      setShowHtmlEditor(false);
+      setModeHTML(!modeHTML);
+    }
+  };
+
+  const syncWithEditor = () => {
+    if (editor) {
+      const html = editor.getHTML();
+      setRawHtml(formatHtml(html));
+    }
+  };
+
+  // Format HTML with indentation and line breaks
+  const formatHtml = (html: any) => {
+    if (!html) return '';
+
+    // Replace closing tags followed by opening tags with line break
+    let formatted = html.replace(/>\s*</g, '>\n<');
+
+    // Add indentation
+    const indent = 2;
+    const lines = formatted.split('\n');
+    let indentLevel = 0;
+
+    formatted = lines.map((line: any) => {
+      // Check for closing tag
+      if (line.match(/^<\//)) {
+        indentLevel = Math.max(0, indentLevel - 1);
+      }
+
+      // Add indentation
+      const indentation = ' '.repeat(indentLevel * indent);
+      const indentedLine = indentation + line;
+
+      // Check for opening tag (not self-closing)
+      if (line.match(/<[^/][^>]*[^/]>$/)) {
+        indentLevel++;
+      }
+
+      return indentedLine;
+    }).join('\n');
+
+    return formatted;
+  };
+
   // Editor toolbar components
   const savePost = async () => {
     if (!editor) return;
@@ -364,7 +415,7 @@ export default function CreatePost() {
               {!previewMode && editor &&
                 <>
                   <div className="w-full mt-2 flex items-center justify-center">
-                    <HtmlEditor editor={editor} />
+                    <HtmlEditor editor={editor} setRawHtml={setRawHtml} rawHtml={rawHtml} />
                   </div>
                   {modeHTML || <Toolbar editor={editor} />}
                 </>
@@ -393,61 +444,75 @@ export default function CreatePost() {
               </div>
               }
 
-              <div className="fixed bottom-5 right-5 flex flex-col gap-3 z-50 md:flex-row">
-                <div className="w-full p-4 flex justify-around items-center">
-                  <div className="flex gap-2">
+              <div className="fixed w-full bg-white shadow-[0_3px_10px_rgb(0,0,0,0.2)] flex justify-between bottom-2 flex flex-col z-50 md:flex-row">
+                <div className="w-full p-4 flex items-left">
+                  <div className="flex gap-2 p-4">
                     {modeHTML || <button
                       onClick={() => setPreviewMode(!previewMode)}
-                      className="px-8 py-4 bg-red-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                      className="whitespace-nowrap px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-md transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
                     >
                       {previewMode ? 'Return to edit' : 'Click to Preview'}
                     </button>}
                   </div>
+                  <div className="flex items-center gap-2 justify-center">
+                    <button
+                      onClick={() => {
+                        syncWithEditor();
+                        setShowHtmlEditor(!showHtmlEditor);
+                        setModeHTML(!modeHTML);
+                      }}
+                      className="px-8 py-4 bg-white from-blue-500 to-purple-500 text-gray-700 font-bold rounded-md shadow hover:bg-gray-100 transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                    >
+                      {showHtmlEditor ? 'Hide HTML' : 'Transfer to HTML Mode'}
+                    </button>
+
+                    {showHtmlEditor && (
+                      <button
+                        onClick={applyHtml}
+                        className="px-8 py-4 bg-white from-blue-500 to-purple-500 text-gray-700 font-bold rounded-md shadow hover:bg-gray-100 transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                      >
+                        Apply HTML
+                      </button>
+                    )}
+                  </div>
                 </div>
                 {title ?
-                  <>
-                    <div className="w-full p-4 flex justify-around items-center">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={onPublicPage}
-                          className={`w-full px-8 py-2 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer ${isPublic ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                          Public
-                        </button>
-                      </div>
+                  <div className='w-full p-4 flex justify-end'>
+                    <div className="p-4 gap-2">
+                      <button
+                        onClick={onPublicPage}
+                        className={`px-8 py-4 bg-green-600 hover:bg-green-700 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg ${isPublic ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        disabled={isPublic}
+                      >
+                        Public
+                      </button>
                     </div>
-                    <div className="w-full p-4 flex justify-around items-center">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={savePost}
-                          className="px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
-                        >
-                          Save Draft
-                        </button>
-                      </div>
+                    <div className="p-4">
+                      <button
+                        onClick={savePost}
+                        className="whitespace-nowrap px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                      >
+                        Save Draft
+                      </button>
                     </div>
-                  </>
+                  </div>
                   :
-                  <>
-                    <div className="w-full p-4 flex justify-around items-center">
-                      <div className="flex gap-2">
-                        <button
-                          className="px-8 py-4 bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
-                        >
-                          Public
-                        </button>
-                      </div>
+                  <div className='w-full p-4 flex justify-end'>
+                    <div className="p-4 gap-2">
+                      <button
+                        className="px-8 py-4 bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
+                      >
+                        Public
+                      </button>
                     </div>
-                    <div className="w-full p-4 flex justify-around items-center">
-                      <div className="flex gap-2">
-                        <button
-                          className="px-8 py-4 bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
-                        >
-                          Save Draft
-                        </button>
-                      </div>
+                    <div className="p-4" >
+                      <button
+                        className="whitespace-nowrap px-8 py-4 bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
+                      >
+                        Save Draft
+                      </button>
                     </div>
-                  </>
+                  </div>
 
                 }
 

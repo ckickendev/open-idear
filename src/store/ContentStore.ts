@@ -9,6 +9,8 @@ interface ContentState {
     setPostList: (postList: any[]) => void,
     modeHTML: boolean,
     setModeHTML: (mode: boolean) => void,
+    showHtmlEditor: boolean,
+    setShowHtmlEditor: (isShow: boolean) => void,
 }
 
 
@@ -28,7 +30,9 @@ const contentStore = create<ContentState>((set) => ({
     postList: [],
     setPostList: (postList) => set(() => ({ postList: postList })),
     modeHTML: false,
-    setModeHTML: (mode) => set(() => ({ modeHTML: mode }))
+    setModeHTML: (mode) => set(() => ({ modeHTML: mode })),
+    showHtmlEditor: false,
+    setShowHtmlEditor: (isShow) => set(() => ({ showHtmlEditor: isShow })),
 }));
 
 export default contentStore;
