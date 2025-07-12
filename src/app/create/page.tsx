@@ -404,7 +404,8 @@ export default function CreatePost() {
           />
         </div>
 
-        <div className="w-full flex flex-col lg:flex-row outline-none border-2 border-gray-100 shadow-md hover:outline-none focus:ring-teal-200 focus:border-teal-200">
+        <div className="relative w-full flex flex-col lg:flex-row outline-none border-2 border-gray-100 shadow-md hover:outline-none focus:ring-teal-200 focus:border-teal-200">
+          <LoadingComponent isLoading={isLoading} />
           {/*All posts*/}
           <PostLists />
 
@@ -427,7 +428,6 @@ export default function CreatePost() {
                 onDragOver={previewMode ? undefined : handleDragOver}
                 onDrop={previewMode ? undefined : handleDrop}
               >
-                <LoadingComponent isLoading={isLoading} />
                 {previewMode ? (
                   <div className="prose max-w-none preview-container">
 
@@ -469,7 +469,7 @@ export default function CreatePost() {
                     {showHtmlEditor && (
                       <button
                         onClick={applyHtml}
-                        className="px-8 py-4 bg-white from-blue-500 to-purple-500 text-gray-700 font-bold rounded-md shadow hover:bg-gray-100 transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                        className="px-8 py-4 bg-blue-200 from-blue-500 to-purple-500 text-gray-700 font-bold rounded-md shadow hover:bg-blue-300 transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
                       >
                         Apply HTML
                       </button>

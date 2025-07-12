@@ -42,7 +42,7 @@ const HtmlEditor = ({ editor, setRawHtml, rawHtml }: any) => {
                     <textarea
                         value={rawHtml}
                         onChange={handleRawHtmlChange}
-                        className="w-full min-h-[300px] font-mono text-sm p-3 border border-gray-300 rounded-md 
+                        className="w-full min-h-[760px] h-full font-mono text-sm p-3 border border-gray-300 rounded-md 
                       whitespace-pre bg-gray-50 shadow-inner
                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
                       hover:border-gray-400 transition-colors duration-200"
