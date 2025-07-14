@@ -31,6 +31,8 @@ import HtmlEditor, { RawHtmlExtension } from './HtmlEditor';
 import Instruction from './Instruction';
 import { useInstructionStore } from '@/store/useInstruction';
 import authenticationStore from '@/store/AuthenticationStore';
+import FileHandler from '@tiptap/extension-file-handler';
+import ImageUpload from './ImageUpload';
 
 export default function CreatePost() {
   const router = useRouter();
@@ -61,6 +63,8 @@ export default function CreatePost() {
   const [category, setCategory] = useState([]);
   const [rawHtml, setRawHtml] = useState('');
   const [onCreateNewSeries, setCreateNewSeries] = useState(false);
+  const [showImageUpload, setShowImageUpload] = useState(false);
+  const [imageInsertPosition, setImageInsertPosition] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchPreData = async () => {
@@ -170,6 +174,54 @@ export default function CreatePost() {
         },
       }),
       RawHtmlExtension,
+      FileHandler.configure({
+        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+        onDrop: (currentEditor, files, pos) => {
+          files.forEach(file => {
+            const fileReader = new FileReader()
+
+            fileReader.readAsDataURL(file)
+            fileReader.onload = () => {
+              currentEditor
+                .chain()
+                .insertContentAt(pos, {
+                  type: 'image',
+                  attrs: {
+                    src: fileReader.result,
+                  },
+                })
+                .focus()
+                .run()
+            }
+          })
+        },
+        onPaste: (currentEditor: any, files: any, htmlContent: any) => {
+          files.forEach((file: any) => {
+            if (htmlContent) {
+              // if there is htmlContent, stop manual insertion & let other extensions handle insertion via inputRule
+              // you could extract the pasted file from this url string and upload it to a server for example
+              console.log(htmlContent) // eslint-disable-line no-console
+              return false
+            }
+
+            const fileReader = new FileReader()
+
+            fileReader.readAsDataURL(file)
+            fileReader.onload = () => {
+              currentEditor
+                .chain()
+                .insertContentAt(currentEditor.state.selection.anchor, {
+                  type: 'image',
+                  attrs: {
+                    src: fileReader.result,
+                  },
+                })
+                .focus()
+                .run()
+            }
+          })
+        },
+      }),
     ],
     content: content,
     editorProps: {
@@ -238,10 +290,9 @@ export default function CreatePost() {
         editor.chain().focus().insertContentAt(position, '<h3>Heading 3</h3>').run();
         break;
       case 'image':
-        const imageUrl = prompt('Enter image URL:', 'https://source.unsplash.com/random/800x400');
-        if (imageUrl) {
-          editor.chain().focus().insertContentAt(position, `<img src="${imageUrl}" alt="Inserted image" />`).run();
-        }
+        // Instead of prompting for URL, open the upload modal
+        setImageInsertPosition(position);
+        setShowImageUpload(true);
         break;
       case 'link':
         const url = prompt('Enter URL:', 'https://example.com');
@@ -372,6 +423,31 @@ export default function CreatePost() {
       changeLoad();
       alert(errorMessage);
     });
+  };
+
+  const handleImageUploaded = (imageUrl: string) => {
+    if (editor && imageInsertPosition !== null) {
+      editor
+        .chain()
+        .focus()
+        .insertContentAt(imageInsertPosition, {
+          type: 'image',
+          attrs: {
+            src: imageUrl,
+            alt: 'Uploaded image',
+          },
+        })
+        .run();
+    }
+    setShowImageUpload(false);
+    setImageInsertPosition(null);
+  };
+
+  const insertImageAtCursor = () => {
+    if (!editor) return;
+    const currentPos = editor.state.selection.anchor;
+    setImageInsertPosition(currentPos);
+    setShowImageUpload(true);
   };
 
   return (
@@ -521,12 +597,31 @@ export default function CreatePost() {
             </div>
           </div>
 
+          {showImageUpload && (
+            <div className="fixed inset-0 bg-white/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <ImageUpload
+                  onImageUploaded={handleImageUploaded}
+                  onClose={() => {
+                    setShowImageUpload(false);
+                    setImageInsertPosition(null);
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Element sidebar */}
           <FloatingToolbar />
         </div>
         {/* Public page */}
         {onPublic && <div className="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full flex justify-center items-center bg-gray-50/70">
           <div className='relative p-4 w-full max-w-xl max-h-full bg-white shadow sm:rounded-xl sm:px-10 flex flex-col items-center justify-center py-12 sm:px-6 lg:px-8'>
+            <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center cursor-pointer dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="static-modal" onClick={() => setOnPublic(false)}>
+              <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+              </svg>
+            </button>
             <h1 className="text-3xl font-bold text-gray-600 mb-4">Public Post</h1>
             <div className="w-full mb-4">
               <div className="prose max-w-none">

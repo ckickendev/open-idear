@@ -5,12 +5,12 @@ import { Upload, X, FileImage, Loader2 } from 'lucide-react';
 
 const ImageUpload = ({ onImageUploaded, onClose }: any) => {
     const [selectedFile, setSelectedFile] = useState(null);
-    const [preview, setPreview] = useState(null);
+    const [preview, setPreview] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
-    const [error, setError] = useState(null);
-    const fileInputRef = useRef(null);
+    const [error, setError] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileSelect = (event) => {
+    const handleFileSelect = (event: any) => {
         const file = event.target.files[0];
         if (file) {
             // Validate file type
@@ -32,7 +32,9 @@ const ImageUpload = ({ onImageUploaded, onClose }: any) => {
             // Create preview
             const reader = new FileReader();
             reader.onload = (e) => {
-                setPreview(e.target.result);
+                if (e.target && typeof e.target.result === 'string') {
+                    setPreview(e.target.result);
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -67,8 +69,8 @@ const ImageUpload = ({ onImageUploaded, onClose }: any) => {
             } else {
                 throw new Error(data.error || 'Upload failed');
             }
-        } catch (err) {
-            setError(err.message || 'Upload failed. Please try again.');
+        } catch (err : any) {
+            setError(err?.message || 'Upload failed. Please try again.');
         } finally {
             setUploading(false);
         }
@@ -83,12 +85,12 @@ const ImageUpload = ({ onImageUploaded, onClose }: any) => {
         }
     };
 
-    const handleDragOver = (e) => {
+    const handleDragOver = (e : any) => {
         e.preventDefault();
         e.stopPropagation();
     };
 
-    const handleDrop = (e) => {
+    const handleDrop = (e : any) => {
         e.preventDefault();
         e.stopPropagation();
 
