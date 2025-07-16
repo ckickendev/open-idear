@@ -7,7 +7,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline'
-import TextStyle from '@tiptap/extension-text-style'
+import { TextStyleKit } from '@tiptap/extension-text-style'
 import { Extension } from '@tiptap/core';
 import Head from 'next/head';
 import Paragraph from '@tiptap/extension-paragraph';
@@ -132,7 +132,7 @@ export default function CreatePost() {
   const editor = useEditor({
     extensions: [
       StarterKit,
-      TextStyle,
+      TextStyleKit ,
       CodeBlock.configure({
         exitOnArrowDown: true, // Allow exiting code block with down arrow at the end
         exitOnTripleEnter: true, // Exit after three consecutive Enter presses
@@ -229,6 +229,7 @@ export default function CreatePost() {
         class: 'edit-container prose prose-lg focus:outline-none max-w-none',
       },
     },
+    immediatelyRender: false,
   });
 
   useEffect(() => {
