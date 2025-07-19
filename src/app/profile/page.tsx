@@ -21,7 +21,7 @@ import PostElement from './PostElement';
 
 // Define types
 export interface PostInterface {
-    // _id: string;
+    _id: string;
     title: string;
     slug?: string;
     content?: string;
@@ -218,7 +218,9 @@ const ProfileDashboard: React.FC = () => {
                             <div className="space-y-4">
                                 {displayPost.length == 0 && <h1 className='text-xxl font-semibold mb-4'>No record</h1>}
                                 {displayPost.map((post, index) => (
-                                    <PostElement key={index}
+                                    <PostElement 
+                                        _id={post._id}
+                                        key={index}
                                         image={post.image}
                                         category={post.category}
                                         title={post.title}

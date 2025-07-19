@@ -38,7 +38,9 @@ const PostElement = (data: PostInterface) => {
                         </button>
                     </div>
 
-                    <h2 className="text-lg font-bold leading-tight mb-2">{data.title}</h2>
+                    <a href={`./post/${data._id}`} className="block hover:underline">
+                        <h2 className="text-lg font-bold leading-tight mb-2">{data.title}</h2>
+                    </a>
                     {data.content && (
                         <p className="text-sm text-gray-600 line-clamp-2">"{data.content}"</p>
                     )}
