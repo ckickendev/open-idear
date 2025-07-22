@@ -45,7 +45,9 @@ const LikeInformation = () => {
                 <div className="space-y-4 h-full m-4 p-2">
                     {likePosts.length == 0 && <h1 className='text-xxl h-full font-semibold mb-4 flex justify-center items-center'>No record</h1>}
                     {likePosts.map((post, index) => (
-                        <PostElement key={index}
+                        <PostElement 
+                            _id={post._id}
+                            key={index}
                             image={post.image}
                             category={post.category}
                             title={post.title}
