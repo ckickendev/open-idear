@@ -24,7 +24,7 @@ export default async function PostLists({
       }
 
       const data = await res.json();
-      console.log("API Response: ", data);
+      console.log("data.post: ", data.post);
 
       return data.post;
     } catch (error) {
@@ -68,27 +68,25 @@ export default async function PostLists({
         {/* Category Tag */}
         <div className="mb-4">
           <span className="inline-block px-3 py-1 text-xs font-semibold text-gray-800 bg-gray-200 rounded uppercase tracking-wide">
-            HEALTH
+            {postData.category ? postData.category.name : "Uncategorized"}
           </span>
         </div>
 
         {/* Headline */}
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6">
-          This underdiagnosed vein disorder affects 4 in 10 Americans
+          {postData.title}
         </h1>
 
         {/* Subheadline */}
         <p className="text-xl text-gray-700 leading-relaxed mb-6">
-          From tingly legs to bulging veins, these warning signs may point to
-          chronic venous insufficiency—a widespread circulatory issue doctors
-          say is on the rise.
+          {postData.description}
         </p>
 
         {/* Author and Date Info */}
         <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-200">
           <div>
-            <p className="text-sm font-medium text-gray-900">By Daryl Austin</p>
-            <p className="text-sm text-gray-600">July 18, 2025</p>
+            <p className="text-sm font-medium text-gray-900">By <a href={`/profile/${postData.author.id}`} className="hover:underline">{postData.author.username}</a></p>
+            <p className="text-sm text-gray-600">Created date: {new Date(postData.createdAt).toLocaleDateString()}</p>
           </div>
 
           {/* Social Share Icons */}
@@ -104,32 +102,7 @@ export default async function PostLists({
 
         {/* Article Body */}
         <div className="prose prose-lg max-w-none">
-          <p className="text-gray-800 leading-relaxed mb-6">
-            Swelling, aching calves, tingling, or bulging veins might seem like
-            everyday discomforts, but they could point to a hidden problem in
-            your circulatory system. A surprisingly common yet underrecognized
-            condition called chronic venous insufficiency is behind a growing
-            number of cases—and scientists say it's far more widespread than
-            most people realize.
-          </p>
-
-          <p className="text-gray-800 leading-relaxed mb-6">
-            Here are five things to know about this painful and underdiagnosed
-            vascular disorder.
-          </p>
-
-          {/* Additional content sections can be added here */}
-          <div className="bg-gray-50 p-6 rounded-lg mt-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">
-              What is Chronic Venous Insufficiency?
-            </h3>
-            <p className="text-gray-700 leading-relaxed">
-              Chronic venous insufficiency occurs when the veins in your legs
-              don't allow blood to flow back up to your heart effectively. This
-              can lead to blood pooling in the legs, causing various symptoms
-              and complications if left untreated.
-            </p>
-          </div>
+          <div dangerouslySetInnerHTML={{ __html: postData.content }} />
         </div>
       </article>
     </div>
