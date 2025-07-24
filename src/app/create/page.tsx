@@ -61,10 +61,17 @@ export default function CreatePost() {
   const [isPublic, setIsPublic] = useState(false);
   const [onPublic, setOnPublic] = useState(false);
   const [category, setCategory] = useState([]);
+  const [series, setSeries] = useState([]);
   const [rawHtml, setRawHtml] = useState('');
   const [onCreateNewSeries, setCreateNewSeries] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [imageInsertPosition, setImageInsertPosition] = useState<number | null>(null);
+
+  const [newSeries, setNewSeries] = useState<string>('');
+  const [descriptionPublic, setDescriptionPublic] = useState<string>('');
+  const [seriesPublic, setSeriesPublic] = useState<string>('');
+  const [categoryPublic, setCategoryPublic] = useState<string>('');
+  const [imagePublic, setImagePublic] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPreData = async () => {
@@ -89,11 +96,11 @@ export default function CreatePost() {
 
         // Get series 
         try {
-          const resCategory = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category`, { headers });
-          console.log("resCategory: ", resCategory);
+          const resSeries = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getByUser`, { headers });
+          console.log("res srestes: ", resSeries);
 
-          if (resCategory.status === 200) {
-            setCategory(resCategory.data.categories);
+          if (resSeries.status === 200) {
+            setSeries(resSeries.data.series);
           }
         } catch (error) {
           alert('Error fetching user data');
@@ -110,19 +117,17 @@ export default function CreatePost() {
         }
 
         try {
-          const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPost?postId=${idPost}`, { headers });
+          const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostToEdit?postId=${idPost}`, { headers });
           if (res.status === 200) {
             setTitle(res.data.post.title);
             setContent(res.data.post.content);
+            setImagePublic(res.data.post.image);
             setIsPublic(res.data.post.published);
           }
         } catch (error) {
           alert('Error fetching user data');
           changeLoad();
         }
-
-
-
         changeLoad();
       }
     };
@@ -426,6 +431,13 @@ export default function CreatePost() {
     });
   };
 
+  const handleImageUploadedPublic = (imageUrl: string) => {
+    console.log("Image uploaded: ", imageUrl);
+    setShowImageUpload(false);
+    setImageInsertPosition(null);
+    setImagePublic(imageUrl);
+  };
+
   const handleImageUploaded = (imageUrl: string) => {
     if (editor && imageInsertPosition !== null) {
       editor
@@ -444,11 +456,31 @@ export default function CreatePost() {
     setImageInsertPosition(null);
   };
 
-  const insertImageAtCursor = () => {
-    if (!editor) return;
-    const currentPos = editor.state.selection.anchor;
-    setImageInsertPosition(currentPos);
-    setShowImageUpload(true);
+  const createNewSeriesHandler = () => {
+    console.log("Creating new series...");
+    setCreateNewSeries(false);
+    axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/create`, {
+      newSeries: newSeries,
+      headers: getHeadersToken()
+    }).then((res) => {
+      console.log(res.data);
+      const params = new URLSearchParams()
+      params.set('id', res.data.post._id)
+      router.push(`${pathname}?${params.toString()}`)
+      changeLoad();
+      alert('Post saved successfully!');
+    }).catch((err) => {
+      const errorMessage = err?.response?.data?.error || err?.message;
+      changeLoad();
+      alert(errorMessage);
+    });
+  };
+
+  const onPublicHandle = () => {
+    console.log("description: ", descriptionPublic);
+    console.log("imagePublic: ", imagePublic);
+    console.log("seriesPublic: ", seriesPublic);
+    console.log("categoryPublic: ", categoryPublic);
   };
 
   return (
@@ -607,6 +639,7 @@ export default function CreatePost() {
                     setShowImageUpload(false);
                     setImageInsertPosition(null);
                   }}
+                  isTitleDisplay={true}
                 />
               </div>
             </div>
@@ -617,13 +650,12 @@ export default function CreatePost() {
         </div>
         {/* Public page */}
         {onPublic && <div className="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full flex justify-center items-center bg-gray-50/70">
-          <div className='relative p-4 w-full max-w-xl max-h-full bg-white shadow sm:rounded-xl sm:px-10 flex flex-col items-center justify-center py-12 sm:px-6 lg:px-8'>
+          <div className='relative p-t-20 p-4 w-full max-w-xl max-h-full bg-white shadow sm:rounded-xl sm:px-10 flex flex-col items-center justify-center py-12 sm:px-6 lg:px-8'>
             <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center cursor-pointer dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="static-modal" onClick={() => setOnPublic(false)}>
               <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
               </svg>
             </button>
-            <h1 className="text-3xl font-bold text-gray-600 mb-4">Public Post</h1>
             <div className="w-full mb-4">
               <div className="prose max-w-none">
                 <div className=" mx-auto p-6 bg-white">
@@ -632,7 +664,27 @@ export default function CreatePost() {
                     <h2 className="text-sm font-medium text-gray-800 mb-2">
                       Desciption <span className="text-gray-400 italic">(no required but we recommend it for SEO)</span>
                     </h2>
-                    <textarea id="message" rows={4} className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-red-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Write your thoughts here..."></textarea>
+                    <textarea id="message" 
+                      value={descriptionPublic} 
+                      onChange={(e) => setDescriptionPublic(e.target.value)} 
+                      rows={4} 
+                      className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-red-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Write your thoughts here...">
+                      </textarea>
+                  </div>
+
+                  {/* Title Section */}
+                  <div className='mb-2'>
+                    <h2 className="text-sm font-medium text-gray-800 mb-2">
+                      Image (Recommend for SEO)
+                    </h2>
+                    <ImageUpload
+                      onImageUploaded={handleImageUploadedPublic}
+                      onClose={() => {
+                        setShowImageUpload(false);
+                        setImageInsertPosition(null);
+                      }}
+                      isTitleDisplay={false}
+                    />
                   </div>
 
                   {/* Series Section */}
@@ -642,15 +694,12 @@ export default function CreatePost() {
                     {/* Dropdown */}
                     <div className="relative mb-4">
 
-
-                      {/* Action Buttons */}
                       {!onCreateNewSeries ? <>
-                        <select id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                          <option selected>No Select</option>
-                          <option value="US">United States</option>
-                          <option value="CA">Canada</option>
-                          <option value="FR">France</option>
-                          <option value="DE">Germany</option>
+                        <select defaultValue="" id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                          <option value="">No Select</option>
+                          {series && series.map((ser: any) => (
+                            <option key={ser._id} value={ser._id}>{ser.name}</option>
+                          ))}
                         </select>
                         <div className="flex gap-2 mt-3">
                           <button className="px-4 py-2 text-gray-600 hover:text-gray-800 focus:outline-none">
@@ -666,6 +715,8 @@ export default function CreatePost() {
                           <div className="p-b-6">
                             <input
                               type="text"
+                              value={newSeries}
+                              onChange={(e) => setNewSeries(e.target.value)}
                               placeholder="Enter series name"
                               className="w-full p-2 border border-gray-300 rounded-lg mb-4"
                             />
@@ -676,7 +727,7 @@ export default function CreatePost() {
                               Cancel
                             </button>
                             <button
-                              onClick={() => setCreateNewSeries(false)}
+                              onClick={() => createNewSeriesHandler()}
                               className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                             >
                               Create
@@ -690,11 +741,11 @@ export default function CreatePost() {
 
                   {/* Category Selection */}
                   <div className="mb-6">
-                    <h2 className="text-sm font-medium text-gray-800 mb-3">Category</h2>
+                    <h2 className="text-sm font-medium text-gray-800 mb-3">Category *</h2>
 
                     {/* Add Category Button */}
-                    <select id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                      <option>No Select</option>
+                    <select defaultValue={categoryPublic} onChange={(e) => setCategoryPublic(e.target.value)} id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                      <option value="">No Select</option>
                       {category && category.map((cat: any) => (
                         <option key={cat._id} value={cat._id}>{cat.name}</option>
                       ))}
@@ -704,7 +755,7 @@ export default function CreatePost() {
               </div>
             </div>
             <button
-              onClick={() => setOnPublic(false)}
+              onClick={() => onPublicHandle()}
               className="w-50 px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
             >
               Public

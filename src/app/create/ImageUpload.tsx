@@ -2,11 +2,13 @@
 
 import React, { useState, useRef } from 'react';
 import { Upload, X, FileImage, Loader2 } from 'lucide-react';
+import { set } from 'react-hook-form';
 
-const ImageUpload = ({ onImageUploaded, onClose }: any) => {
+const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [preview, setPreview] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
+    const [isUploadDone, setIsUploadDone] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -64,6 +66,8 @@ const ImageUpload = ({ onImageUploaded, onClose }: any) => {
             if (data.status === 'success') {
                 // Call the callback with the uploaded image URL
                 onImageUploaded(data.data.imageUrl);
+                // Call the callback with the uploaded image URL
+                setIsUploadDone(true);
                 // Close the modal
                 onClose();
             } else {
@@ -80,6 +84,7 @@ const ImageUpload = ({ onImageUploaded, onClose }: any) => {
         setSelectedFile(null);
         setPreview(null);
         setError(null);
+        setIsUploadDone(false);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -103,16 +108,16 @@ const ImageUpload = ({ onImageUploaded, onClose }: any) => {
     };
 
     return (
-        <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-            <div className="flex justify-between items-center mb-6">
+        <div className="max-w-2xl p-6 bg-white rounded-lg shadow-lg">
+            {isTitleDisplay && <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">Upload Image</h2>
                 <button
                     onClick={onClose}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-gray-400 hover:text-gray-600 transition-colors corsor-pointer"
                 >
                     <X size={24} />
                 </button>
-            </div>
+            </div>}
 
             {/* Upload Area */}
             <div
@@ -175,7 +180,7 @@ const ImageUpload = ({ onImageUploaded, onClose }: any) => {
                 <div className="mt-6 flex gap-3">
                     <button
                         onClick={handleUpload}
-                        disabled={uploading}
+                        disabled={uploading || isUploadDone}
                         className="flex-1 bg-blue-500 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                     >
                         {uploading ? (

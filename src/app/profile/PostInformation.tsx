@@ -58,8 +58,8 @@ const PostInformation = () => {
           {displayPost.length == 0 && <h1 className='text-xxl h-full font-semibold mb-4 flex justify-center items-center'>No record</h1>}
           {displayPost.map((post, index) => (
             <PostElement
-              _id={post._id}
               key={index}
+              _id={post._id}
               image={post.image}
               category={post.category}
               title={post.title}
