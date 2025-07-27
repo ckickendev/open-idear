@@ -85,7 +85,7 @@
       "create": "Create post"
     },
     "hotPost": {
-      "title": "Hot This Month",
+      "title": "Hot This Week",
       "moreDes": "View TOP 10 Posts"
     }
   },

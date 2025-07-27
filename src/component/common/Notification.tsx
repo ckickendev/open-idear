@@ -90,7 +90,7 @@ const Notification: React.FC<NotificationProps> = ({
     }
 
     return (
-        <div className={`fixed inset-0 z-50 flex items-start justify-center pt-20 pointer-events-none transition-all duration-300 bg-gray-600/50`}>
+        <div className={`fixed inset-0 z-999 flex items-start justify-center pt-20 pointer-events-none transition-all duration-300 bg-gray-600/50`}>
             <div className={`${getNotificationStyles()} pointer-events-auto transform transition-all duration-300 ease-out ${isAnimating
                     ? 'opacity-100 scale-100 translate-y-0'
                     : 'opacity-0 scale-95 -translate-y-4'

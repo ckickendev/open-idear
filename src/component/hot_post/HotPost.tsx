@@ -1,6 +1,6 @@
 'use client';
 
-import React from "react";
+import React, { use, useEffect } from "react";
 import {
   Clock,
   Bookmark,
@@ -8,79 +8,47 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useTranslation } from "@/app/hook/useTranslation";
+import axios from "axios";
+import { set } from "react-hook-form";
 
-interface Author {
-  name: string;
-  verified?: boolean;
-  postedTime: string;
-  avatar: string;
-}
-
-interface Article {
+interface Post {
   id: number;
   title: string;
   image: string;
   readingTime: string;
-  author: Author;
+  author: {
+    name: string;
+    verified?: boolean;
+    postedTime: string;
+    avatar: string;
+  };
   likes?: number;
 }
 
-const articles: Article[] = [
-  {
-    id: 1,
-    title: "Sự Hỗn Loạn Của Nước Mỹ Dưới Thời Trump 2.0",
-    image:
-      "https://images.spiderum.com/sp-thumbnails/06be8810142911f09324374faab789d8.png",
-    readingTime: "26 phút đọc",
-    author: {
-      name: "Huskywannafly",
-      verified: true,
-      postedTime: "1 Th4",
-      avatar: "/avatars/author1.jpg",
-    },
-    likes: 598,
-  },
-  {
-    id: 2,
-    title: "Cuộc thi viết Rốt cuộc chúng ta là... cái quái...",
-    image:
-      "https://images.spiderum.com/sp-thumbnails/06be8810142911f09324374faab789d8.png",
-    readingTime: "4 phút đọc",
-    author: {
-      name: "Spiderum Team",
-      postedTime: "3 Th4",
-      avatar: "/avatars/author2.jpg",
-    },
-  },
-  {
-    id: 3,
-    title: "Sự kết thúc của toàn cầu hóa",
-    image:
-      "https://images.spiderum.com/sp-thumbnails/06be8810142911f09324374faab789d8.png",
-    readingTime: "16 phút đọc",
-    author: {
-      name: "Victor Pham",
-      verified: true,
-      postedTime: "7 Th4",
-      avatar: "/avatars/author3.jpg",
-    },
-  },
-  {
-    id: 4,
-    title: "TÍNH NAM ĐỘC HẠI TRÊN MẠNG XÃ HỘI - KHI THẾ",
-    image:
-      "https://images.spiderum.com/sp-thumbnails/06be8810142911f09324374faab789d8.png",
-    readingTime: "15 phút đọc",
-    author: {
-      name: "phucnt",
-      postedTime: "30 Th3",
-      avatar: "/avatars/author4.jpg",
-    },
-  },
-];
 
 const HotPost: React.FC = () => {
   const { t } = useTranslation();
+  const [articles, setArticles] = React.useState<Post[]>([]);
+
+  useEffect(() => {
+        // Fetch all posts from the server
+        const fetchHotPost = async () => {
+            try {
+                const token = localStorage.getItem("access_token");
+                if (token) {
+                    const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getHotPostsWeek?limit=10&page=1`);
+                    if (res.status === 200) {
+                      setArticles(res.data.posts);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching posts:', error);
+            }
+        };
+
+        fetchHotPost();
+    }, []);
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">

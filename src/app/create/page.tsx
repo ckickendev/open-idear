@@ -33,6 +33,9 @@ import { useInstructionStore } from '@/store/useInstruction';
 import authenticationStore from '@/store/AuthenticationStore';
 import FileHandler from '@tiptap/extension-file-handler';
 import ImageUpload from './ImageUpload';
+import alertStore from '@/store/AlertStore';
+import { set } from 'react-hook-form';
+import Notification from '@/component/common/Notification';
 
 export default function CreatePost() {
   const router = useRouter();
@@ -60,8 +63,8 @@ export default function CreatePost() {
 
   const [isPublic, setIsPublic] = useState(false);
   const [onPublic, setOnPublic] = useState(false);
-  const [category, setCategory] = useState([]);
-  const [series, setSeries] = useState([]);
+  const [category, setCategory] = useState<any[]>([]);
+  const [series, setSeries] = useState<any[]>([]);
   const [rawHtml, setRawHtml] = useState('');
   const [onCreateNewSeries, setCreateNewSeries] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
@@ -72,6 +75,9 @@ export default function CreatePost() {
   const [seriesPublic, setSeriesPublic] = useState<string>('');
   const [categoryPublic, setCategoryPublic] = useState<string>('');
   const [imagePublic, setImagePublic] = useState<string | null>(null);
+
+  const setType = alertStore((state) => state.setType);
+  const setMessage = alertStore((state) => state.setMessage);
 
   useEffect(() => {
     const fetchPreData = async () => {
@@ -463,12 +469,11 @@ export default function CreatePost() {
       newSeries: newSeries,
       headers: getHeadersToken()
     }).then((res) => {
-      console.log(res.data);
-      const params = new URLSearchParams()
-      params.set('id', res.data.post._id)
-      router.push(`${pathname}?${params.toString()}`)
+      console.log('Created series:', res.data);
+      setNewSeries('');
+      setSeries((prev) => [...prev, res.data.data]);
       changeLoad();
-      alert('Post saved successfully!');
+      alert('New series created successfully!');
     }).catch((err) => {
       const errorMessage = err?.response?.data?.error || err?.message;
       changeLoad();
@@ -476,15 +481,40 @@ export default function CreatePost() {
     });
   };
 
-  const onPublicHandle = () => {
+  const onPublicHandle = async () => {
     console.log("description: ", descriptionPublic);
     console.log("imagePublic: ", imagePublic);
     console.log("seriesPublic: ", seriesPublic);
     console.log("categoryPublic: ", categoryPublic);
+    const publicInfo = {
+      postId: idPost,
+      description: descriptionPublic,
+      image: imagePublic,
+      series: seriesPublic,
+      category: categoryPublic
+    };
+
+    try {
+      const onPublic = await axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/public`, {
+        headers: getHeadersToken(),
+        publicInfo
+      });
+      console.log("onPublic: ", onPublic);
+      if (onPublic.status === 200) {
+        setType('success');
+        setMessage("Public post successfully!");
+        setOnPublic(false);
+        setIsPublic(true);
+      }
+    } catch (error: any) {
+      setType('error');
+      setMessage(error?.response?.data?.message || error?.message);
+    }
   };
 
   return (
     <div className="min-h-screen bg-white">
+      <Notification />
       <Instruction />
       <Head>
         <title>Create New Post</title>
@@ -695,10 +725,10 @@ export default function CreatePost() {
                     <div className="relative mb-4">
 
                       {!onCreateNewSeries ? <>
-                        <select defaultValue="" id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        <select defaultValue="" onChange={(e) => setSeriesPublic(e.target.value)} id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                           <option value="">No Select</option>
-                          {series && series.map((ser: any) => (
-                            <option key={ser._id} value={ser._id}>{ser.name}</option>
+                          {series.map((ser: any) => (
+                            <option key={ser._id} value={ser._id}>{ser.title} </option>
                           ))}
                         </select>
                         <div className="flex gap-2 mt-3">

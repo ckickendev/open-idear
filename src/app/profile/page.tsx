@@ -48,7 +48,6 @@ const ProfileDashboard: React.FC = () => {
     const [allUnfinishPosts, setAllUnfinishPosts] = React.useState<PostInterface[]>([]);
     const [allLikePost, setAllLikePost] = React.useState<PostInterface[]>([]);
 
-    const currentUser = authenticationStore((state) => state.currentUser);
     const isLoading = loadingStore(state => state.isLoading);
     const changeLoad = loadingStore((state) => state.changeLoad);
 
@@ -76,9 +75,9 @@ const ProfileDashboard: React.FC = () => {
                         });
                     }
 
-                    const resLike = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getLikeByUser/${currentUser._id}`);
+                    const resLike = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getLikeByUser`, { headers });
                     if (resLike.status === 200) {
-                        setAllLikePost(resLike.data.posts);
+                        setAllLikePost(resLike.data.likePost);
                     }
                 }
             } catch (error) {
