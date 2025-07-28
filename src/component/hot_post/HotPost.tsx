@@ -9,20 +9,16 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/app/hook/useTranslation";
 import axios from "axios";
-import { set } from "react-hook-form";
+import convertDate from "@/common/datetime";
 
 interface Post {
-  id: number;
+  _id: number;
   title: string;
   image: string;
-  readingTime: string;
-  author: {
-    name: string;
-    verified?: boolean;
-    postedTime: string;
-    avatar: string;
-  };
-  likes?: number;
+  readtime: string;
+  author: any;
+  likes?: [any];
+  createdAt: string;
 }
 
 
@@ -38,6 +34,7 @@ const HotPost: React.FC = () => {
                 if (token) {
                     const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getHotPostsWeek?limit=10&page=1`);
                     if (res.status === 200) {
+                      console.log('res.data.hotpost: ', res.data.posts);
                       setArticles(res.data.posts);
                     }
                 }
@@ -64,23 +61,26 @@ const HotPost: React.FC = () => {
       <div className="grid grid-cols-4 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {articles.map((article) => (
           <div
-            key={article.id}
+            key={article._id}
             className="flex flex-col bg-white rounded-lg overflow-hidden h-full"
           >
             <div className="relative h-40 w-full">
               {/* Next.js Image component would be used here with actual images */}
-              <div className="absolute inset-0 bg-gray-200">
-                <img src={article.image} className="w-full" />
-              </div>
+              <a href={`/post/${article._id}`} className="block h-full">
+                <div className="absolute inset-0 bg-gray-200">
+                  <img src={article.image} className="w-full" />
+                </div>
+              </a>
+              
             </div>
 
             <div className="flex flex-1 flex-col p-3">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs text-gray-500 flex items-center">
                   <Clock size={14} className="mr-1" />
-                  {article.readingTime}
+                  {article.readtime ? article.readtime : "5 min read"}
                 </span>
-                <button className="text-gray-400 hover:text-gray-700">
+                <button className="text-gray-400 hover:text-gray-700 transition-colors focus:outline-none cursor-pointer">
                   <Bookmark size={18} />
                 </button>
               </div>
@@ -88,6 +88,7 @@ const HotPost: React.FC = () => {
               <h3 className="font-medium text-base mb-4 line-clamp-2 cursor-pointer hover:underline">
                 {article.title}
               </h3>
+
 
               <div className="flex items-center mt-auto">
                 <div className="h-8 w-8 rounded-full bg-gray-200 mr-2" />
@@ -102,14 +103,9 @@ const HotPost: React.FC = () => {
                   </div>
                   <div className="flex items-center text-xs text-gray-500">
                     <span>{article.author.postedTime}</span>
-                    {article.likes && (
-                      <>
-                        <span className="mx-1">•</span>
-                        <span className="flex items-center">
-                          {article.likes}N
-                        </span>
-                      </>
-                    )}
+                    <span className="flex items-center">
+                      {convertDate(article.createdAt)} 
+                    </span>
                   </div>
                 </div>
               </div>
