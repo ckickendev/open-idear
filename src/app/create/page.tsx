@@ -74,7 +74,7 @@ export default function CreatePost() {
   const [descriptionPublic, setDescriptionPublic] = useState<string>('');
   const [seriesPublic, setSeriesPublic] = useState<string>('');
   const [categoryPublic, setCategoryPublic] = useState<string>('');
-  const [imagePublic, setImagePublic] = useState<string | null>(null);
+  const [imagePublic, setImagePublic] = useState<{ imageUrl: string; description: string } | null>(null);
 
   const setType = alertStore((state) => state.setType);
   const setMessage = alertStore((state) => state.setMessage);
@@ -125,9 +125,11 @@ export default function CreatePost() {
         try {
           const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostToEdit?postId=${idPost}`, { headers });
           if (res.status === 200) {
+            console.log('res.data.post to edit: ', res.data.post);
+            
             setTitle(res.data.post.title);
             setContent(res.data.post.content);
-            setImagePublic(res.data.post.image);
+            // setImagePublic({ imageUrl: res.data.post.image.url, description: res.data.post.image.description });
             setIsPublic(res.data.post.published);
           }
         } catch (error) {
@@ -437,14 +439,13 @@ export default function CreatePost() {
     });
   };
 
-  const handleImageUploadedPublic = (imageUrl: string) => {
-    console.log("Image uploaded: ", imageUrl);
+  const handleImageUploadedPublic = (image: any) => {
     setShowImageUpload(false);
     setImageInsertPosition(null);
-    setImagePublic(imageUrl);
+    setImagePublic({imageUrl: image.url, description: image.description});
   };
 
-  const handleImageUploaded = (imageUrl: string) => {
+  const handleImageUploaded = (image: any) => {
     if (editor && imageInsertPosition !== null) {
       editor
         .chain()
@@ -452,11 +453,26 @@ export default function CreatePost() {
         .insertContentAt(imageInsertPosition, {
           type: 'image',
           attrs: {
-            src: imageUrl,
-            alt: 'Uploaded image',
+            src: image.url,
+            alt: image.description,
+            },
           },
-        })
+        )
+        // .insertContentAt(imageInsertPosition + 1, {
+        //   type: 'paragraph',
+        //   content: [
+        //     {
+        //       type: 'text',
+        //       text: description,
+        //       class: 'image-description',
+        //     },
+        //   ],
+        //   attrs: {
+        //     class: 'image-description',
+        //   },
+        // })
         .run();
+
     }
     setShowImageUpload(false);
     setImageInsertPosition(null);
@@ -681,12 +697,12 @@ export default function CreatePost() {
         {/* Public page */}
         {onPublic && <div className="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full flex justify-center items-center bg-gray-50/70">
           <div className='relative p-t-20 p-4 w-full max-w-xl max-h-full bg-white shadow sm:rounded-xl sm:px-10 flex flex-col items-center justify-center py-12 sm:px-6 lg:px-8'>
-            <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center cursor-pointer dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="static-modal" onClick={() => setOnPublic(false)}>
+            <button type="button" className="text-gray-400 bg-transparent p-2 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center cursor-pointer dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="static-modal" onClick={() => setOnPublic(false)}>
               <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
               </svg>
             </button>
-            <div className="w-full mb-4">
+            <div className="w-full">
               <div className="prose max-w-none">
                 <div className=" mx-auto p-6 bg-white">
                   {/* Title Section */}

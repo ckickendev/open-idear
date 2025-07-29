@@ -59,10 +59,6 @@ export default async function PostLists({
             (CVI), a vascular condition in which damaged leg veins impair blood
             flow back to the heart. CVI can lead to symptoms such as swelling,
             skin changes, and venous ulcers if left untreated.
-            <div className="mt-2 text-xs text-gray-500 uppercase tracking-wide">
-              PHOTOGRAPH BY MICHAEL MACOR, THE SAN FRANCISCO CHRONICLE VIA GETTY
-              IMAGES
-            </div>
           </div> */}
         </div>
 

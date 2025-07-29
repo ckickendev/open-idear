@@ -1,14 +1,15 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Upload, X, FileImage, Loader2 } from 'lucide-react';
-import { set } from 'react-hook-form';
+import { Upload, X, FileImage, Loader2, Check } from 'lucide-react';
+import { getHeadersToken } from '@/api/authentication';
 
 const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [preview, setPreview] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
     const [isUploadDone, setIsUploadDone] = useState(false);
+    const [description, setDescription] = useState('');
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -30,6 +31,8 @@ const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
 
             setSelectedFile(file);
             setError(null);
+            setIsUploadDone(false);
+            setDescription('');
 
             // Create preview
             const reader = new FileReader();
@@ -50,11 +53,13 @@ const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
 
         const formData = new FormData();
         formData.append('image', selectedFile);
+        formData.append('description', description);
 
         try {
-            const response = await fetch('http://localhost:5001/media/upload', {
+            const response = await fetch('http://localhost:5001/media/uploadImage', {
                 method: 'POST',
                 body: formData,
+                headers: getHeadersToken(),
             });
 
             if (!response.ok) {
@@ -64,9 +69,12 @@ const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
             const data = await response.json();
 
             if (data.status === 'success') {
-                // Call the callback with the uploaded image URL
-                onImageUploaded(data.data.imageUrl);
-                // Call the callback with the uploaded image URL
+                // Call the callback with the uploaded image data
+                console.log('Image uploaded successfully:', data.image);
+                
+                onImageUploaded(
+                    data.image
+                );
                 setIsUploadDone(true);
                 // Close the modal
                 onClose();
@@ -85,6 +93,7 @@ const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
         setPreview(null);
         setError(null);
         setIsUploadDone(false);
+        setDescription('');
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -109,15 +118,17 @@ const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
 
     return (
         <div className="max-w-2xl p-6 bg-white rounded-lg shadow-lg">
-            {isTitleDisplay && <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Upload Image</h2>
-                <button
-                    onClick={onClose}
-                    className="text-gray-400 hover:text-gray-600 transition-colors corsor-pointer"
-                >
-                    <X size={24} />
-                </button>
-            </div>}
+            {isTitleDisplay && (
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-gray-800">Upload Image</h2>
+                    <button
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                    >
+                        <X size={24} />
+                    </button>
+                </div>
+            )}
 
             {/* Upload Area */}
             <div
@@ -168,6 +179,26 @@ const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
                 )}
             </div>
 
+            {/* Description Input - Shows after file selection */}
+            {selectedFile && (
+                <div className="mt-6 space-y-2">
+                    <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                        Image Description
+                    </label>
+                    <textarea
+                        id="description"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Enter a description for this image..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        rows={3}
+                    />
+                    <p className="text-xs text-gray-500">
+                        Optional: Add a description to help identify this image later
+                    </p>
+                </div>
+            )}
+
             {/* Error Message */}
             {error && (
                 <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -176,11 +207,11 @@ const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
             )}
 
             {/* Upload Button */}
-            {selectedFile && (
+            {selectedFile && !isUploadDone && (
                 <div className="mt-6 flex gap-3">
                     <button
                         onClick={handleUpload}
-                        disabled={uploading || isUploadDone}
+                        disabled={uploading}
                         className="flex-1 bg-blue-500 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                     >
                         {uploading ? (
