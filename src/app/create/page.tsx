@@ -74,7 +74,7 @@ export default function CreatePost() {
   const [descriptionPublic, setDescriptionPublic] = useState<string>('');
   const [seriesPublic, setSeriesPublic] = useState<string>('');
   const [categoryPublic, setCategoryPublic] = useState<string>('');
-  const [imagePublic, setImagePublic] = useState<{ imageUrl: string; description: string } | null>(null);
+  const [imagePublic, setImagePublic] = useState<{ _id: string } | null>(null);
 
   const setType = alertStore((state) => state.setType);
   const setMessage = alertStore((state) => state.setMessage);
@@ -442,7 +442,7 @@ export default function CreatePost() {
   const handleImageUploadedPublic = (image: any) => {
     setShowImageUpload(false);
     setImageInsertPosition(null);
-    setImagePublic({imageUrl: image.url, description: image.description});
+    setImagePublic(image._id);
   };
 
   const handleImageUploaded = (image: any) => {

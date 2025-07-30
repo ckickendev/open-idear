@@ -33,7 +33,7 @@ export interface PostInterface {
     // likes: number;
     readTime: string;
     // updateAt: Date;
-    image: string;
+    image: any;
 }
 
 //  updateAt, likes, views, _id, rate

@@ -47,23 +47,19 @@ export default async function PostLists({
         {/* Article Header Image */}
         <div className="relative mb-6">
           <img
-            src={postData.image || "/placeholder-image.jpg"}
+            src={postData.image?.url || "/placeholder-image.jpg"}
             alt={postData.title}
             className="w-full h-80 object-cover rounded-lg"
           />
 
           {/* Image Caption */}
-          {/* <div className="mt-4 text-sm text-gray-600 leading-relaxed">
-            <span className="text-yellow-600 font-medium">|</span> A nurse
-            practitioner examines a patient with chronic venous insufficiency
-            (CVI), a vascular condition in which damaged leg veins impair blood
-            flow back to the heart. CVI can lead to symptoms such as swelling,
-            skin changes, and venous ulcers if left untreated.
-          </div> */}
+          <div className="mt-4 text-sm text-gray-600 leading-relaxed">
+            <span className="text-yellow-600 font-medium">|</span> {postData.image?.description}
+          </div>
         </div>
 
         {/* Article Content */}
-        <article className="max-w-3xl">
+        <article className="max-w-4xl">
           {/* Category Tag */}
           <div className="mb-4">
             <span className="inline-block px-3 py-1 text-xs font-semibold text-gray-800 bg-gray-200 rounded uppercase tracking-wide">

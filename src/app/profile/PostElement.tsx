@@ -10,7 +10,7 @@ const PostElement = (data: PostInterface) => {
             {/* Left side - Image */}
             <div className="w-1/3">
                 <img
-                    src={data.image}
+                    src={data.image?.url}
                     alt={data.title}
                     className="object-cover h-full w-full"
                 />
