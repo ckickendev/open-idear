@@ -10,15 +10,20 @@ import HoverTooltip from "@/component/common/TooltipNote";
 
 type PostType = {
     _id: string;
+    image: {
+        url: string;
+        description?: string;
+    };
     title: string;
+    description: string;
     author: any;
     category: any;
     published: any;
+    views?: number;
+    likes?: number;
     createdAt: string;
     content?: string;
     slug?: string;
-    views?: number;
-    likes?: number;
 };
 
 const Post = () => {
@@ -274,11 +279,11 @@ const Post = () => {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {post.author.username}
+                                        {post.author?.username}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                            {post.category.name}
+                                            {post.category?.name}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
@@ -286,7 +291,7 @@ const Post = () => {
                                             ? 'bg-green-100 text-green-800'
                                             : 'bg-yellow-100 text-yellow-800'
                                             }`}>
-                                            {post.published === true ? 'Đã duyệt' : 'Chờ duyệt'}
+                                            {post.published === true ? 'Đã public' : 'Chưa public'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

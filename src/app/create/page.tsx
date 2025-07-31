@@ -34,7 +34,6 @@ import authenticationStore from '@/store/AuthenticationStore';
 import FileHandler from '@tiptap/extension-file-handler';
 import ImageUpload from './ImageUpload';
 import alertStore from '@/store/AlertStore';
-import { set } from 'react-hook-form';
 import Notification from '@/component/common/Notification';
 
 export default function CreatePost() {
@@ -96,7 +95,8 @@ export default function CreatePost() {
             setCategory(resCategory.data.categories);
           }
         } catch (error) {
-          alert('Error fetching user data');
+          setType('error');
+          setMessage("Error fetching categories");
           changeLoad();
         }
 
@@ -109,7 +109,8 @@ export default function CreatePost() {
             setSeries(resSeries.data.series);
           }
         } catch (error) {
-          alert('Error fetching user data');
+          setType('error');
+          setMessage("Error fetching user data");
           changeLoad();
         }
 
@@ -133,7 +134,8 @@ export default function CreatePost() {
             setIsPublic(res.data.post.published);
           }
         } catch (error) {
-          alert('Error fetching user data');
+          setType('error');
+          setMessage("Error fetching user data");
           changeLoad();
         }
         changeLoad();
@@ -411,11 +413,13 @@ export default function CreatePost() {
       }).then((res) => {
         console.log(res.data);
         changeLoad();
-        alert('Post updated successfully!');
+        setType('success');
+        setMessage('Post updated successfully!');
       }).catch((err) => {
         const errorMessage = err?.response?.data?.error || err?.message;
         changeLoad();
-        alert(errorMessage);
+        setType('error');
+        setMessage(errorMessage);
       });
       return;
     }
@@ -431,11 +435,13 @@ export default function CreatePost() {
       params.set('id', res.data.post._id)
       router.push(`${pathname}?${params.toString()}`)
       changeLoad();
-      alert('Post saved successfully!');
+      setType('success');
+      setMessage('Post created successfully!');
     }).catch((err) => {
       const errorMessage = err?.response?.data?.error || err?.message;
       changeLoad();
-      alert(errorMessage);
+      setType('error');
+      setMessage(errorMessage);
     });
   };
 
@@ -489,19 +495,17 @@ export default function CreatePost() {
       setNewSeries('');
       setSeries((prev) => [...prev, res.data.data]);
       changeLoad();
-      alert('New series created successfully!');
+      setType('success');
+      setMessage('New series created successfully!');
     }).catch((err) => {
       const errorMessage = err?.response?.data?.error || err?.message;
       changeLoad();
-      alert(errorMessage);
+      setType('error');
+      setMessage(errorMessage);
     });
   };
 
   const onPublicHandle = async () => {
-    console.log("description: ", descriptionPublic);
-    console.log("imagePublic: ", imagePublic);
-    console.log("seriesPublic: ", seriesPublic);
-    console.log("categoryPublic: ", categoryPublic);
     const publicInfo = {
       postId: idPost,
       description: descriptionPublic,
