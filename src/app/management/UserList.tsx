@@ -363,7 +363,6 @@ const UserList = () => {
                             <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Email</th>
                             <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vai trò</th>
                             <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Số bài viết</th>
                             <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Ngày tham gia</th>
                             <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
                         </tr>
@@ -419,11 +418,6 @@ const UserList = () => {
                                         {user.activate === true ? <UserCheck className="w-3 h-3 mr-1" /> : <UserX className="w-3 h-3 mr-1" />}
                                         <span className="hidden sm:inline">{user.activate === true ? 'Hoạt động' : 'Vô hiệu hóa'}</span>
                                         <span className="sm:hidden">{user.activate === true ? 'Active' : 'Disabled'}</span>
-                                    </span>
-                                </td>
-                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                        {user.postsCount || 0} bài
                                     </span>
                                 </td>
                                 <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
