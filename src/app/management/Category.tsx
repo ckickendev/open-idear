@@ -250,18 +250,18 @@ const Category = () => {
     return (
         <div className="h-full space-y-6 relative flex flex-col justify-between">
             <div className="w-full">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
                     <h1 className="text-2xl font-bold text-gray-900">{t('management.category.title')}</h1>
                     <button
                         onClick={() => openModal('add')}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
                     >
                         <Plus size={16} />
                         {t('management.category.add')}
                     </button>
                 </div>
 
-                <div className="flex gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row gap-4 mb-6">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                         <input
@@ -272,59 +272,70 @@ const Category = () => {
                             className="w-full pl-10 pr-4 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
                         />
                     </div>
-                    <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition-colors">
+                    <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors">
                         <Filter size={16} />
-                        Lọc
+                        <span className="hidden sm:inline">Lọc</span>
                     </button>
                 </div>
 
                 {/* Results info */}
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 mb-4">
                     {t('management.category.display')} {startIndex + 1}-{Math.min(endIndex, filteredCategories.length)} / {filteredCategories.length} {t('management.category.cate')}
                     {searchTerm && ` (filter from ${categories.length} total)`}
                 </div>
 
+                {/* Single Responsive Table */}
                 <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
+                    {/* Table for larger screens */}
+                    <table className="min-w-full divide-y divide-gray-200 hidden sm:table">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.number')}</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.name')}</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.description')}</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.numberPost')}</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.createDate')}</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.action')}</th>
+                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.number')}</th>
+                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.name')}</th>
+                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">{t('management.category.description')}</th>
+                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.numberPost')}</th>
+                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">{t('management.category.createDate')}</th>
+                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.action')}</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {currentCategories.map((category, index) => (
                                 <tr key={category._id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {startIndex + index + 1}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-medium text-gray-900">{category.name}</div>
+                                    <td className="px-3 sm:px-6 py-4">
+                                        <div className="space-y-1">
+                                            <div className="text-sm font-medium text-gray-900">{category.name}</div>
+                                            {/* Show description and date on mobile/tablet in subtitle */}
+                                            <div className="text-xs text-gray-500 lg:hidden">
+                                                <div className="truncate max-w-xs">{category.description}</div>
+                                                <div>Ngày tạo: {convertDate(category.createdAt)}</div>
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-3 sm:px-6 py-4 hidden lg:table-cell">
                                         <div className="text-sm text-gray-600 max-w-xs truncate">{category.description}</div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                             {category.postCount} bài
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{convertDate(category.createdAt)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div className="flex items-center gap-2 ">
+                                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
+                                        {convertDate(category.createdAt)}
+                                    </td>
+                                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div className="flex items-center gap-1 sm:gap-2">
                                             <button
                                                 onClick={() => openModal('edit', category)}
-                                                className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 cursor-pointer"
+                                                className="text-blue-600 hover:text-blue-900 p-1 sm:p-2 rounded hover:bg-blue-50 cursor-pointer transition-colors"
                                             >
                                                 <Edit size={16} />
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteCategory(category._id)}
-                                                className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer"
+                                                className="text-red-600 hover:text-red-900 p-1 sm:p-2 rounded hover:bg-red-50 cursor-pointer transition-colors"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -334,13 +345,56 @@ const Category = () => {
                             ))}
                             {currentCategories.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                    <td colSpan={6} className="px-3 sm:px-6 py-4 text-center text-gray-500">
                                         {searchTerm ? 'Không tìm thấy danh mục nào phù hợp' : 'Chưa có danh mục nào'}
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
+
+                    {/* Mobile Card View */}
+                    <div className="sm:hidden space-y-4 p-4">
+                        {currentCategories.map((category, index) => (
+                            <div key={category._id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div className="flex-1">
+                                        <div className="text-sm font-semibold text-gray-900 mb-1">
+                                            #{startIndex + index + 1} - {category.name}
+                                        </div>
+                                        <div className="text-xs text-gray-500 space-y-1">
+                                            <div className="line-clamp-2">{category.description}</div>
+                                            <div>Ngày tạo: <span className="font-medium">{convertDate(category.createdAt)}</span></div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 ml-4">
+                                        <button
+                                            onClick={() => openModal('edit', category)}
+                                            className="text-blue-600 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-colors"
+                                        >
+                                            <Edit size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteCategory(category._id)}
+                                            className="text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between items-center pt-3 border-t border-gray-300">
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        {category.postCount} bài viết
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                        {currentCategories.length === 0 && (
+                            <div className="text-center py-8 text-gray-500">
+                                {searchTerm ? 'Không tìm thấy danh mục nào phù hợp' : 'Chưa có danh mục nào'}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -439,11 +493,12 @@ const Category = () => {
                                     Slug
                                 </label>
                                 <input
+                                    disabled={true}
                                     type="text"
                                     value={formData.slug}
                                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
-                                    placeholder="Tên icon hoặc emoji..."
+                                    className="w-full px-3 py-2 border bg-gray-200 border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
+                                    placeholder="Default slug will be generated from name"
                                 />
                             </div>
                         </div>

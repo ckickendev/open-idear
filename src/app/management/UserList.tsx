@@ -302,18 +302,18 @@ const UserList = () => {
 
     return (
         <div className="space-y-6 relative">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <h1 className="text-2xl font-bold text-gray-900">Quản lý Người dùng</h1>
                 <button
                     onClick={() => openModal('add')}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
                 >
                     <Plus size={16} />
                     Thêm mới
                 </button>
             </div>
 
-            <div className="flex gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                     <input
@@ -324,53 +324,57 @@ const UserList = () => {
                         className="w-full pl-10 pr-4 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
                     />
                 </div>
-                <select
-                    value={roleFilter}
-                    onChange={(e) => setRoleFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
-                >
-                    <option value="all">Tất cả vai trò</option>
-                    <option value="0">Người dùng</option>
-                    <option value="1">Quản trị viên</option>
-                </select>
-                <select
-                    value={activateFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
-                >
-                    <option value="all">Tất cả trạng thái</option>
-                    <option value="true">Đang hoạt động</option>
-                    <option value="false">Đã vô hiệu hóa</option>
-                </select>
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <select
+                        value={roleFilter}
+                        onChange={(e) => setRoleFilter(e.target.value)}
+                        className="px-4 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
+                    >
+                        <option value="all">Tất cả vai trò</option>
+                        <option value="0">Người dùng</option>
+                        <option value="1">Quản trị viên</option>
+                    </select>
+                    <select
+                        value={activateFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="px-4 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
+                    >
+                        <option value="all">Tất cả trạng thái</option>
+                        <option value="true">Đang hoạt động</option>
+                        <option value="false">Đã vô hiệu hóa</option>
+                    </select>
+                </div>
             </div>
 
             {/* Results info */}
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 mb-4">
                 Hiển thị {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} của {filteredUsers.length} người dùng
                 {(searchTerm || roleFilter !== 'all' || activateFilter !== 'all') && ` (lọc từ ${users.length} tổng cộng)`}
             </div>
 
+            {/* Single Responsive Table */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
+                {/* Table for larger screens */}
+                <table className="min-w-full divide-y divide-gray-200 hidden sm:table">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STT</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thông tin</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vai trò</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số bài viết</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tham gia</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
+                            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STT</th>
+                            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thông tin</th>
+                            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Email</th>
+                            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vai trò</th>
+                            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Số bài viết</th>
+                            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Ngày tham gia</th>
+                            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {currentUsers.map((user, index) => (
                             <tr key={user._id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {startIndex + index + 1}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-3 sm:px-6 py-4">
                                     <div className="flex items-center">
                                         <div className="flex-shrink-0 h-10 w-10">
                                             {user.avatar ? (
@@ -384,37 +388,45 @@ const UserList = () => {
                                         <div className="ml-4">
                                             <div className="text-sm font-medium text-gray-900">{user.name}</div>
                                             <div className="text-sm text-gray-500">@{user.username}</div>
+                                            {/* Show email, posts count, and join date on mobile/tablet in subtitle */}
+                                            <div className="text-xs text-gray-500 lg:hidden mt-1 space-y-1">
+                                                <div>{user.email}</div>
+                                                {user.phone && <div>{user.phone}</div>}
+                                                <div>Bài viết: {user.postsCount || 0} | Tham gia: {convertDate(user.joinDate)}</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                                     <div className="text-sm text-gray-900">{user.email}</div>
                                     {user.phone && <div className="text-sm text-gray-500">{user.phone}</div>}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 1
                                         ? 'bg-purple-100 text-purple-800'
                                         : 'bg-blue-100 text-blue-800'
                                         }`}>
                                         {user.role === 1 ? <Shield className="w-3 h-3 mr-1" /> : <User className="w-3 h-3 mr-1" />}
-                                        {user.role === 1 ? 'Quản trị viên' : 'Người dùng'}
+                                        <span className="hidden sm:inline">{user.role === 1 ? 'Quản trị viên' : 'Người dùng'}</span>
+                                        <span className="sm:hidden">{user.role === 1 ? 'Admin' : 'User'}</span>
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.activate === true
                                         ? 'bg-green-100 text-green-800'
                                         : 'bg-red-100 text-red-800'
                                         }`}>
                                         {user.activate === true ? <UserCheck className="w-3 h-3 mr-1" /> : <UserX className="w-3 h-3 mr-1" />}
-                                        {user.activate === true ? 'Hoạt động' : 'Vô hiệu hóa'}
+                                        <span className="hidden sm:inline">{user.activate === true ? 'Hoạt động' : 'Vô hiệu hóa'}</span>
+                                        <span className="sm:hidden">{user.activate === true ? 'Active' : 'Disabled'}</span>
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                                         {user.postsCount || 0} bài
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
                                     {convertDate(user.joinDate)}
                                     {user.createdAt && (
                                         <div className="text-xs text-gray-400">
@@ -422,17 +434,17 @@ const UserList = () => {
                                         </div>
                                     )}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div className="flex items-center gap-2">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div className="flex items-center gap-1 sm:gap-2">
                                         <button
                                             onClick={() => openModal('edit', user)}
-                                            className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 cursor-pointer"
+                                            className="text-blue-600 hover:text-blue-900 p-1 sm:p-2 rounded hover:bg-blue-50 cursor-pointer transition-colors"
                                         >
                                             <Edit size={16} />
                                         </button>
                                         <button
                                             onClick={() => toggleUserStatus(user._id, user.activate)}
-                                            className={`p-1 rounded cursor-pointer ${user.activate === true
+                                            className={`p-1 sm:p-2 rounded cursor-pointer transition-colors ${user.activate === true
                                                 ? 'text-red-600 hover:text-red-900 hover:bg-red-50'
                                                 : 'text-green-600 hover:text-green-900 hover:bg-green-50'
                                                 }`}
@@ -441,7 +453,7 @@ const UserList = () => {
                                         </button>
                                         <button
                                             onClick={() => handleDeleteUser(user._id)}
-                                            className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer"
+                                            className="text-red-600 hover:text-red-900 p-1 sm:p-2 rounded hover:bg-red-50 cursor-pointer transition-colors"
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -451,13 +463,93 @@ const UserList = () => {
                         ))}
                         {currentUsers.length === 0 && (
                             <tr>
-                                <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                                <td colSpan={8} className="px-3 sm:px-6 py-4 text-center text-gray-500">
                                     {searchTerm || roleFilter !== 'all' || activateFilter !== 'all' ? 'Không tìm thấy người dùng nào phù hợp' : 'Chưa có người dùng nào'}
                                 </td>
                             </tr>
                         )}
                     </tbody>
                 </table>
+
+                {/* Mobile Card View */}
+                <div className="sm:hidden space-y-4 p-4">
+                    {currentUsers.map((user, index) => (
+                        <div key={user._id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                            <div className="flex items-start gap-3 mb-3">
+                                <div className="flex-shrink-0">
+                                    {user.avatar ? (
+                                        <img className="h-12 w-12 rounded-full" src={user.avatar} alt="" />
+                                    ) : (
+                                        <div className="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center">
+                                            <User className="h-8 w-8 text-gray-600" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="text-sm font-semibold text-gray-900">
+                                                #{startIndex + index + 1} - {user.name}
+                                            </div>
+                                            <div className="text-sm text-gray-500">@{user.username}</div>
+                                        </div>
+                                        <div className="flex items-center gap-2 ml-2">
+                                            <button
+                                                onClick={() => openModal('edit', user)}
+                                                className="text-blue-600 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-colors"
+                                            >
+                                                <Edit size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => toggleUserStatus(user._id, user.activate)}
+                                                className={`p-2 rounded-full transition-colors ${user.activate === true
+                                                    ? 'text-red-600 bg-red-50 hover:bg-red-100'
+                                                    : 'text-green-600 bg-green-50 hover:bg-green-100'
+                                                    }`}
+                                            >
+                                                {user.activate === true ? <UserX size={16} /> : <UserCheck size={16} />}
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteUser(user._id)}
+                                                className="text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-2 space-y-1">
+                                        <div>Email: <span className="font-medium">{user.email}</span></div>
+                                        {user.phone && <div>Phone: <span className="font-medium">{user.phone}</span></div>}
+                                        <div>Bài viết: <span className="font-medium">{user.postsCount || 0}</span> | Tham gia: <span className="font-medium">{convertDate(user.joinDate)}</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex justify-between items-center pt-3 border-t border-gray-300">
+                                <div className="flex gap-2">
+                                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${user.role === 1
+                                        ? 'bg-purple-100 text-purple-800'
+                                        : 'bg-blue-100 text-blue-800'
+                                        }`}>
+                                        {user.role === 1 ? <Shield className="w-3 h-3 mr-1" /> : <User className="w-3 h-3 mr-1" />}
+                                        {user.role === 1 ? 'Admin' : 'User'}
+                                    </span>
+                                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${user.activate === true
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-red-100 text-red-800'
+                                        }`}>
+                                        {user.activate === true ? <UserCheck className="w-3 h-3 mr-1" /> : <UserX className="w-3 h-3 mr-1" />}
+                                        {user.activate === true ? 'Active' : 'Disabled'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                    {currentUsers.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                            {searchTerm || roleFilter !== 'all' || activateFilter !== 'all' ? 'Không tìm thấy người dùng nào phù hợp' : 'Chưa có người dùng nào'}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Enhanced Pagination */}
