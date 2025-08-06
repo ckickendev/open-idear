@@ -133,7 +133,7 @@ const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
                 {t('component.authen.confirm_signup.check_email')}
             </p>
             <p className="mt-2 text-center text-sm text-gray-600 max-w">
-                {t('component.authen.confirm_signup.check')}
+                {t('component.authen.confirm_signup.or')}
                 <span onClick={() => setAuthenState(2)} className="font-medium text-blue-600 hover:text-blue-500 cursor-pointer">
                     &nbsp; {t('component.authen.confirm_signup.now')}
                 </span>

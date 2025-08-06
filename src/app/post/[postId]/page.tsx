@@ -1,6 +1,7 @@
 import HotPost from "@/component/hot_post/HotPost";
 import axios from "axios";
 import { Mail, Link } from "lucide-react";
+import CommentSection from "./CommentSection";
 
 export default async function PostLists({
   params,
@@ -63,20 +64,19 @@ export default async function PostLists({
 
   return (
     <>
-      <div className="max-w-4xl mx-auto px-4 py-8 bg-white">
-        {/* Article Header Image */}
-        <div className="relative mb-6">
-          <img
-            src={postData.image?.url || "/banner/openidear3.webp"}
-            alt={postData.title}
-            className="w-full h-80 object-cover rounded-lg"
-          />
+      <div className="relative mb-6">
+        <img
+          src={postData.image?.url || "/banner/openidear3.webp"}
+          alt={postData.title}
+          className="w-full h-80 object-cover rounded-lg"
+        />
 
-          {/* Image Caption */}
-          <div className="mt-4 text-sm text-gray-600 leading-relaxed">
-            <span className="text-yellow-600 font-medium">|</span> {postData.image?.description || "No description available"}
-          </div>
+        {/* Image Caption */}
+        <div className="max-w-4xl mx-auto px-4 py-2 bg-white text-sm text-gray-600 leading-relaxed">
+          <span className="text-yellow-600 font-medium">|</span> {postData.image?.description || "No description available"}
         </div>
+      </div>  
+      <div className="max-w-4xl mx-auto px-4 py-8 bg-white">
 
         {/* Article Content */}
         <article className="max-w-4xl">
@@ -145,6 +145,10 @@ export default async function PostLists({
       </div>
       <div className="max-w-full mx-auto px-4 py-8 bg-white">
         <HotPost />
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-8 bg-white">
+        <CommentSection postId={postId} />
       </div>
     </>
     

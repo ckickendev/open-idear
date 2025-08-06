@@ -2,7 +2,7 @@ import { ForgotPassword } from './ForgotPassword';
 import { boolean, z } from "zod";
 
 const password = new RegExp(
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,25}$/
 );
 
 export const REACT_APP_ROOT_BACKEND = process.env.NEXT_PUBLIC_ROOT_BACKEND;
