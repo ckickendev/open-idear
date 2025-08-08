@@ -2,7 +2,7 @@
 
 <div align="center">
   
-![Open-Idear Logo](https://raw.githubusercontent.com/ckickendev/open-idear/main/assets/logo.png)
+![Open-Idear Logo]([https://raw.githubusercontent.com/ckickendev/open-idear/main/assets/logo.png](https://res.cloudinary.com/dhc6z8uix/image/upload/v1743690388/wik95ksifmrudkbfmzom.png))
 
 ### *Where Technology Ideas Connect*
 
