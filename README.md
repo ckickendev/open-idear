@@ -2,8 +2,7 @@
 
 <div align="center">
   
-![Open-Idear Logo]([https://res.cloudinary.com/dhc6z8uix/image/upload/v1743690388/wik95ksifmrudkbfmzom.png]())
-
+<img src="https://res.cloudinary.com/dhc6z8uix/image/upload/v1743690388/wik95ksifmrudkbfmzom.png" width="100px;" alt="ckickendev"/>
 ### *Where Technology Ideas Connect*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
