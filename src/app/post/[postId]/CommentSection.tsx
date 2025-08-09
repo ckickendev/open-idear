@@ -4,10 +4,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getHeadersToken } from '@/api/authentication';
 import { Heart } from 'lucide-react';
+import authenticationStore from '@/store/AuthenticationStore';
+import Link from 'next/link';
 
 type Comment = {
   _id: string;
   author: {
+    _id: string,
     avatar?: string;
     username: string;
   };
@@ -15,7 +18,7 @@ type Comment = {
   timeAgo: string;
   isEdited?: boolean;
   voteCount: number;
-  userVote?: boolean;
+  upvotes: String[];
   replies: Comment[];
   hasMoreReplies?: boolean;
   totalReplies: number;
@@ -70,7 +73,7 @@ function CommentSection({ postId }: { postId: string }) {
   // Load more replies for a specific comment
   const loadMoreReplies = async (commentId: string, currentRepliesCount: number) => {
     try {
-      const response = await axios.get(`/api/comments/${commentId}/replies`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/comments/${commentId}/replies`, {
         params: {
           skip: currentRepliesCount,
           limit: 5
@@ -133,11 +136,13 @@ function CommentSection({ postId }: { postId: string }) {
   const voteComment = async (commentId: string) => {
     try {
         // Remove vote
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/comments/${commentId}/vote`, {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/comments/vote/${commentId}`, {
           headers: getHeadersToken()
         });
-        const { userVote } = response.data.data;
-        setComments(prev => updateCommentScore(prev, commentId, userVote));
+        console.log("response.data", response.data);
+        
+        const { userVote, score, upvotes } = response.data;
+        setComments(prev => updateCommentScore(prev, commentId, userVote, score, upvotes));
     } catch (error) {
       console.error('Error voting:', error);
     }
@@ -147,16 +152,18 @@ function CommentSection({ postId }: { postId: string }) {
   const updateCommentScore = (
     comments: Comment[],
     commentId: string,
-    userVote: boolean
+    userVote: boolean,
+    score: number,
+    upvotes: string[]
   ): Comment[] => {
     return comments.map((comment: Comment) => {
       if (comment._id === commentId) {
-        return { ...comment, userVote };
+        return { ...comment, userVote: userVote, voteCount: score, upvotes };
       }
       if (comment.replies && comment.replies.length > 0) {
         return {
           ...comment,
-          replies: updateCommentScore(comment.replies, commentId, userVote)
+          replies: updateCommentScore(comment.replies, commentId, userVote, score, upvotes)
         };
       }
       return comment;
@@ -224,6 +231,8 @@ function CommentItem({ comment, onReply, onVote, onLoadMoreReplies }: CommentIte
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyContent, setReplyContent] = useState('');
 
+  const currentUser = authenticationStore((state) => state.currentUser);
+
   const handleReply = () => {
     if (replyContent.trim()) {
       onReply(replyContent, comment._id);
@@ -242,7 +251,9 @@ function CommentItem({ comment, onReply, onVote, onLoadMoreReplies }: CommentIte
           className="w-8 h-8 rounded-full"
         />
         <span className="font-semibold text-gray-800">
-          {comment.author.username}
+          <Link href={`/profile/${comment?.author?._id}`}>
+            {comment.author.username}
+          </Link>
         </span>
         <span className="text-gray-500 text-sm">
           {comment.timeAgo}
@@ -259,7 +270,7 @@ function CommentItem({ comment, onReply, onVote, onLoadMoreReplies }: CommentIte
 
       <div className="comment-actions flex items-center gap-4 text-sm">
         <div className="vote-buttons flex items-center gap-1">
-          <Heart className='cursor-pointer' fill={comment.userVote ? "red" : "transparent"} size={20} color="red" onClick={() => onVote(comment._id)} />
+          <Heart className='cursor-pointer' fill={comment.upvotes.includes(currentUser?._id) ? "red" : "transparent"} size={20} color="red" onClick={() => onVote(comment._id)} />
           <span className="vote-count font-medium">
             {comment.voteCount}
           </span>

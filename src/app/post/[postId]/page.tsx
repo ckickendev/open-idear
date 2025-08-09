@@ -1,14 +1,15 @@
 import HotPost from "@/component/hot_post/HotPost";
-import axios from "axios";
 import { Mail, Link } from "lucide-react";
 import CommentSection from "./CommentSection";
+import PostSidebarActions from "./PostSideBarActions";
+import Image from "next/image";
 
 export default async function PostLists({
   params,
 }: {
-  params: Promise<{ postId: string }>;
+  params: { postId: string };
 }) {
-  const { postId } = await params;
+  const { postId } = params;
 
   const getPost = async (id: string) => {
     try {
@@ -65,6 +66,14 @@ export default async function PostLists({
   return (
     <>
       <div className="relative mb-6">
+        {/* <Image
+          src={postData?.image?.url || "/banner/openidear3.webp"} // adjust field name
+          alt={postData?.title || "Post banner"}
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1200px"
+          className="w-full h-80 object-cover rounded-lg"
+        /> */}
         <img
           src={postData.image?.url || "/banner/openidear3.webp"}
           alt={postData.title}
@@ -77,6 +86,7 @@ export default async function PostLists({
         </div>
       </div>  
       <div className="max-w-4xl mx-auto px-4 py-8 bg-white">
+        <PostSidebarActions />
 
         {/* Article Content */}
         <article className="max-w-4xl">
