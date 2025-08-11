@@ -1,17 +1,44 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
 import { Heart, Bookmark, MessageCircle, Share2, User } from "lucide-react";
+import authenticationStore from "@/store/AuthenticationStore";
+import { getHeadersToken } from "@/api/authentication";
+import { REACT_APP_ROOT_BACKEND } from "@/component/authen/authentication";
+import axios from "axios";
+import alertStore from "@/store/AlertStore";
+import Notification from "@/component/common/Notification";
 
-export default function PostSidebarActions() {
-  const [isLiked, setIsLiked] = useState(false);
+export default function PostSidebarActions({postData}: any) {
+  const currentUser = authenticationStore((state) => state.currentUser);
+  
+  const [isLiked, setIsLiked] = useState(postData?.likes?.includes(currentUser._id));
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [likeCount, setLikeCount] = useState(26);
-  const [commentCount] = useState(24);
+  const [likeCount, setLikeCount] = useState(postData?.likes?.length);
+  const [commentCount, setCommentCount] = useState(postData?.comments?.length);
   const [display, setDisplay] = useState(false);
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikeCount((prev) => (isLiked ? prev - 1 : prev + 1));
+  const setType = alertStore((state) => state.setType);
+  const setMessage = alertStore((state) => state.setMessage);
+
+  const handleLike = async () => {
+    try {
+      // Using native fetch with Next.js optimizations
+      const res = await axios.post(`${REACT_APP_ROOT_BACKEND}/comments/voteLike/${postData._id}`, {headers: getHeadersToken()});
+
+      if (res.status !== 200) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      console.log("data.post.postlike: ", res.data.postLike);
+      const { postLike } = res.data;
+      if(postLike) {
+        setLikeCount(likeCount+1);
+      } else { 
+        setLikeCount(likeCount-1);
+      }
+    } catch (error) {
+      setType('error');
+      setMessage("Error when like post");
+    }
   };
 
   const handleBookmark = () => {
@@ -39,18 +66,11 @@ export default function PostSidebarActions() {
     };
   }, [handleScroll]); // Dependency array includes handleScroll to ensure the listener is updated if handleScroll changes
 
-  useEffect(() => {
-    loadDataInSideBar
-  }, []);
-
-  const loadDataInSideBar = async () => {
-    
-  };
-
   return (
     <>
+      <Notification />
       {display && (
-        <div className="fixed left-12 top-1/2 transform -translate-y-1/2 flex flex-col items-center space-y-6 z-10">
+        <div className="hidden md:block fixed left-12 top-1/2 transform -translate-y-1/2 flex flex-col items-center space-y-6 z-10">
           {/* Like Button with Heart */}
           <div className="flex flex-col items-center">
             <button
@@ -59,7 +79,7 @@ export default function PostSidebarActions() {
                 isLiked
                   ? "bg-red-100 text-red-500 hover:bg-red-200"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
+              } cursor-pointer`}
             >
               <Heart size={20} className={isLiked ? "fill-current" : ""} />
             </button>
@@ -90,7 +110,7 @@ export default function PostSidebarActions() {
               isBookmarked
                 ? "bg-blue-100 text-blue-500 hover:bg-blue-200"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
+            } cursor-pointer`}
           >
             <Bookmark
               size={20}
@@ -100,7 +120,7 @@ export default function PostSidebarActions() {
 
           {/* Comments */}
           <div className="flex flex-col items-center">
-            <button className="p-3 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-200 hover:scale-110">
+            <button className="p-3 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-200 hover:scale-110 cursor-pointer">
               <MessageCircle size={20} />
             </button>
             <span className="text-sm font-medium text-gray-700 mt-1">
@@ -109,7 +129,7 @@ export default function PostSidebarActions() {
           </div>
 
           {/* Share Button */}
-          <button className="p-3 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-200 hover:scale-110">
+          <button className="p-3 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-200 hover:scale-110 cursor-pointer">
             <Share2 size={20} />
           </button>
         </div>

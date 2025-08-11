@@ -2,7 +2,6 @@ import HotPost from "@/component/hot_post/HotPost";
 import { Mail, Link } from "lucide-react";
 import CommentSection from "./CommentSection";
 import PostSidebarActions from "./PostSideBarActions";
-import Image from "next/image";
 
 export default async function PostLists({
   params,
@@ -86,7 +85,7 @@ export default async function PostLists({
         </div>
       </div>  
       <div className="max-w-4xl mx-auto px-4 py-8 bg-white">
-        <PostSidebarActions />
+        <PostSidebarActions postData={postData} />
 
         {/* Article Content */}
         <article className="max-w-4xl">
