@@ -11,7 +11,7 @@ import Notification from "@/component/common/Notification";
 export default function PostSidebarActions({postData}: any) {
   const currentUser = authenticationStore((state) => state.currentUser);
   
-  const [isLiked, setIsLiked] = useState(postData?.likes?.includes(currentUser._id));
+  const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [likeCount, setLikeCount] = useState(postData?.likes?.length);
   const [commentCount, setCommentCount] = useState(postData?.comments?.length);
@@ -22,7 +22,6 @@ export default function PostSidebarActions({postData}: any) {
 
   const handleLike = async () => {
     try {
-      // Using native fetch with Next.js optimizations
       const res = await axios.post(`${REACT_APP_ROOT_BACKEND}/comments/voteLike/${postData._id}`, {headers: getHeadersToken()});
 
       if (res.status !== 200) {
@@ -31,8 +30,10 @@ export default function PostSidebarActions({postData}: any) {
       console.log("data.post.postlike: ", res.data.postLike);
       const { postLike } = res.data;
       if(postLike) {
+        setIsLiked(true);
         setLikeCount(likeCount+1);
       } else { 
+        setIsLiked(false);
         setLikeCount(likeCount-1);
       }
     } catch (error) {
@@ -41,9 +42,50 @@ export default function PostSidebarActions({postData}: any) {
     }
   };
 
-  const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
+  const handleBookmark = async () => {
+    try {
+      // Using native fetch with Next.js optimizations
+      const res = await axios.post(`${REACT_APP_ROOT_BACKEND}/post/marked?postId=${postData._id}`, {headers: getHeadersToken()});
+
+      if (res.status !== 200) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      console.log("data.post.postlike: ", res.data.isMarked);
+      const { isMarked } = res.data;
+      if(isMarked) {
+        setType('info');
+        setMessage("Post bookmarked successfully");
+      } else {
+        setType('info');
+        setMessage("Post unbookmarked successfully");
+      }
+      setIsBookmarked(isMarked);
+    } catch (error) {
+      setType('error');
+      setMessage("Error when like post");
+    }
   };
+
+  useEffect(() => {
+    const getStatus = async () => {
+      try {
+        const res = await axios.get(`${REACT_APP_ROOT_BACKEND}/post/getLikeAndMarked?postId=${postData._id}`, { headers: getHeadersToken()});
+
+        if (res.status !== 200) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        console.log("data.post.postlike: ", res.data);
+        const { isLiked, isBookmarked } = res.data;
+        setIsLiked(isLiked);
+        setIsBookmarked(isBookmarked);
+      } catch (error) {
+        setType('error');
+        setMessage("Error when fetching post status");
+      }
+    };
+
+    getStatus();
+  }, [])
 
   const handleScroll = useCallback(() => {
     console.log("Scrolled!", window.scrollY);
