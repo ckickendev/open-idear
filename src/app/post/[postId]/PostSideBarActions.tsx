@@ -1,18 +1,19 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
-import { Heart, Bookmark, MessageCircle, Share2, User } from "lucide-react";
+import { Heart , MessageCircle, Share2, User, Plus, Bookmark, Check } from "lucide-react";
 import authenticationStore from "@/store/AuthenticationStore";
 import { getHeadersToken } from "@/api/authentication";
 import { REACT_APP_ROOT_BACKEND } from "@/component/authen/authentication";
 import axios from "axios";
 import alertStore from "@/store/AlertStore";
 import Notification from "@/component/common/Notification";
+import Link from "next/link";
 
 export default function PostSidebarActions({postData}: any) {
-  const currentUser = authenticationStore((state) => state.currentUser);
   
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isFollowed, setIsFollowed] = useState(false);
   const [likeCount, setLikeCount] = useState(postData?.likes?.length);
   const [commentCount, setCommentCount] = useState(postData?.comments?.length);
   const [display, setDisplay] = useState(false);
@@ -66,18 +67,43 @@ export default function PostSidebarActions({postData}: any) {
     }
   };
 
+  const handleFollow = async () => {
+    try {
+      // Using native fetch with Next.js optimizations
+      const res = await axios.patch(`${REACT_APP_ROOT_BACKEND}/post/followUser?postId=${postData._id}`, {headers: getHeadersToken()});
+
+      if (res.status !== 200) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      console.log("data.post.postlike: ", res.data.isFollowed);
+      const { isFollowed } = res.data;
+      if(isFollowed) {
+        setType('info');
+        setMessage("User followed successfully");
+      } else {
+        setType('info');
+        setMessage("User unfollowed successfully");
+      }
+      setIsFollowed(isFollowed);
+    } catch (error) {
+      setType('error');
+      setMessage("Error when follow user");
+    }
+  };
+
   useEffect(() => {
     const getStatus = async () => {
       try {
-        const res = await axios.get(`${REACT_APP_ROOT_BACKEND}/post/getLikeAndMarked?postId=${postData._id}`, { headers: getHeadersToken()});
+        const res = await axios.get(`${REACT_APP_ROOT_BACKEND}/post/getSideInformation?postId=${postData._id}`, { headers: getHeadersToken()});
 
         if (res.status !== 200) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
         console.log("data.post.postlike: ", res.data);
-        const { isLiked, isBookmarked } = res.data;
+        const { isLiked, isBookmarked, isFollowed } = res.data;
         setIsLiked(isLiked);
         setIsBookmarked(isBookmarked);
+        setIsFollowed(isFollowed);
       } catch (error) {
         setType('error');
         setMessage("Error when fetching post status");
@@ -133,16 +159,23 @@ export default function PostSidebarActions({postData}: any) {
           {/* Author Avatar */}
           <div className="relative">
             <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors cursor-pointer">
-              <img
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"
+              <Link href={`/profile/${postData.author._id}`}><img
+                src={postData.author.avatar}
                 alt="Author avatar"
                 className="w-full h-full object-cover"
-              />
+              /></Link>
+              
             </div>
             {/* Small plus icon for follow */}
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors">
-              <User size={12} className="text-white" />
-            </div>
+            { isFollowed ? (
+              <div onClick={handleFollow} className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors">
+                <Check size={12} className="text-white" />
+              </div>
+            ) : (
+              <div onClick={handleFollow} className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors">
+                <Plus size={12} className="text-white" />
+              </div>
+            )}
           </div>
 
           {/* Bookmark Button */}
@@ -154,7 +187,7 @@ export default function PostSidebarActions({postData}: any) {
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             } cursor-pointer`}
           >
-            <Bookmark
+            <Bookmark 
               size={20}
               className={isBookmarked ? "fill-current" : ""}
             />
