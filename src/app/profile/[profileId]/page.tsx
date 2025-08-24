@@ -7,17 +7,17 @@ import ProfileInfo from '@/component/authen/ProfileInfo';
 import { BookHeart, Bookmark, BookText, ChartColumnStacked, CircleHelp, Heart, LogOut, Pen, PencilLine, Settings, ShoppingCart, SquarePen, Star, UserRoundPen } from 'lucide-react';
 import { getHeadersToken } from '@/api/authentication';
 import axios from 'axios';
-import ProfileInformation from './ProfileInformation';
-import PostInformation from './PostInformation';
 import loadingStore from '@/store/LoadingStore';
 import LoadingComponent from '@/component/common/Loading';
-import LikeInformation from './LikeInformation';
-import YourRating from './YourRating';
-import YourCourse from './YourCourse';
-import YourHistory from './YourHistory';
-import AskQuestion from './AskQuestion';
-import SettingProfile from './Setting';
-import PostElement from './PostElement';
+import PostElement from '../PostElement';
+import ProfileInformation from '../ProfileInformation';
+import PostInformation from '../PostInformation';
+import LikeInformation from '../LikeInformation';
+import YourRating from '../YourRating';
+import YourCourse from '../YourCourse';
+import YourHistory from '../YourHistory';
+import AskQuestion from '../AskQuestion';
+import SettingProfile from '../Setting';
 
 // Define types
 export interface PostInterface {
@@ -38,7 +38,12 @@ export interface PostInterface {
 
 //  updateAt, likes, views, _id, rate
 
-const ProfileDashboard: React.FC = () => {
+async function ProfileDashboard({
+  params,
+}: {
+  params: { profileId: string };
+}) {
+    const { profileId } = params;
     const [postType, setPostType] = React.useState<number>(1);
     const [selectId, setSelectId] = React.useState<string>("overview");
     const [displayPost, setDisplayPost] = React.useState<PostInterface[]>([]);
@@ -217,7 +222,7 @@ const ProfileDashboard: React.FC = () => {
                             <div className="space-y-4">
                                 {displayPost.length == 0 && <h1 className='text-xxl font-semibold mb-4'>No record</h1>}
                                 {displayPost.map((post, index) => (
-                                    <PostElement 
+                                    <PostElement
                                         _id={post._id}
                                         key={index}
                                         image={post.image}
