@@ -39,9 +39,9 @@ export interface PostInterface {
 //  updateAt, likes, views, _id, rate
 
 async function ProfileDashboard({
-  params,
+    params,
 }: {
-  params: { profileId: string };
+    params: { profileId: string };
 }) {
     const { profileId } = params;
     const [postType, setPostType] = React.useState<number>(1);
@@ -62,12 +62,10 @@ async function ProfileDashboard({
         // Fetch all posts from the server
         const fetchPosts = async () => {
             try {
-                changeLoad()
-                const token = localStorage.getItem("access_token");
-                if (token) {
+                changeLoad();
+                if (profileId) {
                     const headers = getHeadersToken();
-
-                    const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor`, { headers });
+                    const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor?profileId=${profileId}`, { headers });
                     if (res.status === 200) {
                         console.log("posts info: ", res.data);
                         setAllPosts(res.data.posts);
@@ -80,11 +78,38 @@ async function ProfileDashboard({
                         });
                     }
 
-                    const resLike = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getLikeByUser`, { headers });
+                    const resLike = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getLikeByUser?profileId${profileId}`, { headers });
                     if (resLike.status === 200) {
                         setAllLikePost(resLike.data.likePost);
                     }
+
+
+                } else {
+                    router.push(`/profile/${authenticationStore.getState().currentUser._id}`);
+                    const token = localStorage.getItem("access_token");
+                    if (token) {
+                        const headers = getHeadersToken();
+
+                        const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor`, { headers });
+                        if (res.status === 200) {
+                            console.log("posts info: ", res.data);
+                            setAllPosts(res.data.posts);
+                            setDisplayPost(res.data.posts);
+
+                            setAllUnfinishPosts(() => {
+                                return res.data.posts.filter((e: PostInterface) => {
+                                    return e.published === false;
+                                });
+                            });
+                        }
+
+                        const resLike = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getLikeByUser`, { headers });
+                        if (resLike.status === 200) {
+                            setAllLikePost(resLike.data.likePost);
+                        }
+                    }
                 }
+
             } catch (error) {
                 console.error('Error fetching posts:', error);
             } finally {

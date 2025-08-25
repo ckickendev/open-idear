@@ -46,9 +46,9 @@ export default async function PostLists({
       );
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
-      } 
+      }
       const data = await res.json();
-      
+
       return data.topic;
     } catch (error) {
       console.error("Error fetching random topic:", error);
@@ -83,7 +83,7 @@ export default async function PostLists({
         <div className="max-w-4xl mx-auto px-4 py-2 bg-white text-sm text-gray-600 leading-relaxed">
           <span className="text-yellow-600 font-medium">|</span> {postData.image?.description || "No description available"}
         </div>
-      </div>  
+      </div>
       <div className="max-w-4xl mx-auto px-4 py-8 bg-white">
         <PostSidebarActions postData={postData} />
 
@@ -148,8 +148,6 @@ export default async function PostLists({
               <p className="text-gray-600">No related topics available.</p>
             )}
           </div>
-
-          
         </article>
       </div>
       <div className="max-w-full mx-auto px-4 py-8 bg-white">
@@ -160,7 +158,6 @@ export default async function PostLists({
         <CommentSection postId={postId} />
       </div>
     </>
-    
-    
+
   );
 }
