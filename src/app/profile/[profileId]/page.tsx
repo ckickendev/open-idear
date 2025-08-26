@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import authenticationStore from '@/store/AuthenticationStore';
@@ -29,25 +29,22 @@ export interface PostInterface {
     author: any;
     category: string;
     published?: boolean;
-    // views: number;
-    // likes: number;
     readTime: string;
-    // updateAt: Date;
     image: any;
 }
 
-//  updateAt, likes, views, _id, rate
-
-async function ProfileDashboard({
+function ProfileDashboard({
     params,
 }: {
-    params: { profileId: string };
+    params: Promise<{ profileId: string }>;
 }) {
-    const { profileId } = params;
+    const { profileId } = use(params);
     const [postType, setPostType] = React.useState<number>(1);
     const [selectId, setSelectId] = React.useState<string>("overview");
     const [displayPost, setDisplayPost] = React.useState<PostInterface[]>([]);
     const [titlePost, setTitlePost] = useState("Bài viết của bạn");
+    const [userInfor, setUserInfor] = useState<any>();
+    const [hasRedirected, setHasRedirected] = useState(false); // Add this to prevent redirect loops
 
     const [allPosts, setAllPosts] = React.useState<PostInterface[]>([]);
     const [allUnfinishPosts, setAllUnfinishPosts] = React.useState<PostInterface[]>([]);
@@ -58,67 +55,72 @@ async function ProfileDashboard({
 
     const router = useRouter();
 
-    useEffect(() => {
-        // Fetch all posts from the server
-        const fetchPosts = async () => {
-            try {
-                changeLoad();
-                if (profileId) {
-                    const headers = getHeadersToken();
-                    const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor?profileId=${profileId}`, { headers });
-                    if (res.status === 200) {
-                        console.log("posts info: ", res.data);
-                        setAllPosts(res.data.posts);
-                        setDisplayPost(res.data.posts);
-
-                        setAllUnfinishPosts(() => {
-                            return res.data.posts.filter((e: PostInterface) => {
-                                return e.published === false;
-                            });
-                        });
-                    }
-
-                    const resLike = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getLikeByUser?profileId${profileId}`, { headers });
-                    if (resLike.status === 200) {
-                        setAllLikePost(resLike.data.likePost);
-                    }
-
-
-                } else {
-                    router.push(`/profile/${authenticationStore.getState().currentUser._id}`);
-                    const token = localStorage.getItem("access_token");
-                    if (token) {
-                        const headers = getHeadersToken();
-
-                        const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor`, { headers });
-                        if (res.status === 200) {
-                            console.log("posts info: ", res.data);
-                            setAllPosts(res.data.posts);
-                            setDisplayPost(res.data.posts);
-
-                            setAllUnfinishPosts(() => {
-                                return res.data.posts.filter((e: PostInterface) => {
-                                    return e.published === false;
-                                });
-                            });
-                        }
-
-                        const resLike = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getLikeByUser`, { headers });
-                        if (resLike.status === 200) {
-                            setAllLikePost(resLike.data.likePost);
-                        }
-                    }
+    // Memoize the fetch function to prevent recreation on every render
+    const fetchPosts = useCallback(async () => {
+        try {
+            changeLoad();
+            
+            // Handle redirect logic first, before making API calls
+            if (!profileId && !hasRedirected) {
+                const currentUserId = authenticationStore.getState().currentUser?._id;
+                if (currentUserId) {
+                    setHasRedirected(true);
+                    router.push(`/profile/${currentUserId}`);
+                    return; // Exit early to prevent API calls
                 }
-
-            } catch (error) {
-                console.error('Error fetching posts:', error);
-            } finally {
-                changeLoad();
             }
-        };
 
+            const headers = getHeadersToken();
+            const token = localStorage.getItem("access_token");
+            
+            if (!token) {
+                console.error('No access token found');
+                return;
+            }
+
+            // Determine which endpoint to use
+            const endpoint = profileId 
+                ? `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor?profileId=${profileId}`
+                : `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor`;
+
+            const likeEndpoint = profileId
+                ? `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getLikeByUser?profileId=${profileId}`
+                : `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getLikeByUser`;
+
+            // Fetch posts
+            const res = await axios.get(endpoint, { headers });
+            if (res.status === 200) {
+                console.log("posts info: ", res.data);
+                const posts = res.data.posts || [];
+                setAllPosts(posts);
+                setDisplayPost(posts);
+
+                const unfinishedPosts = posts.filter((e: PostInterface) => e.published === false);
+                setAllUnfinishPosts(unfinishedPosts);
+            }
+
+            // Fetch liked posts
+            const resLike = await axios.get(likeEndpoint, { headers });
+            if (resLike.status === 200) {
+                setAllLikePost(resLike.data.likePost || []);
+            }
+
+            const resProfile = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/auth/getProfileById?id=${profileId}`);
+            if (resProfile.status === 200) {
+                console.log("resProfile: ", resProfile.data.userInfo);
+                setUserInfor(resProfile.data.userInfo);
+            }
+
+        } catch (error) {
+            console.error('Error fetching posts:', error);
+        } finally {
+            changeLoad();
+        }
+    }, [profileId, changeLoad, router, hasRedirected]); // Include all dependencies
+
+    useEffect(() => {
         fetchPosts();
-    }, []);
+    }, [fetchPosts]); // Now depends on the memoized function
 
     // Navigation items
     const navItems = [
@@ -146,18 +148,16 @@ async function ProfileDashboard({
 
     const handlePostTypeClick = (postTypeId: number) => {
         setPostType(postTypeId);
-
-        if (postTypeId == 1) {
+        if (postTypeId === 1) {
             setTitlePost("Bài viết của bạn");
             setDisplayPost(allPosts);
-        } else if (postTypeId == 2) {
+        } else if (postTypeId === 2) {
             setTitlePost("Bài viết chưa hoàn thành");
             setDisplayPost(allUnfinishPosts);
         } else {
             setTitlePost("Bài viết đã thích");
             setDisplayPost(allLikePost);
         }
-
     };
 
     return (
@@ -184,7 +184,7 @@ async function ProfileDashboard({
             {/* User info */}
             <div className="max-w-7xl mx-auto px-4 py-6">
                 <div className="flex mb-8 h-130">
-                    <ProfileInfo />
+                    <ProfileInfo userInfor={userInfor} />
                 </div>
 
                 <div className="flex border-t-1 border-gray-500 pt-4">
@@ -208,7 +208,7 @@ async function ProfileDashboard({
                         </nav>
                     </div>
 
-                    {selectId == 'overview' && <div className="flex-1 m-l-4 p-6 bg-white rounded-lg shadow-sm">
+                    {selectId === 'overview' && <div className="flex-1 m-l-4 p-6 bg-white rounded-lg shadow-sm">
                         <div className="flex items-center justify-between mb-6">
                             <h1 className="text-xl font-bold">Tổng Quan</h1>
                         </div>
@@ -245,7 +245,7 @@ async function ProfileDashboard({
                         <div>
                             <h2 className="text-lg font-semibold mb-4">{titlePost}</h2>
                             <div className="space-y-4">
-                                {displayPost.length == 0 && <h1 className='text-xxl font-semibold mb-4'>No record</h1>}
+                                {displayPost.length === 0 && <h1 className='text-xxl font-semibold mb-4'>No record</h1>}
                                 {displayPost.map((post, index) => (
                                     <PostElement
                                         _id={post._id}
@@ -262,14 +262,14 @@ async function ProfileDashboard({
                         </div>
                     </div>}
 
-                    {selectId == 'user-info' && <ProfileInformation />}
-                    {selectId == 'posts' && <PostInformation />}
-                    {selectId == 'wishlist' && <LikeInformation />}
-                    {selectId == 'ratings' && <YourRating />}
-                    {selectId == 'courses' && <YourCourse />}
-                    {selectId == 'orders' && <YourHistory />}
-                    {selectId == 'faq' && <AskQuestion />}
-                    {selectId == 'settings' && <SettingProfile />}
+                    {selectId === 'user-info' && <ProfileInformation />}
+                    {selectId === 'posts' && <PostInformation />}
+                    {selectId === 'wishlist' && <LikeInformation />}
+                    {selectId === 'ratings' && <YourRating />}
+                    {selectId === 'courses' && <YourCourse />}
+                    {selectId === 'orders' && <YourHistory />}
+                    {selectId === 'faq' && <AskQuestion />}
+                    {selectId === 'settings' && <SettingProfile />}
                 </div>
             </div>
         </div>

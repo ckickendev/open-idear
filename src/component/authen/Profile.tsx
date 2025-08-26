@@ -65,7 +65,7 @@ export default function Profile() {
 
                     {/* Menu Items */}
                     <div className="py-1">
-                        <Link href={`/profile`}>
+                        <Link href={`/profile/${userInfo._id}`}>
                             <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
                                 <User size={20} className="text-gray-400" />
                                 <span>Trang cá nhân</span>

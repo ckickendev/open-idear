@@ -9,7 +9,8 @@ import { REACT_APP_ROOT_BACKEND } from './authentication';
 import alertStore from '@/store/AlertStore';
 import loadingStore from '@/store/LoadingStore';
 
-const ProfileInfo = () => {
+const ProfileInfo = ({userInfor}: any) => {
+    console.log("user info in profile info: ", userInfor);
     const [showAvatarUpload, setShowAvatarUpload] = useState(false);
     const [showBackgroundUpload, setShowBackgroundUpload] = useState(false);
 
@@ -59,13 +60,12 @@ const ProfileInfo = () => {
                             </div>
                         </div>
                     </div>
-                    <button
+                    {(userInfor?._id == currentUser?._id) && <button
                         onClick={handleBackgroundChangeClick}
                         className="absolute bottom-2 right-2 bg-amber-100 text-gray-800 px-3 py-1 rounded-full flex items-center gap-1 text-sm font-medium cursor-pointer hover:bg-amber-200"
                     >
                         <Edit size={16} /> Upload background image
-                    </button>
-
+                    </button>}
                 </div>
 
                 {showBackgroundUpload && (
@@ -133,7 +133,7 @@ const ProfileInfo = () => {
                 <div className="absolute -bottom-30 left-6 flex items-center">
                     <div className="w-50 h-50 rounded-full border-4 border-white relative hover:bg-sky-700">
                         <img
-                            src={currentUser.avatar || "http://localhost:3000/icon/profile/hippo.png"}
+                            src={userInfor?.avatar || currentUser?.avatar || "http://localhost:3000/icon/profile/hippo.png"}
                             alt="Profile"
                             className="w-full h-full object-cover rounded-full cursor-pointer"
                             onClick={handleProfileImageClick}
@@ -210,10 +210,10 @@ const ProfileInfo = () => {
                     <div className="pt-14 px-6 pb-4">
                         <div className="flex items-start justify-between">
                             <div>
-                                <h1 className="text-xl font-semibold text-gray-900">{currentUser.name ? currentUser.name : currentUser.username}</h1>
-                                <p className="text-gray-700">{currentUser.email}</p>
+                                <h1 className="text-xl font-semibold text-gray-900">{ userInfor?.name ? userInfor?.name : userInfor?.username || currentUser.name ? currentUser.name : currentUser.username}</h1>
+                                <p className="text-gray-700">{userInfor?.email || currentUser.email}</p>
                                 <div className="flex items-center gap-1 text-gray-500 text-sm mt-1">
-                                    <span>{currentUser.bio ?? "No bio"}</span>
+                                    <span>{userInfor?.bio || currentUser.bio || "No bio"}</span>
                                 </div>
                             </div>
                         </div>
