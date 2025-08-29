@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { PostInterface } from "./page";
 import { Bookmark } from "lucide-react";
+import { PostInterface } from "./[profileId]/page";
 
 const PostElement = (data: PostInterface) => {
     const [bookmarked, setBookmarked] = useState(false);

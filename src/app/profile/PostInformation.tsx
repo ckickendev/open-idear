@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
-import { PostInterface } from "./page";
 import { getHeadersToken } from "@/api/authentication";
 import axios from "axios";
 import loadingStore from "@/store/LoadingStore";
 import PostElement from "./PostElement";
+import { PostInterface } from "./[profileId]/page";
 
 const PostInformation = () => {
   const [displayPost, setDisplayPost] = React.useState<PostInterface[]>([]);

@@ -25,6 +25,7 @@ const ProfileInfo = ({userInfor}: any) => {
     };
 
     const handleProfileImageClick = () => {
+        if(userInfor?._id != currentUser?._id) return;
         setShowAvatarUpload((state) => !state);
     };
 

@@ -124,12 +124,12 @@ function ProfileDashboard({
 
     // Navigation items
     const navItems = [
-        { id: 'overview', icon: <ChartColumnStacked />, text: 'Tổng quan' },
-        { id: 'user-info', icon: <UserRoundPen />, text: 'Thông tin của tôi' },
-        { id: 'posts', icon: <Pen />, text: 'Tất cả bài viết' },
+        { id: 'overview', icon: <ChartColumnStacked />, text: 'Tổng quan', otherProfile: true },
+        { id: 'user-info', icon: <UserRoundPen />, text: 'Thông tin của tôi', otherProfile: true },
+        { id: 'posts', icon: <Pen />, text: 'Tất cả bài viết', otherProfile: true },
         { id: 'wishlist', icon: <Heart />, text: 'Danh sách yêu thích' },
         { id: 'ratings', icon: <Star />, text: 'Đánh giá của tôi' },
-        { id: 'courses', icon: <BookText />, text: 'Khóa học của tôi' },
+        { id: 'courses', icon: <BookText />, text: 'Khóa học', otherProfile: true },
         { id: 'orders', icon: <ShoppingCart />, text: 'Lịch sử đơn hàng' },
         { id: 'faq', icon: <CircleHelp />, text: 'Hỏi & đáp' },
         { id: 'settings', icon: <Settings />, text: 'Cài đặt' },
@@ -192,7 +192,7 @@ function ProfileDashboard({
                     <div className="w-64 h-full bg-white shadow-sm rounded-lg pt-2 mr-6">
                         <nav>
                             <ul>
-                                {navItems.map(item => (
+                                {navItems.map(item =>  (
                                     <li key={item.id}>
                                         <button
                                             onClick={() => handleNavClick(item.id)}
@@ -264,7 +264,7 @@ function ProfileDashboard({
 
                     {selectId === 'user-info' && <ProfileInformation />}
                     {selectId === 'posts' && <PostInformation />}
-                    {selectId === 'wishlist' && <LikeInformation />}
+                    {selectId === 'wishlist' && <LikeInformation  />}
                     {selectId === 'ratings' && <YourRating />}
                     {selectId === 'courses' && <YourCourse />}
                     {selectId === 'orders' && <YourHistory />}
