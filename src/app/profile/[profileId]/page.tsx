@@ -59,7 +59,7 @@ function ProfileDashboard({
     const fetchPosts = useCallback(async () => {
         try {
             changeLoad();
-            
+
             // Handle redirect logic first, before making API calls
             if (!profileId && !hasRedirected) {
                 const currentUserId = authenticationStore.getState().currentUser?._id;
@@ -72,14 +72,14 @@ function ProfileDashboard({
 
             const headers = getHeadersToken();
             const token = localStorage.getItem("access_token");
-            
+
             if (!token) {
                 console.error('No access token found');
                 return;
             }
 
             // Determine which endpoint to use
-            const endpoint = profileId 
+            const endpoint = profileId
                 ? `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor?profileId=${profileId}`
                 : `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor`;
 
@@ -192,7 +192,7 @@ function ProfileDashboard({
                     <div className="w-64 h-full bg-white shadow-sm rounded-lg pt-2 mr-6">
                         <nav>
                             <ul>
-                                {navItems.map(item =>  (
+                                {navItems.map(item => (
                                     <li key={item.id}>
                                         <button
                                             onClick={() => handleNavClick(item.id)}
@@ -221,24 +221,28 @@ function ProfileDashboard({
                             >
                                 <div className="bg-purple-200 rounded-full text-purple-500 text-4xl p-4 mb-2 cir"><SquarePen /></div>
                                 <div className="text-4xl font-bold mb-1">{allPosts.length}</div>
-                                <div className="text-sm text-center text-gray-600">Tất cả bài viết của bạn</div>
+                                <div className="text-sm text-center text-gray-600">Tất cả bài viết</div>
                             </div>
-                            <div
-                                onClick={() => handlePostTypeClick(2)}
-                                className="bg-white border-1 border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-shadow"
-                            >
-                                <div className="bg-purple-200 rounded-full text-purple-500 text-4xl p-4 mb-2 cir"><PencilLine /></div>
-                                <div className="text-4xl font-bold mb-1">{allUnfinishPosts.length}</div>
-                                <div className="text-sm text-center text-gray-600">Bài viết chưa hoàn thành</div>
-                            </div>
-                            <div
-                                onClick={() => handlePostTypeClick(3)}
-                                className="bg-white border-1 border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-shadow"
-                            >
-                                <div className="bg-purple-200 rounded-full text-purple-500 text-4xl p-4 mb-2 cir"><BookHeart /></div>
-                                <div className="text-4xl font-bold mb-1">{allLikePost.length}</div>
-                                <div className="text-sm text-center text-gray-600">Bài viết đã thích</div>
-                            </div>
+                            { profileId === authenticationStore.getState().currentUser?._id &&
+                                <div
+                                    onClick={() => handlePostTypeClick(2)}
+                                    className="bg-white border-1 border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-shadow"
+                                >
+                                    <div className="bg-purple-200 rounded-full text-purple-500 text-4xl p-4 mb-2 cir"><PencilLine /></div>
+                                    <div className="text-4xl font-bold mb-1">{allUnfinishPosts.length}</div>
+                                    <div className="text-sm text-center text-gray-600">Bài viết chưa hoàn thành</div>
+                                </div>
+                            }
+                            { profileId === authenticationStore.getState().currentUser?._id &&
+                                <div
+                                    onClick={() => handlePostTypeClick(3)}
+                                    className="bg-white border-1 border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-shadow"
+                                >
+                                    <div className="bg-purple-200 rounded-full text-purple-500 text-4xl p-4 mb-2 cir"><BookHeart /></div>
+                                    <div className="text-4xl font-bold mb-1">{allLikePost.length}</div>
+                                    <div className="text-sm text-center text-gray-600">Bài viết đã thích</div>
+                                </div>
+                            }
                         </div>
 
                         {/* In Progress Courses */}
@@ -264,7 +268,7 @@ function ProfileDashboard({
 
                     {selectId === 'user-info' && <ProfileInformation />}
                     {selectId === 'posts' && <PostInformation />}
-                    {selectId === 'wishlist' && <LikeInformation  />}
+                    {selectId === 'wishlist' && <LikeInformation />}
                     {selectId === 'ratings' && <YourRating />}
                     {selectId === 'courses' && <YourCourse />}
                     {selectId === 'orders' && <YourHistory />}
