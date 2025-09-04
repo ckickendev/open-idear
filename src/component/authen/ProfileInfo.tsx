@@ -8,11 +8,13 @@ import axios from 'axios';
 import { REACT_APP_ROOT_BACKEND } from './authentication';
 import alertStore from '@/store/AlertStore';
 import loadingStore from '@/store/LoadingStore';
+import { getHeadersToken } from '@/api/authentication';
 
-const ProfileInfo = ({userInfor}: any) => {
+const ProfileInfo = ({ userInfor }: any) => {
     console.log("user info in profile info: ", userInfor);
     const [showAvatarUpload, setShowAvatarUpload] = useState(false);
     const [showBackgroundUpload, setShowBackgroundUpload] = useState(false);
+    const [isFollowed, setIsFollowed] = useState(userInfor?.isFollowed);
 
     const setType = alertStore((state) => state.setType);
     const setMessage = alertStore((state) => state.setMessage);
@@ -25,7 +27,7 @@ const ProfileInfo = ({userInfor}: any) => {
     };
 
     const handleProfileImageClick = () => {
-        if(userInfor?._id != currentUser?._id) return;
+        if (userInfor?._id != currentUser?._id) return;
         setShowAvatarUpload((state) => !state);
     };
 
@@ -44,6 +46,29 @@ const ProfileInfo = ({userInfor}: any) => {
         // You can integrate with your UploadImage component here
         // For example: trigger file input or open upload modal
     };
+
+    const handleFollowUser = async () => {
+        try {
+            // Using native fetch with Next.js optimizations
+            const res = await axios.patch(`${REACT_APP_ROOT_BACKEND}/auth/followUser?userId=${userInfor._id}`, { headers: getHeadersToken() });
+
+            if (res.status !== 200) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            const { isFollowed } = res.data;
+            if (isFollowed) {
+                setType('info');
+                setMessage("User followed successfully");
+            } else {
+                setType('info');
+                setMessage("User unfollowed successfully");
+            }
+            setIsFollowed(isFollowed);
+        } catch (error) {
+            setType('error');
+            setMessage("Error when follow user");
+        }
+    }
 
     return (
         <div className="w-full bg-white rounded-lg shadow">
@@ -211,7 +236,7 @@ const ProfileInfo = ({userInfor}: any) => {
                     <div className="pt-14 px-6 pb-4">
                         <div className="flex items-start justify-between">
                             <div>
-                                <h1 className="text-xl font-semibold text-gray-900">{ userInfor?.name ? userInfor?.name : userInfor?.username || currentUser.name ? currentUser.name : currentUser.username}</h1>
+                                <h1 className="text-xl font-semibold text-gray-900">{userInfor?.name ? userInfor?.name : userInfor?.username || currentUser.name ? currentUser.name : currentUser.username}</h1>
                                 <p className="text-gray-700">{userInfor?.email || currentUser.email}</p>
                                 <div className="flex items-center gap-1 text-gray-500 text-sm mt-1">
                                     <span>{userInfor?.bio || currentUser.bio || "No bio"}</span>
@@ -220,6 +245,19 @@ const ProfileInfo = ({userInfor}: any) => {
                         </div>
                     </div>
                 </div>
+                {userInfor?._id !== currentUser?._id && (
+                    <div className="absolute -bottom-20 right-6 flex items-center" onClick={handleFollowUser}>
+                        {isFollowed ? (
+                            <button className="w-full h-full border-1 focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 cursor-pointer">
+                                Unfollow
+                            </button>
+                        ) : (
+                            <button className="w-full h-full border-1 focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 cursor-pointer">
+                                Follow
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
