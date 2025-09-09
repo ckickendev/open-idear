@@ -105,7 +105,7 @@ function ProfileDashboard({
                 setAllLikePost(resLike.data.likePost || []);
             }
 
-            const resProfile = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/auth/getProfileById?id=${profileId}`);
+            const resProfile = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/auth/getProfileById?id=${profileId}`, { headers });
             if (resProfile.status === 200) {
                 console.log("resProfile: ", resProfile.data.userInfo);
                 setUserInfor(resProfile.data.userInfo);

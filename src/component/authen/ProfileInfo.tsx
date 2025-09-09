@@ -246,13 +246,13 @@ const ProfileInfo = ({ userInfor }: any) => {
                     </div>
                 </div>
                 {userInfor?._id !== currentUser?._id && (
-                    <div className="absolute -bottom-20 right-6 flex items-center" onClick={handleFollowUser}>
+                    <div className="absolute -bottom-20 right-6 flex items-center">
                         {isFollowed ? (
-                            <button className="w-full h-full border-1 focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 cursor-pointer">
+                            <button onClick={handleFollowUser} className="w-full h-full border-1 focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 cursor-pointer">
                                 Unfollow
                             </button>
                         ) : (
-                            <button className="w-full h-full border-1 focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 cursor-pointer">
+                            <button onClick={handleFollowUser} className="w-full h-full border-1 focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 cursor-pointer">
                                 Follow
                             </button>
                         )}
