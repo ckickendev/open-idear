@@ -116,7 +116,7 @@ function ProfileDashboard({
         } finally {
             changeLoad();
         }
-    }, [profileId, changeLoad, router, hasRedirected]); // Include all dependencies
+    }, [profileId, hasRedirected]); // Include all dependencies
 
     useEffect(() => {
         fetchPosts();
@@ -250,10 +250,10 @@ function ProfileDashboard({
                             <h2 className="text-lg font-semibold mb-4">{titlePost}</h2>
                             <div className="space-y-4">
                                 {displayPost.length === 0 && <h1 className='text-xxl font-semibold mb-4'>No record</h1>}
-                                {displayPost.map((post, index) => (
+                                {displayPost.map(post => (
                                     <PostElement
                                         _id={post._id}
-                                        key={index}
+                                        key={post._id}
                                         image={post.image}
                                         category={post.category}
                                         title={post.title}

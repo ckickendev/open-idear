@@ -1,5 +1,5 @@
 // ProfilePage.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Edit, Upload, X } from 'lucide-react';
 import authenticationStore from '@/store/AuthenticationStore';
 import UploadImage from '../common/UploadImage';
@@ -11,7 +11,7 @@ import loadingStore from '@/store/LoadingStore';
 import { getHeadersToken } from '@/api/authentication';
 
 const ProfileInfo = ({ userInfor }: any) => {
-    console.log("user info in profile info: ", userInfor);
+    console.log("render profile infor");
     const [showAvatarUpload, setShowAvatarUpload] = useState(false);
     const [showBackgroundUpload, setShowBackgroundUpload] = useState(false);
     const [isFollowed, setIsFollowed] = useState(userInfor?.isFollowed);
@@ -21,6 +21,10 @@ const ProfileInfo = ({ userInfor }: any) => {
     const changeLoad = loadingStore((state) => state.changeLoad);
     const updateCurrentUser = authenticationStore((state) => state.updateCurrentUser);
     const currentUser = authenticationStore((state) => state.currentUser);
+
+    useEffect(() => {
+        setIsFollowed(userInfor?.isFollowed);
+    }, [userInfor?.isFollowed]);
 
     const handleBackgroundChangeClick = () => {
         setShowBackgroundUpload((state) => !state);
@@ -50,7 +54,7 @@ const ProfileInfo = ({ userInfor }: any) => {
     const handleFollowUser = async () => {
         try {
             // Using native fetch with Next.js optimizations
-            const res = await axios.patch(`${REACT_APP_ROOT_BACKEND}/auth/followUser?userId=${userInfor._id}`, { headers: getHeadersToken() });
+            const res = await axios.patch(`${REACT_APP_ROOT_BACKEND}/post/followUser?userId=${userInfor._id}`, { headers: getHeadersToken() });
 
             if (res.status !== 200) {
                 throw new Error(`HTTP error! status: ${res.status}`);
@@ -79,7 +83,7 @@ const ProfileInfo = ({ userInfor }: any) => {
                         <div className="opacity-80">
                             <div className="bg-black flex items-center justify-center">
                                 <img
-                                    src={currentUser.background}
+                                    src={currentUser?.background}
                                     alt="cover-image"
                                     className="object-fill w-full h-100"
                                 />
@@ -247,13 +251,13 @@ const ProfileInfo = ({ userInfor }: any) => {
                 </div>
                 {userInfor?._id !== currentUser?._id && (
                     <div className="absolute -bottom-20 right-6 flex items-center">
-                        {isFollowed ? (
+                        {isFollowed == true ? (
                             <button onClick={handleFollowUser} className="w-full h-full border-1 focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 cursor-pointer">
                                 Unfollow
                             </button>
                         ) : (
                             <button onClick={handleFollowUser} className="w-full h-full border-1 focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 cursor-pointer">
-                                Follow
+                                Follow 
                             </button>
                         )}
                     </div>
