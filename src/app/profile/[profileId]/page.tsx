@@ -50,13 +50,21 @@ function ProfileDashboard({
     const [allUnfinishPosts, setAllUnfinishPosts] = React.useState<PostInterface[]>([]);
     const [allLikePost, setAllLikePost] = React.useState<PostInterface[]>([]);
 
+    type NavItem = {
+        id: string;
+        icon: React.JSX.Element;
+        text: string;
+    };
+
+    const [navItems, setNavItems] = useState<NavItem[]>([]);
+
     const isLoading = loadingStore(state => state.isLoading);
     const changeLoad = loadingStore((state) => state.changeLoad);
 
     const router = useRouter();
 
     // Memoize the fetch function to prevent recreation on every render
-    const fetchPosts = useCallback(async () => {
+    const fetchDataProfiles = useCallback(async () => {
         try {
             changeLoad();
 
@@ -111,6 +119,23 @@ function ProfileDashboard({
                 setUserInfor(resProfile.data.userInfo);
             }
 
+             const navItems = [
+                { id: 'overview', icon: <ChartColumnStacked />, text: 'Tổng quan' },
+                { id: 'user-info', icon: <UserRoundPen />, text: 'Thông tin của tôi' },
+                { id: 'posts', icon: <Pen />, text: 'Tất cả bài viết' },
+                { id: 'courses', icon: <BookText />, text: 'Khóa học' },
+            ];
+
+            if (profileId === authenticationStore.getState().currentUser?._id) {
+                navItems.push({ id: 'wishlist', icon: <Heart />, text: 'Danh sách yêu thích' });
+                navItems.push({ id: 'ratings', icon: <Star />, text: 'Đánh giá của tôi' });
+                navItems.push({ id: 'orders', icon: <ShoppingCart />, text: 'Lịch sử đơn hàng' });
+                navItems.push({ id: 'faq', icon: <CircleHelp />, text: 'Hỏi & đáp' });
+                navItems.push({ id: 'settings', icon: <Settings />, text: 'Cài đặt' });
+                navItems.push({ id: 'logout', icon: <LogOut />, text: 'Đăng xuất' });
+            }
+            setNavItems(navItems);
+
         } catch (error) {
             console.error('Error fetching posts:', error);
         } finally {
@@ -119,22 +144,8 @@ function ProfileDashboard({
     }, [profileId, hasRedirected]); // Include all dependencies
 
     useEffect(() => {
-        fetchPosts();
-    }, [fetchPosts]); // Now depends on the memoized function
-
-    // Navigation items
-    const navItems = [
-        { id: 'overview', icon: <ChartColumnStacked />, text: 'Tổng quan', otherProfile: true },
-        { id: 'user-info', icon: <UserRoundPen />, text: 'Thông tin của tôi', otherProfile: true },
-        { id: 'posts', icon: <Pen />, text: 'Tất cả bài viết', otherProfile: true },
-        { id: 'wishlist', icon: <Heart />, text: 'Danh sách yêu thích' },
-        { id: 'ratings', icon: <Star />, text: 'Đánh giá của tôi' },
-        { id: 'courses', icon: <BookText />, text: 'Khóa học', otherProfile: true },
-        { id: 'orders', icon: <ShoppingCart />, text: 'Lịch sử đơn hàng' },
-        { id: 'faq', icon: <CircleHelp />, text: 'Hỏi & đáp' },
-        { id: 'settings', icon: <Settings />, text: 'Cài đặt' },
-        { id: 'logout', icon: <LogOut />, text: 'Đăng xuất' }
-    ];
+        fetchDataProfiles();
+    }, [fetchDataProfiles]); // Now depends on the memoized function
 
     // Handle click on navigation item
     const handleNavClick = (itemId: string) => {
@@ -267,7 +278,7 @@ function ProfileDashboard({
                     </div>}
 
                     {selectId === 'user-info' && <ProfileInformation />}
-                    {selectId === 'posts' && <PostInformation />}
+                    {selectId === 'posts' && <PostInformation profileId={profileId} />}
                     {selectId === 'wishlist' && <LikeInformation />}
                     {selectId === 'ratings' && <YourRating />}
                     {selectId === 'courses' && <YourCourse />}
