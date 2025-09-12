@@ -9,12 +9,14 @@ import { REACT_APP_ROOT_BACKEND } from './authentication';
 import alertStore from '@/store/AlertStore';
 import loadingStore from '@/store/LoadingStore';
 import { getHeadersToken } from '@/api/authentication';
+import Notification from '../common/Notification';
 
 const ProfileInfo = ({ userInfor }: any) => {
     console.log("render profile infor");
     const [showAvatarUpload, setShowAvatarUpload] = useState(false);
     const [showBackgroundUpload, setShowBackgroundUpload] = useState(false);
     const [isFollowed, setIsFollowed] = useState(userInfor?.isFollowed);
+    const [unfollowBtn, setUnfollowBtn] = useState(false);
 
     const setType = alertStore((state) => state.setType);
     const setMessage = alertStore((state) => state.setMessage);
@@ -67,6 +69,7 @@ const ProfileInfo = ({ userInfor }: any) => {
                 setType('info');
                 setMessage("User unfollowed successfully");
             }
+            setUnfollowBtn(false);
             setIsFollowed(isFollowed);
         } catch (error) {
             setType('error');
@@ -76,6 +79,7 @@ const ProfileInfo = ({ userInfor }: any) => {
 
     return (
         <div className="w-full bg-white rounded-lg shadow">
+            <Notification />
             {/* Cover Image & Profile Section */}
             <div className="relative">
                 <div className="w-full h-100 bg-gray-800 relative">
@@ -252,11 +256,18 @@ const ProfileInfo = ({ userInfor }: any) => {
                 {userInfor?._id !== currentUser?._id && (
                     <div className="absolute -bottom-20 right-6 flex items-center">
                         {isFollowed == true ? (
-                            <button onClick={handleFollowUser} className="w-full h-full border-1 focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 cursor-pointer">
-                                Unfollow
-                            </button>
+                            <>
+                                <button onClick={() => {setUnfollowBtn(!unfollowBtn)}} className="relative w-30 h-full border-1 focus:outline-none text-dark bg-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 cursor-pointer">
+                                    Followed
+                                </button>
+                                {unfollowBtn && (
+                                    <button onClick={handleFollowUser} className="absolute top-12 w-30 h-full border-1 focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 cursor-pointer">
+                                        Unfollow
+                                    </button>
+                                )}
+                            </>
                         ) : (
-                            <button onClick={handleFollowUser} className="w-full h-full border-1 focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 cursor-pointer">
+                            <button onClick={handleFollowUser} className="w-30 h-full border-1 focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 cursor-pointer">
                                 Follow 
                             </button>
                         )}
