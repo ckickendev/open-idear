@@ -4,9 +4,11 @@ import axios from "axios";
 import loadingStore from "@/store/LoadingStore";
 import PostElement from "./PostElement";
 import { PostInterface } from "./[profileId]/page";
+import SeriesElement from "./SeriesElement";
 
-const PostInformation = () => {
+const PostInformation = ({ profileId }: any) => {
   const [displayPost, setDisplayPost] = React.useState<PostInterface[]>([]);
+  const [displaySeries, setDisplaySeries] = React.useState<any[]>([]);
   // 1: All posts, 2: Series
   const [postType, setPostType] = React.useState<number>(1);
   const [titlePost, setTitlePost] = React.useState<string>("Posts");
@@ -18,16 +20,20 @@ const PostInformation = () => {
     const fetchPosts = async () => {
       try {
         changeLoad();
-        const token = localStorage.getItem("access_token");
-        if (token) {
-          const headers = getHeadersToken();
 
-          const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor`, { headers });
-          if (res.status === 200) {
-            console.log("posts info: ", res.data);
-            setDisplayPost(res.data.posts);
-          }
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthorId?profileId=${profileId}`);
+        if (res.status === 200) {
+          
+          console.log("posts info: ", res.data);
+          setDisplayPost(res.data.posts);
         }
+
+        const resSeries = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getSeriesByAuthorId?profileId=${profileId}`);
+        if (resSeries.status === 200) {
+          console.log("series info: ", resSeries.data);
+          setDisplaySeries(resSeries.data.series);
+        }
+
       } catch (error) {
         console.error('Error fetching posts:', error);
       } finally {
@@ -56,7 +62,7 @@ const PostInformation = () => {
       <div className="h-full">
         <div className="space-y-4 h-full m-4 p-2">
           {displayPost.length == 0 && <h1 className='text-xxl h-full font-semibold mb-4 flex justify-center items-center'>No record</h1>}
-          {displayPost.map((post, index) => (
+          {postType == 1 ? displayPost.map((post, index) => (
             <PostElement
               key={index}
               _id={post._id}
@@ -66,6 +72,15 @@ const PostInformation = () => {
               content={post.text}
               author={post.author}
               readTime="5 phut"
+            />
+          )) : displaySeries.map((series, index) => (
+            <SeriesElement
+              key={index}
+              _id={series._id}
+              image={series.image}
+              title={series.title}
+              description={series.description}
+              author={series.author}
             />
           ))}
         </div>
