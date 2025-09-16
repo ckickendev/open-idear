@@ -47,13 +47,13 @@ const PostElement = (data: PostInterface) => {
                 </div>
 
                 {/* Author */}
-                {data.author && (
+                {data.author?._id && (
                     <div className="flex items-center mt-2">
-                        {data.author.avatarUrl && (
+                        {data.author.avatar && (
                             <img
-                                src={data.author.avatarUrl}
+                                src={data.author.avatar}
                                 alt={data.author.name}
-                                className="w-6 h-6 rounded-full mr-2"
+                                className="w-10 h-10 rounded-full mr-2"
                             />
                         )}
                         <div className="flex items-center">

@@ -30,7 +30,7 @@ const PostInformation = ({ profileId }: any) => {
 
         const resSeries = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getSeriesByAuthorId?profileId=${profileId}`);
         if (resSeries.status === 200) {
-          console.log("series info: ", resSeries.data);
+          //console.log("series info: ", resSeries.data);
           setDisplaySeries(resSeries.data.series);
         }
 
@@ -80,7 +80,7 @@ const PostInformation = ({ profileId }: any) => {
               image={series.image}
               title={series.title}
               description={series.description}
-              author={series.author}
+              user={series.user}
             />
           ))}
         </div>

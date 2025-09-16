@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Bookmark } from "lucide-react";
 
 const SeriesElement = (data: any) => {
+    console.log("data series", data);
+    
     const [bookmarked, setBookmarked] = useState(false);
 
     return (
@@ -39,18 +41,18 @@ const SeriesElement = (data: any) => {
                 </div>
 
                 {/* Author */}
-                {data.author && (
+                {data.user?._id && (
                     <div className="flex items-center mt-2">
-                        {data.author.avatarUrl && (
+                        {data.user.avatar && (
                             <img
-                                src={data.author.avatarUrl}
-                                alt={data.author.name}
-                                className="w-6 h-6 rounded-full mr-2"
+                                src={data.user.avatar}
+                                alt={data.user.name}
+                                className="w-10 h-10 rounded-full mr-2"
                             />
                         )}
                         <div className="flex items-center">
-                            <span className="text-sm font-medium">{data.author.name}</span>
-                            {data.author.verified && (
+                            <span className="text-sm font-medium">{data.user.name}</span>
+                            {data.user.verified && (
                                 <span className="ml-1 text-blue-500">
                                     <svg
                                         className="w-4 h-4 inline-block"
