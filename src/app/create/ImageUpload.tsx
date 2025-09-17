@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Upload, X, FileImage, Loader2, Check } from 'lucide-react';
+import { Upload, X, FileImage, Loader2, Check, CheckCircle } from 'lucide-react';
 import { getHeadersToken } from '@/api/authentication';
 
 const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
@@ -236,6 +236,8 @@ const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
                     </button>
                 </div>
             )}
+
+            {isUploadDone && (<div className="mt-4 p-3 border border-green-200 rounded-lg flex align-center justify-center"><CheckCircle size={24} className="text-green-500 mr-1" /> Image uploaded successfully!</div>)}
         </div>
     );
 };

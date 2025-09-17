@@ -48,7 +48,7 @@ const PostElement = (data: PostInterface) => {
 
                 {/* Author */}
                 {data.author?._id && (
-                    <div className="flex items-center mt-2">
+                    <a className="flex items-center mt-2" href={`./${data.author._id}`}>
                         {data.author.avatar && (
                             <img
                                 src={data.author.avatar}
@@ -70,7 +70,7 @@ const PostElement = (data: PostInterface) => {
                                 </span>
                             )}
                         </div>
-                    </div>
+                    </a>
                 )}
             </div>
         </div>

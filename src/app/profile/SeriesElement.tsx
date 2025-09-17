@@ -42,7 +42,7 @@ const SeriesElement = (data: any) => {
 
                 {/* Author */}
                 {data.user?._id && (
-                    <div className="flex items-center mt-2">
+                    <a className="flex items-center mt-2" href={`./${data.user._id}`}>
                         {data.user.avatar && (
                             <img
                                 src={data.user.avatar}
@@ -64,7 +64,7 @@ const SeriesElement = (data: any) => {
                                 </span>
                             )}
                         </div>
-                    </div>
+                    </a>
                 )}
             </div>
         </div>
