@@ -14,7 +14,7 @@ import convertDate from "@/common/datetime";
 interface Post {
   _id: number;
   title: string;
-  image: string;
+  image: any;
   readtime: string;
   author: any;
   likes?: [any];
@@ -67,8 +67,8 @@ const HotPost: React.FC = () => {
             <div className="relative h-40 w-full">
               {/* Next.js Image component would be used here with actual images */}
               <a href={`/post/${article._id}`} className="block h-full">
-                <div className="absolute inset-0 bg-gray-200">
-                  <img src={article.image} className="w-full" />
+                <div className="absolute inset-0 bg-gray-200 ">
+                  <img src={article.image?.url} className="w-full h-full object-cover" />
                 </div>
               </a>
               
@@ -85,9 +85,9 @@ const HotPost: React.FC = () => {
                 </button>
               </div>
 
-              <h3 className="font-medium text-base mb-4 line-clamp-2 cursor-pointer hover:underline">
+              <a className="font-medium text-base mb-4 line-clamp-2 cursor-pointer hover:underline" href={`/post/${article._id}`}>
                 {article.title}
-              </h3>
+              </a>
 
 
               <div className="flex items-center mt-auto">

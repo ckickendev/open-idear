@@ -8,7 +8,7 @@ const PostElement = (data: PostInterface) => {
     return (
         <div className="flex w-full rounded-lg overflow-hidden bg-white shadow-sm border border-gray-100">
             {/* Left side - Image */}
-            <div className="w-1/3">
+            <div className="w-1/3 h-40">
                 <img
                     src={data.image?.url}
                     alt={data.title}
@@ -38,7 +38,7 @@ const PostElement = (data: PostInterface) => {
                         </button>
                     </div>
 
-                    <a href={`./post/${data._id}`} className="block hover:underline">
+                    <a href={`/post/${data._id}`} className="block hover:underline">
                         <h2 className="text-lg font-bold leading-tight mb-2">{data.title}</h2>
                     </a>
                     {data.content && (
@@ -48,7 +48,7 @@ const PostElement = (data: PostInterface) => {
 
                 {/* Author */}
                 {data.author?._id && (
-                    <a className="flex items-center mt-2" href={`./${data.author._id}`}>
+                    <a className="flex items-center justify-start mt-2" href={`./${data.author._id}`}>
                         {data.author.avatar && (
                             <img
                                 src={data.author.avatar}

@@ -27,7 +27,7 @@ export default async function PostLists({
       }
 
       const data = await res.json();
-      console.log("data.post: ", data.post);
+      //console.log("data.post: ", data.post);
 
       return data.post;
     } catch (error) {

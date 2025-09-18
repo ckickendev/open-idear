@@ -127,7 +127,7 @@ export default function CreatePost() {
           const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostToEdit?postId=${idPost}`, { headers });
           if (res.status === 200) {
             console.log('res.data.post to edit: ', res.data.post);
-            
+
             setTitle(res.data.post.title);
             setContent(res.data.post.content);
             // setImagePublic({ imageUrl: res.data.post.image.url, description: res.data.post.image.description });
@@ -147,7 +147,7 @@ export default function CreatePost() {
   const editor = useEditor({
     extensions: [
       StarterKit,
-      TextStyleKit ,
+      TextStyleKit,
       CodeBlock.configure({
         exitOnArrowDown: true, // Allow exiting code block with down arrow at the end
         exitOnTripleEnter: true, // Exit after three consecutive Enter presses
@@ -461,8 +461,8 @@ export default function CreatePost() {
           attrs: {
             src: image.url,
             alt: image.description,
-            },
           },
+        },
         )
         // .insertContentAt(imageInsertPosition + 1, {
         //   type: 'paragraph',
@@ -699,117 +699,120 @@ export default function CreatePost() {
           <FloatingToolbar />
         </div>
         {/* Public page */}
-        {onPublic && <div className="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] flex justify-center items-center bg-gray-50/70">
-          <div className='relative p-2 w-full max-w-xl bg-white shadow sm:rounded-xl sm:px-10 flex flex-col items-center justify-center py-0 sm:px-6 lg:px-8 max-h-[90vh] overflow-y-auto'>
-            <button type="button" className="text-gray-400 bg-transparent p-2 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center cursor-pointer dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="static-modal" onClick={() => setOnPublic(false)}>
-              <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-              </svg>
-            </button>
+        {onPublic && <div className="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 w-full md:inset-0 flex justify-center items-center bg-gray-50/70">
+          <div className='absolute top-2 p-2 w-full max-w-xl bg-white shadow sm:rounded-xl sm:px-10 flex items-center justify-center py-0 sm:px-6 lg:px-8'>
             <div className="w-full">
-              <div className="prose max-w-none">
-                <div className=" mx-auto p-6 bg-white">
-                  {/* Title Section */}
-                  <div className="mb-6">
-                    <h2 className="text-sm font-medium text-gray-800 mb-2">
-                      Desciption <span className="text-gray-400 italic">(no required but we recommend it for SEO)</span>
-                    </h2>
-                    <textarea id="message" 
-                      value={descriptionPublic} 
-                      onChange={(e) => setDescriptionPublic(e.target.value)} 
-                      rows={4} 
-                      className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-red-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Write your thoughts here...">
-                      </textarea>
-                  </div>
+              <div className="p-6 bg-white">
+                <div className='flex justify-end'>
+                  <button type="button" className="text-gray-400 bg-transparent p-2 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center cursor-pointer dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="static-modal" onClick={() => setOnPublic(false)}>
+                    <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                      <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                    </svg>
+                  </button>
+                </div>
+                {/* Title Section */}
+                <div className="mb-6">
+                  <h2 className="text-sm font-medium text-gray-800 mb-2">
+                    Desciption <span className="text-gray-400 italic">(no required but we recommend it for SEO)</span>
+                  </h2>
+                  <textarea id="message"
+                    value={descriptionPublic}
+                    onChange={(e) => setDescriptionPublic(e.target.value)}
+                    rows={4}
+                    className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-red-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Write your thoughts here...">
+                  </textarea>
+                </div>
 
-                  {/* Title Section */}
-                  <div className='mb-2'>
-                    <h2 className="text-sm font-medium text-gray-800 mb-2">
-                      Image (Recommend for SEO)
-                    </h2>
-                    <ImageUpload
-                      onImageUploaded={handleImageUploadedPublic}
-                      onClose={() => {
-                        setShowImageUpload(false);
-                        setImageInsertPosition(null);
-                      }}
-                      isTitleDisplay={false}
-                    />
-                  </div>
+                {/* Title Section */}
+                <div className='mb-2'>
+                  <h2 className="text-sm font-medium text-gray-800 mb-2">
+                    Image (Recommend for SEO)
+                  </h2>
+                  <ImageUpload
+                    onImageUploaded={handleImageUploadedPublic}
+                    onClose={() => {
+                      setShowImageUpload(false);
+                      setImageInsertPosition(null);
+                    }}
+                    isTitleDisplay={false}
+                  />
+                </div>
 
-                  {/* Series Section */}
-                  <div className="mb-6">
-                    <h2 className="text-sm font-medium text-gray-800 mb-3">Series</h2>
+                {/* Series Section */}
+                <div className="mb-6">
+                  <h2 className="text-sm font-medium text-gray-800 mb-3">Series</h2>
 
-                    {/* Dropdown */}
-                    <div className="relative mb-4">
+                  {/* Dropdown */}
+                  <div className="relative mb-4">
 
-                      {!onCreateNewSeries ? <>
-                        <select defaultValue="" onChange={(e) => setSeriesPublic(e.target.value)} id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                          <option value="">No Select</option>
-                          {series.map((ser: any) => (
-                            <option key={ser._id} value={ser._id}>{ser.title} </option>
-                          ))}
-                        </select>
-                        <div className="flex gap-2 mt-3">
-                          <button className="px-4 py-2 text-gray-600 hover:text-gray-800 focus:outline-none">
-                            Hoặc
+                    {!onCreateNewSeries ? <>
+                      <select defaultValue="" onChange={(e) => setSeriesPublic(e.target.value)} id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        <option value="">No Select</option>
+                        {series.map((ser: any) => (
+                          <option key={ser._id} value={ser._id}>{ser.title} </option>
+                        ))}
+                      </select>
+                      <div className="flex gap-2 mt-3">
+                        <button className="px-4 py-2 text-gray-600 hover:text-gray-800 focus:outline-none">
+                          Hoặc
+                        </button>
+                        <button className="flex items-center gap-1 px-4 py-2 text-blue-600 hover:text-blue-700 focus:outline-none cursor-pointer" onClick={() => setCreateNewSeries(true)}>
+                          <Plus className="h-4 w-4" />
+                          Tạo mới
+                        </button>
+                      </div>
+                    </> :
+                      (<div className="w-full h-full bg-white">
+                        <div className="p-b-6">
+                          <input
+                            type="text"
+                            value={newSeries}
+                            onChange={(e) => setNewSeries(e.target.value)}
+                            placeholder="Enter series name"
+                            className="w-full p-2 border border-gray-300 rounded-lg mb-4"
+                          />
+                          <button
+                            onClick={() => setCreateNewSeries(false)}
+                            className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer mr-2"
+                          >
+                            Cancel
                           </button>
-                          <button className="flex items-center gap-1 px-4 py-2 text-blue-600 hover:text-blue-700 focus:outline-none cursor-pointer" onClick={() => setCreateNewSeries(true)}>
-                            <Plus className="h-4 w-4" />
-                            Tạo mới
+                          <button
+                            onClick={() => createNewSeriesHandler()}
+                            className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                          >
+                            Create
                           </button>
                         </div>
-                      </> :
-                        (<div className="w-full h-full bg-white">
-                          <div className="p-b-6">
-                            <input
-                              type="text"
-                              value={newSeries}
-                              onChange={(e) => setNewSeries(e.target.value)}
-                              placeholder="Enter series name"
-                              className="w-full p-2 border border-gray-300 rounded-lg mb-4"
-                            />
-                            <button
-                              onClick={() => setCreateNewSeries(false)}
-                              className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer mr-2"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={() => createNewSeriesHandler()}
-                              className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                            >
-                              Create
-                            </button>
-                          </div>
-                        </div>)
-                      }
+                      </div>)
+                    }
 
-                    </div>
                   </div>
+                </div>
 
-                  {/* Category Selection */}
-                  <div className="mb-6">
-                    <h2 className="text-sm font-medium text-gray-800 mb-3">Category *</h2>
+                {/* Category Selection */}
+                <div className="mb-6">
+                  <h2 className="text-sm font-medium text-gray-800 mb-3">Category *</h2>
 
-                    {/* Add Category Button */}
-                    <select defaultValue={categoryPublic} onChange={(e) => setCategoryPublic(e.target.value)} id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                      <option value="">No Select</option>
-                      {category && category.map((cat: any) => (
-                        <option key={cat._id} value={cat._id}>{cat.name}</option>
-                      ))}
-                    </select>
-                  </div>
+                  {/* Add Category Button */}
+                  <select defaultValue={categoryPublic} onChange={(e) => setCategoryPublic(e.target.value)} id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    <option value="">No Select</option>
+                    {category && category.map((cat: any) => (
+                      <option key={cat._id} value={cat._id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className='flex justify-center'>
+                  <button
+                    onClick={() => onPublicHandle()}
+                    className="w-50 px-8 py-4 mb-2 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                  >
+                    Public
+                  </button>
                 </div>
               </div>
             </div>
-            <button
-              onClick={() => onPublicHandle()}
-              className="w-50 px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
-            >
-              Public
-            </button>
+
           </div>
         </div>}
 
