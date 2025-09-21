@@ -6,9 +6,10 @@ import PostSidebarActions from "./PostSideBarActions";
 export default async function PostLists({
   params,
 }: {
-  params: { postId: string };
+  params: Promise<{ postId: string }>;
 }) {
-  const { postId } = params;
+  // Await params before destructuring
+  const { postId } = await params;
 
   const getPost = async (id: string) => {
     try {
