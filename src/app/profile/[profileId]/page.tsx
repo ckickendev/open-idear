@@ -12,12 +12,12 @@ import LoadingComponent from '@/component/common/Loading';
 import PostElement from '../PostElement';
 import ProfileInformation from '../ProfileInformation';
 import PostInformation from '../PostInformation';
-import LikeInformation from '../LikeInformation';
 import YourRating from '../YourRating';
 import YourCourse from '../YourCourse';
 import YourHistory from '../YourHistory';
 import AskQuestion from '../AskQuestion';
 import SettingProfile from '../Setting';
+import PostMarked from '../PostMarked';
 
 // Define types
 export interface PostInterface {
@@ -48,7 +48,7 @@ function ProfileDashboard({
 
     const [allPosts, setAllPosts] = React.useState<PostInterface[]>([]);
     const [allUnfinishPosts, setAllUnfinishPosts] = React.useState<PostInterface[]>([]);
-    const [allLikePost, setAllLikePost] = React.useState<PostInterface[]>([]);
+    const [allMarkedPost, setAllMarkedPost] = React.useState<PostInterface[]>([]);
 
     type NavItem = {
         id: string;
@@ -92,8 +92,8 @@ function ProfileDashboard({
                 : `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor`;
 
             const likeEndpoint = profileId
-                ? `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getLikeByUser?profileId=${profileId}`
-                : `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getLikeByUser`;
+                ? `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getMarkedByUser?profileId=${profileId}`
+                : `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getMarkedByUser`;
 
             // Fetch posts
             const res = await axios.get(endpoint, { headers });
@@ -110,7 +110,7 @@ function ProfileDashboard({
             // Fetch liked posts
             const resLike = await axios.get(likeEndpoint, { headers });
             if (resLike.status === 200) {
-                setAllLikePost(resLike.data.likePost || []);
+                setAllMarkedPost(resLike.data.likePost || []);
             }
 
             const resProfile = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/auth/getProfileById?id=${profileId}`, { headers });
@@ -127,7 +127,7 @@ function ProfileDashboard({
             ];
 
             if (profileId === authenticationStore.getState().currentUser?._id) {
-                navItems.push({ id: 'wishlist', icon: <Heart />, text: 'Danh sách yêu thích' });
+                navItems.push({ id: 'marklist', icon: <Heart />, text: 'Danh sách đánh dấu' });
                 navItems.push({ id: 'ratings', icon: <Star />, text: 'Đánh giá của tôi' });
                 navItems.push({ id: 'orders', icon: <ShoppingCart />, text: 'Lịch sử đơn hàng' });
                 navItems.push({ id: 'faq', icon: <CircleHelp />, text: 'Hỏi & đáp' });
@@ -166,8 +166,8 @@ function ProfileDashboard({
             setTitlePost("Bài viết chưa hoàn thành");
             setDisplayPost(allUnfinishPosts);
         } else {
-            setTitlePost("Bài viết đã thích");
-            setDisplayPost(allLikePost);
+            setTitlePost("Bài viết đã đánh dấu");
+            setDisplayPost(allMarkedPost);
         }
     };
 
@@ -250,8 +250,8 @@ function ProfileDashboard({
                                     className="bg-white border-1 border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-shadow"
                                 >
                                     <div className="bg-purple-200 rounded-full text-purple-500 text-4xl p-4 mb-2 cir"><BookHeart /></div>
-                                    <div className="text-4xl font-bold mb-1">{allLikePost.length}</div>
-                                    <div className="text-sm text-center text-gray-600">Bài viết đã thích</div>
+                                    <div className="text-4xl font-bold mb-1">{allMarkedPost.length}</div>
+                                    <div className="text-sm text-center text-gray-600">Bài viết đã đánh dấu</div>
                                 </div>
                             }
                         </div>
@@ -279,7 +279,7 @@ function ProfileDashboard({
 
                     {selectId === 'user-info' && <ProfileInformation />}
                     {selectId === 'posts' && <PostInformation profileId={profileId} />}
-                    {selectId === 'wishlist' && <LikeInformation />}
+                    {selectId === 'marklist' && <PostMarked />}
                     {selectId === 'ratings' && <YourRating />}
                     {selectId === 'courses' && <YourCourse />}
                     {selectId === 'orders' && <YourHistory />}
