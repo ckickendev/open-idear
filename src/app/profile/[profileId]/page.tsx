@@ -31,6 +31,7 @@ export interface PostInterface {
     published?: boolean;
     readTime: string;
     image: any;
+    marked?: [any];
 }
 
 function ProfileDashboard({

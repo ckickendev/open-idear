@@ -1,9 +1,36 @@
 import { useState } from "react";
 import { Bookmark } from "lucide-react";
 import { PostInterface } from "./[profileId]/page";
+import authenticationStore from "@/store/AuthenticationStore";
+import axios from "axios";
+import alertStore from "@/store/AlertStore";
 
 const PostElement = (data: PostInterface) => {
-    const [bookmarked, setBookmarked] = useState(false);
+    const currentUser = authenticationStore((state) => state.currentUser);
+    const [bookmarked, setBookmarked] = useState(data.marked?.includes(currentUser?._id));
+    const setType = alertStore((state) => state.setType);
+    const setMessage = alertStore((state) => state.setMessage);
+
+    const onMarkedPost = async () => {
+        try {
+            const response = await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/markPost`, {
+                postId: data._id,
+            });
+
+            if (response.status === 200) {
+                setType("success");
+                setMessage(response.data.message);
+                setBookmarked(!bookmarked);
+            } else {
+                setType("error");
+                setMessage("Failed to mark the post.");
+            }
+        } catch (error) {
+            console.error("Error marking the post:", error);
+            setType("error");
+            setMessage("An error occurred while marking the post.");
+        }
+    };
 
     return (
         <div className="flex w-full rounded-lg overflow-hidden bg-white shadow-sm border border-gray-100">
@@ -28,7 +55,7 @@ const PostElement = (data: PostInterface) => {
                             <span className="text-xs text-gray-500">{data.readTime}</span>
                         </div>
                         <button
-                            onClick={() => setBookmarked(!bookmarked)}
+                            onClick={onMarkedPost}
                             className="text-gray-400 hover:text-gray-600"
                         >
                             <Bookmark

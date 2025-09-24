@@ -211,12 +211,7 @@ const ProfileInfo = ({ userInfor }: any) => {
                                 >
                                     {({ open }) => {
                                         function handleOnClick() {
-                                            console.log(1);
-
                                             open();
-
-                                            console.log(2);
-
                                         }
                                         return (
                                             <div className="rounded-md w-full">
