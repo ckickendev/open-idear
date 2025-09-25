@@ -89,7 +89,6 @@ export default function CreatePost() {
         // Get category
         try {
           const resCategory = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category`, { headers });
-          console.log("resCategory: ", resCategory);
 
           if (resCategory.status === 200) {
             setCategory(resCategory.data.categories);
@@ -103,8 +102,6 @@ export default function CreatePost() {
         // Get series 
         try {
           const resSeries = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getByUser`, { headers });
-          console.log("res srestes: ", resSeries);
-
           if (resSeries.status === 200) {
             setSeries(resSeries.data.series);
           }
@@ -118,7 +115,6 @@ export default function CreatePost() {
         if (!idPost) {
           setTitle("");
           setContent("");
-          console.log("content: ", content);
           changeLoad();
           return;
         }
@@ -126,8 +122,6 @@ export default function CreatePost() {
         try {
           const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostToEdit?postId=${idPost}`, { headers });
           if (res.status === 200) {
-            console.log('res.data.post to edit: ', res.data.post);
-
             setTitle(res.data.post.title);
             setContent(res.data.post.content);
             // setImagePublic({ imageUrl: res.data.post.image.url, description: res.data.post.image.description });
@@ -213,9 +207,6 @@ export default function CreatePost() {
         onPaste: (currentEditor: any, files: any, htmlContent: any) => {
           files.forEach((file: any) => {
             if (htmlContent) {
-              // if there is htmlContent, stop manual insertion & let other extensions handle insertion via inputRule
-              // you could extract the pasted file from this url string and upload it to a server for example
-              console.log(htmlContent) // eslint-disable-line no-console
               return false
             }
 
@@ -397,9 +388,6 @@ export default function CreatePost() {
     const text = editor.getText().replace(/\n/g, '');
     const content = editor.getHTML();
 
-    console.log("Saving post with text: ", text);
-
-
     changeLoad();
     const headers = getHeadersToken();
 
@@ -411,7 +399,6 @@ export default function CreatePost() {
         content: content,
         headers
       }).then((res) => {
-        console.log(res.data);
         changeLoad();
         setType('success');
         setMessage('Post updated successfully!');
@@ -430,7 +417,6 @@ export default function CreatePost() {
       content: content,
       headers
     }).then((res) => {
-      console.log(res.data);
       const params = new URLSearchParams()
       params.set('id', res.data.post._id)
       router.push(`${pathname}?${params.toString()}`)
@@ -485,13 +471,11 @@ export default function CreatePost() {
   };
 
   const createNewSeriesHandler = () => {
-    console.log("Creating new series...");
     setCreateNewSeries(false);
     axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/create`, {
       newSeries: newSeries,
       headers: getHeadersToken()
     }).then((res) => {
-      console.log('Created series:', res.data);
       setNewSeries('');
       setSeries((prev) => [...prev, res.data.data]);
       changeLoad();
@@ -519,7 +503,6 @@ export default function CreatePost() {
         headers: getHeadersToken(),
         publicInfo
       });
-      console.log("onPublic: ", onPublic);
       if (onPublic.status === 200) {
         setType('success');
         setMessage("Public post successfully!");

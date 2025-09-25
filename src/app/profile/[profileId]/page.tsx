@@ -29,7 +29,7 @@ export interface PostInterface {
     author: any;
     category: string;
     published?: boolean;
-    readTime: string;
+    readtime: string;
     image: any;
     marked?: [any];
 }
@@ -111,7 +111,7 @@ function ProfileDashboard({
             // Fetch liked posts
             const resLike = await axios.get(likeEndpoint, { headers });
             if (resLike.status === 200) {
-                setAllMarkedPost(resLike.data.likePost || []);
+                setAllMarkedPost(resLike.data.markedPost || []);
             }
 
             const resProfile = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/auth/getProfileById?id=${profileId}`, { headers });
@@ -185,11 +185,11 @@ function ProfileDashboard({
                         <span className="mx-2">•</span>
                         <span className="text-lg">Thông tin tài khoản</span>
                     </div>
-                    <div className="flex items-center">
+                    {/* <div className="flex items-center">
                         <button className="mr-4 p-2">
                             <span>🔔</span>
                         </button>
-                    </div>
+                    </div> */}
                 </div>
             </header>
 
@@ -271,7 +271,8 @@ function ProfileDashboard({
                                         title={post.title}
                                         content={post.text}
                                         author={post.author}
-                                        readTime="5 phut"
+                                        readtime={post.readtime}
+                                        marked={post.marked}
                                     />
                                 ))}
                             </div>

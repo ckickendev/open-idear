@@ -4,6 +4,7 @@ import { PostInterface } from "./[profileId]/page";
 import authenticationStore from "@/store/AuthenticationStore";
 import axios from "axios";
 import alertStore from "@/store/AlertStore";
+import { getHeadersToken } from "@/api/authentication";
 
 const PostElement = (data: PostInterface) => {
     const currentUser = authenticationStore((state) => state.currentUser);
@@ -15,11 +16,13 @@ const PostElement = (data: PostInterface) => {
         try {
             const response = await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/markPost`, {
                 postId: data._id,
+            }, {
+                headers: getHeadersToken()
             });
 
             if (response.status === 200) {
                 setType("success");
-                setMessage(response.data.message);
+                setMessage(response.data.isMarked ? "Post marked successfully." : "Post unmarked successfully.");
                 setBookmarked(!bookmarked);
             } else {
                 setType("error");
@@ -52,11 +55,11 @@ const PostElement = (data: PostInterface) => {
                                 }`}>
                                 {data.category}
                             </span>
-                            <span className="text-xs text-gray-500">{data.readTime}</span>
+                            <span className="text-xs text-gray-500">{data.readtime} phút đọc</span>
                         </div>
                         <button
                             onClick={onMarkedPost}
-                            className="text-gray-400 hover:text-gray-600"
+                            className="text-gray-400 hover:text-gray-600 cursor-pointer"
                         >
                             <Bookmark
                                 size={18}
