@@ -3,7 +3,7 @@ import { Bookmark } from "lucide-react";
 
 const SeriesElement = (data: any) => {
     console.log("data series", data);
-    
+
     const [bookmarked, setBookmarked] = useState(false);
 
     return (
@@ -21,9 +21,12 @@ const SeriesElement = (data: any) => {
             <div className="w-2/3 p-4 flex flex-col justify-between">
                 <div className="mb-2">
                     <div className="flex justify-between items-center mb-2">
+                        <a href={`./post/${data._id}`} className="block hover:underline">
+                            <h2 className="text-lg font-bold leading-tight mb-2">{data.title}</h2>
+                        </a>
                         <button
                             onClick={() => setBookmarked(!bookmarked)}
-                            className="text-gray-400 hover:text-gray-600"
+                            className="text-gray-400 hover:text-gray-600 cursor-pointer"
                         >
                             <Bookmark
                                 size={18}
@@ -32,9 +35,7 @@ const SeriesElement = (data: any) => {
                         </button>
                     </div>
 
-                    <a href={`./post/${data._id}`} className="block hover:underline">
-                        <h2 className="text-lg font-bold leading-tight mb-2">{data.title}</h2>
-                    </a>
+                    <p className="text-sm text-gray-600 line-clamp-2">Series includes {data.posts.length > 0 ? data.posts.length + " posts" : "No posts available"}</p>
                     {data.description && (
                         <p className="text-sm text-gray-600 line-clamp-2">"{data.description}"</p>
                     )}
@@ -42,29 +43,38 @@ const SeriesElement = (data: any) => {
 
                 {/* Author */}
                 {data.user?._id && (
-                    <a className="flex items-center mt-2" href={`./${data.user._id}`}>
-                        {data.user.avatar && (
-                            <img
-                                src={data.user.avatar}
-                                alt={data.user.name}
-                                className="w-10 h-10 rounded-full mr-2"
-                            />
-                        )}
-                        <div className="flex items-center">
-                            <span className="text-sm font-medium">{data.user.name}</span>
-                            {data.user.verified && (
-                                <span className="ml-1 text-blue-500">
-                                    <svg
-                                        className="w-4 h-4 inline-block"
-                                        viewBox="0 0 24 24"
-                                        fill="currentColor"
-                                    >
-                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
-                                    </svg>
-                                </span>
+                    <div className="flex justify-between align-center">
+                        <a className="flex items-center mt-2" href={`./${data.user._id}`}>
+                            {data.user.avatar && (
+                                <img
+                                    src={data.user.avatar}
+                                    alt={data.user.name}
+                                    className="w-10 h-10 rounded-full mr-2"
+                                />
                             )}
+                            <div className="flex items-center">
+                                <span className="text-sm font-medium">{data.user.name}</span>
+                                {data.user.verified && (
+                                    <span className="ml-1 text-blue-500">
+                                        <svg
+                                            className="w-4 h-4 inline-block"
+                                            viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                        >
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+                                        </svg>
+                                    </span>
+                                )}
+                            </div>
+                        </a>
+
+                        <div className="flex items-center">
+                            <button className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 cursor-pointer">
+                                View Series
+                            </button>
                         </div>
-                    </a>
+                    </div>
+
                 )}
             </div>
         </div>
