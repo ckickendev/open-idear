@@ -28,10 +28,9 @@ const PostElement = (data: PostInterface) => {
                 setType("error");
                 setMessage("Failed to mark the post.");
             }
-        } catch (error) {
-            console.error("Error marking the post:", error);
+        } catch (error: any) {
             setType("error");
-            setMessage("An error occurred while marking the post.");
+            setMessage(error.response.data.message || "An error occurred while marking the post.");
         }
     };
 

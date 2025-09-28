@@ -30,7 +30,7 @@ const PostInformation = ({ profileId }: any) => {
 
         const resSeries = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getSeriesByAuthorId?profileId=${profileId}`);
         if (resSeries.status === 200) {
-          //console.log("series info: ", resSeries.data);
+          console.log("series info: ", resSeries.data);
           setDisplaySeries(resSeries.data.series);
         }
 
@@ -71,7 +71,8 @@ const PostInformation = ({ profileId }: any) => {
               title={post.title}
               content={post.text}
               author={post.author}
-              readTime="5 phut"
+              readtime={post.readtime}
+              marked={post.marked}
             />
           )) : displaySeries.map((series, index) => (
             <SeriesElement
@@ -81,6 +82,8 @@ const PostInformation = ({ profileId }: any) => {
               title={series.title}
               description={series.description}
               user={series.user}
+              posts={series.posts}
+              marked={series.marked}
             />
           ))}
         </div>

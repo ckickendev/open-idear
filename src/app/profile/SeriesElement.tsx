@@ -1,10 +1,40 @@
 import { useState } from "react";
 import { Bookmark } from "lucide-react";
+import authenticationStore from "@/store/AuthenticationStore";
+import { getHeadersToken } from "@/api/authentication";
+import axios from "axios";
+import alertStore from "@/store/AlertStore";
 
 const SeriesElement = (data: any) => {
     console.log("data series", data);
+    const currentUser = authenticationStore((state) => state.currentUser);
+    const [bookmarked, setBookmarked] = useState(data.marked?.includes(currentUser?._id));
 
-    const [bookmarked, setBookmarked] = useState(false);
+    const setType = alertStore((state) => state.setType);
+    const setMessage = alertStore((state) => state.setMessage);
+
+    const onMarkedSeries = async () => {
+        try {
+            const response = await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/markSeries`, {
+                seriesId: data._id,
+            }, {
+                headers: getHeadersToken()
+            });
+
+            if (response.status === 200) {
+                setType("success");
+                setMessage(response.data.isMarked ? "Series marked successfully." : "Series unmarked successfully.");
+                setBookmarked(!bookmarked);
+            } else {
+                setType("error");
+                setMessage("Failed to mark the series.");
+            }
+        } catch (error: any) {
+            console.log(error.response.data);
+            setType("error");
+            setMessage(error.response.data.message || "An error occurred while marking the series.");
+        }
+    };
 
     return (
         <div className="flex w-full rounded-lg overflow-hidden bg-white shadow-sm border border-gray-100">
@@ -25,7 +55,7 @@ const SeriesElement = (data: any) => {
                             <h2 className="text-lg font-bold leading-tight mb-2">{data.title}</h2>
                         </a>
                         <button
-                            onClick={() => setBookmarked(!bookmarked)}
+                            onClick={onMarkedSeries}
                             className="text-gray-400 hover:text-gray-600 cursor-pointer"
                         >
                             <Bookmark
