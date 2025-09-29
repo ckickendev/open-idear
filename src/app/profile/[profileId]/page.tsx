@@ -17,7 +17,7 @@ import YourCourse from '../YourCourse';
 import YourHistory from '../YourHistory';
 import AskQuestion from '../AskQuestion';
 import SettingProfile from '../Setting';
-import PostMarked from '../PostMarked';
+import MarkedList from '../MarkedList';
 
 // Define types
 export interface PostInterface {
@@ -281,7 +281,7 @@ function ProfileDashboard({
 
                     {selectId === 'user-info' && <ProfileInformation />}
                     {selectId === 'posts' && <PostInformation profileId={profileId} />}
-                    {selectId === 'marklist' && <PostMarked />}
+                    {selectId === 'marklist' && <MarkedList />}
                     {selectId === 'ratings' && <YourRating />}
                     {selectId === 'courses' && <YourCourse />}
                     {selectId === 'orders' && <YourHistory />}

@@ -52,6 +52,7 @@ const PostInformation = ({ profileId }: any) => {
       setTitlePost("Series");
     }
   };
+
   return (
     <div className="flex-1 m-l-4 bg-white rounded-lg shadow-sm">
       <div className="flex items-center justify-between rounded-xl ">
