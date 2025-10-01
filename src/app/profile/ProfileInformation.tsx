@@ -7,6 +7,7 @@ import authenticationStore from "@/store/AuthenticationStore";
 import loadingStore from '@/store/LoadingStore';
 import axios from 'axios';
 import alertStore from '@/store/AlertStore';
+import { UserRoundPen } from 'lucide-react';
 
 // Zod schema for validation
 const profileSchema = z.object({
@@ -60,7 +61,7 @@ const ProfileInformation = () => {
             const token = localStorage.getItem("access_token");
             if (token) {
                 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                
+
                 const res = await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/updateProfile`, {
                     data
                 });
@@ -92,9 +93,15 @@ const ProfileInformation = () => {
     return (
         <div className="flex-1 m-l-4 p-6 bg-white rounded-lg shadow-sm">
             <div className="flex items-center justify-between mb-6">
-                <div className="w-full mx-auto p-6 bg-white">
+                <div className="w-full mx-auto bg-white">
                     {/* Header */}
-                    <h1 className="text-2xl font-bold text-gray-800 mb-8">Your information</h1>
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+                            <UserRoundPen className="text-blue-600" size={32} />
+                            Your information
+                        </h1>
+                        <p className="text-gray-600">Overview about your information</p>
+                    </div>
 
                     <form onSubmit={handleSubmit(onSubmit)}>
                         {/* Profile Information */}

@@ -6,16 +6,16 @@ import axios from "axios";
 import alertStore from "@/store/AlertStore";
 import { getHeadersToken } from "@/api/authentication";
 
-const PostElement = (data: PostInterface) => {
+const PostElement = ({post}: {post: PostInterface}) => {
     const currentUser = authenticationStore((state) => state.currentUser);
-    const [bookmarked, setBookmarked] = useState(data.marked?.includes(currentUser?._id));
+    const [bookmarked, setBookmarked] = useState(post.marked?.includes(currentUser?._id));
     const setType = alertStore((state) => state.setType);
     const setMessage = alertStore((state) => state.setMessage);
 
     const onMarkedPost = async () => {
         try {
             const response = await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/markPost`, {
-                postId: data._id,
+                postId: post._id,
             }, {
                 headers: getHeadersToken()
             });
@@ -31,6 +31,7 @@ const PostElement = (data: PostInterface) => {
         } catch (error: any) {
             setType("error");
             setMessage(error.response.data.message || "An error occurred while marking the post.");
+
         }
     };
 
@@ -39,8 +40,8 @@ const PostElement = (data: PostInterface) => {
             {/* Left side - Image */}
             <div className="w-1/3 h-40">
                 <img
-                    src={data.image?.url}
-                    alt={data.title}
+                    src={post.image?.url}
+                    alt={post.title}
                     className="object-cover h-full w-full"
                 />
             </div>
@@ -50,11 +51,11 @@ const PostElement = (data: PostInterface) => {
                 <div className="mb-2">
                     <div className="flex justify-between items-center mb-2">
                         <div className="flex items-center space-x-2">
-                            <span className={`text-xs font-semibold ${data.category === 'primary' ? 'text-green-800' : 'text-blue-600'
+                            <span className={`text-xs font-semibold ${post.category === 'primary' ? 'text-green-800' : 'text-blue-600'
                                 }`}>
-                                {data.category}
+                                {post.category}
                             </span>
-                            <span className="text-xs text-gray-500">{data.readtime} phút đọc</span>
+                            <span className="text-xs text-gray-500">{post.readtime} phút đọc</span>
                         </div>
                         <button
                             onClick={onMarkedPost}
@@ -67,27 +68,27 @@ const PostElement = (data: PostInterface) => {
                         </button>
                     </div>
 
-                    <a href={`/post/${data._id}`} className="block hover:underline">
-                        <h2 className="text-lg font-bold leading-tight mb-2">{data.title}</h2>
+                    <a href={`/post/${post._id}`} className="block hover:underline">
+                        <h2 className="text-lg font-bold leading-tight mb-2">{post.title}</h2>
                     </a>
-                    {data.content && (
-                        <p className="text-sm text-gray-600 line-clamp-2">"{data.content}"</p>
+                    {post.content && (
+                        <p className="text-sm text-gray-600 line-clamp-2">"{post.content}"</p>
                     )}
                 </div>
 
                 {/* Author */}
-                {data.author?._id && (
-                    <a className="flex items-center justify-start mt-2" href={`./${data.author._id}`}>
-                        {data.author.avatar && (
+                {post.author?._id && (
+                    <a className="flex items-center justify-start mt-2" href={`./${post.author._id}`}>
+                        {post.author.avatar && (
                             <img
-                                src={data.author.avatar}
-                                alt={data.author.name}
+                                src={post.author.avatar}
+                                alt={post.author.name}
                                 className="w-10 h-10 rounded-full mr-2"
                             />
                         )}
                         <div className="flex items-center">
-                            <span className="text-sm font-medium">{data.author.name}</span>
-                            {data.author.verified && (
+                            <span className="text-sm font-medium">{post.author.name}</span>
+                            {post.author.verified && (
                                 <span className="ml-1 text-blue-500">
                                     <svg
                                         className="w-4 h-4 inline-block"

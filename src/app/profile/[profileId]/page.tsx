@@ -11,7 +11,7 @@ import loadingStore from '@/store/LoadingStore';
 import LoadingComponent from '@/component/common/Loading';
 import PostElement from '../PostElement';
 import ProfileInformation from '../ProfileInformation';
-import PostInformation from '../PostInformation';
+import YourInformation from '../YourInformation';
 import YourRating from '../YourRating';
 import YourCourse from '../YourCourse';
 import YourHistory from '../YourHistory';
@@ -120,7 +120,7 @@ function ProfileDashboard({
                 setUserInfor(resProfile.data.userInfo);
             }
 
-             const navItems = [
+            const navItems = [
                 { id: 'overview', icon: <ChartColumnStacked />, text: 'Tổng quan' },
                 { id: 'user-info', icon: <UserRoundPen />, text: 'Thông tin' },
                 { id: 'posts', icon: <Pen />, text: 'Tất cả bài viết' },
@@ -221,8 +221,12 @@ function ProfileDashboard({
                     </div>
 
                     {selectId === 'overview' && <div className="flex-1 m-l-4 p-6 bg-white rounded-lg shadow-sm">
-                        <div className="flex items-center justify-between mb-6">
-                            <h1 className="text-xl font-bold">Tổng Quan</h1>
+                        <div className="mb-8">
+                            <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+                                <ChartColumnStacked className="text-blue-600" size={32} />
+                                Overview
+                            </h1>
+                            <p className="text-gray-600">Overview about your profile</p>
                         </div>
 
                         {/* Stats */}
@@ -235,7 +239,7 @@ function ProfileDashboard({
                                 <div className="text-4xl font-bold mb-1">{allPosts.length}</div>
                                 <div className="text-sm text-center text-gray-600">Tất cả bài viết</div>
                             </div>
-                            { profileId === authenticationStore.getState().currentUser?._id &&
+                            {profileId === authenticationStore.getState().currentUser?._id &&
                                 <div
                                     onClick={() => handlePostTypeClick(2)}
                                     className="bg-white border-1 border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-shadow"
@@ -245,7 +249,7 @@ function ProfileDashboard({
                                     <div className="text-sm text-center text-gray-600">Bài viết chưa hoàn thành</div>
                                 </div>
                             }
-                            { profileId === authenticationStore.getState().currentUser?._id &&
+                            {profileId === authenticationStore.getState().currentUser?._id &&
                                 <div
                                     onClick={() => handlePostTypeClick(3)}
                                     className="bg-white border-1 border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-shadow"
@@ -264,15 +268,7 @@ function ProfileDashboard({
                                 {displayPost.length === 0 && <h1 className='text-xxl font-semibold mb-4'>No record</h1>}
                                 {displayPost.map(post => (
                                     <PostElement
-                                        _id={post._id}
-                                        key={post._id}
-                                        image={post.image}
-                                        category={post.category}
-                                        title={post.title}
-                                        content={post.text}
-                                        author={post.author}
-                                        readtime={post.readtime}
-                                        marked={post.marked}
+                                        post={post} key={post._id}
                                     />
                                 ))}
                             </div>
@@ -280,7 +276,7 @@ function ProfileDashboard({
                     </div>}
 
                     {selectId === 'user-info' && <ProfileInformation />}
-                    {selectId === 'posts' && <PostInformation profileId={profileId} />}
+                    {selectId === 'posts' && <YourInformation profileId={profileId} />}
                     {selectId === 'marklist' && <MarkedList />}
                     {selectId === 'ratings' && <YourRating />}
                     {selectId === 'courses' && <YourCourse />}

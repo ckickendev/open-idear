@@ -5,10 +5,10 @@ import { getHeadersToken } from "@/api/authentication";
 import axios from "axios";
 import alertStore from "@/store/AlertStore";
 
-const SeriesElement = (data: any) => {
-    console.log("data series", data);
+const SeriesElement = ({series}: any) => {
+    console.log("data series", series);
     const currentUser = authenticationStore((state) => state.currentUser);
-    const [bookmarked, setBookmarked] = useState(data.marked?.includes(currentUser?._id));
+    const [bookmarked, setBookmarked] = useState(series.marked?.includes(currentUser?._id));
 
     const setType = alertStore((state) => state.setType);
     const setMessage = alertStore((state) => state.setMessage);
@@ -16,7 +16,7 @@ const SeriesElement = (data: any) => {
     const onMarkedSeries = async () => {
         try {
             const response = await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/markSeries`, {
-                seriesId: data._id,
+                seriesId: series._id,
             }, {
                 headers: getHeadersToken()
             });
@@ -41,8 +41,8 @@ const SeriesElement = (data: any) => {
             {/* Left side - Image */}
             <div className="w-1/3">
                 <img
-                    src={data.image?.url}
-                    alt={data.title}
+                    src={series.image?.url}
+                    alt={series.title}
                     className="object-cover h-full w-full"
                 />
             </div>
@@ -51,8 +51,8 @@ const SeriesElement = (data: any) => {
             <div className="w-2/3 p-4 flex flex-col justify-between">
                 <div className="mb-2">
                     <div className="flex justify-between items-center mb-2">
-                        <a href={`./post/${data._id}`} className="block hover:underline">
-                            <h2 className="text-lg font-bold leading-tight mb-2">{data.title}</h2>
+                        <a href={`./post/${series._id}`} className="block hover:underline">
+                            <h2 className="text-lg font-bold leading-tight mb-2">{series.title}</h2>
                         </a>
                         <button
                             onClick={onMarkedSeries}
@@ -65,26 +65,26 @@ const SeriesElement = (data: any) => {
                         </button>
                     </div>
 
-                    <p className="text-sm text-gray-600 line-clamp-2">Series includes {data.posts.length > 0 ? data.posts.length + " posts" : "No posts available"}</p>
-                    {data.description && (
-                        <p className="text-sm text-gray-600 line-clamp-2">"{data.description}"</p>
+                    <p className="text-sm text-gray-600 line-clamp-2">Series includes {series.posts.length > 0 ? series.posts.length + " posts" : "No posts available"}</p>
+                    {series.description && (
+                        <p className="text-sm text-gray-600 line-clamp-2">"{series.description}"</p>
                     )}
                 </div>
 
                 {/* Author */}
-                {data.user?._id && (
+                {series.user?._id && (
                     <div className="flex justify-between align-center">
-                        <a className="flex items-center mt-2" href={`./${data.user._id}`}>
-                            {data.user.avatar && (
+                        <a className="flex items-center mt-2" href={`./${series.user._id}`}>
+                            {series.user.avatar && (
                                 <img
-                                    src={data.user.avatar}
-                                    alt={data.user.name}
+                                    src={series.user.avatar}
+                                    alt={series.user.name}
                                     className="w-10 h-10 rounded-full mr-2"
                                 />
                             )}
                             <div className="flex items-center">
-                                <span className="text-sm font-medium">{data.user.name}</span>
-                                {data.user.verified && (
+                                <span className="text-sm font-medium">{series.user.name}</span>
+                                {series.user.verified && (
                                     <span className="ml-1 text-blue-500">
                                         <svg
                                             className="w-4 h-4 inline-block"
