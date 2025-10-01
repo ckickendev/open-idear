@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { Edit, Upload, X } from 'lucide-react';
 import authenticationStore from '@/store/AuthenticationStore';
-import UploadImage from '../common/UploadImage';
 import { CldUploadWidget } from 'next-cloudinary';
 import axios from 'axios';
 import { REACT_APP_ROOT_BACKEND } from './authentication';

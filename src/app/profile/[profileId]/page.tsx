@@ -11,7 +11,7 @@ import loadingStore from '@/store/LoadingStore';
 import LoadingComponent from '@/component/common/Loading';
 import PostElement from '../PostElement';
 import ProfileInformation from '../ProfileInformation';
-import YourInformation from '../YourInformation';
+import AllPost from '../AllPost';
 import YourRating from '../YourRating';
 import YourCourse from '../YourCourse';
 import YourHistory from '../YourHistory';
@@ -276,7 +276,7 @@ function ProfileDashboard({
                     </div>}
 
                     {selectId === 'user-info' && <ProfileInformation />}
-                    {selectId === 'posts' && <YourInformation profileId={profileId} />}
+                    {selectId === 'posts' && <AllPost profileId={profileId} />}
                     {selectId === 'marklist' && <MarkedList />}
                     {selectId === 'ratings' && <YourRating />}
                     {selectId === 'courses' && <YourCourse />}

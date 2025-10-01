@@ -8,7 +8,7 @@ import SeriesElement from "./SeriesElement";
 import { Bookmark, FileText, Layers, Pen } from "lucide-react";
 import EmptyState from "./EmptyState";
 
-const YourInformation = ({ profileId }: any) => {
+const AllPost = ({ profileId }: any) => {
   const [displayPosts, setDisplayPosts] = React.useState<PostInterface[]>([]);
   const [displaySeries, setDisplaySeries] = React.useState<any[]>([]);
 
@@ -125,4 +125,4 @@ const YourInformation = ({ profileId }: any) => {
   );
 }
 
-export default YourInformation;
+export default AllPost;
