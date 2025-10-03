@@ -75,7 +75,7 @@ const SeriesElement = ({ series }: any) => {
     return (
         <div className="flex w-full rounded-lg overflow-hidden bg-white shadow-sm border border-gray-100">
             {/* Left side - Image */}
-            <div className="w-1/3">
+            <div className="w-1/3 h-40">
                 {isEditing ? <ImageUpload
                     onImageUploaded={handleImageUploadedPublic}
                     onClose={() => {}}
