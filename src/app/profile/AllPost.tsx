@@ -30,7 +30,7 @@ const AllPost = ({ profileId }: any) => {
           setDisplayPosts(res.data.posts);
         }
 
-        const resSeries = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getSeriesByAuthorId?profileId=${profileId}`);
+        const resSeries = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getSeriesByAuthorId?profileId=${profileId}`);
         if (resSeries.status === 200) {
           console.log("series info: ", resSeries.data);
           setDisplaySeries(resSeries.data.series);

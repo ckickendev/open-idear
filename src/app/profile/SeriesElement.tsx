@@ -39,6 +39,11 @@ const SeriesElement = ({ series }: any) => {
         }
     };
 
+    const onCancelEditing = () => {
+        setIsEditing(false);
+        setDataSeriesEdit(series); // Reset to original series data
+    }
+
     const onConfirmEditing = async () => {
         try {
             const response = await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/edit`, {
@@ -56,7 +61,7 @@ const SeriesElement = ({ series }: any) => {
                 // Update the local series data with the edited data
                 series.title = dataSeriesEdit.title;
                 series.description = dataSeriesEdit.description;
-                series.image = dataSeriesEdit.image; 
+                series.image = dataSeriesEdit.image;
             } else {
                 setType("error");
                 setMessage("Failed to update the series.");
@@ -78,7 +83,7 @@ const SeriesElement = ({ series }: any) => {
             <div className="w-1/3 h-40">
                 {isEditing ? <ImageUpload
                     onImageUploaded={handleImageUploadedPublic}
-                    onClose={() => {}}
+                    onClose={() => { }}
                     isTitleDisplay={true}
                 /> : <img
                     src={series.image?.url}
@@ -156,9 +161,16 @@ const SeriesElement = ({ series }: any) => {
 
                         <div className="flex items-center">
                             {isEditing ?
-                                <button className="px-4 py-2 mr-2 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 cursor-pointer" onClick={onConfirmEditing}>
-                                    Confirm
-                                </button> :
+                                <>
+                                    <button className="px-4 py-2 mr-2 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 cursor-pointer" onClick={onCancelEditing}>
+                                        Cancel
+                                    </button>
+                                    <button className="px-4 py-2 mr-2 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 cursor-pointer" onClick={onConfirmEditing}>
+                                        Confirm
+                                    </button>
+
+                                </>
+                                :
                                 <button className="px-4 py-2 mr-2 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 cursor-pointer" onClick={() => setIsEditing(true)}>
                                     Edit Series
                                 </button>}
