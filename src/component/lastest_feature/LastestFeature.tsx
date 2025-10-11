@@ -1,13 +1,19 @@
 'use client'
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ChevronRight, ChevronUp } from "lucide-react";
 import Article from "./Article";
 import Logo from "../common/Logo";
 import { useTranslation } from "@/app/hook/useTranslation";
+import axios from "axios";
+import loadingStore from "@/store/LoadingStore";
+import LoadingComponent from "../common/Loading";
 
 const LastestFeature = () => {
   const { t } = useTranslation();
   const [selectFeature, setSelectFeature] = useState(0);
+
+  const isLoading = loadingStore(state => state.isLoading);
+  const changeLoad = loadingStore((state) => state.changeLoad);
   const feature = [
     "All Features",
     "Casino",
@@ -83,16 +89,37 @@ const LastestFeature = () => {
     },
   ];
 
+  useEffect(() => {
+    const fetchRecentlyData = async () => {
+      try {
+        changeLoad();
+        const token = localStorage.getItem("access_token");
+        if (token) {
+          const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getRecentlyData`);
+          if (response.status === 200) {
+            setMarkedPosts(response.data.markedPost);
+          }
+        }
+      } catch (error: any) {
+        // setType('error');
+        // setMessage(error.response?.data?.message || 'Failed to fetch marked posts');
+      } finally {
+        changeLoad();
+      }
+    }
+    // Fetch data if needed
+    fetchRecentlyData();
+  }, []);
+
   const renderFeature = () => {
     return feature.map((data, index) => {
       return (
         <button
           key={index}
-          className={`${
-            index === selectFeature
-              ? "bg-blue-100 text-blue-500 px-4 py-2 rounded mr-2 cursor-pointer" 
+          className={`${index === selectFeature
+              ? "bg-blue-100 text-blue-500 px-4 py-2 rounded mr-2 cursor-pointer"
               : "text-gray-600 px-4 py-2 rounded mr-2 cursor-pointer"
-          }`}
+            }`}
           onClick={() => setSelectFeature(index)}
         >
           {data}
@@ -118,6 +145,7 @@ const LastestFeature = () => {
   return (
     <>
       <div className="max-w-6xl mx-auto p-4">
+        <LoadingComponent isLoading={isLoading} />
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
             <h2 className="font-bold text-xl text-gray-800 mr-6">
