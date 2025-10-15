@@ -27,7 +27,10 @@ export interface PostInterface {
     content?: string;
     text?: string;
     author: any;
-    category: string;
+    category: {
+        name: string;
+        slug: string;
+    };
     published?: boolean;
     readtime: string;
     image: any;

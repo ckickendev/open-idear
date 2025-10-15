@@ -51,9 +51,8 @@ const PostElement = ({post}: {post: PostInterface}) => {
                 <div className="mb-2">
                     <div className="flex justify-between items-center mb-2">
                         <div className="flex items-center space-x-2">
-                            <span className={`text-xs font-semibold ${post.category === 'primary' ? 'text-green-800' : 'text-blue-600'
-                                }`}>
-                                {post.category}
+                            <span className="text-xs font-semibold text-blue-600">
+                                {post.category.name}
                             </span>
                             <span className="text-xs text-gray-500">{post.readtime} phút đọc</span>
                         </div>
@@ -71,8 +70,8 @@ const PostElement = ({post}: {post: PostInterface}) => {
                     <a href={`/post/${post._id}`} className="block hover:underline">
                         <h2 className="text-lg font-bold leading-tight mb-2">{post.title}</h2>
                     </a>
-                    {post.content && (
-                        <p className="text-sm text-gray-600 line-clamp-2">"{post.content}"</p>
+                    {post.text && (
+                        <p className="text-sm text-gray-600 line-clamp-2">"{post.text}"</p>
                     )}
                 </div>
 
