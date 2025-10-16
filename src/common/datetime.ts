@@ -6,7 +6,7 @@ const date = new Date(inputDate);
 
 // Method 1: Simple readable format
 const simpleFormat = date.toLocaleString();
-console.log("Simple format:", simpleFormat);
+// console.log("Simple format:", simpleFormat);
 
 // Method 2: Custom formatted string
 const options: Intl.DateTimeFormatOptions = {
@@ -18,7 +18,7 @@ const options: Intl.DateTimeFormatOptions = {
     hour12: true
 };
 const customFormat = date.toLocaleString('en-US', options);
-console.log("Custom format:", customFormat);
+// console.log("Custom format:", customFormat);
 
 // Method 3: Manual formatting function
 function formatDate(dateObj : any) {
@@ -62,6 +62,27 @@ function convertDate(isoString: string) {
     };
     return d.toLocaleString('en-US', options);
 }
+
+function calculateGapTime(isoString: string) {
+    const d = new Date(isoString);
+    const now = new Date();
+
+    if (isNaN(d.getTime())) {
+        return "";
+    }
+
+    const diffMs = now.getTime() - d.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} minute(s) ago`;
+    if (diffHours < 24) return `${diffHours} hour(s) ago`;
+    return `${diffDays} day(s) ago`;
+}
+
+export { calculateGapTime };
 
 export default convertDate;
 

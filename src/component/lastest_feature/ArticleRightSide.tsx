@@ -4,7 +4,7 @@ import Logo from "../common/Logo";
 import { PostInterface } from "@/app/profile/[profileId]/page";
 import { calculateGapTime } from "@/common/datetime";
 
-const Article = ({ postData }: { postData: PostInterface }) => {
+const ArticleRightSide = ({ postData }: { postData: PostInterface }) => {
   console.log("post data in article: ", postData);
 
   return (
@@ -39,4 +39,4 @@ const Article = ({ postData }: { postData: PostInterface }) => {
   );
 };
 
-export default Article;
+export default ArticleRightSide;
