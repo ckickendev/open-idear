@@ -35,6 +35,7 @@ export interface PostInterface {
     readtime: string;
     image: any;
     marked: [any];
+    createdAt: string;
 }
 
 function ProfileDashboard({
