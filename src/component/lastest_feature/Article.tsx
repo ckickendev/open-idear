@@ -15,7 +15,7 @@ const Article = ({ postData }: { postData: PostInterface }) => {
             <Logo />
           </div>
           <img
-            src={postData?.image?.url}
+            src={postData?.image?.url || "idea.jpg"}
             alt="Roulette wheel"
             className="w-full h-full object-cover"
           />
