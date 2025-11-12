@@ -54,7 +54,7 @@ const PostElement = ({post}: {post: PostInterface}) => {
                             <span className="text-xs font-semibold text-blue-600">
                                 {post.category.name}
                             </span>
-                            <span className="text-xs text-gray-500">{post.readtime} phút đọc</span>
+                            <span className="text-xs text-gray-500">{post.readtime ? post.readtime + " phút đọc" : "..."}</span>
                         </div>
                         <button
                             onClick={onMarkedPost}

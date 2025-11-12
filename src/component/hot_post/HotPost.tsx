@@ -78,7 +78,7 @@ const HotPost: React.FC = () => {
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs text-gray-500 flex items-center">
                   <Clock size={14} className="mr-1" />
-                  {article.readtime ? article.readtime : "5 min read"}
+                  {article.readtime ? article.readtime + " min read" : "5 min read"}
                 </span>
                 <button className="text-gray-400 hover:text-gray-700 transition-colors focus:outline-none cursor-pointer">
                   <Bookmark size={18} />
