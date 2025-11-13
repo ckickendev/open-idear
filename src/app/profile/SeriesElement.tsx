@@ -128,7 +128,7 @@ const SeriesElement = ({ series }: any) => {
                     ) : (
                         <p className="text-sm text-gray-600 line-clamp-2">{series.description}</p>
                     )}
-                    <p className="text-sm text-gray-600 line-clamp-2">Series includes {series.posts.length > 0 ? series.posts.length + " posts" : "No posts available"}</p>
+                    <p className="text-sm text-gray-600 line-clamp-2"> {series.posts.length > 0 ? "Series includes " + series.posts.length + " posts" : "No posts available"}</p>
 
                 </div>
 
