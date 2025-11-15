@@ -161,7 +161,7 @@ export default function PostSidebarActions({postData}: any) {
             <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors cursor-pointer">
               <Link href={`/profile/${postData.author._id}`}><img
                 src={postData.author.avatar}
-                alt="Author avatar"
+                alt="Author avatar image"
                 className="w-full h-full object-cover"
               /></Link>
               

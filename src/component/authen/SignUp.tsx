@@ -59,7 +59,7 @@ export const SignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="text-center">
                     <div className="flex items-center justify-center">
-                        <Image src="/logo.png" alt="open-idear" width={152} height={100} />
+                        <Image src="/logo.png" alt="open-idear logo image" width={152} height={100} />
                     </div>
                     {/* <h1 className="text-2xl font-semibold text-blue-600 flex items-center justify-center">
                         <span className="text-3xl font-bold">Open</span>

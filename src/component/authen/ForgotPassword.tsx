@@ -55,7 +55,7 @@ export const ForgotPassword = ({ setAuthenState, setIsLoading, setIsAuthenFromDi
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="text-center">
                     <div className="flex items-center justify-center">
-                        <Image src="/logo.png" alt="open-idear" width={152} height={100} />
+                        <Image src="/logo.png" alt="open-idear logo image" width={152} height={100} />
                     </div>
                     <p className="text-gray-500 text-sm mt-1">
                         {t("component.authen.forgotPass.des")}

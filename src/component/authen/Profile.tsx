@@ -36,7 +36,7 @@ export default function Profile() {
                     onClick={() => setIsOpen(!isOpen)}
                     className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-blue-500 hover:opacity-90"
                 >
-                    <img src={userInfo.avatar} alt="Profile" className="cursor-pointer w-full h-full object-cover" />
+                    <img src={userInfo.avatar} alt="Profile avatar image" className="cursor-pointer w-full h-full object-cover" />
                 </button>
 
                 {/* Badge - can be used for notifications */}
@@ -52,7 +52,7 @@ export default function Profile() {
                     <div className="p-4 border-b border-gray-700">
                         <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
-                                <img src={userInfo.avatar} alt="Profile" className="w-full h-full object-cover" />
+                                <img src={userInfo.avatar} alt="Profile avatar image" className="w-full h-full object-cover" />
                             </div>
                             <div>
                                 <p className="text-xl font-medium">{userInfo.username}</p>

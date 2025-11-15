@@ -124,7 +124,7 @@ const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
         </button>
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
             <div className="flex items-center justify-center">
-                <Image src="/logo.png" alt="open-idear" width={152} height={100} />
+                <Image src="/logo.png" alt="open-idear logo image" width={152} height={100} />
             </div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                 {t('component.authen.confirm_signup.confirm')}

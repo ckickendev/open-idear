@@ -87,7 +87,7 @@ const ProfileInfo = ({ userInfor }: any) => {
                             <div className="bg-black flex items-center justify-center">
                                 <img
                                     src={currentUser?.background}
-                                    alt="cover-image"
+                                    alt="cover-image of user section open idear"
                                     className="object-fill w-full h-100"
                                 />
                             </div>
@@ -167,7 +167,7 @@ const ProfileInfo = ({ userInfor }: any) => {
                     <div className="w-50 h-50 rounded-full border-4 border-white relative hover:bg-sky-700">
                         <img
                             src={userInfor?.avatar || currentUser?.avatar || "http://localhost:3000/icon/profile/hippo.png"}
-                            alt="Profile"
+                            alt="Profile image of user"
                             className="w-full h-full object-cover rounded-full cursor-pointer"
                             onClick={handleProfileImageClick}
                         />

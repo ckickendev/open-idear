@@ -149,7 +149,7 @@ const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
                     <div className="relative">
                         <img
                             src={preview}
-                            alt="Preview"
+                            alt="Preview of uploaded image"
                             className="max-w-full max-h-64 mx-auto rounded-lg shadow-md"
                         />
                         <button

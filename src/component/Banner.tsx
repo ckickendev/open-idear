@@ -33,7 +33,7 @@ export default function Banner() {
                     <img
                         className="w-full"
                         src={"/banner/banner_standard.png"} //src === "/upload/catalog/1644916867663.jpg"
-                        alt='image'
+                        alt='image banner open idear'
                     />
                 </div>
                 <div className="absolute top-1 flex flex-col flex-nowrap justify-center items-center  gap-4 max-w-screen-xl mx-auto w-full h-full">

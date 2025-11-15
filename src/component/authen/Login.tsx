@@ -64,7 +64,7 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
         </button>
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
             <div className="flex items-center justify-center">
-                <Image src="/logo.png" alt="open-idear" width={152} height={100} />
+                <Image src="/logo.png" alt="open-idear logo image" width={152} height={100} />
             </div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                 {t("component.authen.login.title")}
@@ -146,21 +146,21 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
                             <a href="#"
                                 className="h-full w-full flex items-center justify-center px-8 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                                 <img className="h-5 w-5" src="https://www.svgrepo.com/show/512120/facebook-176.svg"
-                                    alt="" />
+                                    alt="facebook logo image" />
                             </a>
                         </div>
                         <div className="h-full">
                             <a href="#"
                                 className="h-full w-full flex items-center justify-center px-8 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                                 <img className="h-5 w-5" src="https://www.svgrepo.com/show/513008/twitter-154.svg"
-                                    alt="" />
+                                    alt="twitter logo image" />
                             </a>
                         </div>
                         <div className="h-full">
                             <a href="#"
                                 className="h-full w-full flex items-center justify-center px-8 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                                 <img className="h-6 w-6" src="https://www.svgrepo.com/show/506498/google.svg"
-                                    alt="" />
+                                    alt="google logo image" />
                             </a>
                         </div>
                     </div>
