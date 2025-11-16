@@ -48,7 +48,7 @@ export default function Header() {
   return <header className='flex border-b border-gray-300 py-3 px-4 sm:px-10 bg-white tracking-wide relative z-50'>
     <div className='flex flex-row flex-nowrap items-center gap-4 max-w-screen-xl mx-auto w-full'>
       <div className="flex items-center flex-1">
-        <a href="/" className="max-sm:hidden"><img src={process.env.NEXT_CLOUDINARY_LOGO_URL} alt="Image icon for open idear project" className='w-[134px]' />
+        <a href="/" className="max-sm:hidden"><img src={process.env.NEXT_PUBLIC_CLOUDINARY_LOGO_URL} alt="Image icon for open idear project" className='w-[134px]' />
         </a>
         <h1 className="text-2xl font-semibold text-gray-900 flex items-center justify-center">
           <span className="text-4xl text-blue-600 font-bold">Open</span>
@@ -65,11 +65,11 @@ export default function Header() {
             <a href="#"><img src="https://readymadeui.com/readymadeui.svg" alt="logo for readymadeui" className='w-36' />
             </a>
           </li>
-          <li className='max-lg:border-b max-lg:py-3 px-3'>
+          {/* <li className='max-lg:border-b max-lg:py-3 px-3'>
             <Link href='/' className='font-medium lg:hover:text-blue-700 text-slate-900 block text-[15px]'>{t('component.header.home')}</Link>
-          </li>
+          </li> */}
           <li className='max-lg:border-b max-lg:py-3 px-3'>
-            <Link href='/course' className='font-medium lg:hover:text-blue-700 text-slate-900 block text-[15px]'>{t('component.header.course')}</Link>
+            <Link href='/course' className='text-white bg-gradient-to-br from-pink-500 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800 font-medium rounded-md text-sm px-4 py-2.5 text-center leading-5 border-'>{t('component.header.course')}</Link>
           </li>
           
         </ul>
@@ -88,7 +88,7 @@ export default function Header() {
         </form>
         {currentUser?._id ? <Profile /> :
           <div className="flex flex-row">
-            <button type="button" className="cursor-pointer focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-xl text-sm px-5 py-2.5 m-2  dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900" onClick={() => {
+            <button type="button" className="cursor-pointer text-white focus:outline-none text-white  bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-xl text-sm px-5 py-2.5 m-2  dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900" onClick={() => {
               setIsAuthenFromDisplay(true)
               setStateAuthen(2);
             }}>{t('component.header.getstarted')}</button>
