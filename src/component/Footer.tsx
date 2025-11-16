@@ -36,11 +36,11 @@ export default function Footer() {
                 <p className="text-base font-bold tracking-wide text-gray-900">{t('component.footer.ava')}</p>
                 <div className="flex items-center gap-1 px-2">
                     <a href="#" className="w-full">
-                        <img src="https://mcqmate.com/public/images/icons/playstore.svg" alt="Playstore Button"
+                        <img src="https://mcqmate.com/public/images/icons/playstore.svg" alt="Playstore Button OpenIdear"
                             className="h-10" />
                     </a>
                     <a className="w-full" href="https://www.youtube.com/channel/UCo8tEi6SrGFP8XG9O0ljFgA">
-                        <img src="https://mcqmate.com/public/images/icons/youtube.svg" alt="Youtube Button"
+                        <img src="https://mcqmate.com/public/images/icons/youtube.svg" alt="Youtube Button OpenIdear"
                             className="h-28" />
                     </a>
                 </div>

@@ -131,7 +131,7 @@ export default async function PostLists({
           </div>
 
           <div className="mb-4">
-            <h1 className="text-2xl mb-6 font-bold text-red-700">Related Topics</h1>
+            <p className="text-2xl mb-6 font-bold text-red-700">Related Topics</p>
 
             {randomTopic && randomTopic.length > 0 ? (
               <div className="flex flex-wrap gap-4">

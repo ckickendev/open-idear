@@ -573,7 +573,7 @@ export default function CreatePost() {
                 {previewMode ? (
                   <div className="prose max-w-none preview-container">
 
-                    <h1 className="text-3xl font-bold mb-6">{title}</h1>
+                    <p className="text-3xl font-bold mb-6">{title}</p>
                     {editor && (
                       <div dangerouslySetInnerHTML={{ __html: editor.getHTML() }} />
                     )}
