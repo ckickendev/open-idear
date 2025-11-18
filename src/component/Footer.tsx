@@ -1,6 +1,7 @@
 'use client';
 import { useTranslation } from "@/app/hook/useTranslation";
 import Logo from "./common/Logo";
+import Image from "next/image";
 
 export default function Footer() {
     const { t } = useTranslation();
@@ -36,12 +37,10 @@ export default function Footer() {
                 <p className="text-base font-bold tracking-wide text-gray-900">{t('component.footer.ava')}</p>
                 <div className="flex items-center gap-1 px-2">
                     <a href="#" className="w-full">
-                        <img src="https://mcqmate.com/public/images/icons/playstore.svg" alt="Playstore Button OpenIdear"
-                            className="h-10" />
+                        <Image src="https://mcqmate.com/public/images/icons/appstore.svg" alt="Appstore Button OpenIdear" width={100} height={40} />
                     </a>
                     <a className="w-full" href="https://www.youtube.com/channel/UCo8tEi6SrGFP8XG9O0ljFgA">
-                        <img src="https://mcqmate.com/public/images/icons/youtube.svg" alt="Youtube Button OpenIdear"
-                            className="h-28" />
+                        <Image src="https://mcqmate.com/public/images/icons/youtube.svg" alt="Youtube Button OpenIdear" width={112} height={112} />
                     </a>
                 </div>
                 <p className="text-base font-bold tracking-wide text-gray-900">{t('component.footer.contact')}</p>

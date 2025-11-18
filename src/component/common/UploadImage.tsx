@@ -1,4 +1,5 @@
 import { CldUploadWidget } from 'next-cloudinary';
+import Image from 'next/image';
 import { useState } from 'react';
 
 
@@ -34,7 +35,8 @@ const UploadImage = () => {
                                 </label>
                                 <button onClick={handleOnClick} id="upload" className="hidden" />
                             </div>
-                            <img src={resource} width={100} height={100} />
+                            
+                            {resource && <Image src={resource} alt="Uploaded image" width={100} height={100} />}
                         </>
 
                     );

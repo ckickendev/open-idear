@@ -10,6 +10,7 @@ import { useTranslation } from "@/app/hook/useTranslation";
 import LanguageSelector from "./LanguageSelector";
 import Link from "next/link";
 import { useLanguageStore } from "@/store/useLanguage";
+import Image from "next/image";
 
 export default function Header() {
   const { t } = useTranslation();
@@ -48,7 +49,10 @@ export default function Header() {
   return <header className='flex border-b border-gray-300 py-3 px-4 sm:px-10 bg-white tracking-wide relative z-50'>
     <div className='flex flex-row flex-nowrap items-center gap-4 max-w-screen-xl mx-auto w-full'>
       <div className="flex items-center flex-1">
-        <a href="/" className="max-sm:hidden"><img src={process.env.NEXT_PUBLIC_CLOUDINARY_LOGO_URL} alt="Image icon for open idear project" className='w-[134px]' />
+        <a href="/" className="max-sm:hidden">
+          {process.env.NEXT_PUBLIC_CLOUDINARY_LOGO_URL && (
+            <Image src={process.env.NEXT_PUBLIC_CLOUDINARY_LOGO_URL} alt="Image icon for open idear project" width={134} height={50} />
+          )}
         </a>
         <h1 className="text-2xl font-semibold text-gray-900 flex items-center justify-center">
           <span className="text-4xl text-blue-600 font-bold">Open</span>
@@ -62,7 +66,8 @@ export default function Header() {
         <ul
           className='lg:flex lg:ml-14 lg:gap-x-5 max-lg:space-y-3 max-lg:fixed max-lg:bg-white max-lg:w-1/2 max-lg:min-w-[300px] max-lg:top-0 max-lg:left-0 max-lg:p-6 max-lg:h-full max-lg:shadow-md max-lg:overflow-auto z-50'>
           <li className='mb-6 hidden max-lg:block'>
-            <a href="#"><img src="https://readymadeui.com/readymadeui.svg" alt="logo for readymadeui" className='w-36' />
+            <a href="#">
+              <Image src="https://readymadeui.com/readymadeui.svg" alt="logo for readymadeui" width={144} height={36} />
             </a>
           </li>
           {/* <li className='max-lg:border-b max-lg:py-3 px-3'>

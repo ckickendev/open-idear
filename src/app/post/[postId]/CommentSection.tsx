@@ -6,6 +6,7 @@ import { getHeadersToken } from '@/api/authentication';
 import { Heart } from 'lucide-react';
 import authenticationStore from '@/store/AuthenticationStore';
 import Link from 'next/link';
+import Image from 'next/image';
 
 type Comment = {
   _id: string;
@@ -245,11 +246,7 @@ function CommentItem({ comment, onReply, onVote, onLoadMoreReplies }: CommentIte
     <div className={`comment-item border-l-2 border-gray-200 pl-4 mb-4 ${comment.level > 0 ? 'ml-8' : ''}`}>
       {/* Comment header */}
       <div className="comment-header flex items-center gap-3 mb-2">
-        <img 
-          src={comment.author.avatar || '/default-avatar.png'} 
-          alt={comment.author.username}
-          className="w-8 h-8 rounded-full"
-        />
+        <Image src={comment.author.avatar || '/default-avatar.png'} alt={comment.author.username} width={32} height={32} className="w-8 h-8 rounded-full" />
         <span className="font-semibold text-gray-800">
           <Link href={`/profile/${comment?.author?._id}`}>
             {comment.author.username}

@@ -2,6 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
 
 interface Article {
   id: number;
@@ -107,7 +108,7 @@ const Guide: React.FC = () => {
               <Link href={`/article/${article.slug}`}>
                 <div className="group">
                   <div className="bg-gray-200 h-40 w-full mb-3 overflow-hidden">
-                    <img src={article.image} className="h-full" />
+                    <Image src={article.image} alt={article.title} width={256} height={160} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     {/* Placeholder for image - in production, use Next.js Image component */}
                     <div className="h-full w-full bg-gray-300"></div>
                   </div>
