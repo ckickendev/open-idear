@@ -1,8 +1,8 @@
-import type { NextConfig } from 'next'
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   sassOptions: {
-    implementation: 'sass-embedded',
+    implementation: "sass-embedded",
   },
   reactStrictMode: true,
   eslint: {
@@ -13,7 +13,16 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
-        port: '',
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "res.cloudinary.com",
         pathname: "/**",
       },
       {
@@ -23,7 +32,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+};
 
-}
-
-export default nextConfig
+export default nextConfig;

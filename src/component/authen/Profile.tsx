@@ -53,7 +53,7 @@ export default function Profile() {
                     <div className="p-4 border-b border-gray-700">
                         <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
-                                <Image src={userInfo.avatar} alt="Profile avatar image" fill={true} className="w-full h-full object-cover" />
+                                <Image src={userInfo.avatar} alt="Profile avatar image" width={10} height={10} className="w-full h-full object-cover" />
                             </div>
                             <div>
                                 <p className="text-xl font-medium">{userInfo.username}</p>

@@ -379,7 +379,7 @@ const UserList = () => {
                                         <div className="flex-shrink-0 h-10 w-10">
                                             {user.avatar ? (
                                                 <Image 
-                                                    src={user.avatar} alt="avatar user" className="h-10 w-10 rounded-full" />
+                                                    src={user.avatar} alt="avatar user" width={40} height={40} className="h-10 w-10 rounded-full" />
                                             ) : (
                                                 <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                                                     <User className="h-6 w-6 text-gray-600" />
@@ -474,7 +474,7 @@ const UserList = () => {
                             <div className="flex items-start gap-3 mb-3">
                                 <div className="flex-shrink-0">
                                     {user.avatar ? (
-                                        <Image src={user.avatar} alt="avatar of user" className="h-12 w-12 rounded-full" />
+                                        <Image src={user.avatar} alt="avatar of user management" width={48} height={48} className="h-12 w-12 rounded-full" />
                                     ) : (
                                         <div className="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center">
                                             <User className="h-8 w-8 text-gray-600" />
