@@ -1,7 +1,7 @@
 import Banner from "@/component/Banner";
 import Guide from "@/component/Guide/Guide";
 import HotPost from "@/component/hot_post/HotPost";
-import LastestFeature from "@/component/lastest_feature/LastestFeature";
+import LastestFeature from "@/component/recently_post/LastestFeature";
 import Head from "next/head";
 
 export default function Home() {
