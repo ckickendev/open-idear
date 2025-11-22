@@ -14,7 +14,7 @@ import ArticleRightSide from "./ArticleRightSide";
 const LastestFeature = () => {
   const { t } = useTranslation();
   const [selectFeature, setSelectFeature] = useState(0);
-  const [allCategory, setAllCategory] = useState<any[]>([ {name: "Tất cả", slug: 'all'} ]);
+  const [allCategory, setAllCategory] = useState<any[]>([{ name: "Tất cả", slug: 'all' }]);
   const [allPosts, setAllPosts] = useState<PostInterface[]>([]);
 
   const isLoading = loadingStore(state => state.isLoading);
@@ -49,25 +49,25 @@ const LastestFeature = () => {
     setSelectFeature(index);
 
     try {
-        changeLoad();
-        const token = localStorage.getItem("access_token");
-        if (token) {
-          const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getRecentlyDataByFeatures`, {
-            params: {
-              feature: allCategory[index].slug,
-            },
-          });
-          if (response.status === 200) {
-            console.log("recently data: ", response.data.recentlyData.posts, response.data.recentlyData.categories);
-            setAllPosts(response.data.recentlyData.posts);
-          }
+      changeLoad();
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getRecentlyDataByFeatures`, {
+          params: {
+            feature: allCategory[index].slug,
+          },
+        });
+        if (response.status === 200) {
+          console.log("recently data onSelectFeature: ", response.data.recentlyData.posts, response.data.recentlyData.categories);
+          setAllPosts(response.data.recentlyData.posts);
         }
-      } catch (error: any) {
-        // setType('error');
-        // setMessage(error.response?.data?.message || 'Failed to fetch marked posts');
-      } finally {
-        changeLoad();
       }
+    } catch (error: any) {
+      // setType('error');
+      // setMessage(error.response?.data?.message || 'Failed to fetch marked posts');
+    } finally {
+      changeLoad();
+    }
   }
 
   const renderFeature = () => {
@@ -83,18 +83,6 @@ const LastestFeature = () => {
         >
           {category.name}
         </button>
-      );
-    });
-  };
-
-  const renderArticle = () => {
-    return allPosts.map((data: PostInterface, index: number) => {
-      console.log("data in render article: ", data);
-      return (
-        <Article
-          key={index}
-          postData={data}
-        />
       );
     });
   };
@@ -120,18 +108,27 @@ const LastestFeature = () => {
         </div>
 
         {/* Main Featured Content */}
-          <div className="flex gap-4 mb-8 ">
-            <MainFeature postData={allPosts[0]} />
+        <div className="flex gap-4 mb-8 ">
+          <MainFeature postData={allPosts[0]} />
 
-            <div className="w-1/5">
-              <ArticleRightSide
-                postData={allPosts[1]}
-              />
-            </div>
+          <div className="w-1/5">
+            <ArticleRightSide
+              postData={allPosts[1]}
+            />
           </div>
-
-          <div className="grid grid-cols-5 gap-4">{renderArticle()}</div>
         </div>
+
+        <div className="grid grid-cols-5 gap-4">
+          {allPosts.map((data: PostInterface, index: number) => {
+            return (
+              <Article
+                key={index}
+                postData={data}
+              />
+            );
+          })}
+        </div>
+      </div>
 
     </>
   );

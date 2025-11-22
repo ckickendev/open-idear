@@ -5,7 +5,6 @@ import { PostInterface } from "@/app/profile/[profileId]/page";
 import { calculateGapTime } from "@/common/datetime";
 
 const Article = ({ postData }: { postData: PostInterface }) => {
-  console.log("post data in article: ", postData);
 
   return (
     <>
