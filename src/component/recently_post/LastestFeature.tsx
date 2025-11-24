@@ -52,11 +52,7 @@ const LastestFeature = () => {
       changeLoad();
       const token = localStorage.getItem("access_token");
       if (token) {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getRecentlyDataByFeatures`, {
-          params: {
-            feature: allCategory[index].slug,
-          },
-        });
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getRecentlyDataByFeatures?feature=${allCategory[index].slug}`);
         if (response.status === 200) {
           console.log("recently data onSelectFeature: ", response.data.recentlyData.posts, response.data.recentlyData.categories);
           setAllPosts(response.data.recentlyData.posts);
@@ -112,14 +108,12 @@ const LastestFeature = () => {
           <MainFeature postData={allPosts[0]} />
 
           <div className="w-1/5">
-            <ArticleRightSide
-              postData={allPosts[1]}
-            />
+            {allPosts.length > 1 && <ArticleRightSide postData={allPosts[1]} />}
           </div>
         </div>
 
         <div className="grid grid-cols-5 gap-4">
-          {allPosts.map((data: PostInterface, index: number) => {
+          {allPosts.length > 0 && allPosts.slice(2).map((data: PostInterface, index: number) => {
             return (
               <Article
                 key={index}
