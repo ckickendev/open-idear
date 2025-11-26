@@ -6,16 +6,16 @@ import PostSidebarActions from "./PostSideBarActions";
 export default async function PostLists({
   params,
 }: {
-  params: Promise<{ postId: string }>;
+  params: Promise<{ slug: string }>;
 }) {
   // Await params before destructuring
-  const { postId } = await params;
+  const { slug } = await params;
 
-  const getPost = async (id: string) => {
+  const getPost = async (slug: string) => {
     try {
       // Using native fetch with Next.js optimizations
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByID/${id}`,
+        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostBySlug/${slug}`,
         {
           // Next.js 13+ fetch options
           next: { revalidate: 3600 }, // Cache for 1 hour
@@ -33,7 +33,7 @@ export default async function PostLists({
       return data.post;
     } catch (error) {
       console.error("Error fetching post:", error);
-      throw new Error(`Failed to fetch post with ID: ${id}`);
+      throw new Error(`Failed to fetch post with slug: ${slug}`);
     }
   };
 
@@ -56,7 +56,7 @@ export default async function PostLists({
     }
   };
 
-  const postData = await getPost(postId);
+  const postData = await getPost(slug);
   const randomTopic = await getRandomTopic();
 
   if (!postData) {
@@ -156,7 +156,7 @@ export default async function PostLists({
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8 bg-white">
-        <CommentSection postId={postId} />
+        <CommentSection postId={postData._id} />
       </div>
     </>
 
