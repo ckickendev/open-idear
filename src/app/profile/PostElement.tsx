@@ -67,7 +67,7 @@ const PostElement = ({post}: {post: PostInterface}) => {
                         </button>
                     </div>
 
-                    <a href={`/post/${post._id}`} className="block hover:underline">
+                    <a href={`/post/${post.slug}`} className="block hover:underline">
                         <h2 className="text-lg font-bold leading-tight mb-2">{post.title}</h2>
                     </a>
                     {post.text && (

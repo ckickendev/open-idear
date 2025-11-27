@@ -104,7 +104,7 @@ const SeriesElement = ({ series }: any) => {
                                 className="w-full text-lg font-bold leading-tight mb-2 border border-gray-300 rounded p-1"
                             />
                         ) : (
-                            <a href={`./post/${series._id}`} className="block hover:underline">
+                            <a href={`./series/${series.slug}`} className="block hover:underline">
                                 <h2 className="text-lg font-bold leading-tight mb-2">{series.title}</h2>
                             </a>
                         )}

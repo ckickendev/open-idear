@@ -1,7 +1,8 @@
 import { useTranslation } from "@/app/hook/useTranslation";
 import Logo from "../common/Logo";
+import { PostInterface } from "@/app/profile/[profileId]/page";
 
-const MainFeature = ({ postData }: { postData: any }) => {
+const MainFeature = ({ postData }: { postData: PostInterface }) => {
     const { t } = useTranslation();
     return <div className="flex w-4/5 border rounded border-gray-300 p-4 h-[400px]">
         <div className="h-full w-3/5 bg-blue-400 rounded overflow-hidden relative">
@@ -25,7 +26,9 @@ const MainFeature = ({ postData }: { postData: any }) => {
             </div>
 
             <h2 className="text-2xl font-bold text-gray-800 mb-2 cursor-pointer hover:underline">
-                {postData?.title}
+                <a href={`/post/${postData?.slug}`}>
+                    {postData?.title}
+                </a>
             </h2>
 
             <div className="flex items-center text-sm text-gray-600 mb-4">

@@ -23,9 +23,15 @@ const Article = ({ postData }: { postData: PostInterface }) => {
         <div className="mt-2 flex flex-col justify-between h-20">
           <div className="flex flex-col">
             <div className="text-blue-600 font-semibold text-sm cursor-pointer hover:underline">
-              {postData?.category?.name || "Uncategorized"}
+              <a href={`/posts/category/${postData?.category?.slug}`}>
+                {postData?.category?.name || "Uncategorized"}
+              </a>
             </div>
-            <h3 className="font-bold text-sm/5 cursor-pointer hover:underline line-height: 2 line-clamp-2">{postData.title}</h3>
+            <h3 className="font-bold text-sm/5 cursor-pointer hover:underline line-height: 2 line-clamp-2">\
+              <a href={`/post/${postData?.slug}`}>
+                {postData.title}
+              </a>
+            </h3>
           </div>
           <div className="flex items-center text-xs text-gray-600 dark:text-white mt-1 float-bottom">
             <span className="font-medium cursor-pointer hover:underline">{postData.author.username}</span>
@@ -33,7 +39,7 @@ const Article = ({ postData }: { postData: PostInterface }) => {
             <span>{calculateGapTime(postData.createdAt)}</span>
           </div>
         </div>
-      </div>
+      </div >
     </>
   );
 };

@@ -281,7 +281,7 @@ const Post = () => {
                                     <td className="px-3 sm:px-6 py-4">
                                         <div className="space-y-1">
                                             <div className="text-sm font-medium text-gray-900">
-                                                <Link href={`/post/${post._id}`} className="hover:underline">
+                                                <Link href={`/post/${post.slug}`} className="hover:underline">
                                                     {post.title}
                                                 </Link>
                                             </div>
@@ -359,7 +359,7 @@ const Post = () => {
                                 <div className="flex justify-between items-start mb-3">
                                     <div className="flex-1">
                                         <div className="text-sm font-semibold text-gray-900 mb-1">
-                                            <Link href={`/post/${post._id}`} className="hover:underline">
+                                            <Link href={`/post/${post.slug}`} className="hover:underline">
                                                 #{startIndex + index + 1} - {post.title}
                                             </Link>
                                         </div>

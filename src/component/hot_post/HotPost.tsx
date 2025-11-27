@@ -19,6 +19,7 @@ interface Post {
   readtime: string;
   author: any;
   likes?: [any];
+  slug: string;
   createdAt: string;
 }
 
@@ -67,7 +68,7 @@ const HotPost: React.FC = () => {
           >
             <div className="relative h-40 w-full">
               {/* Next.js Image component would be used here with actual images */}
-              <a href={`/post/${article._id}`} className="block h-full">
+              <a href={`/post/${article.slug}`} className="block h-full">
                 <div className="absolute inset-0 bg-gray-200 ">
                   <Image src={article.image?.url} alt={article.title} layout="fill" objectFit="cover" />
                 </div>
@@ -85,7 +86,7 @@ const HotPost: React.FC = () => {
                 </button>
               </div>
 
-              <a className="font-medium text-base mb-4 line-clamp-2 cursor-pointer hover:underline" href={`/post/${article._id}`}>
+              <a className="font-medium text-base mb-4 line-clamp-2 cursor-pointer hover:underline" href={`/post/${article.slug}`}>
                 {article.title}
               </a>
 
