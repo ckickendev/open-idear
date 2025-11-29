@@ -9,21 +9,21 @@ const Article = ({ postData }: { postData: PostInterface }) => {
   return (
     <>
       <div className="col-span-1 h-full border-b-1 border-gray-300 pt-4 pb-4">
-        <div className="h-32 bg-gray-200 rounded overflow-hidden relative">
+        <div className="h-32 bg-gray-200 rounded overflow-hidden relative group">
           <div className="absolute top-2 right-2 p-1 rounded">
             <Logo />
           </div>
           <img
             src={postData?.image?.url || "idea.jpg"}
-            alt="Roulette wheel"
-            className="w-full h-full object-cover"
+            alt={postData?.title || "Article image"}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
         </div>
 
         <div className="mt-2 flex flex-col justify-between h-20">
           <div className="flex flex-col">
             <div className="text-blue-600 font-semibold text-sm cursor-pointer hover:underline">
-              <a href={`/posts/category/${postData?.category?.slug}`}>
+              <a href={`/category/${postData?.category?.slug}`}>
                 {postData?.category?.name || "Uncategorized"}
               </a>
             </div>

@@ -5,14 +5,14 @@ import { PostInterface } from "@/app/profile/[profileId]/page";
 const MainFeature = ({ postData }: { postData: PostInterface }) => {
     const { t } = useTranslation();
     return <div className="flex w-4/5 border rounded border-gray-300 p-4 h-[400px]">
-        <div className="h-full w-3/5 bg-blue-400 rounded overflow-hidden relative">
+        <div className="h-full w-3/5 bg-blue-400 rounded overflow-hidden relative group">
             <div className="absolute top-2 right-2 p-1 rounded">
                 <Logo />
             </div>
             <img
                 src={postData?.image?.url || "https://www.techopedia.com/wp-content/uploads/2025/04/What-Makes-an-iGaming-App-Great-in-2025-Expert-Insights.webp"}
-                alt="Slot machine in futuristic setting"
-                className="w-full h-full object-cover"
+                alt={postData?.title || "Main feature image"}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
         </div>
         <div className="m-8 w-2/5">
@@ -22,7 +22,9 @@ const MainFeature = ({ postData }: { postData: PostInterface }) => {
             </div>
 
             <div className="text-blue-600 font-semibold text-sm mb-2 cursor-pointer hover:underline">
-                {postData?.category?.name || "Uncategorized"}
+                <a href={`/category/${postData?.category?.slug}`}>
+                    {postData?.category?.name || "Uncategorized"}
+                </a>
             </div>
 
             <h2 className="text-2xl font-bold text-gray-800 mb-2 cursor-pointer hover:underline">

@@ -2,7 +2,7 @@ import { CldUploadWidget } from 'next-cloudinary';
 import Image from 'next/image';
 import { useState } from 'react';
 
-
+// remove this component, just document
 const UploadImage = () => {
     const [resource, setResource] = useState<string | undefined>(undefined);
 
