@@ -99,7 +99,7 @@
       "number": "Number",
       "name": "Name",
       "description": "Discription",
-      "numberPost": "Number of posts",
+      "background_image": "Background",
       "createDate": "Created date",
       "action": "Action",
       "previous": "Previous",

@@ -3,17 +3,17 @@ import convertDate from "@/common/datetime";
 import alertStore from "@/store/AlertStore";
 import loadingStore from "@/store/LoadingStore";
 import axios from "axios";
-import { Edit, Filter, Plus, Search, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Edit, Filter, Plus, Search, Trash2, X, ChevronLeft, ChevronRight, Eye, ImageUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "../hook/useTranslation";
-import { log } from "console";
+import ImageUpload from "../create/ImageUpload";
 
 type CategoryType = {
     _id: string;
     name: string;
     slug: string;
     description: string;
-    postCount: number;
+    background_image: string;
     createdAt: string;
 };
 
@@ -42,7 +42,7 @@ const Category = () => {
                 if (token) {
                     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                     const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category`);
-
+                    console.log('Fetched categories:', response.data.categories);
                     setCategories(response.data.categories);
                 } else {
                     setType('error');
@@ -293,7 +293,7 @@ const Category = () => {
                                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.number')}</th>
                                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.name')}</th>
                                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">{t('management.category.description')}</th>
-                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.numberPost')}</th>
+                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.background_image')}</th>
                                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">{t('management.category.createDate')}</th>
                                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.action')}</th>
                             </tr>
@@ -318,8 +318,10 @@ const Category = () => {
                                         <div className="text-sm text-gray-600 max-w-xs truncate">{category.description}</div>
                                     </td>
                                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            {category.postCount} bài
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-blue-800">
+                                            <a href={`${category.background_image || `background/category/${category._id}.png`}`} target="_blank" rel="noopener noreferrer">
+                                                <Eye size={14} className="mr-1" />
+                                            </a>
                                         </span>
                                     </td>
                                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
@@ -383,8 +385,10 @@ const Category = () => {
                                     </div>
                                 </div>
                                 <div className="flex justify-between items-center pt-3 border-t border-gray-300">
-                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        {category.postCount} bài viết
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-blue-800">
+                                        <a href={`${category.background_image}`} target="_blank" rel="noopener noreferrer">
+                                            <Eye size={14} className="mr-1" />
+                                        </a>
                                     </span>
                                 </div>
                             </div>
