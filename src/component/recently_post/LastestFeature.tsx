@@ -113,7 +113,7 @@ const LastestFeature = () => {
         </div>
 
         <div className="grid grid-cols-5 gap-4">
-          {allPosts.length > 0 && allPosts.slice(2).map((data: PostInterface, index: number) => {
+          {allPosts.length > 0 && allPosts.slice(2 , 7).map((data: PostInterface, index: number) => {
             return (
               <Article
                 key={index}
