@@ -178,13 +178,13 @@ function CommentSection({ postId }: { postId: string }) {
         <span className="font-semibold">Sắp xếp theo:</span>
         <button 
           onClick={() => setSortBy('hot')}
-          className={`px-3 py-1 rounded ${sortBy === 'hot' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          className={`px-3 cursor-pointer py-1 rounded ${sortBy === 'hot' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
         >
           Hot nhất
         </button>
         <button 
           onClick={() => setSortBy('new')}
-          className={`px-3 py-1 rounded ${sortBy === 'new' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          className={`px-3 cursor-pointer py-1 rounded ${sortBy === 'new' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
         >
           Mới nhất
         </button>

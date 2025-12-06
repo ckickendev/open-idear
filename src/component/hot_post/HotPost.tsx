@@ -70,7 +70,7 @@ const HotPost: React.FC = () => {
               {/* Next.js Image component would be used here with actual images */}
               <a href={`/post/${article.slug}`} className="block h-full">
                 <div className="absolute inset-0 bg-gray-200 ">
-                  <Image src={article.image?.url} alt={article.title} layout="fill" objectFit="cover" />
+                  <Image src={article.image?.url} alt={article.title} fill sizes="23vw" style={{ objectFit: "cover" }} />
                 </div>
               </a>
             </div>

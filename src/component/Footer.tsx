@@ -37,10 +37,13 @@ export default function Footer() {
                 <p className="text-base font-bold tracking-wide text-gray-900">{t('component.footer.ava')}</p>
                 <div className="flex items-center gap-1 px-2">
                     <a href="#" className="w-full">
-                        <Image src="https://mcqmate.com/public/images/icons/appstore.svg" alt="Appstore Button OpenIdear" width={100} height={40} />
+                        <Image src="https://upload.wikimedia.org/wikipedia/commons/6/67/App_Store_%28iOS%29.svg" alt="Appstore Button OpenIdear" width={40} height={40} />
                     </a>
                     <a className="w-full" href="https://www.youtube.com/channel/UCo8tEi6SrGFP8XG9O0ljFgA">
-                        <Image src="https://mcqmate.com/public/images/icons/youtube.svg" alt="Youtube Button OpenIdear" width={112} height={112} />
+                        <Image src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" alt="Youtube Button OpenIdear" width={40} height={40} />
+                    </a>
+                    <a className="w-full" href="https://www.facebook.com/openidear">
+                        <Image src="https://upload.wikimedia.org/wikipedia/commons/f/fb/Facebook_icon_2013.svg" alt="Facebook Button OpenIdear" width={40} height={40} />
                     </a>
                 </div>
                 <p className="text-base font-bold tracking-wide text-gray-900">{t('component.footer.contact')}</p>
