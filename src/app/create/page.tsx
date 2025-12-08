@@ -586,9 +586,9 @@ export default function CreatePost() {
               </div>
               }
 
-              <div className="fixed w-full bg-white shadow-[0_3px_10px_rgb(0,0,0,0.2)] flex justify-between bottom-2 flex flex-col z-50 md:flex-row">
-                <div className="w-full p-4 flex items-left">
-                  <div className="flex gap-2 p-4">
+              <div className="fixed w-full bg-white shadow-[0_3px_10px_rgb(0,0,0,0.2)] flex justify-between bottom-0 flex flex-col z-50 md:flex-row">
+                <div className="w-full px-4 flex items-left h-16">
+                  <div className="flex items-center gap-2 justify-center px-2">
                     {modeHTML || <button
                       onClick={() => setPreviewMode(!previewMode)}
                       className="whitespace-nowrap px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-md transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
@@ -596,7 +596,7 @@ export default function CreatePost() {
                       {previewMode ? 'Return to edit' : 'Click to Preview'}
                     </button>}
                   </div>
-                  <div className="flex items-center gap-2 justify-center">
+                  <div className="flex items-center gap-2 justify-center px-2">
                     <button
                       onClick={() => {
                         syncWithEditor();
@@ -619,37 +619,37 @@ export default function CreatePost() {
                   </div>
                 </div>
                 {title ?
-                  <div className='w-full p-4 flex justify-end'>
-                    <div className="p-4 gap-2">
+                  <div className='w-full px-2 flex justify-end h-16'>
+                    <div className="flex items-center gap-2 justify-center px-2">
                       <button
                         onClick={onPublicPage}
-                        className={`px-8 py-4 bg-green-600 hover:bg-green-700 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg ${isPublic ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        className={`px-8 py-4 min-w-40 bg-green-600 hover:bg-green-700 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg ${isPublic ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         disabled={isPublic}
                       >
                         Public
                       </button>
                     </div>
-                    <div className="p-4">
+                    <div className="flex items-center gap-2 justify-center px-2">
                       <button
                         onClick={savePost}
-                        className="whitespace-nowrap px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                        className="whitespace-nowrap px-8 py-4 min-w-40 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
                       >
                         Save Draft
                       </button>
                     </div>
                   </div>
                   :
-                  <div className='w-full p-4 flex justify-end'>
-                    <div className="p-4 gap-2">
+                  <div className='w-full px-2 flex justify-end h-16'>
+                    <div className="flex items-center gap-2 justify-center px-2">
                       <button
-                        className="px-8 py-4 bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
+                        className="px-8 py-4 min-w-40 bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
                       >
                         Public
                       </button>
                     </div>
-                    <div className="p-4" >
+                    <div className="flex items-center gap-2 justify-center px-2" >
                       <button
-                        className="whitespace-nowrap px-8 py-4 bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
+                        className="px-8 py-4 min-w-40 whitespace-nowrap bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
                       >
                         Save Draft
                       </button>
