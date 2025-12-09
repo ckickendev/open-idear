@@ -105,7 +105,7 @@ const LastestFeature = () => {
 
         {/* Main Featured Content */}
         <div className="flex gap-4 mb-8 ">
-          <MainFeature postData={allPosts[0]} />
+          {allPosts.length > 1 && <MainFeature postData={allPosts[0]} />}
 
           <div className="w-1/5">
             {allPosts.length > 1 && <ArticleRightSide postData={allPosts[1]} />}
@@ -113,7 +113,7 @@ const LastestFeature = () => {
         </div>
 
         <div className="grid grid-cols-5 gap-4">
-          {allPosts.length > 0 && allPosts.slice(2 , 7).map((data: PostInterface, index: number) => {
+          {allPosts.length > 0 && allPosts.slice(2, 7).map((data: PostInterface, index: number) => {
             return (
               <Article
                 key={index}

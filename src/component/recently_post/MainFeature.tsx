@@ -10,7 +10,7 @@ const MainFeature = ({ postData }: { postData: PostInterface }) => {
                 <Logo />
             </div>
             <img
-                src={postData?.image?.url || "https://www.techopedia.com/wp-content/uploads/2025/04/What-Makes-an-iGaming-App-Great-in-2025-Expert-Insights.webp"}
+                src={postData?.image?.url || "anh.jpg"}
                 alt={postData?.title || "Main feature image"}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
