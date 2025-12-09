@@ -35,6 +35,7 @@ import FileHandler from '@tiptap/extension-file-handler';
 import ImageUpload from './ImageUpload';
 import alertStore from '@/store/AlertStore';
 import Notification from '@/component/common/Notification';
+import { ButtonCyanToBlue, ButtonPinkToOrange, ButtonPurpleToBlue, ButtonPurpleToPink } from '@/component/common/ButtonCustom';
 
 export default function CreatePost() {
   const router = useRouter();
@@ -587,72 +588,67 @@ export default function CreatePost() {
               }
 
               <div className="fixed w-full bg-white shadow-[0_3px_10px_rgb(0,0,0,0.2)] flex justify-between bottom-0 flex flex-col z-50 md:flex-row">
-                <div className="w-full px-4 flex items-left h-16">
+                <div className="w-full px-4 flex items-left h-auto p-1">
                   <div className="flex items-center gap-2 justify-center px-2">
-                    {modeHTML || <button
-                      onClick={() => setPreviewMode(!previewMode)}
-                      className="whitespace-nowrap px-8 py-4 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-md transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
-                    >
-                      {previewMode ? 'Return to edit' : 'Click to Preview'}
-                    </button>}
+                    {modeHTML ||
+                      <ButtonPurpleToBlue
+                        onClick={() => setPreviewMode(!previewMode)}
+                        classAddition="whitespace-nowrap px-8 py-2 rounded-md"
+                        title={previewMode ? 'Return to edit' : 'Click to Preview'}
+                      />
+                    }
                   </div>
                   <div className="flex items-center gap-2 justify-center px-2">
-                    <button
+                    <ButtonPurpleToPink
                       onClick={() => {
                         syncWithEditor();
                         setShowHtmlEditor(!showHtmlEditor);
                         setModeHTML(!modeHTML);
                       }}
-                      className="px-8 py-4 bg-white from-blue-500 to-purple-500 text-gray-700 font-bold rounded-md shadow hover:bg-gray-100 transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
-                    >
-                      {showHtmlEditor ? 'Hide HTML' : 'Transfer to HTML Mode'}
-                    </button>
+                      classAddition="whitespace-nowrap px-8 py-2 rounded-md"
+                      title={showHtmlEditor ? 'Hide HTML' : 'HTML Mode'}
+                    />
 
                     {showHtmlEditor && (
-                      <button
-                        onClick={applyHtml}
-                        className="px-8 py-4 bg-blue-200 from-blue-500 to-purple-500 text-gray-700 font-bold rounded-md shadow hover:bg-blue-300 transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
-                      >
-                        Apply HTML
-                      </button>
+                      <ButtonPurpleToPink
+                        onClick={() => {
+                          applyHtml();
+                        }}
+                        classAddition="whitespace-nowrap px-8 py-2 rounded-md"
+                        title='Apply HTML'
+                      />
                     )}
                   </div>
                 </div>
                 {title ?
-                  <div className='w-full px-2 flex justify-end h-16'>
+                  <div className='w-full px-2 flex justify-end h-auto'>
                     <div className="flex items-center gap-2 justify-center px-2">
-                      <button
+                      <ButtonPinkToOrange
                         onClick={onPublicPage}
-                        className={`px-8 py-4 min-w-40 bg-green-600 hover:bg-green-700 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg ${isPublic ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        classAddition={`px-8 py-2 min-w-40 text-white ${isPublic ? 'opacity-50 cursor-not-allowed' : ''}`}
                         disabled={isPublic}
-                      >
-                        Public
-                      </button>
+                        title={'Public'}
+                      />
                     </div>
                     <div className="flex items-center gap-2 justify-center px-2">
-                      <button
-                        onClick={savePost}
-                        className="whitespace-nowrap px-8 py-4 min-w-40 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
-                      >
-                        Save Draft
-                      </button>
+                      <ButtonCyanToBlue onClick={savePost} classAddition="whitespace-nowrap px-8 py-2 rounded-md" title="Save Draft" />
                     </div>
                   </div>
                   :
-                  <div className='w-full px-2 flex justify-end h-16'>
+                  <div className='w-full px-2 flex justify-end h-auto'>
                     <div className="flex items-center gap-2 justify-center px-2">
-                      <button
-                        className="px-8 py-4 min-w-40 bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
-                      >
-                        Public
-                      </button>
+                      <ButtonCyanToBlue
+                        classAddition="px-8 py-2 min-w-40 text-white"
+                        disabled
+                        title="Published"
+                      />
                     </div>
                     <div className="flex items-center gap-2 justify-center px-2" >
-                      <button
-                        className="px-8 py-4 min-w-40 whitespace-nowrap bg-gray-300 from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-not-allowed" disabled
-                      >
-                        Save Draft
-                      </button>
+                      <ButtonCyanToBlue
+                        classAddition="px-8 py-2 rounded-md min-w-40 text-white"
+                        disabled
+                        title="Save Draft"
+                      />
                     </div>
                   </div>
 

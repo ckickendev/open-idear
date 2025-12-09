@@ -1,6 +1,7 @@
 import { useTranslation } from "@/app/hook/useTranslation";
 import Logo from "../common/Logo";
 import { PostInterface } from "@/app/profile/[profileId]/page";
+import { calculateGapTime } from "@/common/datetime";
 
 const MainFeature = ({ postData }: { postData: PostInterface }) => {
     const { t } = useTranslation();
@@ -38,7 +39,7 @@ const MainFeature = ({ postData }: { postData: PostInterface }) => {
                     {postData?.author?.username}
                 </span>
                 <span className="mx-2">•</span>
-                <span>{postData?.createdAt}</span>
+                <span>{calculateGapTime(postData?.createdAt)}</span>
             </div>
 
             <p className="text-gray-700 line-height: 4 line-clamp-4">
