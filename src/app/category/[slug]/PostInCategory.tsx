@@ -63,7 +63,7 @@ const PostInCategory = ({ allCategory, slug, totalPage }: { allCategory: any[], 
                             <img
                                 src={article?.image?.url}
                                 alt={article?.image?.description || article.title}
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                className="w-full h-full max-h-60 object-cover transition-transform duration-500 group-hover:scale-110"
                             />
                         </a>
                         <div className={`p-6 flex flex-col justify-center md:col-span-3`}>
