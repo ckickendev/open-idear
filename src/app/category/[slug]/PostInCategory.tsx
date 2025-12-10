@@ -1,5 +1,7 @@
 'use client';
 
+import Category from "@/app/management/Category";
+import { CategoryLinkCustom, PostLinkCustom } from "@/component/common/LinkCustom";
 import { PaginationComponent } from "@/component/common/PaginationComponent";
 import axios from "axios";
 import { Menu } from "lucide-react";
@@ -67,10 +69,14 @@ const PostInCategory = ({ allCategory, slug, totalPage }: { allCategory: any[], 
                             />
                         </a>
                         <div className={`p-6 flex flex-col justify-center md:col-span-3`}>
-                            <span className="text-yellow-600 text-xs font-semibold mb-2">{article?.category?.name}</span>
-                            <a href={`/post/${article.slug}`}>
-                                <h3 className="text-2xl font-bold mb-3">{article?.title}</h3>
-                            </a>
+                            <CategoryLinkCustom className="text-yellow-600 text-xs font-semibold mb-2"
+                                slug={article?.category?.slug}
+                                name={article?.category?.name}
+                            />
+                            <PostLinkCustom className={'text-2xl font-bold mb-4 hover:underline line-clamp-2'}
+                                slug={article?.slug}
+                                name={article?.title}
+                            />
                             <p className="text-gray-600 line-clamp-2 ">{article?.description}</p>
                         </div>
                     </div>
@@ -81,9 +87,10 @@ const PostInCategory = ({ allCategory, slug, totalPage }: { allCategory: any[], 
                 <h2 className="text-sm font-bold text-left mb-10">KEYWORDS</h2>
                 {allCategory.map((cat: any, idx: number) => (
                     <div key={idx} className="mb-6">
-                        <a href={`/category/${cat.slug}`} className="text-heading bg-gradient-to-r from-gray-200 to-green-200 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-200 focus:ring-4 focus:outline-none focus:ring-lime-200 dark:focus:ring-teal-700 font-medium rounded-base text-sm px-4 py-2.5 leading-5 mb-2 mr-2">
-                            {cat.name}
-                        </a>
+                        <CategoryLinkCustom className="text-heading bg-gradient-to-r from-gray-200 to-green-200 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-200 focus:ring-4 focus:outline-none focus:ring-lime-200 dark:focus:ring-teal-700 font-medium rounded-base text-sm px-4 py-2.5 leading-5 mb-2 mr-2"
+                            slug={cat.slug}
+                            name={cat.name}
+                        />
                     </div>
                 ))}
             </div>

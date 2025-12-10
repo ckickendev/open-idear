@@ -2,6 +2,7 @@ import HotPost from "@/component/hot_post/HotPost";
 import { Mail, Link } from "lucide-react";
 import CommentSection from "./CommentSection";
 import PostSidebarActions from "./PostSideBarActions";
+import { CategoryLinkCustom } from "@/component/common/LinkCustom";
 
 export default async function PostLists({
   params,
@@ -92,16 +93,15 @@ export default async function PostLists({
         <article className="max-w-4xl">
           {/* Category Tag */}
           <div className="mb-4">
-            <span className="inline-block px-3 py-1 text-xs font-semibold text-gray-800 bg-gray-200 rounded uppercase tracking-wide">
-              {postData.category ? postData.category.name : "Uncategorized"}
-            </span>
+            <CategoryLinkCustom className="inline-block px-3 py-1 text-xs font-semibold text-gray-800 bg-gray-200 rounded uppercase tracking-wide"
+              slug={postData.category ? postData.category.slug : "uncategorized"}
+              name={postData.category ? postData.category.name : "Uncategorized"}
+            />
           </div>
-
           {/* Headline */}
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6">
             {postData.title}
           </h1>
-
           {/* Subheadline */}
           <p className="text-xl text-gray-700 leading-relaxed mb-6">
             {postData.description}

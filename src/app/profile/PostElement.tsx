@@ -5,8 +5,9 @@ import authenticationStore from "@/store/AuthenticationStore";
 import axios from "axios";
 import alertStore from "@/store/AlertStore";
 import { getHeadersToken } from "@/api/authentication";
+import { CategoryLinkCustom } from "@/component/common/LinkCustom";
 
-const PostElement = ({post}: {post: PostInterface}) => {
+const PostElement = ({ post }: { post: PostInterface }) => {
     const currentUser = authenticationStore((state) => state.currentUser);
     const [bookmarked, setBookmarked] = useState(post.marked?.includes(currentUser?._id));
     const setType = alertStore((state) => state.setType);
@@ -51,9 +52,7 @@ const PostElement = ({post}: {post: PostInterface}) => {
                 <div className="mb-2">
                     <div className="flex justify-between items-center mb-2">
                         <div className="flex items-center space-x-2">
-                            <span className="text-xs font-semibold text-blue-600">
-                                {post.category.name}
-                            </span>
+                            <CategoryLinkCustom slug={post.category.slug} name={post.category.name} className="text-xs font-semibold text-yellow-600 hover:text-yellow-800" />
                             <span className="text-xs text-gray-500">{post.readtime ? post.readtime + " phút đọc" : "..."}</span>
                         </div>
                         <button

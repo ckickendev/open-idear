@@ -11,6 +11,7 @@ import { useTranslation } from "@/app/hook/useTranslation";
 import axios from "axios";
 import convertDate from "@/common/datetime";
 import Image from "next/image";
+import Link from "next/link";
 
 interface Post {
   _id: number;
@@ -68,11 +69,11 @@ const HotPost: React.FC = () => {
           >
             <div className="relative h-40 w-full">
               {/* Next.js Image component would be used here with actual images */}
-              <a href={`/post/${article.slug}`} className="block h-full">
+              <Link href={`/post/${article.slug}`} className="block h-full">
                 <div className="absolute inset-0 bg-gray-200 ">
                   <Image src={article.image?.url} alt={article.title} fill sizes="23vw" style={{ objectFit: "cover" }} />
                 </div>
-              </a>
+              </Link>
             </div>
 
             <div className="flex flex-1 flex-col p-3">

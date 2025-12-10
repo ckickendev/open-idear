@@ -2,6 +2,7 @@ import { useTranslation } from "@/app/hook/useTranslation";
 import Logo from "../common/Logo";
 import { PostInterface } from "@/app/profile/[profileId]/page";
 import { calculateGapTime } from "@/common/datetime";
+import { CategoryLinkCustom, PostLinkCustom } from "../common/LinkCustom";
 
 const MainFeature = ({ postData }: { postData: PostInterface }) => {
     const { t } = useTranslation();
@@ -23,15 +24,14 @@ const MainFeature = ({ postData }: { postData: PostInterface }) => {
             </div>
 
             <div className="text-blue-600 font-semibold text-sm mb-2 cursor-pointer hover:underline">
-                <a href={`/category/${postData?.category?.slug}`}>
-                    {postData?.category?.name || "Uncategorized"}
-                </a>
+                <CategoryLinkCustom className={'text-green-600'} slug={postData?.category?.slug} name={postData?.category?.name || "Uncategorized"} />
             </div>
 
             <h2 className="text-2xl font-bold text-gray-800 mb-2 cursor-pointer hover:underline">
-                <a href={`/post/${postData?.slug}`}>
-                    {postData?.title}
-                </a>
+                <PostLinkCustom className={'font-bold text-2xl cursor-pointer hover:underline line-height: 3 line-clamp-3'}
+                    slug={postData?.slug}
+                    name={postData?.title || 'title'}
+                />
             </h2>
 
             <div className="flex items-center text-sm text-gray-600 mb-4">

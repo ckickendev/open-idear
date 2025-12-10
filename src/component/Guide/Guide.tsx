@@ -71,7 +71,7 @@ const Guide: React.FC = () => {
       <div className="flex items-center justify-center mb-4">
         <div className="flex-1 h-px bg-gray-300"></div>
         <h2 className="text-2xl font-bold text-gray-800 px-6 uppercase">
-          SecurityWatch
+          Hot Series
         </h2>
         <div className="flex-1 h-px bg-gray-300"></div>
       </div>
@@ -79,10 +79,10 @@ const Guide: React.FC = () => {
       {/* See all link */}
       <div className="flex justify-center mb-8">
         <Link
-          href="/security-watch"
+          href="/series"
           className="text-sm text-gray-700 hover:underline"
         >
-          See All SecurityWatch Stories
+          Hot series updates every day. See all
         </Link>
       </div>
 

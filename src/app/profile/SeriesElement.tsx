@@ -5,6 +5,7 @@ import { getHeadersToken } from "@/api/authentication";
 import axios from "axios";
 import alertStore from "@/store/AlertStore";
 import ImageUpload from "../create/ImageUpload";
+import { SeriesLinkCustom } from "@/component/common/LinkCustom";
 
 const SeriesElement = ({ series }: any) => {
     console.log("data series", series);
@@ -104,9 +105,7 @@ const SeriesElement = ({ series }: any) => {
                                 className="w-full text-lg font-bold leading-tight mb-2 border border-gray-300 rounded p-1"
                             />
                         ) : (
-                            <a href={`./series/${series.slug}`} className="block hover:underline">
-                                <h2 className="text-lg font-bold leading-tight mb-2">{series.title}</h2>
-                            </a>
+                            <SeriesLinkCustom className={'text-lg font-bold text-green-600 leading-tight mb-2'} slug={series.slug} name={series.title} />
                         )}
                         <button
                             onClick={onMarkedSeries}
