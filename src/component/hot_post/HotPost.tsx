@@ -12,6 +12,7 @@ import axios from "axios";
 import convertDate from "@/common/datetime";
 import Image from "next/image";
 import Link from "next/link";
+import { UserLinkCustom } from "../common/LinkCustom";
 
 interface Post {
   _id: number;
@@ -63,6 +64,7 @@ const HotPost: React.FC = () => {
 
       <div className="grid grid-cols-4 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {articles.slice(0, 4).map((article) => (
+          console.log('article: ', article),
           <div
             key={article._id}
             className="flex flex-col bg-white rounded-lg overflow-hidden h-full"
@@ -91,14 +93,11 @@ const HotPost: React.FC = () => {
                 {article.title}
               </a>
 
-
               <div className="flex items-center mt-auto">
-                <div className="h-8 w-8 rounded-full bg-gray-200 mr-2" />
+                <img src={article.author.avatar} alt={article.author.name} className="h-8 w-8 rounded-full mr-2" />
                 <div className="flex-1 justify-between">
                   <div className="flex items-center">
-                    <span className="text-sm font-medium cursor-pointer hover:underline">
-                      {article.author.name}
-                    </span>
+                    <UserLinkCustom className="text-sm font-medium cursor-pointer hover:underline" id={article.author._id} name={article.author.name} />
                     {article.author.verified && (
                       <CheckCircle size={14} className="ml-1 text-blue-500" />
                     )}

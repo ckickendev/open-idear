@@ -1,4 +1,3 @@
-import { ChevronUp } from "lucide-react";
 import "@styles/globals.css";
 import Logo from "../common/Logo";
 import { PostInterface } from "@/app/profile/[profileId]/page";

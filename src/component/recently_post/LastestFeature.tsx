@@ -1,8 +1,7 @@
 'use client'
 import React, { useEffect, useState } from "react";
-import { ChevronRight, ChevronUp } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Article from "./Article";
-import Logo from "../common/Logo";
 import { useTranslation } from "@/app/hook/useTranslation";
 import axios from "axios";
 import loadingStore from "@/store/LoadingStore";
@@ -10,6 +9,7 @@ import LoadingComponent from "../common/Loading";
 import MainFeature from "./MainFeature";
 import { PostInterface } from "@/app/profile/[profileId]/page";
 import ArticleRightSide from "./ArticleRightSide";
+import Link from "next/link";
 
 const LastestFeature = () => {
   const { t } = useTranslation();
@@ -98,8 +98,10 @@ const LastestFeature = () => {
           </div>
 
           <div className="flex items-center">
-            <span className="font-semibold">{t('component.lastest_feature.more')}</span>
-            <ChevronRight className="ml-1" size={20} />
+            <Link href="/recently-post" className="flex items-center text-gray-600 hover:text-gray-900 text-sm cursor-pointer hover:underline">
+              <span className="font-semibold">{t('component.lastest_feature.more')}</span>
+              <ChevronRight className="ml-1" size={20} />
+            </Link>
           </div>
         </div>
 

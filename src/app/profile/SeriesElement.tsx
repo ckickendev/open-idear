@@ -179,7 +179,6 @@ const SeriesElement = ({ series }: any) => {
                             </button>
                         </div>
                     </div>
-
                 )}
             </div>
         </div >
