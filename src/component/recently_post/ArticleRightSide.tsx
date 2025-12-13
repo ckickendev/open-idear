@@ -5,8 +5,6 @@ import { calculateGapTime } from "@/common/datetime";
 import { CategoryLinkCustom, PostLinkCustom } from "../common/LinkCustom";
 
 const ArticleRightSide = ({ postData }: { postData: PostInterface }) => {
-  console.log("post data in article: ", postData);
-
   return (
     <>
       <div className="col-span-1 h-full border-b-1 border-gray-300 pt-4 pb-4">

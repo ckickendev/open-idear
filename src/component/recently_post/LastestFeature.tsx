@@ -28,8 +28,6 @@ const LastestFeature = () => {
         if (token) {
           const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getRecentlyData`);
           if (response.status === 200) {
-            console.log("recently data: ", response.data.recentlyData.posts, response.data.recentlyData.categories);
-
             setAllCategory((old) => [...old, ...response.data.recentlyData.categories]);
             setAllPosts(response.data.recentlyData.posts);
           }

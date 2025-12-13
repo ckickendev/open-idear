@@ -1,5 +1,5 @@
 import Banner from "@/component/Banner";
-import Guide from "@/component/Guide/Guide";
+import HotSeries from "@/component/hot_series/HotSeries";
 import HotPost from "@/component/hot_post/HotPost";
 import LastestFeature from "@/component/recently_post/LastestFeature";
 import Head from "next/head";
@@ -18,7 +18,7 @@ export default function Home() {
         <main className="flex flex-col flex-nowrap items-center gap-4 max-w-screen-xl mx-auto w-full row-start-2 items-center sm:items-start">
           <LastestFeature />
           <HotPost />
-          <Guide />
+          <HotSeries />
         </main>
       </div>
     </>

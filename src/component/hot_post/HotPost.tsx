@@ -64,7 +64,6 @@ const HotPost: React.FC = () => {
 
       <div className="grid grid-cols-4 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {articles.slice(0, 4).map((article) => (
-          console.log('article: ', article),
           <div
             key={article._id}
             className="flex flex-col bg-white rounded-lg overflow-hidden h-full"

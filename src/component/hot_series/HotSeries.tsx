@@ -3,54 +3,35 @@ import React from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
+import axios from "axios";
 
-interface Article {
-  id: number;
-  title: string;
-  image: string;
-  author: string;
+interface SeriesInteface {
+  _id: string;
+  description: string;
+  image: { url: string; description: string };
+  user: { name: string; username: string }
   slug: string;
+  title: string;
 }
 
-const articles: Article[] = [
-  {
-    id: 1,
-    title: "Want More Privacy Online? Change These Browser Settings",
-    image: "https://images.spiderum.com/sp-thumbnails/f8340000109e11f09ea4735fee28966f.jpg",
-    author: "KIM KEY",
-    slug: "browser-settings-privacy",
-  },
-  {
-    id: 2,
-    title: "The Best Hardware Security Keys We've Tested",
-    image: "https://images.spiderum.com/sp-thumbnails/f8340000109e11f09ea4735fee28966f.jpg",
-    author: "KIM KEY",
-    slug: "best-hardware-security-keys",
-  },
-  {
-    id: 3,
-    title: "Proton VPN vs. NordVPN: Which Is Best for Protecting Your Privacy?",
-    image: "https://images.spiderum.com/sp-thumbnails/f8340000109e11f09ea4735fee28966f.jpg",
-    author: "KIM KEY",
-    slug: "proton-vs-nordvpn",
-  },
-  {
-    id: 4,
-    title: "How to Use a Random Generator to Create the Best Passwords",
-    image: "https://images.spiderum.com/sp-thumbnails/f8340000109e11f09ea4735fee28966f.jpg",
-    author: "NEIL J. RUBENKING",
-    slug: "random-generator-passwords",
-  },
-  {
-    id: 5,
-    title: "Arm Your PC With Antivirus You Can Trust",
-    image: "https://images.spiderum.com/sp-thumbnails/f8340000109e11f09ea4735fee28966f.jpg",
-    author: "NEIL J. RUBENKING",
-    slug: "antivirus-you-can-trust",
-  },
-];
+const getSeriesData = async () => {
+  // Placeholder for fetching series data
+  try {
 
-const Guide: React.FC = () => {
+    const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getHotSeries`);
+    if (res.status === 200) {
+      console.log('res.data.series: ', res.data.series);
+      return res.data.series;
+
+    }
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+  }
+}
+
+const series = await getSeriesData();
+
+const HotSeries: React.FC = () => {
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   const scrollLeft = () => {
@@ -103,19 +84,19 @@ const Guide: React.FC = () => {
           className="flex overflow-x-auto gap-5 px-12 pb-4 scrollbar-hide"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {articles.map((article) => (
-            <div key={article.id} className="flex-shrink-0 w-64">
-              <Link href={`/article/${article.slug}`}>
+          {series.map((serie: SeriesInteface) => (
+            <div key={serie._id} className="flex-shrink-0 w-64">
+              <Link href={`/series/${serie.slug}`}>
                 <div className="group">
                   <div className="bg-gray-200 h-40 w-full mb-3 overflow-hidden">
-                    <Image src={article.image} alt={article.title} width={256} height={160} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <Image src={serie?.image?.url || '/default-series-image.jpg'} alt={serie.title} width={256} height={160} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     {/* Placeholder for image - in production, use Next.js Image component */}
                     <div className="h-full w-full bg-gray-300"></div>
                   </div>
                   <h3 className="font-bold text-base mb-2 group-hover:text-blue-600">
-                    {article.title}
+                    {serie.title}
                   </h3>
-                  <p className="text-xs text-gray-600">BY {article.author}</p>
+                  <p className="text-xs text-gray-600">BY {serie.user.name}</p>
                 </div>
               </Link>
             </div>
@@ -138,4 +119,4 @@ const Guide: React.FC = () => {
   );
 };
 
-export default Guide;
+export default HotSeries;
