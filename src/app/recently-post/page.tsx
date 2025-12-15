@@ -1,7 +1,8 @@
 import axios from 'axios';
 import RecentlyPost from './RecentlyPost';
+import HotSeries from '@/component/hot_series/HotSeries';
 
-export default async function MainPage(){
+export default async function MainPage() {
     return (
         <div className="min-h-screen bg-white">
             {/* Hero Section */}
@@ -18,7 +19,7 @@ export default async function MainPage(){
             <div className="bg-gray-50 py-12">
                 <RecentlyPost />
             </div>
-            {/* <PostInAnotherCategory slug={slug} /> */}
+            <HotSeries />
         </div>
     );
 }

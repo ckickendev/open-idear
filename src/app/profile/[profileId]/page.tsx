@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import authenticationStore from '@/store/AuthenticationStore';
 import ProfileInfo from '@/component/authen/ProfileInfo';
-import { BookHeart, Bookmark, BookText, ChartColumnStacked, CircleHelp, Heart, LogOut, Pen, PencilLine, Settings, ShoppingCart, SquarePen, Star, UserRoundPen } from 'lucide-react';
+import { BookHeart, BookText, ChartColumnStacked, CircleHelp, Heart, LogOut, Pen, PencilLine, Settings, ShoppingCart, SquarePen, Star, UserRoundPen } from 'lucide-react';
 import { getHeadersToken } from '@/api/authentication';
 import axios from 'axios';
 import loadingStore from '@/store/LoadingStore';
@@ -44,7 +44,6 @@ function ProfileDashboard({
     params: Promise<{ profileId: string }>;
 }) {
     const { profileId } = use(params);
-    const [postType, setPostType] = React.useState<number>(1);
     const [selectId, setSelectId] = React.useState<string>("overview");
     const [displayPost, setDisplayPost] = React.useState<PostInterface[]>([]);
     const [titlePost, setTitlePost] = useState("Bài viết của bạn");
@@ -163,7 +162,6 @@ function ProfileDashboard({
     };
 
     const handlePostTypeClick = (postTypeId: number) => {
-        setPostType(postTypeId);
         if (postTypeId === 1) {
             setTitlePost("Bài viết của bạn");
             setDisplayPost(allPosts);
