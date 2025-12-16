@@ -87,7 +87,7 @@ const SeriesElement = ({ series }: any) => {
                     onClose={() => { }}
                     isTitleDisplay={true}
                 /> : <img
-                    src={series.image?.url}
+                    src={series.image?.url || '/default-series-image.jpg'}
                     alt={series.title}
                     className="object-cover h-full w-full"
                 />}

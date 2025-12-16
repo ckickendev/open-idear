@@ -4,15 +4,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import axios from "axios";
-
-interface SeriesInteface {
-  _id: string;
-  description: string;
-  image: { url: string; description: string };
-  user: { name: string; username: string }
-  slug: string;
-  title: string;
-}
+import { SeriesInteface } from "@/inteface/Inteface";
 
 const getSeriesData = async () => {
   // Placeholder for fetching series data

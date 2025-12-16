@@ -126,7 +126,7 @@ function ProfileDashboard({
             const navItems = [
                 { id: 'overview', icon: <ChartColumnStacked />, text: 'Tổng quan' },
                 { id: 'user-info', icon: <UserRoundPen />, text: 'Thông tin' },
-                { id: 'posts', icon: <Pen />, text: 'Tất cả bài viết' },
+                { id: 'posts', icon: <Pen />, text: 'Bài viết / Series của bạn' },
                 { id: 'courses', icon: <BookText />, text: 'Khóa học' },
             ];
 

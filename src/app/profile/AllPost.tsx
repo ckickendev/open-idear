@@ -61,7 +61,7 @@ const AllPost = ({ profileId }: any) => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
             <Pen className="text-blue-600" size={32} />
-            My Posts
+            My Posts / Series
           </h1>
           <p className="text-gray-600">All your posts and series belong to you.</p>
         </div>
