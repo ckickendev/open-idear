@@ -81,12 +81,12 @@ const ProfileInfo = ({ userInfor }: any) => {
             <Notification />
             {/* Cover Image & Profile Section */}
             <div className="relative">
-                <div className="w-full h-100 bg-gray-800 relative">
+                <div className="w-full h-100 bg-gray-100 relative">
                     <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
                         <div className="opacity-80">
                             <div className="bg-black flex items-center justify-center">
                                 <img
-                                    src={currentUser?.background}
+                                    src={currentUser?.background || "/transparent-background.png"}
                                     alt="cover-image of user section open idear"
                                     className="object-fill w-full h-100"
                                 />

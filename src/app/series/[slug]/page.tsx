@@ -15,11 +15,7 @@ export default async function MainPage({
             const res = await axios.get(
                 `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getSeriesBySlug?slug=${slug}`,
             );
-
-
-            console.log(res.data.data);
-            
-            //console.log("data.post: ", data.post);
+            console.log('series data to display', res.data);
 
             return res.data.data;
         } catch (error) {
@@ -33,7 +29,7 @@ export default async function MainPage({
     return (
         <div className="min-h-screen bg-white">
             {/* Hero Section */}
-            <div className="relative h-100 bg-cover bg-center" style={{ backgroundImage: `url()` }}>
+            <div className="relative h-100 bg-cover bg-center" style={{ backgroundImage: `url(${seriesData?.image?.url || `default-series-image.png`})` }}>
                 <div className="absolute inset-0 bg-black/30" />
                 <div className="relative max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">
                     <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">{seriesData.title}</h1>

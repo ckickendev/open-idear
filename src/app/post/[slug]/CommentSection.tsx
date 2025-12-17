@@ -7,6 +7,7 @@ import { Heart } from 'lucide-react';
 import authenticationStore from '@/store/AuthenticationStore';
 import Link from 'next/link';
 import Image from 'next/image';
+import { TextAreaCustom } from '@/component/common/TextAreaCustom';
 
 type Comment = {
   _id: string;
@@ -292,13 +293,7 @@ function CommentItem({ comment, onReply, onVote, onLoadMoreReplies }: CommentIte
       {/* Reply form */}
       {showReplyForm && (
         <div className="reply-form mt-3 p-3 bg-gray-50 rounded">
-          <textarea
-            value={replyContent}
-            onChange={(e) => setReplyContent(e.target.value)}
-            placeholder="Viết phản hồi của bạn..."
-            className="w-full p-2 border border-gray-300 rounded resize-none"
-            rows={3}
-          />
+          <TextAreaCustom id="replyContent" value={replyContent} onChange={(e : any) => setReplyContent(e.target.value)} rows={3} placeholder="Viết phản hồi của bạn..." />
           <div className="flex gap-2 mt-2">
             <button 
               onClick={handleReply}

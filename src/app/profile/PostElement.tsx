@@ -41,7 +41,7 @@ const PostElement = ({ post }: { post: PostInterface }) => {
             {/* Left side - Image */}
             <div className="w-1/3 h-40">
                 <img
-                    src={post.image?.url}
+                    src={post?.image?.url || '/default-post-image.jpg'}
                     alt={post.title}
                     className="object-cover h-full w-full"
                 />

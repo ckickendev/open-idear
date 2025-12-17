@@ -35,7 +35,7 @@ export default function Profile() {
             <div className="relative cursor-pointer">
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="w-10 h-10 relative rounded-full bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-blue-500 hover:opacity-90"
+                    className="w-10 h-10 relative rounded-full bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-green-400 hover:opacity-90"
                 >
                     <Image src={userInfo.avatar} alt="Profile avatar image" fill sizes='40px' className="cursor-pointer w-full h-full object-cover" />
                 </button>

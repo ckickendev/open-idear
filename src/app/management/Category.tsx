@@ -7,6 +7,7 @@ import { Edit, Filter, Plus, Search, Trash2, X, ChevronLeft, ChevronRight, Eye, 
 import { useEffect, useState } from "react";
 import { useTranslation } from "../hook/useTranslation";
 import ImageUpload from "../create/ImageUpload";
+import { TextAreaCustom } from "@/component/common/TextAreaCustom";
 
 type CategoryType = {
     _id: string;
@@ -483,13 +484,7 @@ const Category = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     {t('management.category.description')}
                                 </label>
-                                <textarea
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    rows={3}
-                                    className="w-full px-3 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
-                                    placeholder={t('management.category.input_description')}
-                                />
+                                <TextAreaCustom id="description" value={formData.description} onChange={(e: any) => setFormData({ ...formData, description: e.target.value })} rows={3} placeholder={t('management.category.input_description')} />
                             </div>
 
                             <div>

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { getHeadersToken } from "@/api/authentication";
+
 import axios from "axios";
 import loadingStore from "@/store/LoadingStore";
 import PostElement from "./PostElement";
@@ -7,22 +7,54 @@ import { PostInterface } from "./[profileId]/page";
 import SeriesElement from "./SeriesElement";
 import { Bookmark, FileText, Layers, Pen } from "lucide-react";
 import EmptyState from "./EmptyState";
+import { getHeadersToken } from "@/api/authentication";
+import alertStore from "@/store/AlertStore";
 
 const AllPost = ({ profileId }: any) => {
   const [displayPosts, setDisplayPosts] = React.useState<PostInterface[]>([]);
   const [displaySeries, setDisplaySeries] = React.useState<any[]>([]);
+  const [onDeleteSeriesing, setOnDeleteSeriesing] = React.useState(false);
 
   const [isTransitioning, setIsTransitioning] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState("posts");
 
   const changeLoad = loadingStore((state) => state.changeLoad);
+  const setType = alertStore((state) => state.setType);
+  const setMessage = alertStore((state) => state.setMessage);
+
+  const deleteSeries = async (id: string) => {
+    try {
+      const response = await axios.delete(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/delete`, {
+        data: { seriesId: id },
+        headers: getHeadersToken()
+      });
+
+      if (response.status === 200) {
+        const resSeries = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getSeriesByAuthorId?profileId=${profileId}`);
+        if (resSeries.status === 200) {
+          setDisplaySeries(resSeries.data.series);
+        }
+
+
+        setType("success");
+        setMessage("Series deleted successfully.");
+        setOnDeleteSeriesing(false);
+      } else {
+        setType("error");
+        setMessage("Failed to delete the series.");
+      }
+    } catch (error: any) {
+      setType('error');
+      setMessage(error?.response?.data?.message || error?.message);
+      setMessage(error?.response?.data?.message || "An error occurred while deleting the series.");
+    }
+  }
 
   useEffect(() => {
+    changeLoad();
     // Fetch all posts from the server
     const fetchPosts = async () => {
       try {
-        changeLoad();
-
         const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthorId?profileId=${profileId}`);
         if (res.status === 200) {
 
@@ -113,7 +145,12 @@ const AllPost = ({ profileId }: any) => {
               )
             ) : (
               displaySeries.length > 0 ? (
-                displaySeries.map((series) => <SeriesElement key={series._id} series={series} />)
+                displaySeries.map((series) => <SeriesElement
+                  key={series._id} series={series}
+                  onDeleteSeriesing={onDeleteSeriesing}
+                  setOnDeleteSeriesing={setOnDeleteSeriesing}
+                  deleteSeries={deleteSeries}
+                />)
               ) : (
                 <EmptyState type="marked series" />
               )
