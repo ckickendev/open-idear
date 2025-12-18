@@ -10,7 +10,7 @@ import {
     User,
     ChevronDown,
     Users,
-
+    BookText
 } from 'lucide-react';
 import Logo from '@/component/common/Logo';
 import Category from './Category';
@@ -20,6 +20,7 @@ import UserList from './UserList';
 import LoadingComponent from '@/component/common/Loading';
 import loadingStore from '@/store/LoadingStore';
 import Notification from '@/component/common/Notification';
+import Series from './Series';
 
 const AdminDashboard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -30,6 +31,7 @@ const AdminDashboard = () => {
         { id: 'categories', label: 'Danh mục', icon: Folder },
         { id: 'posts', label: 'Ý tưởng/Bài viết', icon: FileText },
         { id: 'users', label: 'Người dùng', icon: Users },
+        { id: 'series', label: 'Series', icon: BookText },
         { id: 'reports', label: 'Báo cáo vi phạm', icon: AlertTriangle },
         { id: 'settings', label: 'Cài đặt', icon: Settings },
     ];
@@ -44,6 +46,8 @@ const AdminDashboard = () => {
                 return <UserList />
             case 'reports':
                 return <Report />
+            case 'series':
+                return <Series />;
             default:
                 return <div>Chọn một mục từ menu</div>;
         }
@@ -130,8 +134,6 @@ const AdminDashboard = () => {
                     {renderContent()}
                 </main>
             </div>
-
-            {/* Modal */}
 
         </div>
     );
