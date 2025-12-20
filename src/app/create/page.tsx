@@ -518,7 +518,9 @@ export default function CreatePost() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex">
+      {/*All posts*/}
+      <PostLists />
       <Notification />
       <Instruction />
       <Head>
@@ -550,8 +552,6 @@ export default function CreatePost() {
 
         <div className="relative w-full flex flex-col lg:flex-row outline-none border-2 border-gray-100 shadow-md hover:outline-none focus:ring-teal-200 focus:border-teal-200">
           <LoadingComponent isLoading={isLoading} />
-          {/*All posts*/}
-          <PostLists />
 
           {/* Editor area */}
           <div className="w-full flex flex-col justify-between items-center">
@@ -674,9 +674,6 @@ export default function CreatePost() {
               </div>
             </div>
           )}
-
-          {/* Element sidebar */}
-          <FloatingToolbar />
         </div>
         {/* Public page */}
         {onPublic && <div className="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 w-full md:inset-0 flex justify-center items-center bg-gray-50/70">
@@ -695,7 +692,7 @@ export default function CreatePost() {
                   <h2 className="text-sm font-medium text-gray-800 mb-2">
                     Desciption <span className="text-gray-400 italic">(no required but we recommend it for SEO)</span>
                   </h2>
-                  <TextAreaCustom 
+                  <TextAreaCustom
                     id="message"
                     value={descriptionPublic} onChange={(e: any) => setDescriptionPublic(e.target.value)}
                     rows={4}
@@ -798,8 +795,10 @@ export default function CreatePost() {
         </div>}
 
       </div>
-    </div >
 
+      {/* Element sidebar */}
+      <FloatingToolbar />
+    </div >
   );
 }
 

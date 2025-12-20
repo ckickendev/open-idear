@@ -39,7 +39,7 @@ export default function PostLists() {
     return (
         <>
             <div
-                className={`fixed left-0 top-1/4 z-50 bg-white shadow-lg transition-all duration-300 flex flex-col h-full ${isHovered ? 'w-64' : 'w-12'} relative`}
+                className={`fixed left-0 top-0 z-50 bg-white shadow-lg transition-all duration-300 flex flex-col h-full ${isHovered ? 'w-64' : 'w-12'} relative`}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
@@ -57,22 +57,6 @@ export default function PostLists() {
                                     <span className="ml-3 text-sm text-gray-700">Create new post</span>
                                 </div>
                             </Link>
-                        )}
-                    </div>
-
-                    <div
-                        className="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-100 transition-colors"
-                    >
-                        <div className="text-gray-700 flex-shrink-0">
-                            <NotebookPen />
-                        </div>
-                        {isHovered && (
-                            <div className="flex justify-between items-center w-full">
-                                <span className="ml-3 text-sm text-gray-700">All your post</span>
-                                {/* <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">
-                                    All your posts
-                                </span> */}
-                            </div>
                         )}
                     </div>
                 </div>

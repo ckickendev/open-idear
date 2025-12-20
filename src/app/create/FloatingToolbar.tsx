@@ -18,7 +18,7 @@ const FloatingToolbar: React.FC = () => {
 
     return (
         <div
-            className={`fixed right-0 top-1/4 z-50 bg-white shadow-lg transition-all duration-300 flex flex-col h-full ${isHovered ? 'w-64' : 'w-12'} relative`}
+            className={`fixed right-0 top-0 z-50 bg-white shadow-lg transition-all duration-300 flex flex-col h-full ${isHovered ? 'w-64' : 'w-12'} relative`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
