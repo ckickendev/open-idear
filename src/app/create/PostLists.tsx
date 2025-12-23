@@ -58,7 +58,7 @@ export default function PostLists() {
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
-                <div className="h-full border-2 border-gray-500/50 shadow-2xl shadow-cyan-500/20 flex flex-col">
+                <div className="h-full border-1 border-gray-500/50 shadow-2xl shadow-cyan-500/20 flex flex-col">
 
                     {/* Header */}
                     {isHovered && (

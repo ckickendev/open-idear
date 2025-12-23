@@ -3,7 +3,8 @@ import { Code, Grip, Heading1, Heading2, Heading3, Image, Link, Pilcrow, Quote }
 
 const DraggableElement = ({ type, label, icon } : { type: string; label: string; icon: React.ReactNode }) => {
     const handleDragStart = (e : React.DragEvent) => {
-        e.dataTransfer.setData('elementType', type);
+        e.dataTransfer.setData('application/reactflow', type);
+        e.dataTransfer.effectAllowed = 'move';
     };
 
     return (
@@ -42,7 +43,7 @@ const FloatingToolbar = () => {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <div className="h-full bg-gray-100 rounded-lg border-l-2 border-cyan-500/50 shadow-2xl shadow-cyan-500/20">
+            <div className="h-full bg-gray-100 rounded-lg border-1 border-gray-300 shadow-2xl shadow-cyan-500/20">
                 {!isHovered ? (
                     <div className="flex items-center justify-center w-full h-full">
                         <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-gray border border-cyan-500/40 cursor-pointer hover:bg-slate-700/80 hover:border-cyan-400/60 transition-all duration-200">

@@ -539,13 +539,13 @@ export default function CreatePost() {
           </div>
         </div>
 
-        <div className="mb-6 w-1/3">
+        <div className="mb-6 w-full max-w-4xl px-2">
           <input
             id="post-title"
             type="text"
             value={title.toString()}
             onChange={(e) => setTitle(e.target.value)}
-            className="pr-10 input w-full rounded-lg pt-2 pb-2 pl-2 border border-gray-500 focus:outline-none focus:border-red-500"
+            className="pr-10 input text-center w-full rounded-lg pt-1 pb-1 pl-2 border-1 border-gray-500 focus:outline-none focus:border-red-500"
             placeholder="Enter post title"
           />
         </div>
