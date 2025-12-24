@@ -15,7 +15,7 @@ import Paragraph from '@tiptap/extension-paragraph';
 import "./edit.css";
 import Toolbar from './ToolBar';
 import Color from '@tiptap/extension-color';
-import { ChevronDown, MessageCircleQuestion, Plus } from 'lucide-react';
+import { Code, Eye, EyeOff, Globe, MessageCircleQuestion, Plus, Save } from 'lucide-react';
 import FloatingToolbar from './FloatingToolbar';
 import CodeBlock from '@tiptap/extension-code-block';
 import contentStore from '@/store/ContentStore';
@@ -35,7 +35,7 @@ import FileHandler from '@tiptap/extension-file-handler';
 import ImageUpload from './ImageUpload';
 import alertStore from '@/store/AlertStore';
 import Notification from '@/component/common/Notification';
-import { ButtonCyanToBlue, ButtonPinkToOrange, ButtonPurpleToBlue, ButtonPurpleToPink } from '@/component/common/ButtonCustom';
+import { ButtonCyanToBlue, ButtonGray, ButtonPinkToOrange, ButtonPurpleToBlue, ButtonPurpleToPink } from '@/component/common/ButtonCustom';
 import { TextAreaCustom } from '@/component/common/TextAreaCustom';
 
 export default function CreatePost() {
@@ -529,37 +529,49 @@ export default function CreatePost() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="mx-auto py-8 flex flex-col items-center justify-center">
-        <div className='w-full flex items-center justify-center mb-2'>
-          <h1 className="text-3xl font-bold text-gray-600">{!idPost ? "Create new post" : "Edit your post"}</h1>
-          <div className='relative'>
-            <MessageCircleQuestion className=' m-2'
-              onClick={() => setDisplayInstructions(true)}
-            />
+      <div className="max-w-7xl mx-auto px-4 py-6">
+
+        <div className='mb-8 flex items-center justify-between'>
+          <div className='w-full flex items-center mb-2'>
+            <h1 className="text-3xl font-bold text-gray-600">{!idPost ? "Create new post" : "Edit your post"}</h1>
+            <div className='relative'>
+              <MessageCircleQuestion className=' m-2'
+                onClick={() => setDisplayInstructions(true)}
+              />
+            </div>
+          </div>
+
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium ${isPublic
+            ? 'bg-emerald-100 text-emerald-700'
+            : 'bg-amber-100 text-amber-700'
+            }`}>
+            <div className={`w-2 h-2 rounded-full ${isPublic ? 'bg-emerald-500' : 'bg-amber-500'
+              }`} />
+            {isPublic ? 'Published' : 'Draft'}
           </div>
         </div>
 
-        <div className="mb-6 w-full max-w-4xl px-2">
+
+        <div className="mb-6 w-full px-2">
           <input
             id="post-title"
             type="text"
             value={title.toString()}
             onChange={(e) => setTitle(e.target.value)}
-            className="pr-10 input text-center w-full rounded-lg pt-1 pb-1 pl-2 border-1 border-gray-500 focus:outline-none focus:border-red-500"
+            className="w-full px-6 py-4 text-2xl font-semibold bg-white border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all placeholder:text-slate-400"
             placeholder="Enter post title"
           />
         </div>
 
-        <div className="relative w-full flex flex-col lg:flex-row outline-none border-2 border-gray-100 shadow-md hover:outline-none focus:ring-teal-200 focus:border-teal-200">
+        <div className="relative w-full flex flex-col lg:flex-row outline-none hover:outline-none focus:ring-teal-200 focus:border-teal-200">
           <LoadingComponent isLoading={isLoading} />
 
           {/* Editor area */}
-          <div className="w-full flex flex-col justify-between items-center">
-            <div className="w-full bg-white mb-4 flex flex-col items-center">
-
+          <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden w-full">
+            <div className="border-b border-slate-200 bg-slate-50/50 px-6 py-4">
               {!previewMode && editor &&
                 <>
-                  <div className="w-full mt-2 flex items-center justify-center">
+                  <div className="flex items-center gap-2">
                     <HtmlEditor editor={editor} setRawHtml={setRawHtml} rawHtml={rawHtml} />
                   </div>
                   {modeHTML || <Toolbar editor={editor} />}
@@ -568,14 +580,14 @@ export default function CreatePost() {
 
               {modeHTML || <div
                 ref={editorContainerRef}
-                className="p-6 w-4xl min-h-screen editor-end"
+                className="p-8 min-h-[500px]"
                 onDragOver={previewMode ? undefined : handleDragOver}
                 onDrop={previewMode ? undefined : handleDrop}
               >
                 {previewMode ? (
-                  <div className="prose max-w-none preview-container">
+                  <div className="prose prose-lg max-w-none">
 
-                    <p className="text-3xl font-bold mb-6">{title}</p>
+                    <p className="text-3xl font-bold mb-4">{title || 'Untitled Post'}</p>
                     {editor && (
                       <div dangerouslySetInnerHTML={{ __html: editor.getHTML() }} />
                     )}
@@ -587,77 +599,87 @@ export default function CreatePost() {
                 )}
               </div>
               }
+            </div>
+          </div>
+          <div className="fixed w-full bg-white shadow-[0_3px_10px_rgb(0,0,0,0.2)] flex justify-between left-0 bottom-0 flex flex-col z-50 md:flex-row">
+            <div className="w-full px-4 flex items-left h-auto p-1">
+              <div className="flex items-center gap-2 justify-center px-2">
+                {modeHTML ||
+                  <ButtonPurpleToBlue
+                    onClick={() => setPreviewMode(!previewMode)}
+                    classAddition="flex items-center whitespace-nowrap px-8 py-2 rounded-md"
+                    title={previewMode ? 'Return to edit' : 'Click to Preview'}
+                    icon={previewMode ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                  />
+                }
+              </div>
+              <div className="flex items-center gap-2 justify-center px-2">
+                <ButtonPurpleToPink
+                  onClick={() => {
+                    syncWithEditor();
+                    setShowHtmlEditor(!showHtmlEditor);
+                    setModeHTML(!modeHTML);
+                  }}
+                  classAddition="flex items-center whitespace-nowrap px-8 py-2 rounded-md"
+                  title={showHtmlEditor ? 'Hide HTML' : 'HTML Mode'}
+                  icon={<Code className="w-4 h-4 mr-2" />}
+                />
 
-              <div className="fixed w-full bg-white shadow-[0_3px_10px_rgb(0,0,0,0.2)] flex justify-between bottom-0 flex flex-col z-50 md:flex-row">
-                <div className="w-full px-4 flex items-left h-auto p-1">
-                  <div className="flex items-center gap-2 justify-center px-2">
-                    {modeHTML ||
-                      <ButtonPurpleToBlue
-                        onClick={() => setPreviewMode(!previewMode)}
-                        classAddition="whitespace-nowrap px-8 py-2 rounded-md"
-                        title={previewMode ? 'Return to edit' : 'Click to Preview'}
-                      />
-                    }
-                  </div>
-                  <div className="flex items-center gap-2 justify-center px-2">
+                {showHtmlEditor && (
+                  <>
                     <ButtonPurpleToPink
                       onClick={() => {
-                        syncWithEditor();
-                        setShowHtmlEditor(!showHtmlEditor);
-                        setModeHTML(!modeHTML);
+                        applyHtml();
                       }}
-                      classAddition="whitespace-nowrap px-8 py-2 rounded-md"
-                      title={showHtmlEditor ? 'Hide HTML' : 'HTML Mode'}
+                      classAddition="flex items-center whitespace-nowrap px-8 py-2 rounded-md"
+                      title='Apply HTML'
+                      icon={<Code className="w-4 h-4 mr-2" />}
                     />
-
-                    {showHtmlEditor && (
-                      <ButtonPurpleToPink
-                        onClick={() => {
-                          applyHtml();
-                        }}
-                        classAddition="whitespace-nowrap px-8 py-2 rounded-md"
-                        title='Apply HTML'
-                      />
-                    )}
-                  </div>
-                </div>
-                {title ?
-                  <div className='w-full px-2 flex justify-end h-auto'>
-                    <div className="flex items-center gap-2 justify-center px-2">
-                      <ButtonPinkToOrange
-                        onClick={onPublicPage}
-                        classAddition={`px-8 py-2 min-w-40 text-white ${isPublic ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        disabled={isPublic}
-                        title={'Public'}
-                      />
-                    </div>
-                    <div className="flex items-center gap-2 justify-center px-2">
-                      <ButtonCyanToBlue onClick={savePost} classAddition="whitespace-nowrap px-8 py-2 rounded-md" title="Save Draft" />
-                    </div>
-                  </div>
-                  :
-                  <div className='w-full px-2 flex justify-end h-auto'>
-                    <div className="flex items-center gap-2 justify-center px-2">
-                      <ButtonCyanToBlue
-                        classAddition="px-8 py-2 min-w-40 text-white"
-                        disabled
-                        title="Published"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2 justify-center px-2" >
-                      <ButtonCyanToBlue
-                        classAddition="px-8 py-2 rounded-md min-w-40 text-white"
-                        disabled
-                        title="Save Draft"
-                      />
-                    </div>
-                  </div>
-
-                }
-
+                  </>
+                )}
               </div>
-
             </div>
+            {title ?
+              <div className='w-full px-2 flex justify-end h-auto'>
+                <div className="flex items-center gap-2 justify-center px-2">
+                  <ButtonPinkToOrange
+                    onClick={onPublicPage}
+                    classAddition={`flex items-center px-8 py-2 min-w-40 text-white ${isPublic ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={isPublic}
+                    title={isPublic ? 'Published' : 'Public'}
+                    icon={<Globe className="w-4 h-4 mr-2" />}
+                  />
+                </div>
+                <div className="flex items-center gap-2 justify-center px-2">
+                  <ButtonCyanToBlue 
+                    onClick={savePost} 
+                    classAddition="flex items-center whitespace-nowrap px-8 py-2 rounded-md" 
+                    title="Save Draft" 
+                    icon={<Save className="w-4 h-4 mr-2" />}
+                  />
+                </div>
+              </div>
+              :
+              <div className='w-full px-2 flex justify-end h-auto'>
+                <div className="flex items-center gap-2 justify-center px-2">
+                  <ButtonGray
+                    classAddition="flex items-center px-8 py-2 rounded-md min-w-40 text-white"
+                    disabled
+                    title="Public"
+                    icon={<Globe className="w-4 h-4 mr-2" />}
+                  />
+                </div>
+                <div className="flex items-center gap-2 justify-center px-2" >
+                  <ButtonGray
+                    classAddition="flex items-center px-8 py-2 rounded-md min-w-40 text-white"
+                    disabled
+                    title="Save Draft"
+                    icon={<Save className="w-4 h-4 mr-2" />}
+                  />
+                </div>
+              </div>
+            }
+
           </div>
 
           {showImageUpload && (

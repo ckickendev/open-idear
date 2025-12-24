@@ -13,8 +13,7 @@ const ToolbarItem: React.FC<ToolbarItemProps> = ({ children, title, action }) =>
         <HoverTooltip tooltipText={title}>
             <button
                 onClick={action}
-                className="p-2 rounded transition-colors cursor-pointer"
-            // title={title}
+                className="px-4 py-2 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium text-slate-700"
             >
                 {children}
             </button>

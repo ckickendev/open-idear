@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { ChevronRight, BookOpen, Lightbulb, User, Coffee } from "lucide-react";
 import { useInstructionStore } from "@/store/useInstruction";
 import { useTranslation } from "../hook/useTranslation";
+import Image from "next/image";
+import { set } from "react-hook-form";
 
 export default function Instruction() {
   const displayInstructions = useInstructionStore((state) => state.displayInstructions);
@@ -24,10 +26,9 @@ export default function Instruction() {
   const Page1 = () => (
     <div className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto">
-        {/* Header dots indicator */}
-
         {/* Main Tutorial Card */}
         <div className="bg-white rounded-t-2xl border-b-4 border-gray-400 shadow-xl overflow-hidden">
+          {/* Header dots indicator */}
           <div className="flex justify-center mb-8 pt-8">
             <div className="flex space-x-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -150,18 +151,17 @@ export default function Instruction() {
   const Page2 = () => (
     <div className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto">
-        {/* Header dots indicator */}
-        <div className="flex justify-center mb-8 pt-8 ">
-          <div className="flex space-x-2">
-            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-          </div>
-        </div>
-
         {/* Main Editor Tutorial Card */}
-        <div className="bg-white rounded-t-2xl shadow-xl border-b-4 border-gray-400">
+        <div className="bg-white rounded-t-2xl rounded-b-2xl shadow-xl border-b-4 border-gray-400">
+          {/* Header dots indicator */}
+          <div className="flex justify-center mb-8 pt-8 ">
+            <div className="flex space-x-2">
+              <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+              <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+            </div>
+          </div>
           <div className="bg-gradient-to-r from-blue-200 to-blue-300 p-8 relative">
             {/* Character mascot */}
             <div className="absolute top-4 right-8">
@@ -187,70 +187,112 @@ export default function Instruction() {
             </div>
 
             <div className="pr-20">
-              <h1 className="text-2xl font-bold text-gray-800 mb-6">
-                Tool in the OpenIdeaR
-              </h1>
+              <p className="text-2xl font-bold text-gray-800 mb-6">
+                Hướng dẫn sử dụng OpenIdear
+              </p>
 
               {/* Mock Editor Interface */}
               <div className="bg-white rounded-lg p-4 shadow-lg">
-                <h2 className="text-lg font-semibold text-blue-600 mb-4">
-                  Spiderum là gì?
-                </h2>
-
-                {/* Toolbar */}
-                <div className="flex items-center space-x-2 p-2 border-b border-gray-200 mb-4">
-                  <button className="px-2 py-1 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded">
-                    H3
-                  </button>
-                  <button className="px-2 py-1 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded">
-                    H2
-                  </button>
-                  <button className="px-2 py-1 text-sm font-medium text-blue-600 hover:bg-gray-100 rounded">
-                    T
-                  </button>
-                  <div className="w-px h-4 bg-gray-300"></div>
-                  <button className="px-2 py-1 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded">
-                    ≫
-                  </button>
-                  <button className="px-2 py-1 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded">
-                    "
-                  </button>
-                  <button className="px-2 py-1 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded">
-                    B
-                  </button>
-                  <button className="px-2 py-1 text-sm italic text-gray-600 hover:bg-gray-100 rounded">
-                    I
-                  </button>
-                  <button className="px-2 py-1 text-sm text-blue-600 hover:bg-gray-100 rounded">
-                    🔗
-                  </button>
-                  <button className="px-2 py-1 text-sm underline text-gray-600 hover:bg-gray-100 rounded">
-                    U
-                  </button>
-                  <button className="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-                    ⁄
-                  </button>
-                  <button className="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-                    &lt;/&gt;
-                  </button>
-                  <div className="w-px h-4 bg-gray-300"></div>
-                  <button className="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-                    ≡
-                  </button>
-                  <button className="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-                    ⋮
-                  </button>
-                  <button className="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-                    ⊞
-                  </button>
+                <div className="flex max-h-">
+                  <img src="/guide/post_image.png" alt="Post Image" width={140} className="w-1/4 rounded-md" />
+                  <div className="flex-1 border-r-2 border-gray-200 pl-4">
+                    <p className="text-lg font-semibold text-blue-600 mb-4 ml-4">
+                      Bài viết bên trái
+                    </p>
+                    <div className="min-h-16 text-gray-500 text-sm ml-4 ">
+                      <div className="w-full">Bạn có thể vào menu bằng cách rê vào cụm tool bên trái</div>
+                      <div className="w-full">Chọn các post cũ hoặc tạo mới post ở đây</div>
+                    </div>
+                  </div>
+                  <div className="flex-1 border-l-2 border-gray-200">
+                    <p className="text-lg font-semibold text-blue-600 mb-4 ml-4">
+                      Tool bar bên phải
+                    </p>
+                    <div className="min-h-16 text-gray-500 text-sm ml-4 ">
+                      <div className="w-full">Bạn có thể vào menu bằng cách rê vào cụm tool bên phải</div>
+                      <div className="w-full">Chọn thành phần phù hợp để đưa vào bài viết, sau đó kéo sang Editor</div>
+                    </div>
+                  </div>
+                  <img src="/guide/element_image.png" alt="Post Image" className="w-1/4 h-auto rounded-md" />
                 </div>
+              </div>
+            </div>
+          </div>
 
-                {/* Mock content area */}
-                <div className="min-h-16 text-gray-500 text-sm">
-                  <div className="w-full h-1 bg-gray-200 rounded mb-2"></div>
-                  <div className="w-3/4 h-1 bg-gray-200 rounded mb-2"></div>
-                  <div className="w-1/2 h-1 bg-gray-200 rounded"></div>
+          <div className="p-6 bg-gray-50 rounded-b-2xl">
+            <div className="flex items-center justify-between">
+              <div className="flex space-x-4">
+                <button
+                  onClick={handleBack}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer"
+                >
+                  Back
+                </button>
+                <button className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer" onClick={() => setDisplayInstructions(false)}>
+                  Skip
+                </button>
+              </div>
+              <button
+                onClick={handleContinue}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
+              >
+                Tiếp tục
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const Page3 = () => (
+    <div className="min-h-screen p-4">
+      <div className="max-w-4xl mx-auto">
+
+
+        {/* Main Editor Tutorial Card */}
+        <div className="bg-white rounded-t-2xl shadow-xl border-b-4 border-gray-400">
+          {/* Header dots indicator */}
+          <div className="flex justify-center mb-8 pt-8 ">
+            <div className="flex space-x-2">
+              <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+              <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-blue-200 to-blue-300 p-8 relative">
+            {/* Character mascot */}
+            <div className="absolute top-4 right-8">
+              <div className="w-16 h-16 bg-blue-400 rounded-full relative">
+                {/* Eyes with glasses */}
+                <div className="absolute top-4 left-2">
+                  <div className="flex space-x-1">
+                    <div className="w-6 h-6 bg-white rounded-full border-2 border-gray-800 flex items-center justify-center">
+                      <div className="w-3 h-3 bg-black rounded-full"></div>
+                    </div>
+                    <div className="w-6 h-6 bg-white rounded-full border-2 border-gray-800 flex items-center justify-center">
+                      <div className="w-3 h-3 bg-black rounded-full"></div>
+                    </div>
+                  </div>
+                  {/* Glasses bridge */}
+                  <div className="w-1 h-0.5 bg-gray-800 absolute top-3 left-6"></div>
                 </div>
+                {/* Light bulb idea */}
+                <div className="absolute -top-2 -right-2">
+                  <Lightbulb className="w-6 h-6 text-yellow-400 fill-yellow-200" />
+                </div>
+              </div>
+            </div>
+
+            <div className="pr-20">
+              <p className="text-2xl font-bold text-gray-800 mb-6">
+                Editor in the OpenIdeaR
+              </p>
+
+              {/* Mock Editor Interface */}
+              <div className="bg-white rounded-lg p-4 shadow-lg">
+                <Image src="/guide/editor_image.png" alt="Editor Mockup" width={600} height={300} className="rounded-md" />
               </div>
             </div>
           </div>
@@ -269,7 +311,7 @@ export default function Instruction() {
                 </button>
               </div>
               <button
-                onClick={() => handleContinue}
+                onClick={handleContinue}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer"
               >
                 Continue
@@ -279,123 +321,16 @@ export default function Instruction() {
         </div>
 
         {/* Content Guide Section */}
-        <div className="bg-white rounded-b- xl shadow-md p-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-6">
-            PART 2: SUPPORT PROFESSIONAL POST LAYOUT
-          </h2>
+        <div className="bg-white rounded-b-2xl shadow-md p-8">
+          <p className="text-xl font-bold text-gray-800 mb-6">
+            PART 3: EDITOR
+          </p>
 
           <div className="space-y-4 text-gray-700">
-            <h2 className="text-lg font-medium mb-2">Instructions</h2>
+            <p className="text-lg font-medium mb-2">Hướng dẫn</p>
             <ul className="list-disc pl-5 space-y-1 text-gray-700">
-              <li>Drag elements from the sidebar into the editor area</li>
-              <li>Click on elements to edit their content</li>
-              <li>Use the toolbar to format your text</li>
-              <li>Switch to Preview mode to see how your post will look</li>
-              <li>Click Save Post when you're finished</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const Page3 = () => (
-    <div className="min-h-screen p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header dots indicator */}
-        <div className="flex justify-center mb-8 pt-8 ">
-          <div className="flex space-x-2">
-            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-          </div>
-        </div>
-
-        {/* Main Editor Tutorial Card */}
-        <div className="bg-white rounded-t-2xl shadow-xl border-b-4 border-gray-400">
-          <div className="bg-gradient-to-r from-blue-200 to-blue-300 p-8 relative">
-            {/* Character mascot */}
-            <div className="absolute top-4 right-8">
-              <div className="w-16 h-16 bg-blue-400 rounded-full relative">
-                {/* Eyes with glasses */}
-                <div className="absolute top-4 left-2">
-                  <div className="flex space-x-1">
-                    <div className="w-6 h-6 bg-white rounded-full border-2 border-gray-800 flex items-center justify-center">
-                      <div className="w-3 h-3 bg-black rounded-full"></div>
-                    </div>
-                    <div className="w-6 h-6 bg-white rounded-full border-2 border-gray-800 flex items-center justify-center">
-                      <div className="w-3 h-3 bg-black rounded-full"></div>
-                    </div>
-                  </div>
-                  {/* Glasses bridge */}
-                  <div className="w-1 h-0.5 bg-gray-800 absolute top-3 left-6"></div>
-                </div>
-                {/* Light bulb idea */}
-                <div className="absolute -top-2 -right-2">
-                  <Lightbulb className="w-6 h-6 text-yellow-400 fill-yellow-200" />
-                </div>
-              </div>
-            </div>
-
-            <div className="pr-20">
-              <h1 className="text-2xl font-bold text-gray-800 mb-6">
-                Hướng dẫn sử dụng Spiderum
-              </h1>
-
-              {/* Mock Editor Interface */}
-              <div className="bg-white rounded-lg p-4 shadow-lg">
-                <h2 className="text-lg font-semibold text-blue-600 mb-4">
-                  Spiderum là gì?
-                </h2>
-
-                {/* Mock content area */}
-                <div className="min-h-16 text-gray-500 text-sm">
-                  <div className="w-full h-1 bg-gray-200 rounded mb-2"></div>
-                  <div className="w-3/4 h-1 bg-gray-200 rounded mb-2"></div>
-                  <div className="w-1/2 h-1 bg-gray-200 rounded"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6 bg-gray-50">
-            <div className="flex items-center justify-between">
-              <div className="flex space-x-4">
-                <button
-                  onClick={handleBack}
-                  className="text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200"
-                >
-                  Quay lại
-                </button>
-                <button className="text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200">
-                  Bỏ qua hướng dẫn
-                </button>
-              </div>
-              <button
-                onClick={() => handleContinue}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
-              >
-                Tiếp tục
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Content Guide Section */}
-        <div className="bg-white rounded-b- xl shadow-md p-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-6">
-            PHẦN 2: HỖ TRỢ TRÌNH BÀY BÀI VIẾT CHUYÊN NGHIỆP
-          </h2>
-
-          <div className="space-y-4 text-gray-700">
-            <h2 className="text-lg font-medium mb-2">Instructions</h2>
-            <ul className="list-disc pl-5 space-y-1 text-gray-700">
-              <li>Drag elements from the sidebar into the editor area</li>
-              <li>Click on elements to edit their content</li>
-              <li>Use the toolbar to format your text</li>
-              <li>Switch to Preview mode to see how your post will look</li>
-              <li>Click Save Post when you're finished</li>
+              <li>Bạn có thể dễ dàng sửa nội dung bằng cách click vào các phần tử</li>
+              <li>Sử dụng toolbar ở trên để định dạng văn bản</li>
             </ul>
           </div>
         </div>
@@ -406,21 +341,20 @@ export default function Instruction() {
   const Page4 = () => (
     <div className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto">
-        {/* Header dots indicator */}
-        <div className="flex justify-center mb-8 pt-8 ">
-          <div className="flex space-x-2">
-            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-          </div>
-        </div>
-
         {/* Main Editor Tutorial Card */}
-        <div className="bg-white rounded-t-2xl shadow-xl border-b-4 border-gray-400">
+        <div className="bg-white rounded-t-2xl shadow-xl border-b-4 border-gray-400 mb-4">
+          {/* Header dots indicator */}
+          <div className="flex justify-center mb-8 pt-8 ">
+            <div className="flex space-x-2">
+              <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+              <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+              <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            </div>
+          </div>
           <div className="bg-gradient-to-r from-blue-200 to-blue-300 p-8 relative">
             {/* Character mascot */}
-            <div className="absolute top-4 right-8">
+            <div className="absolute top-0 right-0">
               <div className="w-16 h-16 bg-blue-400 rounded-full relative">
                 {/* Eyes with glasses */}
                 <div className="absolute top-4 left-2">
@@ -441,68 +375,67 @@ export default function Instruction() {
                 </div>
               </div>
             </div>
+            <div className="bg-white rounded-lg p-4 shadow-lg">
+              <div className="flex">
+                <div className="flex-1 border-r-2 border-gray-200 pl-4">
+                  <div className="min-h-16 text-gray-500 text-sm ml-4 ">
+                    <div className="w-full">Bạn có thể xem bản xem trước bằng cách bấm Preview</div>
+                    <div className="w-full">Hoặc có thể chọn chế độ HTML để xem và sửa bài viết ở chế độ HTML</div>
+                  </div>
+                  <img src="/guide/page4one.png" alt="Post Image" width={140} className="w-full rounded-md" />
 
-            <div className="pr-20">
-              <h1 className="text-2xl font-bold text-gray-800 mb-6">
-                Hướng dẫn sử dụng Spiderum
-              </h1>
+                </div>
+                <div className="flex-1 border-l-2 border-gray-200">
+                  <div className="min-h-16 text-gray-500 text-sm ml-4 ">
+                    <div className="w-full">Bấm vào đây để public bài viết, bài viết đã public không thể public lại lần nữa</div>
+                    <div className="w-full">Nhấn Save Draft để lưu bài viết</div>
+                  </div>
+                  <img src="/guide/page4two.png" alt="Post Image" className="w-full h-auto rounded-md" />
 
-              {/* Mock Editor Interface */}
-              <div className="bg-white rounded-lg p-4 shadow-lg">
-                <h2 className="text-lg font-semibold text-blue-600 mb-4">
-                  Spiderum là gì?
-                </h2>
-
-                {/* Mock content area */}
-                <div className="min-h-16 text-gray-500 text-sm">
-                  <div className="w-full h-1 bg-gray-200 rounded mb-2"></div>
-                  <div className="w-3/4 h-1 bg-gray-200 rounded mb-2"></div>
-                  <div className="w-1/2 h-1 bg-gray-200 rounded"></div>
                 </div>
               </div>
+
             </div>
           </div>
 
-          <div className="p-6 bg-gray-50">
+          <div className="p-6 bg-gray-50 mb-4">
             <div className="flex items-center justify-between">
               <div className="flex space-x-4">
                 <button
                   onClick={handleBack}
-                  className="text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200"
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer"
                 >
-                  Quay lại
+                  Back
                 </button>
-                <button className="text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200">
-                  Bỏ qua hướng dẫn
+                <button className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer" onClick={() => setDisplayInstructions(false)}>
+                  Skip
                 </button>
               </div>
               <button
-                onClick={() => handleContinue}
+                onClick={() => {setDisplayInstructions(false); setCurrentPage(1);}}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
               >
-                Tiếp tục
+                Kết thúc
               </button>
             </div>
           </div>
         </div>
-
-        {/* Content Guide Section */}
-        <div className="bg-white rounded-b- xl shadow-md p-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-6">
-            PHẦN 2: HỖ TRỢ TRÌNH BÀY BÀI VIẾT CHUYÊN NGHIỆP
-          </h2>
-
-          <div className="space-y-4 text-gray-700">
-            <h2 className="text-lg font-medium mb-2">Instructions</h2>
-            <ul className="list-disc pl-5 space-y-1 text-gray-700">
-              <li>Drag elements from the sidebar into the editor area</li>
-              <li>Click on elements to edit their content</li>
-              <li>Use the toolbar to format your text</li>
-              <li>Switch to Preview mode to see how your post will look</li>
-              <li>Click Save Post when you're finished</li>
-            </ul>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-b-xl p-6 shadow-md h-40 bg-gradient-to-br from-purple-50 to-pink-50">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+                <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+              </div>
+            </div>
+            <div className="bg-white rounded-b-xl p-6 shadow-md h-40 bg-gradient-to-br from-green-50 to-blue-50">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-2/3 mb-3"></div>
+                <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-4/5"></div>
+              </div>
+            </div>
           </div>
-        </div>
       </div>
     </div>
   );

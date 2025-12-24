@@ -1,208 +1,308 @@
-'use client';
+'use client'
+import React, { useState } from 'react';
+import { 
+  Save, 
+  Eye, 
+  EyeOff, 
+  Code, 
+  Globe, 
+  X, 
+  Plus, 
+  ChevronDown,
+  MessageCircleQuestion,
+  Image as ImageIcon,
+  Check,
+  AlertCircle
+} from 'lucide-react';
 
-import React, { useState, useRef } from 'react';
-import { Upload, X, FileImage, Loader2 } from 'lucide-react';
+export default function ImprovedEditorUI() {
+  const [previewMode, setPreviewMode] = useState(false);
+  const [htmlMode, setHtmlMode] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [title, setTitle] = useState('');
+  const [isPublished, setIsPublished] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationType, setNotificationType] = useState<'success' | 'error'>('success');
+  const [notificationMessage, setNotificationMessage] = useState('');
 
-const Test = ({ onImageUploaded, onClose }: any) => {
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [preview, setPreview] = useState(null);
-    const [uploading, setUploading] = useState(false);
-    const [error, setError] = useState(null);
-    const fileInputRef = useRef(null);
+  const showNotif = (type: 'success' | 'error', message: string) => {
+    setNotificationType(type);
+    setNotificationMessage(message);
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 3000);
+  };
 
-    // const handleFileSelect = (event: any) => {
-    //     const file = event.target.files[0];
-    //     if (file) {
-    //         // Validate file type
-    //         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    //         if (!allowedTypes.includes(file.type)) {
-    //             setError('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
-    //             return;
-    //         }
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Notification Toast */}
+      {showNotification && (
+        <div className="fixed top-4 right-4 z-50 animate-slide-in">
+          <div className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl backdrop-blur-sm ${
+            notificationType === 'success' 
+              ? 'bg-emerald-500/95 text-white' 
+              : 'bg-red-500/95 text-white'
+          }`}>
+            {notificationType === 'success' ? (
+              <Check className="w-5 h-5" />
+            ) : (
+              <AlertCircle className="w-5 h-5" />
+            )}
+            <span className="font-medium">{notificationMessage}</span>
+          </div>
+        </div>
+      )}
 
-    //         // Validate file size (5MB limit)
-    //         if (file.size > 5 * 1024 * 1024) {
-    //             setError('File size must be less than 5MB');
-    //             return;
-    //         }
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+              Create New Post
+            </h1>
+            <button className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
+              <MessageCircleQuestion className="w-5 h-5 text-slate-600" />
+            </button>
+          </div>
+          
+          {/* Status Badge */}
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
+            isPublished 
+              ? 'bg-emerald-100 text-emerald-700' 
+              : 'bg-amber-100 text-amber-700'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${
+              isPublished ? 'bg-emerald-500' : 'bg-amber-500'
+            }`} />
+            {isPublished ? 'Published' : 'Draft'}
+          </div>
+        </div>
 
-    //         setSelectedFile(file);
-    //         setError(null);
+        {/* Title Input */}
+        <div className="mb-6">
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full px-6 py-4 text-2xl font-semibold bg-white border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all placeholder:text-slate-400"
+            placeholder="Enter your post title..."
+          />
+        </div>
 
-    //         // Create preview
-    //         const reader = new FileReader();
-    //         reader.onload = (e) => {
-    //             setPreview(e.target.result);
-    //         };
-    //         reader.readAsDataURL(file);
-    //     }
-    // };
+        {/* Editor Card */}
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+          {/* Toolbar */}
+          <div className="border-b border-slate-200 bg-slate-50/50 px-6 py-4">
+            <div className="flex items-center gap-2">
+              <button className="px-4 py-2 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium text-slate-700">
+                <span className="font-bold">B</span>
+              </button>
+              <button className="px-4 py-2 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium text-slate-700">
+                <span className="italic">I</span>
+              </button>
+              <button className="px-4 py-2 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium text-slate-700">
+                <span className="underline">U</span>
+              </button>
+              <div className="w-px h-6 bg-slate-300 mx-2" />
+              <button className="px-4 py-2 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium text-slate-700">
+                <ImageIcon className="w-4 h-4" />
+              </button>
+              <button className="px-4 py-2 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium text-slate-700">
+                <Code className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
 
-    // const handleUpload = async () => {
-    //     if (!selectedFile) return;
+          {/* Editor Content */}
+          <div className="p-8 min-h-[500px]">
+            {previewMode ? (
+              <div className="prose prose-lg max-w-none">
+                <h2 className="text-3xl font-bold mb-4">{title || 'Untitled Post'}</h2>
+                <p className="text-slate-600">Your content preview will appear here...</p>
+              </div>
+            ) : htmlMode ? (
+              <textarea
+                className="w-full h-96 p-4 font-mono text-sm bg-slate-900 text-emerald-400 rounded-xl border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter HTML code..."
+              />
+            ) : (
+              <div className="prose prose-lg max-w-none">
+                <p className="text-slate-400">Start writing your post here...</p>
+              </div>
+            )}
+          </div>
+        </div>
 
-    //     setUploading(true);
-    //     setError(null);
+        {/* Bottom Action Bar */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200 shadow-2xl">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setPreviewMode(!previewMode)}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
+                  previewMode
+                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                {previewMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {previewMode ? 'Edit' : 'Preview'}
+              </button>
 
-    //     const formData = new FormData();
-    //     formData.append('image', selectedFile);
+              <button
+                onClick={() => setHtmlMode(!htmlMode)}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
+                  htmlMode
+                    ? 'bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-lg'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                <Code className="w-4 h-4" />
+                HTML
+              </button>
+            </div>
 
-    //     try {
-    //         const response = await fetch('http://localhost:5001/media/upload', {
-    //             method: 'POST',
-    //             body: formData,
-    //         });
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => showNotif('success', 'Draft saved successfully!')}
+                disabled={!title}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium transition-all ${
+                  title
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg hover:shadow-xl hover:scale-105'
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                }`}
+              >
+                <Save className="w-4 h-4" />
+                Save Draft
+              </button>
 
-    //         if (!response.ok) {
-    //             throw new Error('Upload failed');
-    //         }
+              <button
+                onClick={() => {
+                  if (title) setShowPublishModal(true);
+                }}
+                disabled={!title || isPublished}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium transition-all ${
+                  title && !isPublished
+                    ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg hover:shadow-xl hover:scale-105'
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                }`}
+              >
+                <Globe className="w-4 h-4" />
+                Publish
+              </button>
+            </div>
+          </div>
+        </div>
 
-    //         const data = await response.json();
+        {/* Publish Modal */}
+        {showPublishModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-slate-800">Publish Your Post</h2>
+                  <button
+                    onClick={() => setShowPublishModal(false)}
+                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
 
-    //         if (data.status === 'success') {
-    //             // Call the callback with the uploaded image URL
-    //             onImageUploaded(data.data.imageUrl);
-    //             // Close the modal
-    //             onClose();
-    //         } else {
-    //             throw new Error(data.error || 'Upload failed');
-    //         }
-    //     } catch (err) {
-    //         setError(err.message || 'Upload failed. Please try again.');
-    //     } finally {
-    //         setUploading(false);
-    //     }
-    // };
+                {/* Description */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Description
+                    <span className="text-slate-400 font-normal ml-2">(Recommended for SEO)</span>
+                  </label>
+                  <textarea
+                    rows={4}
+                    className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
+                    placeholder="Write a brief description of your post..."
+                  />
+                </div>
 
-    // const handleClearSelection = () => {
-    //     setSelectedFile(null);
-    //     setPreview(null);
-    //     setError(null);
-    //     if (fileInputRef.current) {
-    //         fileInputRef.current.value = '';
-    //     }
-    // };
+                {/* Featured Image */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Featured Image
+                    <span className="text-slate-400 font-normal ml-2">(Recommended)</span>
+                  </label>
+                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors cursor-pointer bg-slate-50">
+                    <ImageIcon className="w-12 h-12 mx-auto text-slate-400 mb-3" />
+                    <p className="text-sm text-slate-600 font-medium">Click to upload or drag and drop</p>
+                    <p className="text-xs text-slate-400 mt-1">PNG, JPG, GIF up to 10MB</p>
+                  </div>
+                </div>
 
-    // const handleDragOver = (e) => {
-    //     e.preventDefault();
-    //     e.stopPropagation();
-    // };
+                {/* Series */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Series
+                  </label>
+                  <select className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all">
+                    <option>No Series</option>
+                    <option>Getting Started with React</option>
+                    <option>Advanced JavaScript</option>
+                  </select>
+                  <button className="mt-3 flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm">
+                    <Plus className="w-4 h-4" />
+                    Create New Series
+                  </button>
+                </div>
 
-    // const handleDrop = (e) => {
-    //     e.preventDefault();
-    //     e.stopPropagation();
+                {/* Category */}
+                <div className="mb-8">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Category <span className="text-red-500">*</span>
+                  </label>
+                  <select className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all">
+                    <option>Select a category</option>
+                    <option>Technology</option>
+                    <option>Design</option>
+                    <option>Business</option>
+                  </select>
+                </div>
 
-    //     const files = e.dataTransfer.files;
-    //     if (files.length > 0) {
-    //         const file = files[0];
-    //         const event = { target: { files: [file] } };
-    //         handleFileSelect(event);
-    //     }
-    // };
+                {/* Actions */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowPublishModal(false)}
+                    className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowPublishModal(false);
+                      setIsPublished(true);
+                      showNotif('success', 'Post published successfully!');
+                    }}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                  >
+                    Publish Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
-    // return (
-    //     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-    //         <div className="flex justify-between items-center mb-6">
-    //             <h2 className="text-2xl font-bold text-gray-800">Upload Image</h2>
-    //             <button
-    //                 onClick={onClose}
-    //                 className="text-gray-400 hover:text-gray-600 transition-colors"
-    //             >
-    //                 <X size={24} />
-    //             </button>
-    //         </div>
-
-    //         {/* Upload Area */}
-    //         <div
-    //             className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors cursor-pointer"
-    //             onDragOver={handleDragOver}
-    //             onDrop={handleDrop}
-    //             onClick={() => fileInputRef.current?.click()}
-    //         >
-    //             <input
-    //                 ref={fileInputRef}
-    //                 type="file"
-    //                 accept="image/*"
-    //                 onChange={handleFileSelect}
-    //                 className="hidden"
-    //             />
-
-    //             {preview ? (
-    //                 <div className="relative">
-    //                     <img
-    //                         src={preview}
-    //                         alt="Preview"
-    //                         className="max-w-full max-h-64 mx-auto rounded-lg shadow-md"
-    //                     />
-    //                     <button
-    //                         onClick={(e) => {
-    //                             e.stopPropagation();
-    //                             handleClearSelection();
-    //                         }}
-    //                         className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-    //                     >
-    //                         <X size={16} />
-    //                     </button>
-    //                 </div>
-    //             ) : (
-    //                 <div className="space-y-4">
-    //                     <div className="flex justify-center">
-    //                         <FileImage size={48} className="text-gray-400" />
-    //                     </div>
-    //                     <div>
-    //                         <p className="text-lg font-medium text-gray-700">
-    //                             Click to upload or drag and drop
-    //                         </p>
-    //                         <p className="text-sm text-gray-500 mt-1">
-    //                             JPEG, PNG, GIF, or WebP (max 5MB)
-    //                         </p>
-    //                     </div>
-    //                 </div>
-    //             )}
-    //         </div>
-
-    //         {/* Error Message */}
-    //         {error && (
-    //             <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-    //                 <p className="text-red-600 text-sm">{error}</p>
-    //             </div>
-    //         )}
-
-    //         {/* Upload Button */}
-    //         {selectedFile && (
-    //             <div className="mt-6 flex gap-3">
-    //                 <button
-    //                     onClick={handleUpload}
-    //                     disabled={uploading}
-    //                     className="flex-1 bg-blue-500 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-    //                 >
-    //                     {uploading ? (
-    //                         <>
-    //                             <Loader2 size={20} className="animate-spin" />
-    //                             Uploading...
-    //                         </>
-    //                     ) : (
-    //                         <>
-    //                             <Upload size={20} />
-    //                             Upload Image
-    //                         </>
-    //                     )}
-    //                 </button>
-
-    //                 <button
-    //                     onClick={handleClearSelection}
-    //                     disabled={uploading}
-    //                     className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-    //                 >
-    //                     Clear
-    //                 </button>
-    //             </div>
-    //         )}
-    //     </div>
-    // );
-    return <>
-        Test
-    </>
-};
-
-export default Test;
+      <style jsx>{`
+        @keyframes slide-in {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
+        }
+      `}</style>
+    </div>
+  );
+}

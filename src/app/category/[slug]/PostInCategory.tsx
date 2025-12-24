@@ -63,7 +63,7 @@ const PostInCategory = ({ allCategory, slug, totalPage }: { allCategory: any[], 
                     <div key={idx} className={'grid md:grid-cols-5 gap-y-4 bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow'}>
                         <a href={`/post/${article.slug}`} className={'md:col-span-2'}>
                             <img
-                                src={article?.image?.url}
+                                src={article?.image?.url || '/default-post-image.jpg'}
                                 alt={article?.image?.description || article.title}
                                 className="w-full h-full max-h-60 object-cover transition-transform duration-500 group-hover:scale-110"
                             />
