@@ -7,7 +7,7 @@ import { Edit, Filter, Plus, Search, Trash2, X, ChevronLeft, ChevronRight, Eye, 
 import { useEffect, useState } from "react";
 import { useTranslation } from "../hook/useTranslation";
 import ImageUpload from "../create/ImageUpload";
-import { TextAreaCustom } from "@/component/common/TextAreaCustom";
+import { TextAreaCustom } from "@/components/common/TextAreaCustom";
 
 type CategoryType = {
     _id: string;

@@ -5,7 +5,7 @@ import authenticationStore from "@/store/AuthenticationStore";
 import axios from "axios";
 import alertStore from "@/store/AlertStore";
 import { getHeadersToken } from "@/api/authentication";
-import { CategoryLinkCustom } from "@/component/common/LinkCustom";
+import { CategoryLinkCustom } from "@/components/common/LinkCustom";
 
 const PostElement = ({ post }: { post: PostInterface }) => {
     const currentUser = authenticationStore((state) => state.currentUser);

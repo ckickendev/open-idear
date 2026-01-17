@@ -31,24 +31,24 @@ const HotPost: React.FC = () => {
   const [articles, setArticles] = React.useState<Post[]>([]);
 
   useEffect(() => {
-        // Fetch all posts from the server
-        const fetchHotPost = async () => {
-            try {
-                const token = localStorage.getItem("access_token");
-                if (token) {
-                    const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getHotPostsWeek?limit=10&page=1`);
-                    if (res.status === 200) {
-                      console.log('res.data.hotpost: ', res.data.posts);
-                      setArticles(res.data.posts);
-                    }
-                }
-            } catch (error) {
-                console.error('Error fetching posts:', error);
-            }
-        };
+    // Fetch all posts from the server
+    const fetchHotPost = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        if (token) {
+          const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getHotPostsWeek?limit=10&page=1`);
+          if (res.status === 200) {
+            console.log('res.data.hotpost: ', res.data.posts);
+            setArticles(res.data.posts);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+      }
+    };
 
-        fetchHotPost();
-    }, []);
+    fetchHotPost();
+  }, []);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
@@ -93,7 +93,15 @@ const HotPost: React.FC = () => {
               </a>
 
               <div className="flex items-center mt-auto">
-                <img src={article.author.avatar} alt={article.author.name} className="h-8 w-8 rounded-full mr-2" />
+                <div className="relative h-8 w-8 rounded-full overflow-hidden mr-2">
+                  <Image
+                    src={article.author.avatar || "/banner/banner_standard.png"}
+                    alt={article.author.name}
+                    fill
+                    className="object-cover"
+                    sizes="32px"
+                  />
+                </div>
                 <div className="flex-1 justify-between">
                   <div className="flex items-center">
                     <UserLinkCustom className="text-sm font-medium cursor-pointer hover:underline" id={article.author._id} name={article.author.name} />
@@ -104,7 +112,7 @@ const HotPost: React.FC = () => {
                   <div className="flex items-center text-xs text-gray-500">
                     <span>{article.author.postedTime}</span>
                     <span className="flex items-center">
-                      {convertDate(article.createdAt)} 
+                      {convertDate(article.createdAt)}
                     </span>
                   </div>
                 </div>

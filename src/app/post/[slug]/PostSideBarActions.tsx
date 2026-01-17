@@ -3,10 +3,10 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Heart , MessageCircle, Share2, User, Plus, Bookmark, Check } from "lucide-react";
 import authenticationStore from "@/store/AuthenticationStore";
 import { getHeadersToken } from "@/api/authentication";
-import { REACT_APP_ROOT_BACKEND } from "@/component/authen/authentication";
+import { REACT_APP_ROOT_BACKEND } from "@/components/authen/authentication";
 import axios from "axios";
 import alertStore from "@/store/AlertStore";
-import Notification from "@/component/common/Notification";
+import Notification from "@/components/common/Notification";
 import Link from "next/link";
 
 export default function PostSidebarActions({postData}: any) {

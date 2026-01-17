@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import LoadingComponent from "@/component/common/Loading";
-import Dialog from "@/component/common/Dialog";
+import LoadingComponent from "@/components/common/Loading";
+import Dialog from "@/components/common/Dialog";
 import axios from "axios";
 import { redirect } from "next/navigation";
-import { REACT_APP_ROOT_BACKEND, resetPassSchema } from "@/component/authen/authentication";
+import { REACT_APP_ROOT_BACKEND, resetPassSchema } from "@/components/authen/authentication";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";

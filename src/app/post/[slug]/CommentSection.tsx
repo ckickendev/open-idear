@@ -7,7 +7,7 @@ import { Heart } from 'lucide-react';
 import authenticationStore from '@/store/AuthenticationStore';
 import Link from 'next/link';
 import Image from 'next/image';
-import { TextAreaCustom } from '@/component/common/TextAreaCustom';
+import { TextAreaCustom } from '@/components/common/TextAreaCustom';
 
 type Comment = {
   _id: string;

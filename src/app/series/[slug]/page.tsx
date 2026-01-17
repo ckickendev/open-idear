@@ -1,5 +1,5 @@
-import HotSeries from '@/component/hot_series/HotSeries';
-import PostDisplayPageElement from '@/component/PostDisplayPageElement';
+import HotSeries from '@/components/hot_series/HotSeries';
+import PostDisplayPageElement from '@/components/PostDisplayPageElement';
 import axios from 'axios';
 import AnotherSeries from './AnotherSeries';
 

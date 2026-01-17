@@ -6,7 +6,7 @@ import axios from "axios";
 import { Edit, Eye, EyeOff, Search, Trash2, Filter, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "../hook/useTranslation";
-import HoverTooltip from "@/component/common/TooltipNote";
+import HoverTooltip from "@/components/common/TooltipNote";
 import Link from "next/link";
 
 type PostType = {

@@ -12,14 +12,14 @@ import {
     Users,
     BookText
 } from 'lucide-react';
-import Logo from '@/component/common/Logo';
+import Logo from '@/components/common/Logo';
 import Category from './Category';
 import Post from './Post';
 import Report from './Report';
 import UserList from './UserList';
-import LoadingComponent from '@/component/common/Loading';
+import LoadingComponent from '@/components/common/Loading';
 import loadingStore from '@/store/LoadingStore';
-import Notification from '@/component/common/Notification';
+import Notification from '@/components/common/Notification';
 import Series from './Series';
 
 const AdminDashboard = () => {

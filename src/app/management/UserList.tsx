@@ -1,6 +1,6 @@
 'use client';
 import convertDate from "@/common/datetime";
-import LoadingComponent from "@/component/common/Loading";
+import LoadingComponent from "@/components/common/Loading";
 import alertStore from "@/store/AlertStore";
 import loadingStore from "@/store/LoadingStore";
 import axios from "axios";

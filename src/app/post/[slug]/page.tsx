@@ -1,8 +1,8 @@
-import HotPost from "@/component/hot_post/HotPost";
+import HotPost from "@/components/hot_post/HotPost";
 import { Mail, Link } from "lucide-react";
 import CommentSection from "./CommentSection";
 import PostSidebarActions from "./PostSideBarActions";
-import { CategoryLinkCustom } from "@/component/common/LinkCustom";
+import { CategoryLinkCustom } from "@/components/common/LinkCustom";
 
 export default async function PostLists({
   params,

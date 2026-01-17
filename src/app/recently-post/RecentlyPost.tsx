@@ -1,6 +1,6 @@
 'use client';
 
-import PostDisplayPageElement from "@/component/PostDisplayPageElement";
+import PostDisplayPageElement from "@/components/PostDisplayPageElement";
 import axios from "axios";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";

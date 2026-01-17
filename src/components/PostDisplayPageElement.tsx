@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { CategoryLinkCustom, PostLinkCustom } from "./common/LinkCustom"
 import { PaginationComponent } from "./common/PaginationComponent"
 
@@ -6,11 +7,13 @@ const PostDisplayPageElement = ({ data, totalPage }: { data: any[], totalPage: n
         <div className='w-4/5 space-y-4'>
             {data.map((article, idx) => (
                 <div key={idx} className={'grid md:grid-cols-5 gap-y-4 bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow'}>
-                    <a href={`/post/${article?.slug}`} className={'md:col-span-2'}>
-                        <img
+                    <a href={`/post/${article?.slug}`} className={'md:col-span-2 relative min-h-[150px]'}>
+                        <Image
                             src={article?.image?.url || '/default-post-image.jpg'}
                             alt={article?.image?.description || article.title}
-                            className="w-full h-full max-h-60 object-cover transition-transform duration-500 group-hover:scale-110"
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-110"
+                            sizes="(max-width: 768px) 100vw, 40vw"
                         />
                     </a>
                     <div className={`p-6 flex flex-col justify-center md:col-span-3`}>
@@ -30,6 +33,6 @@ const PostDisplayPageElement = ({ data, totalPage }: { data: any[], totalPage: n
             <PaginationComponent pageCount={totalPage} />
         </div>
     </div>
-} 
+}
 
 export default PostDisplayPageElement;

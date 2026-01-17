@@ -1,4 +1,4 @@
-export interface SeriesInteface {
+export interface SeriesInterface {
   _id: string;
   description: string;
   image: { url: string; description: string };

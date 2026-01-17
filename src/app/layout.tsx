@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-import Header from "@/component/Header";
-import Footer from "@/component/Footer";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { Suspense } from "react";
 
 // Fix 1: Add display: 'swap' to prevent layout shift
@@ -33,9 +33,8 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        suppressHydrationWarning={true} // Temporary fix to suppress font-related hydration warnings
       >
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
           <Header />
           {children}
           <Footer />

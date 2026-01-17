@@ -1,8 +1,8 @@
 'use client';
 
 import Category from "@/app/management/Category";
-import { CategoryLinkCustom, PostLinkCustom } from "@/component/common/LinkCustom";
-import { PaginationComponent } from "@/component/common/PaginationComponent";
+import { CategoryLinkCustom, PostLinkCustom } from "@/components/common/LinkCustom";
+import { PaginationComponent } from "@/components/common/PaginationComponent";
 import axios from "axios";
 import { Menu } from "lucide-react";
 import { useSearchParams } from "next/navigation";

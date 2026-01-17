@@ -4,27 +4,25 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import axios from "axios";
-import { SeriesInteface } from "@/inteface/Inteface";
-
-const getSeriesData = async () => {
-  // Placeholder for fetching series data
-  try {
-
-    const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getHotSeries`);
-    if (res.status === 200) {
-      console.log('res.data.series: ', res.data.series);
-      return res.data.series;
-
-    }
-  } catch (error) {
-    console.error('Error fetching posts:', error);
-  }
-}
-
-const series = await getSeriesData();
+import { SeriesInterface } from "@/interfaces/Interface";
 
 const HotSeries: React.FC = () => {
+  const [series, setSeries] = React.useState<SeriesInterface[]>([]);
   const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const fetchSeriesData = async () => {
+      try {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getHotSeries`);
+        if (res.status === 200) {
+          setSeries(res.data.series || []);
+        }
+      } catch (error) {
+        console.error('Error fetching series:', error);
+      }
+    };
+    fetchSeriesData();
+  }, []);
 
   const scrollLeft = () => {
     if (scrollRef.current) {
@@ -76,7 +74,7 @@ const HotSeries: React.FC = () => {
           className="flex overflow-x-auto gap-5 px-12 pb-4 scrollbar-hide"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {series.map((serie: SeriesInteface) => (
+          {series.map((serie: SeriesInterface) => (
             <div key={serie._id} className="flex-shrink-0 w-64">
               <Link href={`/series/${serie.slug}`}>
                 <div className="group">

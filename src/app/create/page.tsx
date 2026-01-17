@@ -23,7 +23,7 @@ import axios from 'axios';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 
 import { getHeadersToken } from '@/api/authentication';
-import LoadingComponent from '@/component/common/Loading';
+import LoadingComponent from '@/components/common/Loading';
 import loadingStore from '@/store/LoadingStore';
 import PostLists from './PostLists';
 
@@ -34,9 +34,9 @@ import authenticationStore from '@/store/AuthenticationStore';
 import FileHandler from '@tiptap/extension-file-handler';
 import ImageUpload from './ImageUpload';
 import alertStore from '@/store/AlertStore';
-import Notification from '@/component/common/Notification';
-import { ButtonCyanToBlue, ButtonGray, ButtonPinkToOrange, ButtonPurpleToBlue, ButtonPurpleToPink } from '@/component/common/ButtonCustom';
-import { TextAreaCustom } from '@/component/common/TextAreaCustom';
+import Notification from '@/components/common/Notification';
+import { ButtonCyanToBlue, ButtonGray, ButtonPinkToOrange, ButtonPurpleToBlue, ButtonPurpleToPink } from '@/components/common/ButtonCustom';
+import { TextAreaCustom } from '@/components/common/TextAreaCustom';
 
 export default function CreatePost() {
   const router = useRouter();

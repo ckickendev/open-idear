@@ -1,6 +1,6 @@
 "use client"
 
-import { SeriesInteface } from "@/inteface/Inteface";
+import { SeriesInterface } from "@/interfaces/Interface";
 import axios from "axios";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
@@ -8,7 +8,7 @@ import Link from "next/link";
 import React from "react";
 
 const AnotherSeries = ({ slug }: { slug: string }) => {
-    const [anotherSeriesData, setAnotherSeriesData] = React.useState<SeriesInteface[]>([]);
+    const [anotherSeriesData, setAnotherSeriesData] = React.useState<SeriesInterface[]>([]);
 
     React.useEffect(() => {
         const getAnotherSeriesData = async () => {
@@ -67,7 +67,7 @@ const AnotherSeries = ({ slug }: { slug: string }) => {
                     className="flex overflow-x-auto gap-5 px-12 pb-4 scrollbar-hide"
                     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                 >
-                    {anotherSeriesData?.map((serie: SeriesInteface) => (
+                    {anotherSeriesData?.map((serie: SeriesInterface) => (
                         <div key={serie._id} className="flex-shrink-0 w-64">
                             <Link href={`/series/${serie.slug}`}>
                                 <div className="group">

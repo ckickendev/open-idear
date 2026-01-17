@@ -5,9 +5,9 @@ import { getHeadersToken } from "@/api/authentication";
 import axios from "axios";
 import alertStore from "@/store/AlertStore";
 import ImageUpload from "../create/ImageUpload";
-import { SeriesLinkCustom } from "@/component/common/LinkCustom";
-import { TextAreaCustom } from "@/component/common/TextAreaCustom";
-import { ButtonCyanToBlue, ButtonGreenToBlue, ButtonPinkToOrange, ButtonPurpleToBlue, ButtonRedToYellow } from "@/component/common/ButtonCustom";
+import { SeriesLinkCustom } from "@/components/common/LinkCustom";
+import { TextAreaCustom } from "@/components/common/TextAreaCustom";
+import { ButtonCyanToBlue, ButtonGreenToBlue, ButtonPinkToOrange, ButtonPurpleToBlue, ButtonRedToYellow } from "@/components/common/ButtonCustom";
 
 const SeriesElement = ({ series, onDeleteSeriesing, setOnDeleteSeriesing, deleteSeries }: any) => {
     const currentUser = authenticationStore((state) => state.currentUser);

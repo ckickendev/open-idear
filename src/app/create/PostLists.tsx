@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { BadgePlus, FileText, Clock, Sparkles } from 'lucide-react';
 import { getHeadersToken } from '@/api/authentication';
 import axios from 'axios';
-import Logo from '@/component/common/Logo';
+import Logo from '@/components/common/Logo';
 
 interface PostListInterface {
     _id: string;

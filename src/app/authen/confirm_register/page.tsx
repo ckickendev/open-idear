@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import LoadingComponent from "@/component/common/Loading";
-import Dialog from "@/component/common/Dialog";
+import LoadingComponent from "@/components/common/Loading";
+import Dialog from "@/components/common/Dialog";
 import axios from "axios";
 import { redirect } from "next/navigation";
-import { REACT_APP_ROOT_BACKEND } from "@/component/authen/authentication";
+import { REACT_APP_ROOT_BACKEND } from "@/components/authen/authentication";
 
 const ConfirmSignUpByLink = () => {
     const [isConfirm, setIsConfirm] = useState(false);

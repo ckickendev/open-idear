@@ -1,4 +1,4 @@
-import HoverTooltip from '@/component/common/TooltipNote';
+import HoverTooltip from '@/components/common/TooltipNote';
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import { AlignCenter, AlignLeft, AlignRight, Bold, Italic, List, ListOrdered, LucideCloudMoonRain, Underline } from 'lucide-react';
 

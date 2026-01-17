@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslation } from "@/app/hook/useTranslation";
+import Image from "next/image";
 
 export default function Banner() {
     const { t } = useTranslation();
@@ -29,11 +30,14 @@ export default function Banner() {
                 </div>
             </div> */}
             <section className="relative overflow-hidden w-full flex flex-col items-center">
-                <div className="w-full">
-                    <img
-                        className="w-full"
-                        src={"/banner/banner_standard.png"} //src === "/upload/catalog/1644916867663.jpg"
-                        alt='image banner open idear'
+                <div className="w-full relative aspect-[16/5] sm:aspect-[21/9]">
+                    <Image
+                        src="/banner/banner_standard.png"
+                        alt="image banner open idear"
+                        fill
+                        priority
+                        className="object-cover"
+                        sizes="100vw"
                     />
                 </div>
                 <div className="absolute top-1 flex flex-col flex-nowrap justify-center items-center  gap-4 max-w-screen-xl mx-auto w-full h-full">

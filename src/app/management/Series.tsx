@@ -6,8 +6,8 @@ import axios from "axios";
 import { Search, Trash2, Filter, ChevronLeft, ChevronRight, Edit, X, Plus, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "../hook/useTranslation";
-import HoverTooltip from "@/component/common/TooltipNote";
-import { TextAreaCustom } from "@/component/common/TextAreaCustom";
+import HoverTooltip from "@/components/common/TooltipNote";
+import { TextAreaCustom } from "@/components/common/TextAreaCustom";
 import Link from "next/link";
 
 type SeriesType = {
