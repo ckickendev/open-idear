@@ -529,11 +529,10 @@ export default function CreatePost() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-
-        <div className='mb-8 flex items-center justify-between'>
+      <div className="w-7xl mx-auto px-4 py-6">
+        <div className='mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
           <div className='w-full flex items-center mb-2'>
-            <h1 className="text-3xl font-bold text-gray-600">{!idPost ? "Create new post" : "Edit your post"}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-600 truncate">{!idPost ? "Create new post" : "Edit your post"}</h1>
             <div className='relative'>
               <MessageCircleQuestion className=' m-2'
                 onClick={() => setDisplayInstructions(true)}
@@ -541,7 +540,7 @@ export default function CreatePost() {
             </div>
           </div>
 
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium ${isPublic
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium w-fit ${isPublic
             ? 'bg-emerald-100 text-emerald-700'
             : 'bg-amber-100 text-amber-700'
             }`}>
@@ -568,7 +567,7 @@ export default function CreatePost() {
 
           {/* Editor area */}
           <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden w-full">
-            <div className="border-b border-slate-200 bg-slate-50/50 px-6 py-4">
+            <div className="border-b border-slate-200 bg-slate-50/50 px-6 py-4 w-full">
               {!previewMode && editor &&
                 <>
                   <div className="flex items-center gap-2">
@@ -651,10 +650,10 @@ export default function CreatePost() {
                   />
                 </div>
                 <div className="flex items-center gap-2 justify-center px-2">
-                  <ButtonCyanToBlue 
-                    onClick={savePost} 
-                    classAddition="flex items-center whitespace-nowrap px-8 py-2 rounded-md" 
-                    title="Save Draft" 
+                  <ButtonCyanToBlue
+                    onClick={savePost}
+                    classAddition="flex items-center whitespace-nowrap px-8 py-2 rounded-md"
+                    title="Save Draft"
                     icon={<Save className="w-4 h-4 mr-2" />}
                   />
                 </div>

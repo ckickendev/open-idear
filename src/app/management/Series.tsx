@@ -3,7 +3,7 @@ import convertDate from "@/common/datetime";
 import alertStore from "@/store/AlertStore";
 import loadingStore from "@/store/LoadingStore";
 import axios from "axios";
-import { Search, Trash2, Filter, ChevronLeft, ChevronRight, Edit, X, Plus, Eye } from "lucide-react";
+import { Search, Trash2, Filter, ChevronLeft, ChevronRight, Edit, X, Plus, Eye, BookOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "../hook/useTranslation";
 import HoverTooltip from "@/components/common/TooltipNote";
@@ -26,6 +26,7 @@ type SeriesType = {
     };
     createdAt?: string;
     updatedAt?: string;
+    price?: number;
 };
 
 const Series = () => {
@@ -50,6 +51,7 @@ const Series = () => {
         title: '',
         slug: '',
         description: '',
+        price: 0,
     });
 
     useEffect(() => {
@@ -153,9 +155,10 @@ const Series = () => {
                 title: item.title || '',
                 slug: item.slug,
                 description: item.description || '',
+                price: item.price || 0,
             });
         } else {
-            setFormData({ _id: '', title: '', slug: '', description: '' });
+            setFormData({ _id: '', title: '', slug: '', description: '', price: 0 });
         }
         setShowModal(true);
     };
@@ -163,7 +166,7 @@ const Series = () => {
     const closeModal = () => {
         setShowModal(false);
         setSelectedItem(null);
-        setFormData({ _id: '', title: '', slug: '', description: '' });
+        setFormData({ _id: '', title: '', slug: '', description: '', price: 0 });
     };
 
     const handleAddSeries = async () => {
@@ -176,9 +179,10 @@ const Series = () => {
                     title: formData.title,
                     slug: formData.slug || formData.title.toLowerCase().replace(/\s+/g, '-'),
                     description: formData.description,
+                    price: formData.price,
                 });
                 setSeries([...series, newSeries.data.series]);
-                setFormData({ _id: '', title: '', slug: '', description: '' });
+                setFormData({ _id: '', title: '', slug: '', description: '', price: 0 });
 
                 setType('info');
                 setMessage('Thêm series thành công');
@@ -206,6 +210,7 @@ const Series = () => {
             title: formData.title,
             slug: formData.title.toLowerCase().replace(/\s+/g, '-'),
             description: formData.description,
+            price: formData.price,
         };
 
         const token = localStorage.getItem("access_token");
@@ -213,11 +218,11 @@ const Series = () => {
         axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/update`, updatedSeries)
             .then(response => {
                 console.log(response.data);
-                
+
                 setSeries(series.map(item =>
                     item._id === selectedItem?._id ? response.data.series : item
                 ));
-                setFormData({ _id: '', title: '', slug: '', description: '' });
+                setFormData({ _id: '', title: '', slug: '', description: '', price: 0 });
                 setSelectedItem(null);
 
                 setType('info');
@@ -355,6 +360,14 @@ const Series = () => {
                                                 >
                                                     <Edit size={16} />
                                                 </button>
+                                            </HoverTooltip>
+                                            <HoverTooltip tooltipText="Quản lý bài học">
+                                                <Link
+                                                    href={`/management/series/${item._id}/lessons`}
+                                                    className="text-green-600 hover:text-green-900 p-1 sm:p-2 rounded hover:bg-green-50 transition-colors"
+                                                >
+                                                    <BookOpen size={16} />
+                                                </Link>
                                             </HoverTooltip>
                                             <HoverTooltip tooltipText="Xóa series">
                                                 <button
@@ -510,12 +523,25 @@ const Series = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Mô tả
                                 </label>
-                                <TextAreaCustom 
-                                    id="description" 
-                                    value={formData.description} 
-                                    onChange={(e: any) => setFormData({ ...formData, description: e.target.value })} 
-                                    rows={3} 
-                                    placeholder="Nhập mô tả series" 
+                                <TextAreaCustom
+                                    id="description"
+                                    value={formData.description}
+                                    onChange={(e: any) => setFormData({ ...formData, description: e.target.value })}
+                                    rows={3}
+                                    placeholder="Nhập mô tả series"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Giá (VNĐ)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={formData.price}
+                                    onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })}
+                                    className="w-full px-3 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
+                                    placeholder="Nhập giá series (0 nếu miễn phí)"
                                 />
                             </div>
 
@@ -538,7 +564,7 @@ const Series = () => {
                             <button
                                 onClick={closeModal}
                                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                            >   
+                            >
                                 Hủy
                             </button>
                             <button
