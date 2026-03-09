@@ -86,7 +86,7 @@ const Courses = () => {
                     courseId: formData._id,
                     ...formData
                 });
-                setCourses(courses.map(c => c._id === formData._id ? response.data.data : c));
+                setCourses(courses?.map(c => c._id === formData._id ? response.data.data : c));
                 setMessage('Cập nhật khóa học thành công');
             } else {
                 const response = await axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/create`, {
@@ -130,7 +130,7 @@ const Courses = () => {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {courses.map((course) => (
+                        {courses?.map((course) => (
                             <tr key={course._id}>
                                 <td className="px-6 py-4">
                                     <div className="text-sm font-medium text-gray-900">{course.title}</div>

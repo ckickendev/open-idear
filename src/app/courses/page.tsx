@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import loadingStore from "@/store/LoadingStore";
 import {
@@ -37,6 +38,7 @@ type Course = {
 const CourseListing = () => {
     const [courses, setCourses] = useState<Course[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const router = useRouter();
     const changeLoad = loadingStore(state => state.changeLoad);
 
     useEffect(() => {
@@ -53,6 +55,12 @@ const CourseListing = () => {
         };
         fetchCourses();
     }, []);
+
+    const handleSearch = () => {
+        if (searchTerm.trim()) {
+            router.push(`/courses/search?q=${encodeURIComponent(searchTerm)}`);
+        }
+    };
 
     const categories = [
         { icon: Code, label: 'Lập trình Web', color: 'bg-blue-100 text-blue-600' },
@@ -97,9 +105,13 @@ const CourseListing = () => {
                                 className="w-full py-4 text-gray-800 focus:outline-none"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                             />
                         </div>
-                        <button className="bg-red-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg">
+                        <button
+                            onClick={handleSearch}
+                            className="bg-red-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg"
+                        >
                             Tìm kiếm
                         </button>
                     </div>
@@ -172,7 +184,7 @@ const CourseListing = () => {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {courses.length > 0 ? courses.map((course) => (
+                        {courses?.length > 0 ? courses.map((course) => (
                             <Link
                                 key={course._id}
                                 href={`/courses/${course.slug}`}
