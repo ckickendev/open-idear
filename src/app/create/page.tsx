@@ -61,6 +61,7 @@ export default function CreatePost() {
   const setDisplayInstructions = useInstructionStore((state) => state.setDisplayInstructions);
 
   const [idPost, setIdPost] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const [isPublic, setIsPublic] = useState(false);
   const [onPublic, setOnPublic] = useState(false);
@@ -383,6 +384,38 @@ export default function CreatePost() {
     return formatted;
   };
 
+  const handleAutoGenerate = async () => {
+    if (!title.toString().trim()) {
+      setType('error');
+      setMessage('Please enter a title to generate content.');
+      return;
+    }
+
+    try {
+      setIsGenerating(true);
+      const headers = getHeadersToken();
+
+      const response = await axios.post('/api/generate', { title: title.toString() }, { headers });
+
+      if (response.status === 200 && response.data.content) {
+        if (editor) {
+          editor.commands.setContent(response.data.content);
+        } else {
+          setContent(response.data.content);
+        }
+        setType('success');
+        setMessage('Content generated successfully!');
+      } else {
+        throw new Error('Failed to parse AI response');
+      }
+    } catch (error: any) {
+      setType('error');
+      setMessage(error?.response?.data?.error || error?.message || 'Failed to generate content');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // Editor toolbar components
   const savePost = async () => {
     if (!editor) return;
@@ -551,15 +584,40 @@ export default function CreatePost() {
         </div>
 
 
-        <div className="mb-6 w-full px-2">
+        <div className="mb-6 w-full px-2 flex flex-col sm:flex-row gap-4">
           <input
             id="post-title"
             type="text"
             value={title.toString()}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-6 py-4 text-2xl font-semibold bg-white border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all placeholder:text-slate-400"
+            className="flex-1 w-full px-6 py-4 text-2xl font-semibold bg-white border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all placeholder:text-slate-400"
             placeholder="Enter post title"
           />
+          <button
+            onClick={handleAutoGenerate}
+            disabled={isGenerating || !title.toString().trim()}
+            className={`px-6 py-4 rounded-2xl font-bold flex items-center justify-center transition-all min-w-[280px] ${isGenerating || !title.toString().trim()
+                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-lg shadow-purple-200 hover:shadow-xl hover:-translate-y-0.5'
+              }`}
+          >
+            {isGenerating ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Generating Content...
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Auto generate by AI
+              </>
+            )}
+          </button>
         </div>
 
         <div className="relative w-full flex flex-col lg:flex-row outline-none hover:outline-none focus:ring-teal-200 focus:border-teal-200">
