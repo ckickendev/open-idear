@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Upload, X, FileImage, Loader2, Check, CheckCircle } from 'lucide-react';
+import { Upload, X, FileImage, Loader2, Check, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { getHeadersToken } from '@/api/authentication';
+import MediaBrowser from './MediaBrowser';
 
 const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
     const [selectedFile, setSelectedFile] = useState(null);
@@ -11,6 +12,7 @@ const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
     const [isUploadDone, setIsUploadDone] = useState(false);
     const [description, setDescription] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [showBrowser, setShowBrowser] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileSelect = (event: any) => {
@@ -97,6 +99,13 @@ const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
+    };
+
+    const handleBrowserSelect = (media: any) => {
+        onImageUploaded(media);
+        setIsUploadDone(true);
+        setShowBrowser(false);
+        onClose();
     };
 
     const handleDragOver = (e : any) => {
@@ -238,6 +247,26 @@ const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
             )}
 
             {isUploadDone && (<div className="mt-4 p-3 border border-green-200 rounded-lg flex align-center justify-center"><CheckCircle size={24} className="text-green-500 mr-1" /> Image uploaded successfully!</div>)}
+
+            {/* Browse Existing Media Button */}
+            {!selectedFile && !isUploadDone && (
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                    <button
+                        onClick={() => setShowBrowser(true)}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 hover:border-blue-500 transition-colors font-medium"
+                    >
+                        <ImageIcon size={20} />
+                        Browse Your Media Library
+                    </button>
+                </div>
+            )}
+
+            {showBrowser && (
+                <MediaBrowser 
+                    onSelect={handleBrowserSelect} 
+                    onClose={() => setShowBrowser(false)} 
+                />
+            )}
         </div>
     );
 };
