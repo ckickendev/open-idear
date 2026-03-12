@@ -1,11 +1,12 @@
 'use client';
-import convertDate from "@/common/datetime";
+import convertDate from '@/common/datetime';
 import alertStore from "@/store/AlertStore";
 import loadingStore from "@/store/LoadingStore";
-import axios from "axios";
+import { postApi } from '@/features/ideas/api/post.api';
+import { categoryApi } from '@/features/categories/api/category.api';
 import { Edit, Eye, EyeOff, Search, Trash2, Filter, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useTranslation } from "../hook/useTranslation";
+import { useTranslation } from '@/app/hook/useTranslation';
 import HoverTooltip from "@/components/common/TooltipNote";
 import Link from "next/link";
 
@@ -48,25 +49,21 @@ const Post = () => {
         const fetchPosts = async () => {
             try {
                 changeLoad();
-                const token = localStorage.getItem("access_token");
-                if (token) {
-                    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                    const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post`);
-                    console.log("response", response);
+                const response = await postApi.getAllPosts();
+                console.log("response", response);
 
-                    const categoriesResponse = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category`);
+                const categoriesResponse = await categoryApi.getCategories();
+                if (categoriesResponse.success) {
                     setAllCategories(categoriesResponse.data.categories);
-
-                    setPosts(response.data.posts);
-                    changeLoad();
-                } else {
-                    setType('error');
-                    setMessage("Authentication error !");
-                    changeLoad();
                 }
+
+                if (response.success) {
+                    setPosts(response.data.posts);
+                } else throw new Error(response.message);
+                changeLoad();
             } catch (error: any) {
                 setType('error');
-                setMessage(error?.response?.data?.message || error?.message);
+                setMessage(error?.message);
                 changeLoad();
                 console.error('Error fetching posts:', error);
             }
@@ -146,12 +143,8 @@ const Post = () => {
             const post = posts.find(p => p._id === id);
             const newPublished = post?.published === true ? false : true;
 
-            const token = localStorage.getItem("access_token");
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-            await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/changePublicManager?id=${id}`, {
-                published: newPublished
-            });
+            const res = await postApi.changePublicManager(id, newPublished);
+            if (!res.success) throw new Error(res.message);
 
             setPosts(posts.map(post =>
                 post._id === id ? { ...post, published: newPublished } : post
@@ -159,10 +152,10 @@ const Post = () => {
 
             setType('info');
             setMessage(`Đã ${newPublished === true ? 'duyệt' : 'ẩn'} bài viết thành công`);
-            changeLoad();
         } catch (error: any) {
             setType('error');
-            setMessage(error?.response?.data?.message || error?.message);
+            setMessage(error?.message);
+        } finally {
             changeLoad();
         }
     };
@@ -170,20 +163,19 @@ const Post = () => {
     const handleDeletePost = (id: string) => {
         if (window.confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
             changeLoad();
-            const token = localStorage.getItem("access_token");
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-            axios.delete(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/delete/${id}`)
+            postApi.deletePost(id)
                 .then(response => {
-                    setType('info');
-                    setMessage('Xóa bài viết thành công');
-                    changeLoad();
+                    if (response.success) {
+                        setType('info');
+                        setMessage('Xóa bài viết thành công');
+                    } else throw new Error(response.message);
                 })
                 .catch(error => {
                     setType('error');
-                    setMessage(error?.response?.data?.message || error?.message);
-                    changeLoad();
-                });
+                    setMessage(error?.message);
+                })
+                .finally(() => changeLoad());
 
             const newPosts = posts.filter(post => post._id !== id);
             setPosts(newPosts);

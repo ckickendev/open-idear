@@ -5,7 +5,7 @@ import Article from "./Article";
 import { useTranslation } from "@/app/hook/useTranslation";
 import axios from "axios";
 import loadingStore from "@/store/LoadingStore";
-import LoadingComponent from "../common/Loading";
+import LoadingComponent from '@/components/common/Loading';
 import MainFeature from "./MainFeature";
 import { PostInterface } from "@/app/profile/[profileId]/page";
 import ArticleRightSide from "./ArticleRightSide";

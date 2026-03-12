@@ -1,12 +1,12 @@
 'use client';
-import convertDate from "@/common/datetime";
+import convertDate from '@/common/datetime';
 import alertStore from "@/store/AlertStore";
 import loadingStore from "@/store/LoadingStore";
-import axios from "axios";
+import { categoryApi } from '@/features/categories/api/category.api';
 import { Edit, Filter, Plus, Search, Trash2, X, ChevronLeft, ChevronRight, Eye, ImageUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useTranslation } from "../hook/useTranslation";
-import ImageUpload from "../create/ImageUpload";
+import { useTranslation } from '@/app/hook/useTranslation';
+import ImageUpload from '@/app/create/ImageUpload';
 import { TextAreaCustom } from "@/components/common/TextAreaCustom";
 
 type CategoryType = {
@@ -39,17 +39,11 @@ const Category = () => {
         const fetchCategories = async () => {
             try {
                 changeLoad();
-                const token = localStorage.getItem("access_token");
-                if (token) {
-                    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                    const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category`);
-                    console.log('Fetched categories:', response.data.categories);
+                const response = await categoryApi.getCategories();
+                console.log('Fetched categories:', response.data.categories);
+                if (response.success) {
                     setCategories(response.data.categories);
-                } else {
-                    setType('error');
-                    setMessage("Authentication error !");
-                }
-
+                } else throw new Error(response.message);
             } catch (error: any) {
                 setType('error');
                 setMessage(error?.response?.data?.message || error?.message)
@@ -158,21 +152,21 @@ const Category = () => {
         changeLoad();
         if (formData.name.trim()) {
             try {
-                const token = localStorage.getItem("access_token");
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                const newCategory = await axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category/create`, {
+                const newCategory = await categoryApi.createCategory({
                     name: formData.name,
                     slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
                     description: formData.description,
                 });
-                setCategories([...categories, newCategory.data.category]);
-                setFormData({ _id: '', name: '', slug: '', description: '' });
+                if(newCategory.success) {
+                    setCategories([...categories, newCategory.data.category]);
+                    setFormData({ _id: '', name: '', slug: '', description: '' });
 
-                setType('info');
-                setMessage(t('management.category.add_success'));
+                    setType('info');
+                    setMessage(t('management.category.add_success'));
+                } else throw new Error(newCategory.message);
             } catch (error: any) {
                 setType('error');
-                setMessage(error?.response?.data?.message || error?.message);
+                setMessage(error?.message);
             } finally {
                 setShowModal(false);
                 changeLoad();
@@ -196,43 +190,44 @@ const Category = () => {
             description: formData.description,
         };
 
-        const token = localStorage.getItem("access_token");
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category/update/${selectedItem?._id}`, updatedCategory)
+        categoryApi.updateCategory(selectedItem?._id as string, updatedCategory)
             .then(response => {
-                setCategories(categories.map(cat =>
-                    cat._id === selectedItem?._id ? response.data.category : cat
-                ));
-                setFormData({ _id: '', name: '', slug: '', description: '' });
-                setSelectedItem(null);
+                if(response.success) {
+                    setCategories(categories.map(cat =>
+                        cat._id === selectedItem?._id ? response.data.category : cat
+                    ));
+                    setFormData({ _id: '', name: '', slug: '', description: '' });
+                    setSelectedItem(null);
 
-                setType('info');
-                setMessage(t('management.category.update_success'));
+                    setType('info');
+                    setMessage(t('management.category.update_success'));
+                } else throw new Error(response.message);
             })
             .catch(error => {
                 setType('error');
-                setMessage(error?.response?.data?.message || error?.message);
+                setMessage(error?.message);
+            })
+            .finally(() => {
+                setShowModal(false);
+                changeLoad();
             });
-        setShowModal(false);
-        changeLoad();
     };
 
     const handleDeleteCategory = (id: string) => {
         if (window.confirm(t('management.category.are_you_sure_delete'))) {
             changeLoad();
-            const token = localStorage.getItem("access_token");
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            axios.delete(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category/delete/${id}`)
+            categoryApi.deleteCategory(id)
                 .then(response => {
-                    setType('info');
-                    setMessage('Xóa danh mục thành công');
-                    changeLoad();
+                    if (response.success) {
+                        setType('info');
+                        setMessage('Xóa danh mục thành công');
+                    } else throw new Error(response.message);
                 })
                 .catch(error => {
                     setType('error');
-                    setMessage(error?.response?.data?.message || error?.message);
-                    changeLoad();
-                });
+                    setMessage(error?.message);
+                })
+                .finally(() => changeLoad());
 
             const newCategories = categories.filter(cat => cat._id !== id);
             setCategories(newCategories);

@@ -7,7 +7,7 @@ import { PostInterface } from "./[profileId]/page";
 import SeriesElement from "./SeriesElement";
 import { Bookmark, FileText, Layers, Pen } from "lucide-react";
 import EmptyState from "./EmptyState";
-import { getHeadersToken } from "@/api/authentication";
+import { getHeadersToken } from "@/lib/api/axios";
 import alertStore from "@/store/AlertStore";
 
 const AllPost = ({ profileId }: any) => {

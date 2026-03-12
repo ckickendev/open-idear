@@ -1,8 +1,8 @@
 import { useTranslation } from "@/app/hook/useTranslation";
-import Logo from "../common/Logo";
+import Logo from "@/components/common/Logo";
 import { PostInterface } from "@/app/profile/[profileId]/page";
 import { calculateGapTime } from "@/common/datetime";
-import { CategoryLinkCustom, PostLinkCustom } from "../common/LinkCustom";
+import { CategoryLinkCustom, PostLinkCustom } from "@/components/common/LinkCustom";
 
 import Image from "next/image";
 

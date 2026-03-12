@@ -2,7 +2,7 @@
 // React component example using parsed comment data
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { getHeadersToken } from '@/api/authentication';
+import { getHeadersToken } from '@/lib/api/axios';
 import { Heart } from 'lucide-react';
 import authenticationStore from '@/store/AuthenticationStore';
 import Link from 'next/link';

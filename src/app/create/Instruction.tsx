@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ChevronRight, BookOpen, Lightbulb, User, Coffee } from "lucide-react";
 import { useInstructionStore } from "@/store/useInstruction";
-import { useTranslation } from "../hook/useTranslation";
+import { useTranslation } from '@/app/hook/useTranslation';
 import Image from "next/image";
 import { set } from "react-hook-form";
 

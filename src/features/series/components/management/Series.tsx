@@ -1,11 +1,11 @@
 'use client';
-import convertDate from "@/common/datetime";
+import convertDate from '@/common/datetime';
 import alertStore from "@/store/AlertStore";
 import loadingStore from "@/store/LoadingStore";
-import axios from "axios";
+import { seriesApi } from '@/features/series/api/series.api';
 import { Search, Trash2, Filter, ChevronLeft, ChevronRight, Edit, X, Plus, Eye, BookOpen } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useTranslation } from "../hook/useTranslation";
+import { useTranslation } from '@/app/hook/useTranslation';
 import HoverTooltip from "@/components/common/TooltipNote";
 import { TextAreaCustom } from "@/components/common/TextAreaCustom";
 import Link from "next/link";
@@ -58,22 +58,16 @@ const Series = () => {
         const fetchSeries = async () => {
             try {
                 changeLoad();
-                const token = localStorage.getItem("access_token");
-                if (token) {
-                    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                    const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series`);
-                    console.log("response", response);
+                const response = await seriesApi.getAllSeries();
+                console.log("response", response);
 
+                if (response.success) {
                     setSeries(response.data.series || response.data);
-                    changeLoad();
-                } else {
-                    setType('error');
-                    setMessage("Authentication error !");
-                    changeLoad();
-                }
+                } else throw new Error(response.message);
+                changeLoad();
             } catch (error: any) {
                 setType('error');
-                setMessage(error?.response?.data?.message || error?.message);
+                setMessage(error?.message);
                 changeLoad();
                 console.error('Error fetching series:', error);
             }
@@ -173,22 +167,22 @@ const Series = () => {
         changeLoad();
         if (formData.title.trim()) {
             try {
-                const token = localStorage.getItem("access_token");
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                const newSeries = await axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/create`, {
+                const newSeries = await seriesApi.createSeries({
                     title: formData.title,
                     slug: formData.slug || formData.title.toLowerCase().replace(/\s+/g, '-'),
                     description: formData.description,
                     price: formData.price,
                 });
-                setSeries([...series, newSeries.data.series]);
-                setFormData({ _id: '', title: '', slug: '', description: '', price: 0 });
+                if(newSeries.success) {
+                    setSeries([...series, newSeries.data.series]);
+                    setFormData({ _id: '', title: '', slug: '', description: '', price: 0 });
 
-                setType('info');
-                setMessage('Thêm series thành công');
+                    setType('info');
+                    setMessage('Thêm series thành công');
+                } else throw new Error(newSeries.message);
             } catch (error: any) {
                 setType('error');
-                setMessage(error?.response?.data?.message || error?.message);
+                setMessage(error?.message);
             } finally {
                 setShowModal(false);
                 changeLoad();
@@ -213,46 +207,44 @@ const Series = () => {
             price: formData.price,
         };
 
-        const token = localStorage.getItem("access_token");
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/update`, updatedSeries)
+        seriesApi.updateSeries(updatedSeries)
             .then(response => {
-                console.log(response.data);
+                if(response.success){
+                    setSeries(series.map(item =>
+                        item._id === selectedItem?._id ? response.data.series : item
+                    ));
+                    setFormData({ _id: '', title: '', slug: '', description: '', price: 0 });
+                    setSelectedItem(null);
 
-                setSeries(series.map(item =>
-                    item._id === selectedItem?._id ? response.data.series : item
-                ));
-                setFormData({ _id: '', title: '', slug: '', description: '', price: 0 });
-                setSelectedItem(null);
-
-                setType('info');
-                setMessage('Cập nhật series thành công');
+                    setType('info');
+                    setMessage('Cập nhật series thành công');
+                } else throw new Error(response.message);
             })
             .catch(error => {
                 setType('error');
-                setMessage(error?.response?.data?.message || error?.message);
+                setMessage(error?.message);
+            })
+            .finally(() => {
+                setShowModal(false);
+                changeLoad();
             });
-        setShowModal(false);
-        changeLoad();
     };
 
     const handleDeleteSeries = (id: string) => {
         if (window.confirm('Bạn có chắc chắn muốn xóa series này?')) {
             changeLoad();
-            const token = localStorage.getItem("access_token");
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-            axios.delete(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/delete/${id}`)
+            seriesApi.deleteSeries(id)
                 .then(response => {
-                    setType('info');
-                    setMessage('Xóa series thành công');
-                    changeLoad();
+                    if (response.success) {
+                        setType('info');
+                        setMessage('Xóa series thành công');
+                    } else throw new Error(response.message);
                 })
                 .catch(error => {
                     setType('error');
-                    setMessage(error?.response?.data?.message || error?.message);
-                    changeLoad();
-                });
+                    setMessage(error?.message);
+                })
+                .finally(() => changeLoad());
 
             const newSeries = series.filter(item => item._id !== id);
             setSeries(newSeries);

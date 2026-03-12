@@ -19,10 +19,14 @@ import { Code, Eye, EyeOff, Globe, MessageCircleQuestion, Plus, Save } from 'luc
 import FloatingToolbar from './FloatingToolbar';
 import CodeBlock from '@tiptap/extension-code-block';
 import contentStore from '@/store/ContentStore';
-import axios from 'axios';
+
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 
-import { getHeadersToken } from '@/api/authentication';
+import { getHeadersToken } from '@/lib/api/axios';
+import { api } from '@/lib/api/axios';
+import { categoryApi } from '@/features/categories/api/category.api';
+import { seriesApi } from '@/features/series/api/series.api';
+import { postApi } from '@/features/ideas/api/post.api';
 import LoadingComponent from '@/components/common/Loading';
 import loadingStore from '@/store/LoadingStore';
 import PostLists from './PostLists';
@@ -61,6 +65,7 @@ export default function CreatePost() {
   const setDisplayInstructions = useInstructionStore((state) => state.setDisplayInstructions);
 
   const [idPost, setIdPost] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const [isPublic, setIsPublic] = useState(false);
   const [onPublic, setOnPublic] = useState(false);
@@ -85,32 +90,24 @@ export default function CreatePost() {
       changeLoad();
       const token = localStorage.getItem("access_token");
       if (token) {
-        const headers = getHeadersToken();
         const idPost = searchParams.get('id');
 
         // Get category
-        try {
-          const resCategory = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category`, { headers });
-
-          if (resCategory.status === 200) {
-            setCategory(resCategory.data.categories);
-          }
-        } catch (error) {
+        const resCategory = await categoryApi.getCategories();
+        if (resCategory.success) {
+          setCategory(resCategory.data.categories);
+        } else {
           setType('error');
           setMessage("Error fetching categories");
-          changeLoad();
         }
 
         // Get series 
-        try {
-          const resSeries = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getByUser`, { headers });
-          if (resSeries.status === 200) {
-            setSeries(resSeries.data.series);
-          }
-        } catch (error) {
+        const resSeries = await seriesApi.getSeriesByUser();
+        if (resSeries.success) {
+          setSeries(resSeries.data.series);
+        } else {
           setType('error');
           setMessage("Error fetching user data");
-          changeLoad();
         }
 
         setIdPost(idPost);
@@ -121,19 +118,18 @@ export default function CreatePost() {
           return;
         }
 
-        try {
-          const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostToEdit?postId=${idPost}`, { headers });
-          if (res.status === 200) {
-            setTitle(res.data.post.title);
-            setContent(res.data.post.content);
-            // setImagePublic({ imageUrl: res.data.post.image.url, description: res.data.post.image.description });
-            setIsPublic(res.data.post.published);
-          }
-        } catch (error) {
+        const resPost = await postApi.getPostToEdit(idPost);
+        if (resPost.success) {
+          setTitle(resPost.data.post.title);
+          setContent(resPost.data.post.content);
+          // setImagePublic({ imageUrl: resPost.data.post.image.url, description: resPost.data.post.image.description });
+          setIsPublic(resPost.data.post.published);
+        } else {
           setType('error');
           setMessage("Error fetching user data");
-          changeLoad();
         }
+        changeLoad();
+      } else {
         changeLoad();
       }
     };
@@ -383,6 +379,31 @@ export default function CreatePost() {
     return formatted;
   };
 
+  const handleAutoGenerate = async () => {
+    if (!title.toString().trim()) {
+      setType('error');
+      setMessage('Please enter a title to generate content.');
+      return;
+    }
+
+    setIsGenerating(true);
+    const response = await api.post('/api/generate', { title: title.toString() });
+
+    if (response.success && response.data?.content) {
+      if (editor) {
+        editor.commands.setContent(response.data.content);
+      } else {
+        setContent(response.data.content);
+      }
+      setType('success');
+      setMessage('Content generated successfully!');
+    } else {
+      setType('error');
+      setMessage(response.message || 'Failed to generate content');
+    }
+    setIsGenerating(false);
+  };
+
   // Editor toolbar components
   const savePost = async () => {
     if (!editor) return;
@@ -391,46 +412,42 @@ export default function CreatePost() {
     const content = editor.getHTML();
 
     changeLoad();
-    const headers = getHeadersToken();
 
     if (idPost) {
-      axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/update`, {
+      const res = await postApi.updatePost({
         postId: idPost,
         title: title,
         text: text,
-        content: content,
-        headers
-      }).then((res) => {
-        changeLoad();
+        content: content
+      });
+      changeLoad();
+      if (res.success) {
         setType('success');
         setMessage('Post updated successfully!');
-      }).catch((err) => {
-        const errorMessage = err?.response?.data?.error || err?.message;
-        changeLoad();
+      } else {
         setType('error');
-        setMessage(errorMessage);
-      });
+        setMessage(res.message || 'Error updating post');
+      }
       return;
     }
 
-    axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/create`, {
+    const res = await postApi.createPost({
       title: title,
       text: text,
-      content: content,
-      headers
-    }).then((res) => {
-      const params = new URLSearchParams()
-      params.set('id', res.data.post._id)
-      router.push(`${pathname}?${params.toString()}`)
-      changeLoad();
+      content: content
+    });
+
+    changeLoad();
+    if (res.success) {
+      const params = new URLSearchParams();
+      params.set('id', res.data.post._id);
+      router.push(`${pathname}?${params.toString()}`);
       setType('success');
       setMessage('Post created successfully!');
-    }).catch((err) => {
-      const errorMessage = err?.response?.data?.error || err?.message;
-      changeLoad();
+    } else {
       setType('error');
-      setMessage(errorMessage);
-    });
+      setMessage(res.message || 'Error creating post');
+    }
   };
 
   const handleImageUploadedPublic = (image: any) => {
@@ -472,23 +489,22 @@ export default function CreatePost() {
     setImageInsertPosition(null);
   };
 
-  const createNewSeriesHandler = () => {
+  const createNewSeriesHandler = async () => {
     setCreateNewSeries(false);
-    axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/create`, {
-      newSeries: newSeries,
-      headers: getHeadersToken()
-    }).then((res) => {
+    changeLoad(); // Adding start load matching the end load.
+    const res = await seriesApi.createSeries({
+      newSeries: newSeries
+    });
+    changeLoad();
+    if (res.success) {
       setNewSeries('');
       setSeries((prev) => [...prev, res.data.data]);
-      changeLoad();
       setType('success');
       setMessage('New series created successfully!');
-    }).catch((err) => {
-      const errorMessage = err?.response?.data?.error || err?.message;
-      changeLoad();
+    } else {
       setType('error');
-      setMessage(errorMessage);
-    });
+      setMessage(res.message || 'Error creating series');
+    }
   };
 
   const onPublicHandle = async () => {
@@ -500,20 +516,19 @@ export default function CreatePost() {
       category: categoryPublic
     };
 
-    try {
-      const onPublic = await axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/public`, {
-        headers: getHeadersToken(),
-        publicInfo
-      });
-      if (onPublic.status === 200) {
-        setType('success');
-        setMessage("Public post successfully!");
-        setOnPublic(false);
-        setIsPublic(true);
-      }
-    } catch (error: any) {
+    changeLoad();
+    const res = await postApi.publishPost({
+      publicInfo
+    });
+    changeLoad();
+    if (res.success) {
+      setType('success');
+      setMessage("Public post successfully!");
+      setOnPublic(false);
+      setIsPublic(true);
+    } else {
       setType('error');
-      setMessage(error?.response?.data?.message || error?.message);
+      setMessage(res.message || "Error publishing post");
     }
   };
 
@@ -551,15 +566,40 @@ export default function CreatePost() {
         </div>
 
 
-        <div className="mb-6 w-full px-2">
+        <div className="mb-6 w-full px-2 flex flex-col sm:flex-row gap-4">
           <input
             id="post-title"
             type="text"
             value={title.toString()}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-6 py-4 text-2xl font-semibold bg-white border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all placeholder:text-slate-400"
+            className="flex-1 w-full px-6 py-4 text-2xl font-semibold bg-white border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all placeholder:text-slate-400"
             placeholder="Enter post title"
           />
+          <button
+            onClick={handleAutoGenerate}
+            disabled={isGenerating || !title.toString().trim()}
+            className={`px-6 py-4 rounded-2xl font-bold flex items-center justify-center transition-all min-w-[280px] ${isGenerating || !title.toString().trim()
+              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+              : 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-lg shadow-purple-200 hover:shadow-xl hover:-translate-y-0.5'
+              }`}
+          >
+            {isGenerating ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Generating Content...
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Auto generate by AI
+              </>
+            )}
+          </button>
         </div>
 
         <div className="relative w-full flex flex-col lg:flex-row outline-none hover:outline-none focus:ring-teal-200 focus:border-teal-200">
@@ -641,13 +681,22 @@ export default function CreatePost() {
             {title ?
               <div className='w-full px-2 flex justify-end h-auto'>
                 <div className="flex items-center gap-2 justify-center px-2">
-                  <ButtonPinkToOrange
-                    onClick={onPublicPage}
-                    classAddition={`flex items-center px-8 py-2 min-w-40 text-white ${isPublic ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    disabled={isPublic}
-                    title={isPublic ? 'Published' : 'Public'}
-                    icon={<Globe className="w-4 h-4 mr-2" />}
-                  />
+                  {idPost ? (
+                    <ButtonPinkToOrange
+                      onClick={onPublicPage}
+                      classAddition={`flex items-center px-8 py-2 min-w-40 text-white ${isPublic ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={isPublic}
+                      title={isPublic ? 'Published' : 'Public'}
+                      icon={<Globe className="w-4 h-4 mr-2" />}
+                    />
+                  ) : (
+                    <ButtonGray
+                      classAddition="flex items-center px-8 py-2 rounded-md min-w-40 text-white"
+                      disabled
+                      title="Public"
+                      icon={<Globe className="w-4 h-4 mr-2" />}
+                    />
+                  )}
                 </div>
                 <div className="flex items-center gap-2 justify-center px-2">
                   <ButtonCyanToBlue

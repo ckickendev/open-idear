@@ -1,10 +1,10 @@
 'use client';
 import alertStore from "@/store/AlertStore";
 import loadingStore from "@/store/LoadingStore";
-import axios from "axios";
+import { courseApi } from '@/features/series/api/course.api';
 import { Search, Trash2, Filter, ChevronLeft, ChevronRight, Edit, X, Plus, Eye, BookOpen } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useTranslation } from "../hook/useTranslation";
+import { useTranslation } from '@/app/hook/useTranslation';
 import HoverTooltip from "@/components/common/TooltipNote";
 import Link from "next/link";
 
@@ -48,11 +48,15 @@ const Courses = () => {
     const fetchCourses = async () => {
         try {
             changeLoad();
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course`);
-            setCourses(response.data.data);
+            const response = await courseApi.getCoursesByUser();
+            if(response.success) {
+                setCourses(response.data.data);
+            } else {
+                throw new Error(response.message);
+            }
         } catch (error: any) {
             setType('error');
-            setMessage(error?.response?.data?.message || error?.message);
+            setMessage(error?.message);
         } finally {
             changeLoad();
         }
@@ -78,28 +82,29 @@ const Courses = () => {
         if (!formData.title.trim()) return;
         changeLoad();
         try {
-            const token = localStorage.getItem("access_token");
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
             if (selectedItem) {
-                const response = await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/update`, {
+                const response = await courseApi.updateCourse({
                     courseId: formData._id,
                     ...formData
                 });
-                setCourses(courses?.map(c => c._id === formData._id ? response.data.data : c));
-                setMessage('Cập nhật khóa học thành công');
+                if(response.success) {
+                    setCourses(courses?.map(c => c._id === formData._id ? response.data.data : c));
+                    setMessage('Cập nhật khóa học thành công');
+                } else throw new Error(response.message);
             } else {
-                const response = await axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/create`, {
+                const response = await courseApi.createCourse({
                     title: formData.title
                 });
-                setCourses([...courses, response.data.data]);
-                setMessage('Thêm khóa học thành công');
+                if(response.success){
+                    setCourses([...courses, response.data.data]);
+                    setMessage('Thêm khóa học thành công');
+                } else throw new Error(response.message);
             }
             setType('info');
             setShowModal(false);
         } catch (error: any) {
             setType('error');
-            setMessage(error?.response?.data?.message || error?.message);
+            setMessage(error?.message);
         } finally {
             changeLoad();
         }

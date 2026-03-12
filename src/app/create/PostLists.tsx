@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BadgePlus, FileText, Clock, Sparkles } from 'lucide-react';
-import { getHeadersToken } from '@/api/authentication';
+import { getHeadersToken } from '@/lib/api/axios';
 import axios from 'axios';
 import Logo from '@/components/common/Logo';
 
@@ -54,7 +54,7 @@ export default function PostLists() {
     return (
         <>
             <div
-                className={`fixed left-0 z-51 bg-gray-100 transition-all duration-300 flex flex-col ${isHovered ? 'w-80 h-full top-0' : 'w-24 top-20'}`}
+                className={`fixed left-0 z-50 bg-gray-100 transition-all duration-300 flex flex-col ${isHovered ? 'w-80 h-full top-0' : 'w-24 top-20'}`}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >

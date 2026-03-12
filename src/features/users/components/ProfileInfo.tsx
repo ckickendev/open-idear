@@ -4,11 +4,11 @@ import { Edit, Upload, X } from 'lucide-react';
 import authenticationStore from '@/store/AuthenticationStore';
 import { CldUploadWidget } from 'next-cloudinary';
 import axios from 'axios';
-import { REACT_APP_ROOT_BACKEND } from './authentication';
+const REACT_APP_ROOT_BACKEND = process.env.NEXT_PUBLIC_ROOT_BACKEND;;
 import alertStore from '@/store/AlertStore';
 import loadingStore from '@/store/LoadingStore';
-import { getHeadersToken } from '@/api/authentication';
-import Notification from '../common/Notification';
+import { getHeadersToken } from '@/lib/api/axios';
+import Notification from '@/components/common/Notification';
 
 const ProfileInfo = ({ userInfor }: any) => {
     console.log("render profile infor");

@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import LoadingComponent from "@/components/common/Loading";
 import Dialog from "@/components/common/Dialog";
-import axios from "axios";
 import { redirect } from "next/navigation";
-import { REACT_APP_ROOT_BACKEND, resetPassSchema } from "@/components/authen/authentication";
+import { resetPassSchema } from "@/features/auth/components/authentication";
+import { authApi } from '@/features/auth/api/auth.api';
+import { api } from "@/lib/api/axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
@@ -51,15 +52,15 @@ const ConfirmResetPassword = () => {
 
             try {
                 if (access_token && email) {
-                    const res = await axios.post(
-                        `${REACT_APP_ROOT_BACKEND}/auth/confirm-token-access`,
-                        loginInfo
-                    );
-                    if (res.data) {
+                    // Assuming this is custom endpoint not explicitly in authApi
+                    const res = await api.post('/auth/confirm-token-access', loginInfo);
+                    if (res.success) {
                         setUser(res.data.user)
 
                         setIsLoading(false);
                         setFormResetDisp(true);
+                    } else {
+                        throw new Error(res.message);
                     }
                 }
             } catch (err: any) {
@@ -77,11 +78,13 @@ const ConfirmResetPassword = () => {
         setIsLoading(true);
         event.preventDefault();
         try {
-            const res = await axios.post(`${REACT_APP_ROOT_BACKEND}/auth/confirm-new-password`, { password: data.password, emailSent });
-            if (res.data.message) {
+            const res = await authApi.resetPasswordConfirm({ password: data.password, emailSent });
+            if (res.success) {
                 setIsConfirmSuccess(true);
                 setIsLoading(false);
                 return;
+            } else {
+                throw new Error(res.message);
             }
         }
         catch (err: any) {

@@ -1,9 +1,9 @@
 "use client"
 import { useEffect, useState } from "react"
 import { AuthenPage } from "./authen/AuthenPage";
-import Profile from "./authen/Profile";
+import Profile from "@/features/users/components/Profile";
 import axios from "axios";
-import { getHeadersToken } from "@/api/authentication";
+import { getHeadersToken } from "@/lib/api/axios";
 import authenticationStore from "@/store/AuthenticationStore";
 
 import { useTranslation } from "@/app/hook/useTranslation";

@@ -1,7 +1,7 @@
 import Banner from "@/components/Banner";
-import HotSeries from "@/components/hot_series/HotSeries";
-import HotPost from "@/components/hot_post/HotPost";
-import LastestFeature from "@/components/recently_post/LastestFeature";
+import HotSeries from '@/features/series/components/hot_series/HotSeries';
+import HotPost from '@/features/ideas/components/hot_post/HotPost';
+import LastestFeature from '@/features/ideas/components/recently_post/LastestFeature';
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

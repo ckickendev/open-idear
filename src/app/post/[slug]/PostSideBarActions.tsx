@@ -2,8 +2,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Heart , MessageCircle, Share2, User, Plus, Bookmark, Check } from "lucide-react";
 import authenticationStore from "@/store/AuthenticationStore";
-import { getHeadersToken } from "@/api/authentication";
-import { REACT_APP_ROOT_BACKEND } from "@/components/authen/authentication";
+import { getHeadersToken } from "@/lib/api/axios";
+import { REACT_APP_ROOT_BACKEND } from "@/features/auth/components/authentication";
 import axios from "axios";
 import alertStore from "@/store/AlertStore";
 import Notification from "@/components/common/Notification";
