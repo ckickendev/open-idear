@@ -1,7 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { loginSchema, REACT_APP_ROOT_BACKEND } from "./authentication";
-import axios from "axios";
+import { loginSchema } from "./authentication";
+import { authApi } from '@/features/auth/api/auth.api';
+import { setToken } from "@/lib/api/axios";
 import { useState } from "react";
 import authenticationStore from "@/store/AuthenticationStore";
 import Image from "next/image";
@@ -38,14 +39,17 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
         console.log(data);
         event.preventDefault();
         try {
-            const res = await axios.post(`${REACT_APP_ROOT_BACKEND}/auth/login`, data);
-            if (res.data) {
-                localStorage.setItem("access_token", res.data.data.access_token);
+            const res = await authApi.login(data);
+            if (res.success) {
+                setToken(res.data.data.access_token);
                 setCurrentUser(res.data.data.user);
                 setCurrentUserId(res.data.data.user._id);
                 setIsLoading(false);
                 setIsAuthenFromDisplay(false);
                 setAuthenState(0);
+            } else {
+                setIsLoading(false);
+                setErrorSv(res.message || "An error occurred");
             }
             return;
         }

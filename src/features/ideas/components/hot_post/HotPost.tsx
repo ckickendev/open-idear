@@ -9,10 +9,10 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/app/hook/useTranslation";
 import axios from "axios";
-import convertDate from "@/common/datetime";
+import convertDate from '@/common/datetime';
 import Image from "next/image";
 import Link from "next/link";
-import { UserLinkCustom } from "../common/LinkCustom";
+import { UserLinkCustom } from "@/components/common/LinkCustom";
 
 interface Post {
   _id: number;

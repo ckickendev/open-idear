@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { CategoryLinkCustom, PostLinkCustom } from "./common/LinkCustom"
+import { CategoryLinkCustom, PostLinkCustom } from '@/components/common/LinkCustom'
 import { PaginationComponent } from "./common/PaginationComponent"
 
 const PostDisplayPageElement = ({ data, totalPage }: { data: any[], totalPage: number }) => {

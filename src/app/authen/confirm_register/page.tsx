@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import LoadingComponent from "@/components/common/Loading";
 import Dialog from "@/components/common/Dialog";
-import axios from "axios";
+import { authApi } from '@/features/auth/api/auth.api';
 import { redirect } from "next/navigation";
-import { REACT_APP_ROOT_BACKEND } from "@/components/authen/authentication";
 
 const ConfirmSignUpByLink = () => {
     const [isConfirm, setIsConfirm] = useState(false);
@@ -27,12 +26,9 @@ const ConfirmSignUpByLink = () => {
 
             try {
                 if (access_token && email) {
-                    const res = await axios.post(
-                        `${REACT_APP_ROOT_BACKEND}/auth/confirmSignup`,
-                        loginInfo
-                    );
-                    if (res.data) {
-                        setTittle(res.data.message);
+                    const res = await authApi.confirmRegister(loginInfo);
+                    if (res.success) {
+                        setTittle(res.message || "Confirmed successfully!");
                         setContent(
                             "You can login right now, you will redirect to login in some minutes..."
                         );
@@ -41,6 +37,8 @@ const ConfirmSignUpByLink = () => {
                         setTimeout(() => {
                             redirect("/");
                         }, 3000);
+                    } else {
+                        throw new Error(res.message);
                     }
                 }
             } catch (err: any) {

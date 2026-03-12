@@ -1,4 +1,4 @@
-import HotPost from "@/components/hot_post/HotPost";
+import HotPost from '@/features/ideas/components/hot_post/HotPost';
 import { Mail, Link } from "lucide-react";
 import CommentSection from "./CommentSection";
 import PostSidebarActions from "./PostSideBarActions";

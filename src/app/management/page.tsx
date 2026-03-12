@@ -14,15 +14,15 @@ import {
     BookOpen
 } from 'lucide-react';
 import Logo from '@/components/common/Logo';
-import Category from './Category';
-import Post from './Post';
+import Category from '@/features/categories/components/management/Category';
+import Post from '@/features/ideas/components/management/Post';
 import Report from './Report';
-import UserList from './UserList';
+import UserList from '@/features/users/components/UserList';
 import LoadingComponent from '@/components/common/Loading';
 import loadingStore from '@/store/LoadingStore';
 import Notification from '@/components/common/Notification';
-import Series from './Series';
-import Courses from './Courses';
+import Series from '@/features/series/components/management/Series';
+import Courses from '@/features/series/components/management/Courses';
 
 const AdminDashboard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);

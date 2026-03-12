@@ -22,8 +22,11 @@ import contentStore from '@/store/ContentStore';
 
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 
-import { getHeadersToken } from '@/api/authentication';
-import { api } from '@/common/apiClient';
+import { getHeadersToken } from '@/lib/api/axios';
+import { api } from '@/lib/api/axios';
+import { categoryApi } from '@/features/categories/api/category.api';
+import { seriesApi } from '@/features/series/api/series.api';
+import { postApi } from '@/features/ideas/api/post.api';
 import LoadingComponent from '@/components/common/Loading';
 import loadingStore from '@/store/LoadingStore';
 import PostLists from './PostLists';
@@ -90,7 +93,7 @@ export default function CreatePost() {
         const idPost = searchParams.get('id');
 
         // Get category
-        const resCategory = await api.get('/category');
+        const resCategory = await categoryApi.getCategories();
         if (resCategory.success) {
           setCategory(resCategory.data.categories);
         } else {
@@ -99,7 +102,7 @@ export default function CreatePost() {
         }
 
         // Get series 
-        const resSeries = await api.get('/series/getByUser');
+        const resSeries = await seriesApi.getSeriesByUser();
         if (resSeries.success) {
           setSeries(resSeries.data.series);
         } else {
@@ -115,7 +118,7 @@ export default function CreatePost() {
           return;
         }
 
-        const resPost = await api.get(`/post/getPostToEdit?postId=${idPost}`);
+        const resPost = await postApi.getPostToEdit(idPost);
         if (resPost.success) {
           setTitle(resPost.data.post.title);
           setContent(resPost.data.post.content);
@@ -411,7 +414,7 @@ export default function CreatePost() {
     changeLoad();
 
     if (idPost) {
-      const res = await api.patch('/post/update', {
+      const res = await postApi.updatePost({
         postId: idPost,
         title: title,
         text: text,
@@ -428,7 +431,7 @@ export default function CreatePost() {
       return;
     }
 
-    const res = await api.post('/post/create', {
+    const res = await postApi.createPost({
       title: title,
       text: text,
       content: content
@@ -489,7 +492,7 @@ export default function CreatePost() {
   const createNewSeriesHandler = async () => {
     setCreateNewSeries(false);
     changeLoad(); // Adding start load matching the end load.
-    const res = await api.post('/series/create', {
+    const res = await seriesApi.createSeries({
       newSeries: newSeries
     });
     changeLoad();
@@ -514,7 +517,7 @@ export default function CreatePost() {
     };
 
     changeLoad();
-    const res = await api.post('/post/public', {
+    const res = await postApi.publishPost({
       publicInfo
     });
     changeLoad();

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, Loader2, Image as ImageIcon } from 'lucide-react';
-import { getHeadersToken } from '@/api/authentication';
+import { getHeadersToken } from '@/lib/api/axios';
 
 interface MediaBrowserProps {
     onSelect: (media: any) => void;

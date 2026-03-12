@@ -1,5 +1,4 @@
-import { REACT_APP_ROOT_BACKEND } from "./authentication";
-import axios from "axios";
+import { authApi } from '@/features/auth/api/auth.api';
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { useTranslation } from "@/app/hook/useTranslation";
@@ -47,12 +46,9 @@ const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
             };
             console.log(loginInfo);
 
-            const res = await axios.post(
-                `${REACT_APP_ROOT_BACKEND}/auth/confirmSignup`,
-                loginInfo
-            );
-            setErrorSv(res.data.message);
-            if (res.status === 200) {
+            const res = await authApi.confirmRegister(loginInfo);
+            setErrorSv(res.message || "Failed to confirm registration");
+            if (res.success) {
                 setIsLoading(false);
                 localStorage.removeItem("user_signup");
                 setIsLoading(true);

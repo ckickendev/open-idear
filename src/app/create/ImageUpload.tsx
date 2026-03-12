@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { Upload, X, FileImage, Loader2, Check, CheckCircle, Image as ImageIcon } from 'lucide-react';
-import { getHeadersToken } from '@/api/authentication';
+import { getHeadersToken } from '@/lib/api/axios';
 import MediaBrowser from './MediaBrowser';
 
 const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {

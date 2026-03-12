@@ -1,9 +1,9 @@
 'use client';
-import convertDate from "@/common/datetime";
+import convertDate from '@/common/datetime';
 import LoadingComponent from "@/components/common/Loading";
 import alertStore from "@/store/AlertStore";
 import loadingStore from "@/store/LoadingStore";
-import axios from "axios";
+import { userApi } from '@/features/users/api/user.api';
 import { Edit, Filter, Plus, Search, Trash2, X, ChevronLeft, ChevronRight, User, Shield, UserCheck, UserX } from "lucide-react";
 import Image from "next/image";
 import { use, useEffect, useState } from "react";
@@ -43,23 +43,19 @@ const UserList = () => {
         const fetchUsers = async () => {
             try {
                 changeLoad();
-                const token = localStorage.getItem("access_token");
-                if (token) {
-                    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                    const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user`);
-                    console.log("response", response);
-
+                const response = await userApi.getUsersList();
+                if (response.success) {
                     setUsers(response.data.users);
                     changeLoad();
                 } else {
                     setType('error');
-                    setMessage("Authentication error !");
+                    setMessage(response.message || "Authentication error !");
                     changeLoad();
                 }
 
             } catch (error: any) {
                 setType('error');
-                setMessage(error?.response?.data?.message || error?.message)
+                setMessage(error?.message)
                 changeLoad();
                 console.error('Error fetching users:', error);
             }
@@ -174,9 +170,7 @@ const UserList = () => {
         changeLoad();
         if (formData.name.trim() && formData.username.trim() && formData.email.trim()) {
             try {
-                const token = localStorage.getItem("access_token");
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                const newUser = await axios.post(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/create`, {
+                const newUser = await userApi.createUser({
                     name: formData.name,
                     username: formData.username,
                     email: formData.email,
@@ -184,17 +178,21 @@ const UserList = () => {
                     activate: formData.activate,
                     phone: formData.phone,
                 });
-                setUsers([...users, newUser.data.user]);
-                setFormData({ _id: '', name: '', username: '', email: '', role: 0, activate: "false", phone: '' });
-                setShowModal(false);
+                if(newUser.success){
+                    setUsers([...users, newUser.data.user]);
+                    setFormData({ _id: '', name: '', username: '', email: '', role: 0, activate: "false", phone: '' });
+                    setShowModal(false);
 
-                setType('info');
-                setMessage('Thêm người dùng thành công');
+                    setType('info');
+                    setMessage('Thêm người dùng thành công');
+                } else {
+                    throw new Error(newUser.message);
+                }
                 changeLoad();
             } catch (error: any) {
                 setShowModal(false);
                 setType('error');
-                setMessage(error?.response?.data?.message || error?.message);
+                setMessage(error?.message);
                 changeLoad();
             }
         }
@@ -219,24 +217,26 @@ const UserList = () => {
             phone: formData.phone,
         };
 
-        const token = localStorage.getItem("access_token");
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/update/${selectedItem?._id}`, updatedUser)
+        userApi.updateUser(selectedItem?._id as string, updatedUser)
             .then(response => {
-                setUsers(users.map(user =>
-                    user._id === selectedItem?._id ? response.data.user : user
-                ));
-                setFormData({ _id: '', name: '', username: '', email: '', role: 0, activate: "false", phone: '' });
-                setShowModal(false);
-                setSelectedItem(null);
+                if(response.success){
+                    setUsers(users.map(user =>
+                        user._id === selectedItem?._id ? response.data.user : user
+                    ));
+                    setFormData({ _id: '', name: '', username: '', email: '', role: 0, activate: "false", phone: '' });
+                    setShowModal(false);
+                    setSelectedItem(null);
 
-                setType('info');
-                setMessage('Cập nhật người dùng thành công');
+                    setType('info');
+                    setMessage('Cập nhật người dùng thành công');
+                } else {
+                     throw new Error(response.message);
+                }
                 changeLoad();
             })
             .catch(error => {
                 setType('error');
-                setMessage(error?.response?.data?.message || error?.message);
+                setMessage(error?.message);
                 changeLoad();
             });
     };
@@ -244,17 +244,19 @@ const UserList = () => {
     const handleDeleteUser = (id: string) => {
         if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
             changeLoad();
-            const token = localStorage.getItem("access_token");
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            axios.delete(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/delete/${id}`)
+            userApi.deleteUser(id)
                 .then(response => {
-                    setType('info');
-                    setMessage('Xóa người dùng thành công');
+                    if (response.success) {
+                        setType('info');
+                        setMessage('Xóa người dùng thành công');
+                    } else {
+                        throw new Error(response.message);
+                    }
                     changeLoad();
                 })
                 .catch(error => {
                     setType('error');
-                    setMessage(error?.response?.data?.message || error?.message);
+                    setMessage(error?.message);
                     changeLoad();
                 });
 
@@ -281,11 +283,8 @@ const UserList = () => {
         const newActivate = currentActivate === 'true' ? 'false' : 'true';
         try {
             changeLoad();
-            const token = localStorage.getItem("access_token");
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/toggle-status/${userId}`, {
-                activate: newActivate
-            });
+            const res = await userApi.toggleUserStatus(userId, { activate: newActivate });
+            if (!res.success) throw new Error(res.message);
 
             setUsers(users.map(user =>
                 user._id === userId ? { ...user, activate: newActivate } : user
@@ -296,7 +295,7 @@ const UserList = () => {
             changeLoad();
         } catch (error: any) {
             setType('error');
-            setMessage(error?.response?.data?.message || error?.message);
+            setMessage(error?.message);
             changeLoad();
         }
     };

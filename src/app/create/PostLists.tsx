@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BadgePlus, FileText, Clock, Sparkles } from 'lucide-react';
-import { getHeadersToken } from '@/api/authentication';
+import { getHeadersToken } from '@/lib/api/axios';
 import axios from 'axios';
 import Logo from '@/components/common/Logo';
 

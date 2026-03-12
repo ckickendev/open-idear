@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { REACT_APP_ROOT_BACKEND, signUpSchema } from "./authentication";
-import axios from "axios";
+import { signUpSchema } from "./authentication";
+import { authApi } from '@/features/auth/api/auth.api';
 import { useState } from "react";
 import Image from "next/image";
 import { useTranslation } from "@/app/hook/useTranslation";
@@ -21,8 +21,6 @@ type ModalAuthen = {
 
 export const SignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAuthen) => {
     const { t } = useTranslation();
-
-    const ROOT_BACKEND = REACT_APP_ROOT_BACKEND;
     const [errorSv, setErrorSv] = useState("");
     const {
         register,
@@ -36,14 +34,19 @@ export const SignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
         setIsLoading(true);
         event.preventDefault();
         try {
-            const res = await axios.post(`${ROOT_BACKEND}/auth/register`, data);
-            localStorage.setItem("user_signup", res.data.user);
-            setIsLoading(false);
-            setAuthenState(3);
+            const res = await authApi.register(data);
+            if (res.success) {
+                localStorage.setItem("user_signup", res.data.user);
+                setIsLoading(false);
+                setAuthenState(3);
+            } else {
+                setErrorSv(res.message || "An error occurred");
+                setIsLoading(false);
+            }
             return;
         }
         catch (err: any) {
-            setErrorSv(err?.response?.data?.error || err?.message);
+            setErrorSv(err?.message || "An error occurred");
             setIsLoading(false);
         }
     };
