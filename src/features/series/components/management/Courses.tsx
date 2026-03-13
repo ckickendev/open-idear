@@ -49,8 +49,10 @@ const Courses = () => {
         try {
             changeLoad();
             const response = await courseApi.getCoursesByUser();
-            if(response.success) {
-                setCourses(response.data.data);
+            if (response.success) {
+                console.log("response.data.courses", response.data.courses);
+
+                setCourses(response.data.courses);
             } else {
                 throw new Error(response.message);
             }
@@ -87,7 +89,7 @@ const Courses = () => {
                     courseId: formData._id,
                     ...formData
                 });
-                if(response.success) {
+                if (response.success) {
                     setCourses(courses?.map(c => c._id === formData._id ? response.data.data : c));
                     setMessage('Cập nhật khóa học thành công');
                 } else throw new Error(response.message);
@@ -95,14 +97,21 @@ const Courses = () => {
                 const response = await courseApi.createCourse({
                     title: formData.title
                 });
-                if(response.success){
-                    setCourses([...courses, response.data.data]);
+
+                if (response.success) {
+                    if (courses) {
+                        setCourses(prevCourses => [...prevCourses, response.data.data]);
+                    } else {
+                        setCourses([response.data.data]);
+                    }
+
                     setMessage('Thêm khóa học thành công');
                 } else throw new Error(response.message);
             }
             setType('info');
             setShowModal(false);
         } catch (error: any) {
+
             setType('error');
             setMessage(error?.message);
         } finally {
@@ -155,7 +164,7 @@ const Courses = () => {
             </div>
 
             {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="fixed inset-0 bg-gray-500/50 bg-opacity-70 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="px-6 py-4 border-b flex items-center justify-between bg-gray-50">
                             <h3 className="text-lg font-bold text-gray-900">
