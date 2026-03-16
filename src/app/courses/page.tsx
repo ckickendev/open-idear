@@ -21,7 +21,8 @@ import {
     Award,
     BookOpen,
     User,
-    Users
+    Users,
+    LayoutDashboard
 } from 'lucide-react';
 
 type Course = {
@@ -114,6 +115,17 @@ const CourseListing = () => {
                         >
                             Tìm kiếm
                         </button>
+                    </div>
+
+                    {/* Manage My Courses CTA */}
+                    <div className="mt-6 flex justify-center">
+                        <Link
+                            href="/management/my-courses"
+                            className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/30 text-white font-semibold px-6 py-3 rounded-full transition-all duration-200 hover:scale-105 shadow-lg"
+                        >
+                            <LayoutDashboard size={18} />
+                            Quản lý khóa học của tôi
+                        </Link>
                     </div>
                 </div>
             </section>
