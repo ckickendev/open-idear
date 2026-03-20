@@ -5,8 +5,9 @@ import { courseApi } from '@/features/series/api/course.api';
 import { Search, Trash2, Filter, ChevronLeft, ChevronRight, Edit, X, Plus, Eye, BookOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from '@/app/hook/useTranslation';
-import HoverTooltip from "@/components/common/TooltipNote";
+import HoverNote from "@/components/common/HoverNote";
 import Link from "next/link";
+import ImageUpload from "@/app/create/ImageUpload";
 
 type CourseType = {
     _id: string;
@@ -14,6 +15,7 @@ type CourseType = {
     slug: string;
     description: string;
     price: number;
+    thumbnail: string;
     status: 'draft' | 'published';
     instructor: {
         username: string;
@@ -32,6 +34,7 @@ const Courses = () => {
         title: '',
         slug: '',
         description: '',
+        thumbnail: '',
         price: 0,
     });
 
@@ -73,9 +76,10 @@ const Courses = () => {
                 slug: item.slug,
                 description: item.description || '',
                 price: item.price || 0,
+                thumbnail: item.thumbnail,
             });
         } else {
-            setFormData({ _id: '', title: '', slug: '', description: '', price: 0 });
+            setFormData({ _id: '', title: '', slug: '', description: '', price: 0, thumbnail: '' });
         }
         setShowModal(true);
     };
@@ -119,6 +123,10 @@ const Courses = () => {
         }
     };
 
+    const handleImageUploadSuccess = (media: any) => {
+        setFormData(prev => ({ ...prev, thumbnail: media._id }));
+    };
+
     return (
         <div className="h-full space-y-6">
             <div className="flex justify-between items-center">
@@ -154,8 +162,12 @@ const Courses = () => {
                                 <td className="px-6 py-4 text-sm text-gray-500">{course.price.toLocaleString()} VNĐ</td>
                                 <td className="px-6 py-4 text-sm text-gray-500">{course.status}</td>
                                 <td className="px-6 py-4 text-sm font-medium flex gap-2">
-                                    <button onClick={() => openModal(course)} className="text-blue-600 hover:text-blue-900"><Edit size={16} /></button>
-                                    <Link href={`/management/course/${course._id}/curriculum`} className="text-green-600 hover:text-green-900"><BookOpen size={16} /></Link>
+                                    <HoverNote note="Chỉnh sửa thông tin khoá học">
+                                        <button onClick={() => openModal(course)} className="text-blue-600 hover:text-blue-900"><Edit size={16} /></button>
+                                    </HoverNote>
+                                    <HoverNote note="Chỉnh sửa chi tiết khoá học">
+                                        <Link href={`/management/course/${course._id}/curriculum`} className="text-green-600"><BookOpen size={16} /></Link>
+                                    </HoverNote>
                                 </td>
                             </tr>
                         ))}
@@ -182,6 +194,9 @@ const Courses = () => {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                 />
                             </div>
+                            <ImageUpload
+                                onImageUploaded={handleImageUploadSuccess}
+                            />
                             {selectedItem && (
                                 <>
                                     <div>
