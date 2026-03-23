@@ -89,7 +89,7 @@ export default function Instruction() {
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <button className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2 cursor-pointer"
+                <button className="bg-white hover:bg-gray-300 text-gray-900 border-1 px-6 py-2 font-medium transition-colors duration-200 flex items-center space-x-2 cursor-pointer"
                   onClick={() => setDisplayInstructions(false)}
                 >
                   Skip
@@ -97,7 +97,7 @@ export default function Instruction() {
               </div>
               <button
                 onClick={handleContinue}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2 cursor-pointer"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 font-medium transition-colors duration-200 flex items-center space-x-2 cursor-pointer"
               >
                 <span>Continue</span>
                 <ChevronRight className="w-4 h-4" />
@@ -119,7 +119,7 @@ export default function Instruction() {
                 OpenIdear is an open platform where everyone can share ideas, knowledge, services, and technology. We connect a creative community and support earning through affiliate links.
                 Let’s share and spread value together!
               </p>
-              <p className="bg-red-50 p-3 rounded-lg border-l-4 border-red-300">
+              <p className="bg-red-50 p-3 border-l-4 border-red-300">
                 Join the sharing community – Post your content today!
               </p>
             </div>
@@ -224,17 +224,17 @@ export default function Instruction() {
               <div className="flex space-x-4">
                 <button
                   onClick={handleBack}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer"
+                  className="bg-white hover:bg-gray-300 text-gray-900 border-1 px-6 py-2 font-medium transition-colors duration-200 cursor-pointer"
                 >
                   Back
                 </button>
-                <button className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer" onClick={() => setDisplayInstructions(false)}>
+                <button className="bg-red-500 hover:bg-gray-300 text-gray-900 border-1 border-red-500 px-6 py-2 font-medium transition-colors duration-200 cursor-pointer" onClick={() => setDisplayInstructions(false)}>
                   Skip
                 </button>
               </div>
               <button
                 onClick={handleContinue}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 font-medium transition-colors duration-200 cursor-pointer"
               >
                 Tiếp tục
               </button>
@@ -302,17 +302,17 @@ export default function Instruction() {
               <div className="flex space-x-4">
                 <button
                   onClick={handleBack}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer"
+                  className="bg-white hover:bg-gray-300 text-gray-900 border-1 px-6 py-2 font-medium transition-colors duration-200 cursor-pointer"
                 >
                   Back
                 </button>
-                <button className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer" onClick={() => setDisplayInstructions(false)}>
+                <button className="bg-red-500 hover:bg-gray-300 text-gray-900 border-1 border-red-500 px-6 py-2 font-medium transition-colors duration-200 cursor-pointer" onClick={() => setDisplayInstructions(false)}>
                   Skip
                 </button>
               </div>
               <button
                 onClick={handleContinue}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 font-medium transition-colors duration-200 cursor-pointer"
               >
                 Continue
               </button>
@@ -403,39 +403,39 @@ export default function Instruction() {
               <div className="flex space-x-4">
                 <button
                   onClick={handleBack}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer"
+                  className="bg-white hover:bg-gray-300 text-gray-900 border-1 px-6 py-2 font-medium transition-colors duration-200 cursor-pointer"
                 >
                   Back
                 </button>
-                <button className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer" onClick={() => setDisplayInstructions(false)}>
+                <button className="bg-red-500 hover:bg-gray-300 text-gray-900 border-1 border-red-500 px-6 py-2 font-medium transition-colors duration-200 cursor-pointer" onClick={() => setDisplayInstructions(false)}>
                   Skip
                 </button>
               </div>
               <button
-                onClick={() => {setDisplayInstructions(false); setCurrentPage(1);}}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
+                onClick={() => { setDisplayInstructions(false); setCurrentPage(1); }}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 font-medium transition-colors duration-200 cursor-pointer"
               >
                 Kết thúc
               </button>
             </div>
           </div>
         </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-b-xl p-6 shadow-md h-40 bg-gradient-to-br from-purple-50 to-pink-50">
-              <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
-                <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-              </div>
-            </div>
-            <div className="bg-white rounded-b-xl p-6 shadow-md h-40 bg-gradient-to-br from-green-50 to-blue-50">
-              <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-2/3 mb-3"></div>
-                <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-4/5"></div>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white rounded-b-xl p-6 shadow-md h-40 bg-gradient-to-br from-purple-50 to-pink-50">
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+              <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-5/6"></div>
             </div>
           </div>
+          <div className="bg-white rounded-b-xl p-6 shadow-md h-40 bg-gradient-to-br from-green-50 to-blue-50">
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-2/3 mb-3"></div>
+              <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-4/5"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

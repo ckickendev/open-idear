@@ -12,6 +12,7 @@ type Course = {
     slug: string;
     description: string;
     price: number;
+    discountPrice?: number;
     thumbnail: { url: string };
     instructor: { name: string; avatar: string; bio: string };
     lessons: {
@@ -145,9 +146,19 @@ const CourseDetail = () => {
 
                         <div className="p-6">
                             <div className="flex items-center gap-3 mb-6">
-                                <span className="text-3xl font-bold">{course.price.toLocaleString()} VNĐ</span>
-                                <span className="text-gray-500 line-through text-lg">{(course.price * 1.5).toLocaleString()} VNĐ</span>
-                                <span className="text-red-500 font-bold text-sm">33% Discount</span>
+                                {course.price === 0 ? (
+                                    <span className="text-3xl font-bold">MIỄN PHÍ</span>
+                                ) : course.discountPrice && course.discountPrice > 0 ? (
+                                    <>
+                                        <span className="text-3xl font-bold">{course.discountPrice.toLocaleString()} VNĐ</span>
+                                        <span className="text-gray-500 line-through text-lg">{course.price.toLocaleString()} VNĐ</span>
+                                        <span className="text-red-500 font-bold text-sm">
+                                            {Math.round(((course.price - course.discountPrice) / course.price) * 100)}% Giảm
+                                        </span>
+                                    </>
+                                ) : (
+                                    <span className="text-3xl font-bold">{course.price.toLocaleString()} VNĐ</span>
+                                )}
                             </div>
 
                             <div className="flex flex-col gap-3 mb-6">

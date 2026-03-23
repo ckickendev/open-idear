@@ -15,6 +15,7 @@ type CourseType = {
     slug: string;
     description: string;
     price: number;
+    discountPrice?: number;
     thumbnail: string;
     status: 'draft' | 'published';
     instructor: {
@@ -36,6 +37,7 @@ const Courses = () => {
         description: '',
         thumbnail: '',
         price: 0,
+        discountPrice: 0,
     });
 
     const setType = alertStore((state) => state.setType);
@@ -76,10 +78,11 @@ const Courses = () => {
                 slug: item.slug,
                 description: item.description || '',
                 price: item.price || 0,
+                discountPrice: item.discountPrice || 0,
                 thumbnail: item.thumbnail,
             });
         } else {
-            setFormData({ _id: '', title: '', slug: '', description: '', price: 0, thumbnail: '' });
+            setFormData({ _id: '', title: '', slug: '', description: '', price: 0, discountPrice: 0, thumbnail: '' });
         }
         setShowModal(true);
     };
@@ -158,8 +161,16 @@ const Courses = () => {
                                     <div className="text-sm font-medium text-gray-900">{course.title}</div>
                                     <div className="text-xs text-gray-500">{course.slug}</div>
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-500">{course.instructor?.name}</td>
-                                <td className="px-6 py-4 text-sm text-gray-500">{course.price.toLocaleString()} VNĐ</td>
+                                <td className="px-6 py-4 text-sm text-gray-500">
+                                    {course.discountPrice && course.discountPrice > 0 ? (
+                                        <div>
+                                            <span className="text-gray-900 font-bold">{course.discountPrice.toLocaleString()} VNĐ</span>
+                                            <div className="text-xs line-through text-gray-400">{course.price.toLocaleString()} VNĐ</div>
+                                        </div>
+                                    ) : (
+                                        <span>{course.price.toLocaleString()} VNĐ</span>
+                                    )}
+                                </td>
                                 <td className="px-6 py-4 text-sm text-gray-500">{course.status}</td>
                                 <td className="px-6 py-4 text-sm font-medium flex gap-2">
                                     <HoverNote note="Chỉnh sửa thông tin khoá học">
@@ -214,6 +225,15 @@ const Courses = () => {
                                             type="number"
                                             value={formData.price}
                                             onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Giá khuyến mãi (VNĐ) (Tùy chọn)</label>
+                                        <input
+                                            type="number"
+                                            value={formData.discountPrice}
+                                            onChange={(e) => setFormData({ ...formData, discountPrice: parseInt(e.target.value) || 0 })}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                         />
                                     </div>
