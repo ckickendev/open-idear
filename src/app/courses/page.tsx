@@ -1,27 +1,13 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import loadingStore from "@/store/LoadingStore";
 import {
-    Search,
-    Code,
-    Brain,
-    Database,
-    Lock,
-    Cloud,
-    Terminal,
-    Smartphone,
-    Layout,
-    CheckCircle,
-    ArrowRight,
-    PlayCircle,
-    Star,
-    Award,
-    BookOpen,
-    User,
-    Users
+    Search, Star, ArrowRight, ChevronLeft, ChevronRight,
+    Users, Award, BookOpen, LayoutDashboard, Clock, PlayCircle,
+    TrendingUp, Zap, Globe, Code, Brain, Database, Smartphone
 } from 'lucide-react';
 
 type Course = {
@@ -30,14 +16,165 @@ type Course = {
     slug: string;
     description: string;
     price: number;
+    discountPrice?: number;
     thumbnail: { url: string };
     instructor: { name: string; avatar: string };
     status: string;
 };
 
+// ─── Dummy data for sections that need it ───────────────────────────────────
+
+const TOPICS = [
+    { label: 'Python', learners: '47.4M' },
+    { label: 'Web Development', learners: '12.8M' },
+    { label: 'Machine Learning', learners: '8.1M' },
+    { label: 'Data Science', learners: '7.9M' },
+    { label: 'JavaScript', learners: '19.5M' },
+    { label: 'React', learners: '13.2M' },
+    { label: 'Java', learners: '16.3M' },
+    { label: 'C#', learners: '10.5M' },
+    { label: 'AWS', learners: '6.3M' },
+    { label: 'SQL', learners: '11.1M' },
+];
+
+const FEATURED_TOPICS = [
+    { icon: Code, label: 'Lập trình Web', count: '1,200+', color: 'text-blue-600' },
+    { icon: Brain, label: 'Trí tuệ nhân tạo', count: '800+', color: 'text-purple-600' },
+    { icon: Database, label: 'Khoa học dữ liệu', count: '650+', color: 'text-green-600' },
+    { icon: Smartphone, label: 'Mobile Dev', count: '450+', color: 'text-orange-600' },
+];
+
+const DUMMY_COURSES: Course[] = [
+    {
+        _id: '1', title: 'Khóa học lập trình Python từ cơ bản đến nâng cao', slug: 'python-co-ban-nang-cao',
+        description: 'Nắm vững Python với hơn 100 bài tập thực hành', price: 1499000, discountPrice: 399000,
+        thumbnail: { url: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?auto=format&fit=crop&w=400&q=80' },
+        instructor: { name: 'Nguyễn Văn A', avatar: '' }, status: 'published',
+    },
+    {
+        _id: '2', title: 'React & Next.js - Xây dựng ứng dụng Web hiện đại', slug: 'react-nextjs',
+        description: 'Học React từ số 0 đến dự án thực tế', price: 1899000, discountPrice: 499000,
+        thumbnail: { url: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=400&q=80' },
+        instructor: { name: 'Trần Minh B', avatar: '' }, status: 'published',
+    },
+    {
+        _id: '3', title: 'Machine Learning A-Z: Trí tuệ nhân tạo với Python', slug: 'machine-learning-az',
+        description: 'Khám phá AI, Machine Learning & Deep Learning', price: 2199000, discountPrice: 599000,
+        thumbnail: { url: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?auto=format&fit=crop&w=400&q=80' },
+        instructor: { name: 'Lê Hồng C', avatar: '' }, status: 'published',
+    },
+    {
+        _id: '4', title: 'Node.js & Express - Backend cho người mới bắt đầu', slug: 'nodejs-express',
+        description: 'API RESTful, MongoDB, Authentication & Deployment', price: 1299000, discountPrice: 349000,
+        thumbnail: { url: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?auto=format&fit=crop&w=400&q=80' },
+        instructor: { name: 'Phạm Đức D', avatar: '' }, status: 'published',
+    },
+    {
+        _id: '5', title: 'Docker & Kubernetes cho DevOps Engineers', slug: 'docker-kubernetes',
+        description: 'Containerization, CI/CD, Orchestration', price: 1699000, discountPrice: 449000,
+        thumbnail: { url: 'https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?auto=format&fit=crop&w=400&q=80' },
+        instructor: { name: 'Hoàng Minh E', avatar: '' }, status: 'published',
+    },
+];
+
+// ─── Rating Stars ────────────────────────────────────────────────────────────
+
+const RatingStars = ({ rating }: { rating: number }) => {
+    return (
+        <div className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map(i => (
+                <Star key={i} size={12} className={i <= Math.floor(rating) ? 'text-[#b4690e] fill-[#b4690e]' : 'text-[#b4690e] fill-[#b4690e] opacity-30'} />
+            ))}
+        </div>
+    );
+};
+
+// ─── Course Card (Udemy Style) ──────────────────────────────────────────────
+
+const CourseCard = ({ course }: { course: Course }) => {
+    const rating = (4 + Math.random() * 0.9);
+    const students = Math.floor(1000 + Math.random() * 50000);
+    const totalHours = Math.floor(10 + Math.random() * 40);
+    const totalLectures = Math.floor(50 + Math.random() * 150);
+
+    return (
+        <Link href={`/courses/${course.slug}`} className="group block w-[260px] flex-shrink-0">
+            <div className="aspect-video overflow-hidden bg-gray-200 mb-2">
+                <img
+                    src={course.thumbnail?.url}
+                    alt={course.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+            </div>
+            <h3 className="font-bold text-[15px] leading-tight text-[#1c1d1f] mb-1 line-clamp-2 group-hover:text-[#5624d0] transition-colors">
+                {course.title}
+            </h3>
+            <p className="text-xs text-gray-500 mb-1 truncate">{course.instructor?.name}</p>
+            <div className="flex items-center gap-1 mb-1">
+                <span className="text-sm font-bold text-[#b4690e]">{rating.toFixed(1)}</span>
+                <RatingStars rating={rating} />
+                <span className="text-xs text-gray-500">({students.toLocaleString()})</span>
+            </div>
+            <p className="text-[11px] text-gray-500 mb-1">{totalHours} giờ • {totalLectures} bài giảng</p>
+            <div className="flex items-center gap-2">
+                {course.discountPrice && course.discountPrice > 0 ? (
+                    <>
+                        <span className="font-extrabold text-[#1c1d1f]">₫{course.discountPrice.toLocaleString()}</span>
+                        <span className="text-sm text-gray-500 line-through">₫{course.price.toLocaleString()}</span>
+                    </>
+                ) : course.price === 0 ? (
+                    <span className="font-extrabold text-[#1c1d1f]">Miễn phí</span>
+                ) : (
+                    <span className="font-extrabold text-[#1c1d1f]">₫{course.price.toLocaleString()}</span>
+                )}
+            </div>
+        </Link>
+    );
+};
+
+// ─── Scrollable Row ─────────────────────────────────────────────────────────
+
+const CourseRow = ({ courses }: { courses: Course[] }) => {
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    const scroll = (dir: 'left' | 'right') => {
+        if (scrollRef.current) {
+            const amount = 280 * 2;
+            scrollRef.current.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
+        }
+    };
+
+    return (
+        <div className="relative group/row">
+            <button
+                onClick={() => scroll('left')}
+                className="absolute -left-5 top-1/3 -translate-y-1/2 z-10 w-12 h-12 bg-[#1c1d1f] text-white rounded-full flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-black shadow-lg"
+            >
+                <ChevronLeft size={24} />
+            </button>
+            <div
+                ref={scrollRef}
+                className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+                {courses.map(c => <CourseCard key={c._id} course={c} />)}
+            </div>
+            <button
+                onClick={() => scroll('right')}
+                className="absolute -right-5 top-1/3 -translate-y-1/2 z-10 w-12 h-12 bg-[#1c1d1f] text-white rounded-full flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-black shadow-lg"
+            >
+                <ChevronRight size={24} />
+            </button>
+        </div>
+    );
+};
+
+// ─── Main Page ──────────────────────────────────────────────────────────────
+
 const CourseListing = () => {
     const [courses, setCourses] = useState<Course[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState('Python');
     const router = useRouter();
     const changeLoad = loadingStore(state => state.changeLoad);
 
@@ -62,214 +199,214 @@ const CourseListing = () => {
         }
     };
 
-    const categories = [
-        { icon: Code, label: 'Lập trình Web', color: 'bg-blue-100 text-blue-600' },
-        { icon: Brain, label: 'Trí tuệ nhân tạo', color: 'bg-purple-100 text-purple-600' },
-        { icon: Database, label: 'Khoa học dữ liệu', color: 'bg-green-100 text-green-600' },
-        { icon: Lock, label: 'An ninh mạng', color: 'bg-red-100 text-red-600' },
-        { icon: Cloud, label: 'Điện toán đám mây', color: 'bg-cyan-100 text-cyan-600' },
-        { icon: Terminal, label: 'DevOps', color: 'bg-gray-100 text-gray-600' },
-        { icon: Smartphone, label: 'Mobile App', color: 'bg-orange-100 text-orange-600' },
-        { icon: Layout, label: 'UI/UX Design', color: 'bg-pink-100 text-pink-600' },
-    ];
-
-    const techLogos = [
-        { name: 'Google', url: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg' },
-        { name: 'Microsoft', url: 'https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg' },
-        { name: 'Amazon', url: 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg' },
-        { name: 'Meta', url: 'https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg' },
-    ];
+    const displayCourses = courses?.length > 0 ? courses : DUMMY_COURSES;
 
     return (
-        <div className="bg-white min-h-screen font-sans">
-            {/* Hero Section */}
-            <section className="relative py-20 overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-500">
-                <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-96 h-96 bg-blue-900/20 rounded-full blur-3xl"></div>
-
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
-                    <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight">
-                        Nâng Tầm Kỹ Năng Công Nghệ <br />
-                        <span className="text-yellow-400">Hoàn Toàn Miễn Phí</span>
-                    </h1>
-                    <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
-                        Khám phá hàng ngàn khóa học lập trình và công nghệ chất lượng cao từ các chuyên gia hàng đầu.
-                    </p>
-
-                    <div className="max-w-2xl mx-auto flex p-1 bg-white rounded-2xl shadow-2xl">
-                        <div className="flex-1 flex items-center px-4">
-                            <Search className="text-gray-400 mr-2" />
-                            <input
-                                type="text"
-                                placeholder="Bạn muốn học gì hôm nay?"
-                                className="w-full py-4 text-gray-800 focus:outline-none"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                            />
+        <div className="bg-white min-h-screen font-sans text-[#1c1d1f]">
+            {/* ═══════ Hero Banner ═══════ */}
+            <section className="relative bg-[#1c1d1f]">
+                <div className="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center">
+                    <div className="flex-1 py-12 lg:py-16 lg:pr-12">
+                        <h1 className="text-3xl lg:text-[2.7rem] font-bold text-white leading-tight mb-4">
+                            Học kỹ năng mới.<br />
+                            <span className="text-[#c0c4fc]">Xây dựng tương lai.</span>
+                        </h1>
+                        <p className="text-[#d1d7dc] text-lg mb-8 max-w-lg">
+                            Kiến thức mới mỗi ngày — từ lập trình, dữ liệu, tới AI. Học từ các chuyên gia hàng đầu Việt Nam.
+                        </p>
+                        <div className="flex max-w-xl">
+                            <div className="flex-1 flex items-center bg-white border-2 border-white">
+                                <Search className="text-gray-500 ml-4 flex-shrink-0" size={20} />
+                                <input
+                                    type="text"
+                                    placeholder="Bạn muốn học gì?"
+                                    className="w-full py-4 px-3 text-[#1c1d1f] focus:outline-none text-base"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                />
+                            </div>
+                            <button
+                                onClick={handleSearch}
+                                className="bg-[#a435f0] text-white px-6 font-bold hover:bg-[#8710d8] transition-colors flex-shrink-0"
+                            >
+                                <Search size={20} />
+                            </button>
                         </div>
-                        <button
-                            onClick={handleSearch}
-                            className="bg-red-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg"
-                        >
-                            Tìm kiếm
-                        </button>
+                    </div>
+                    <div className="hidden lg:block flex-1 max-w-lg">
+                        <img
+                            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=700&q=80"
+                            alt="Learning"
+                            className="w-full h-80 object-cover"
+                        />
                     </div>
                 </div>
             </section>
 
-            {/* Trusted By Section */}
-            <section className="py-12 bg-gray-50 border-b">
-                <div className="max-w-7xl mx-auto px-4 text-center">
-                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-8">HỢP TÁC CÙNG CÁC ĐỐI TÁC CÔNG NGHỆ</p>
-                    <div className="flex flex-wrap justify-center items-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all">
-                        {techLogos.map((logo) => (
-                            <img key={logo.name} src={logo.url} alt={logo.name} className="h-8 md:h-10" />
+            {/* ═══════ Trusted By ═══════ */}
+            <section className="bg-[#f7f9fa] border-b border-gray-200">
+                <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-center gap-8">
+                    <span className="text-sm text-gray-500 font-medium whitespace-nowrap">Được tin tưởng bởi hơn 15,000 công ty và hàng triệu học viên trên toàn thế giới</span>
+                    <div className="flex flex-wrap justify-center items-center gap-8 opacity-50 grayscale">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google" className="h-6" />
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg" alt="Microsoft" className="h-6" />
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt="Amazon" className="h-6" />
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg" alt="Meta" className="h-6" />
+                    </div>
+                </div>
+            </section>
+
+            {/* ═══════ Instructor CTA (Banner) ═══════ */}
+            <section className="bg-white border-b border-gray-200">
+                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+                    <p className="text-sm text-gray-700">
+                        <span className="font-bold">Bạn là giảng viên?</span> Quản lý và tạo khóa học mới dễ dàng từ bảng điều khiển.
+                    </p>
+                    <Link
+                        href="/management/my-courses"
+                        className="inline-flex items-center gap-2 text-sm font-bold text-[#5624d0] hover:text-[#401b9c] transition-colors"
+                    >
+                        <LayoutDashboard size={16} />
+                        Bảng điều khiển giảng viên
+                    </Link>
+                </div>
+            </section>
+
+            {/* ═══════ Topic Tabs + Course Carousel ═══════ */}
+            <section className="py-12 max-w-7xl mx-auto px-6">
+                <h2 className="text-3xl font-bold mb-2">Khóa học phổ biến theo chủ đề</h2>
+                <p className="text-gray-600 mb-6">Khám phá các khóa học từ hàng trăm chủ đề được yêu thích nhất.</p>
+
+                {/* Tabs */}
+                <div className="flex flex-wrap gap-2 mb-8 border-b border-gray-200">
+                    {TOPICS.slice(0, 6).map(topic => (
+                        <button
+                            key={topic.label}
+                            onClick={() => setActiveTab(topic.label)}
+                            className={`pb-3 px-4 text-sm font-bold transition-colors relative ${activeTab === topic.label
+                                ? 'text-[#1c1d1f] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#1c1d1f]'
+                                : 'text-gray-500 hover:text-[#1c1d1f]'
+                                }`}
+                        >
+                            {topic.label}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Content for active tab */}
+                <div className="mb-4">
+                    <h3 className="text-xl font-bold mb-1">Khám phá {activeTab}</h3>
+                    <p className="text-sm text-gray-500 mb-6">
+                        {TOPICS.find(t => t.label === activeTab)?.learners || '10M+'} học viên đang theo học chủ đề này trên toàn thế giới.
+                    </p>
+                </div>
+
+                <CourseRow courses={displayCourses} />
+            </section>
+
+            {/* ═══════ Featured Topics ═══════ */}
+            <section className="bg-[#f7f9fa] py-16">
+                <div className="max-w-7xl mx-auto px-6">
+                    <h2 className="text-3xl font-bold mb-2">Chủ đề nổi bật theo danh mục</h2>
+                    <p className="text-gray-600 mb-10">Những lĩnh vực được săn đón nhất trong thị trường công nghệ.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {FEATURED_TOPICS.map(topic => (
+                            <div key={topic.label} className="bg-white border border-gray-200 p-6 hover:shadow-lg transition-shadow cursor-pointer group">
+                                <topic.icon size={28} className={`${topic.color} mb-4`} />
+                                <h3 className="font-bold text-lg mb-1 group-hover:text-[#5624d0] transition-colors">{topic.label}</h3>
+                                <p className="text-sm text-gray-500">{topic.count} khóa học</p>
+                            </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* Categories Grid */}
-            <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4">Khám phá theo lĩnh vực</h2>
-                    <div className="w-20 h-1.5 bg-blue-600 mx-auto rounded-full"></div>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-                    {categories.map((cat) => (
-                        <div key={cat.label} className="group cursor-pointer">
-                            <div className={`${cat.color} aspect-square rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-sm`}>
-                                {<cat.icon size={32} />}
-                            </div>
-                            <p className="text-sm font-bold text-gray-700 text-center group-hover:text-blue-600 transition-colors">{cat.label}</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* Premium Courses Banner */}
-            <section className="py-20 bg-gray-900 text-white relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-                <div className="max-w-7xl mx-auto px-4 relative flex flex-col md:flex-row items-center justify-between">
-                    <div className="mb-10 md:mb-0">
-                        <h2 className="text-3xl md:text-5xl font-bold mb-6">Bạn đã sẵn sàng trở thành <br /> Fullstack Developer?</h2>
-                        <ul className="space-y-4 mb-8">
-                            <li className="flex items-center gap-3"><CheckCircle className="text-green-500" /> Lộ trình học bài bản từ Zero đến Hero</li>
-                            <li className="flex items-center gap-3"><CheckCircle className="text-green-500" /> Thực hành với các dự án thực tế</li>
-                            <li className="flex items-center gap-3"><CheckCircle className="text-green-500" /> Hỗ trợ 24/7 từ đội ngũ giảng viên</li>
-                        </ul>
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-full inline-flex items-center gap-2 transition-all transform hover:scale-105">
-                            Bắt đầu ngay <ArrowRight size={20} />
-                        </button>
-                    </div>
-                    <div className="w-full md:w-1/2">
-                        <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80" alt="Coding" className="rounded-3xl shadow-2xl border-4 border-white/10" />
-                    </div>
-                </div>
-            </section>
-
-            {/* Featured Courses Section */}
-            <section className="py-24 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-end mb-12">
+            {/* ═══════ Real Courses from API ═══════ */}
+            {courses?.length > 0 && (
+                <section className="py-16 max-w-7xl mx-auto px-6">
+                    <div className="flex items-end justify-between mb-8">
                         <div>
-                            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Khóa Học Phổ Biến</h2>
-                            <p className="text-gray-500 text-lg italic">Những khóa học được nhiều học viên tham gia nhất trong tháng này.</p>
+                            <h2 className="text-3xl font-bold mb-1">Khóa học mới nhất</h2>
+                            <p className="text-gray-500">Những khóa học vừa được thêm vào hệ thống.</p>
                         </div>
-                        <Link href="/courses/all" className="text-blue-600 font-bold hover:underline flex items-center gap-2">
-                            Xem tất cả <ArrowRight size={18} />
+                        <Link href="/courses/search?q=" className="font-bold text-[#5624d0] hover:text-[#401b9c] text-sm flex items-center gap-1">
+                            Xem tất cả <ArrowRight size={16} />
                         </Link>
                     </div>
+                    <CourseRow courses={courses} />
+                </section>
+            )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {courses?.length > 0 ? courses.map((course) => (
-                            <Link
-                                key={course._id}
-                                href={`/courses/${course.slug}`}
-                                className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] transition-all flex flex-col h-full"
-                            >
-                                <div className="relative aspect-video overflow-hidden">
-                                    <img
-                                        src={course.thumbnail?.url || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=400&q=80'}
-                                        alt={course.title}
-                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-                                        <div className="flex items-center gap-2 text-white text-xs font-bold bg-blue-600/80 px-2 py-1 rounded">
-                                            <PlayCircle size={14} /> 24 Lessons
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="p-6 flex flex-col flex-1">
-                                    <h3 className="font-bold text-xl text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                                        {course.title}
-                                    </h3>
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <div className="w-8 h-8 rounded-full bg-gray-200">
-                                            <img src={course.instructor?.avatar} className="w-full h-full rounded-full object-cover" />
-                                        </div>
-                                        <div className="text-sm text-gray-600 font-medium">{course.instructor?.name}</div>
-                                    </div>
-                                    <div className="flex items-center gap-1 text-yellow-500 mb-6">
-                                        <Star size={16} fill="currentColor" />
-                                        <Star size={16} fill="currentColor" />
-                                        <Star size={16} fill="currentColor" />
-                                        <Star size={16} fill="currentColor" />
-                                        <Star size={16} fill="currentColor" />
-                                        <span className="text-xs text-gray-400 font-bold ml-1">(4.9)</span>
-                                    </div>
-                                    <div className="mt-auto flex items-center justify-between pt-4 border-t">
-                                        <div className="text-2xl font-black text-gray-900">
-                                            {course.price === 0 ? 'MIỄN PHÍ' : `${course.price.toLocaleString()} VNĐ`}
-                                        </div>
-                                        <button className="bg-red-50 text-red-600 p-2 rounded-lg group-hover:bg-red-600 group-hover:text-white transition-all">
-                                            <ArrowRight size={20} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </Link>
-                        )) : (
-                            // Placeholder cards if no courses
-                            [1, 2, 3, 4].map(i => (
-                                <div key={i} className="animate-pulse bg-gray-50 rounded-2xl aspect-[4/5] border border-gray-100"></div>
-                            ))
-                        )}
+            {/* ═══════ Why Learn With Us ═══════ */}
+            <section className="bg-[#1c1d1f] text-white py-16">
+                <div className="max-w-7xl mx-auto px-6">
+                    <h2 className="text-3xl font-bold mb-12 text-center">Tại sao nên học tại OpenIdear?</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                        <div className="text-center">
+                            <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center border-2 border-white/20 rounded-full">
+                                <PlayCircle size={28} />
+                            </div>
+                            <h3 className="font-bold text-xl mb-3">Học theo tốc độ của bạn</h3>
+                            <p className="text-[#d1d7dc] text-sm leading-relaxed">Truy cập mọi lúc mọi nơi. Học trên di động hay máy tính, phù hợp với lịch trình của bạn.</p>
+                        </div>
+                        <div className="text-center">
+                            <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center border-2 border-white/20 rounded-full">
+                                <Award size={28} />
+                            </div>
+                            <h3 className="font-bold text-xl mb-3">Chứng chỉ chuyên nghiệp</h3>
+                            <p className="text-[#d1d7dc] text-sm leading-relaxed">Nhận chứng chỉ hoàn thành khóa học được công nhận bởi cộng đồng và doanh nghiệp.</p>
+                        </div>
+                        <div className="text-center">
+                            <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center border-2 border-white/20 rounded-full">
+                                <Users size={28} />
+                            </div>
+                            <h3 className="font-bold text-xl mb-3">Cộng đồng hỗ trợ</h3>
+                            <p className="text-[#d1d7dc] text-sm leading-relaxed">Kết nối, thảo luận và nhận hỗ trợ từ giảng viên cùng hàng ngàn học viên khác.</p>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            {/* Why Choose Us Section */}
-            <section className="py-24 bg-blue-50">
-                <div className="max-w-7xl mx-auto px-4">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl font-bold font-sans text-gray-900 mb-4">Tại sao học tại OpenIdear?</h2>
-                        <p className="text-gray-600 max-w-2xl mx-auto">Chúng tôi cung cấp môi trường học tập tốt nhất để bạn phát triển sự nghiệp.</p>
+            {/* ═══════ Become Instructor CTA ═══════ */}
+            <section className="py-16 bg-white">
+                <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center gap-12">
+                    <div className="w-full md:w-1/2">
+                        <img
+                            src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=600&q=80"
+                            alt="Become an instructor"
+                            className="w-full h-72 object-cover"
+                        />
                     </div>
+                    <div className="flex-1">
+                        <h2 className="text-3xl font-bold mb-4">Trở thành giảng viên</h2>
+                        <p className="text-gray-600 mb-6 text-lg leading-relaxed">
+                            Chia sẻ kiến thức của bạn với hàng triệu học viên trên nền tảng. Tạo khóa học video, tiếp cận cộng đồng toàn cầu, và nhận thu nhập khi giảng dạy những gì bạn yêu thích.
+                        </p>
+                        <Link
+                            href="/management/my-courses"
+                            className="inline-block bg-[#1c1d1f] text-white font-bold px-8 py-4 hover:bg-black transition-colors"
+                        >
+                            Bắt đầu giảng dạy ngay
+                        </Link>
+                    </div>
+                </div>
+            </section>
 
-                    <div className="grid md:grid-cols-3 gap-10">
-                        <div className="bg-white p-10 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl transition-all text-center">
-                            <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 transform rotate-3">
-                                <Award size={32} />
-                            </div>
-                            <h3 className="text-xl font-bold mb-4">Chứng chỉ uy tín</h3>
-                            <p className="text-gray-500 text-sm leading-relaxed">Nhận chứng chỉ hoàn thành khóa học được công nhận bởi các đối tác tuyển dụng hàng đầu.</p>
-                        </div>
-                        <div className="bg-white p-10 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl transition-all text-center">
-                            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6 transform -rotate-3">
-                                <BookOpen size={32} />
-                            </div>
-                            <h3 className="text-xl font-bold mb-4">Nội dung thực tế</h3>
-                            <p className="text-gray-500 text-sm leading-relaxed">Chương trình học luôn được cập nhật theo xu hướng công nghệ mới nhất của thị trường.</p>
-                        </div>
-                        <div className="bg-white p-10 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl transition-all text-center">
-                            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6 transform rotate-6">
-                                <Users size={32} />
-                            </div>
-                            <h3 className="text-xl font-bold mb-4">Cộng đồng sôi động</h3>
-                            <p className="text-gray-500 text-sm leading-relaxed">Tham gia diễn đàn thảo luận cùng hàng ngàn học viên khác để cùng nhau phát triển.</p>
-                        </div>
+            {/* ═══════ Top Topics ═══════ */}
+            <section className="bg-[#f7f9fa] py-16 border-t border-gray-200">
+                <div className="max-w-7xl mx-auto px-6">
+                    <h2 className="text-2xl font-bold mb-8">Chủ đề hàng đầu</h2>
+                    <div className="flex flex-wrap gap-3">
+                        {TOPICS.map(t => (
+                            <Link
+                                key={t.label}
+                                href={`/courses/search?q=${encodeURIComponent(t.label)}`}
+                                className="bg-white border border-gray-200 px-5 py-2.5 text-sm font-bold text-[#1c1d1f] hover:bg-gray-50 transition-colors"
+                            >
+                                {t.label}
+                            </Link>
+                        ))}
                     </div>
                 </div>
             </section>

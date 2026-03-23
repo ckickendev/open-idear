@@ -5,8 +5,9 @@ import { courseApi } from '@/features/series/api/course.api';
 import { Search, Trash2, Filter, ChevronLeft, ChevronRight, Edit, X, Plus, Eye, BookOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from '@/app/hook/useTranslation';
-import HoverTooltip from "@/components/common/TooltipNote";
+import HoverNote from "@/components/common/HoverNote";
 import Link from "next/link";
+import ImageUpload from "@/app/create/ImageUpload";
 
 type CourseType = {
     _id: string;
@@ -14,6 +15,8 @@ type CourseType = {
     slug: string;
     description: string;
     price: number;
+    discountPrice?: number;
+    thumbnail: string;
     status: 'draft' | 'published';
     instructor: {
         username: string;
@@ -32,7 +35,9 @@ const Courses = () => {
         title: '',
         slug: '',
         description: '',
+        thumbnail: '',
         price: 0,
+        discountPrice: 0,
     });
 
     const setType = alertStore((state) => state.setType);
@@ -49,8 +54,10 @@ const Courses = () => {
         try {
             changeLoad();
             const response = await courseApi.getCoursesByUser();
-            if(response.success) {
-                setCourses(response.data.data);
+            if (response.success) {
+                console.log("response.data.courses", response.data.courses);
+
+                setCourses(response.data.courses);
             } else {
                 throw new Error(response.message);
             }
@@ -71,9 +78,11 @@ const Courses = () => {
                 slug: item.slug,
                 description: item.description || '',
                 price: item.price || 0,
+                discountPrice: item.discountPrice || 0,
+                thumbnail: item.thumbnail,
             });
         } else {
-            setFormData({ _id: '', title: '', slug: '', description: '', price: 0 });
+            setFormData({ _id: '', title: '', slug: '', description: '', price: 0, discountPrice: 0, thumbnail: '' });
         }
         setShowModal(true);
     };
@@ -87,7 +96,7 @@ const Courses = () => {
                     courseId: formData._id,
                     ...formData
                 });
-                if(response.success) {
+                if (response.success) {
                     setCourses(courses?.map(c => c._id === formData._id ? response.data.data : c));
                     setMessage('Cập nhật khóa học thành công');
                 } else throw new Error(response.message);
@@ -95,19 +104,30 @@ const Courses = () => {
                 const response = await courseApi.createCourse({
                     title: formData.title
                 });
-                if(response.success){
-                    setCourses([...courses, response.data.data]);
+
+                if (response.success) {
+                    if (courses) {
+                        setCourses(prevCourses => [...prevCourses, response.data.data]);
+                    } else {
+                        setCourses([response.data.data]);
+                    }
+
                     setMessage('Thêm khóa học thành công');
                 } else throw new Error(response.message);
             }
             setType('info');
             setShowModal(false);
         } catch (error: any) {
+
             setType('error');
             setMessage(error?.message);
         } finally {
             changeLoad();
         }
+    };
+
+    const handleImageUploadSuccess = (media: any) => {
+        setFormData(prev => ({ ...prev, thumbnail: media._id }));
     };
 
     return (
@@ -141,12 +161,24 @@ const Courses = () => {
                                     <div className="text-sm font-medium text-gray-900">{course.title}</div>
                                     <div className="text-xs text-gray-500">{course.slug}</div>
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-500">{course.instructor?.name}</td>
-                                <td className="px-6 py-4 text-sm text-gray-500">{course.price.toLocaleString()} VNĐ</td>
+                                <td className="px-6 py-4 text-sm text-gray-500">
+                                    {course.discountPrice && course.discountPrice > 0 ? (
+                                        <div>
+                                            <span className="text-gray-900 font-bold">{course.discountPrice.toLocaleString()} VNĐ</span>
+                                            <div className="text-xs line-through text-gray-400">{course.price.toLocaleString()} VNĐ</div>
+                                        </div>
+                                    ) : (
+                                        <span>{course.price.toLocaleString()} VNĐ</span>
+                                    )}
+                                </td>
                                 <td className="px-6 py-4 text-sm text-gray-500">{course.status}</td>
                                 <td className="px-6 py-4 text-sm font-medium flex gap-2">
-                                    <button onClick={() => openModal(course)} className="text-blue-600 hover:text-blue-900"><Edit size={16} /></button>
-                                    <Link href={`/management/course/${course._id}/curriculum`} className="text-green-600 hover:text-green-900"><BookOpen size={16} /></Link>
+                                    <HoverNote note="Chỉnh sửa thông tin khoá học">
+                                        <button onClick={() => openModal(course)} className="text-blue-600 hover:text-blue-900"><Edit size={16} /></button>
+                                    </HoverNote>
+                                    <HoverNote note="Chỉnh sửa chi tiết khoá học">
+                                        <Link href={`/management/course/${course._id}/curriculum`} className="text-green-600"><BookOpen size={16} /></Link>
+                                    </HoverNote>
                                 </td>
                             </tr>
                         ))}
@@ -155,7 +187,7 @@ const Courses = () => {
             </div>
 
             {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="fixed inset-0 bg-gray-500/50 bg-opacity-70 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="px-6 py-4 border-b flex items-center justify-between bg-gray-50">
                             <h3 className="text-lg font-bold text-gray-900">
@@ -173,6 +205,9 @@ const Courses = () => {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                 />
                             </div>
+                            <ImageUpload
+                                onImageUploaded={handleImageUploadSuccess}
+                            />
                             {selectedItem && (
                                 <>
                                     <div>
@@ -190,6 +225,15 @@ const Courses = () => {
                                             type="number"
                                             value={formData.price}
                                             onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Giá khuyến mãi (VNĐ) (Tùy chọn)</label>
+                                        <input
+                                            type="number"
+                                            value={formData.discountPrice}
+                                            onChange={(e) => setFormData({ ...formData, discountPrice: parseInt(e.target.value) || 0 })}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                         />
                                     </div>

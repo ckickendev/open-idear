@@ -646,7 +646,7 @@ export default function CreatePost() {
                 {modeHTML ||
                   <ButtonPurpleToBlue
                     onClick={() => setPreviewMode(!previewMode)}
-                    classAddition="flex items-center whitespace-nowrap px-8 py-2 rounded-md"
+                    classAddition="flex items-center whitespace-nowrap px-8 py-2"
                     title={previewMode ? 'Return to edit' : 'Click to Preview'}
                     icon={previewMode ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
                   />

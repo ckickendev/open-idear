@@ -31,6 +31,7 @@ type Course = {
     slug: string;
     description: string;
     price: number;
+    discountPrice?: number;
     thumbnail: { url: string };
     instructor: { name: string; avatar: string };
     status: string;
@@ -310,8 +311,23 @@ const SearchResultsContent = () => {
                                                 <span className="text-xs text-gray-400 font-bold ml-1">(4.9)</span>
                                             </div>
                                             <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50">
-                                                <div className="text-xl font-black text-gray-900">
-                                                    {course.price === 0 ? 'MIỄN PHÍ' : `${course.price.toLocaleString()} VNĐ`}
+                                                <div>
+                                                    {course.price === 0 ? (
+                                                        <div className="text-xl font-black text-gray-900">MIỄN PHÍ</div>
+                                                    ) : course.discountPrice && course.discountPrice > 0 ? (
+                                                        <div className="flex flex-col">
+                                                            <span className="text-xl font-black text-gray-900">
+                                                                {course.discountPrice.toLocaleString()} VNĐ
+                                                            </span>
+                                                            <span className="text-xs text-gray-400 line-through">
+                                                                {course.price.toLocaleString()} VNĐ
+                                                            </span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-xl font-black text-gray-900">
+                                                            {course.price.toLocaleString()} VNĐ
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="bg-blue-50 text-blue-600 p-2 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-all">
                                                     <ArrowRight size={18} />
