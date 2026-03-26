@@ -11,10 +11,12 @@ import {
     ChevronDown,
     Users,
     BookText,
-    BookOpen
+    BookOpen,
+    Hash
 } from 'lucide-react';
 import Logo from '@/components/common/Logo';
 import Category from '@/features/categories/components/management/Category';
+import Topic from '@/features/topics/components/management/Topic';
 import Post from '@/features/ideas/components/management/Post';
 import Report from './Report';
 import UserList from '@/features/users/components/UserList';
@@ -31,6 +33,7 @@ const AdminDashboard = () => {
 
     const menuItems = [
         { id: 'categories', label: 'Danh mục', icon: Folder },
+        { id: 'topics', label: 'Chủ đề', icon: Hash },
         { id: 'posts', label: 'Ý tưởng/Bài viết', icon: FileText },
         { id: 'users', label: 'Người dùng', icon: Users },
         { id: 'series', label: 'Series', icon: BookText },
@@ -43,6 +46,8 @@ const AdminDashboard = () => {
         switch (activeTab) {
             case 'categories':
                 return <Category />
+            case 'topics':
+                return <Topic />
             case 'posts':
                 return <Post />
             case 'users':

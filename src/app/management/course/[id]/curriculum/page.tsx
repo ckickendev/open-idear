@@ -187,6 +187,7 @@ const CurriculumManager = () => {
     const { id: courseId } = useParams();
     const [chapters, setChapters] = useState<Chapter[]>([]);
     const [courseTitle, setCourseTitle] = useState('');
+    const [courseStatus, setCourseStatus] = useState<'draft' | 'published'>('draft');
     const [videoUploadModal, setVideoUploadModal] = useState<{ chapterId: string } | null>(null);
     const [moveLessonModal, setMoveLessonModal] = useState<{ lesson: Lesson; sourceChapterId: string } | null>(null);
     const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
@@ -217,6 +218,7 @@ const CurriculumManager = () => {
             changeLoad();
             const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/getById?id=${courseId}`);
             setCourseTitle(response.data.data.title);
+            setCourseStatus(response.data.data.status || 'draft');
             setChapters(response.data.data.chapters || []);
         } catch (error: any) {
             console.error(error);
@@ -359,6 +361,27 @@ const CurriculumManager = () => {
         } finally { changeLoad(); }
     };
 
+    const handleTogglePublish = async () => {
+        changeLoad();
+        try {
+            const token = localStorage.getItem('access_token');
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            const newStatus = courseStatus === 'published' ? 'draft' : 'published';
+            await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/update`, {
+                courseId,
+                status: newStatus
+            });
+            setCourseStatus(newStatus);
+            setType('info'); 
+            setMessage(newStatus === 'published' ? 'Đã xuất bản khóa học' : 'Đã đưa khóa học về bản nháp');
+        } catch (error: any) {
+            setType('error'); 
+            setMessage(error?.response?.data?.message || 'Lỗi khi cập nhật trạng thái khóa học');
+        } finally { 
+            changeLoad(); 
+        }
+    };
+
     const totalLessons = chapters.reduce((acc, c) => acc + (c.lessons?.length || 0), 0);
 
     return (
@@ -391,11 +414,25 @@ const CurriculumManager = () => {
                         <div className="h-6 w-px bg-gray-700" />
                         <div>
                             <p className="text-[13px] text-gray-400 leading-none">Chương trình học</p>
-                            <p className="text-sm font-bold leading-tight mt-0.5 truncate max-w-md">{courseTitle || 'Đang tải...'}</p>
+                            <p className="text-sm font-bold leading-tight mt-0.5 truncate max-w-md">
+                                {courseTitle || 'Đang tải...'}
+                                {courseTitle && (
+                                    <span className={`ml-3 px-2 py-0.5 text-xs rounded border ${courseStatus === 'published' ? 'bg-gray-800 border-gray-600 text-gray-300' : 'bg-yellow-900/40 border-yellow-700/50 text-yellow-500'}`}>
+                                        {courseStatus === 'published' ? 'Đã xuất bản' : 'Bản nháp'}
+                                    </span>
+                                )}
+                            </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3 text-sm">
+                    <div className="flex items-center gap-6 text-sm">
                         <span className="text-gray-400">{chapters.length} chương • {totalLessons} bài</span>
+                        
+                        <button
+                            onClick={handleTogglePublish}
+                            className={`px-4 py-2 font-bold text-sm transition-colors border ${courseStatus === 'published' ? 'bg-transparent text-white border-white hover:bg-white/10' : 'bg-white text-[#1c1d1f] border-white hover:bg-gray-200'}`}
+                        >
+                            {courseStatus === 'published' ? 'Hủy xuất bản' : 'Xuất bản khóa học'}
+                        </button>
                     </div>
                 </div>
             </div>

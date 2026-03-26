@@ -5,7 +5,10 @@ export const courseApi = {
         return await api.get('/course/search');
     },
     getCoursesByUser: async () => {
-        return await api.get('/course');
+        return await api.get('/course/me');
+    },
+    getEnrolledCourses: async () => {
+        return await api.get('/course/enrolled');
     },
     getCourseById: async (courseId: string) => {
         return await api.get(`/course/detail?courseId=${courseId}`);

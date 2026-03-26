@@ -1,10 +1,11 @@
 'use client';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import loadingStore from "@/store/LoadingStore";
 import { Play, Check, ChevronDown, ChevronUp, Globe, Info, Clock, Smartphone, Infinity, Award } from 'lucide-react';
 import Link from 'next/link';
+import { api } from '@/lib/api/axios';
 
 type Course = {
     _id: string;
@@ -26,7 +27,9 @@ type Course = {
 
 const CourseDetail = () => {
     const { slug } = useParams();
+    const router = useRouter();
     const [course, setCourse] = useState<Course | null>(null);
+    const [isEnrolling, setIsEnrolling] = useState(false);
     const changeLoad = loadingStore(state => state.changeLoad);
 
     useEffect(() => {
@@ -43,6 +46,25 @@ const CourseDetail = () => {
         };
         fetchCourse();
     }, [slug]);
+
+    const handleEnroll = async () => {
+        if (!course) return;
+        try {
+            setIsEnrolling(true);
+            const response = await api.post('/course/enroll', { courseId: course._id });
+            if (response.success) {
+                alert('Đăng ký khóa học thành công!');
+                router.push('/management/my-courses');
+            } else {
+                alert(response.message || 'Có lỗi xảy ra khi đăng ký!');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Có lỗi xảy ra khi đăng ký!');
+        } finally {
+            setIsEnrolling(false);
+        }
+    };
 
     if (!course) return null;
 
@@ -165,8 +187,12 @@ const CourseDetail = () => {
                                 <button className="w-full bg-purple-600 text-white font-bold py-3 rounded hover:bg-purple-700 transition-colors">
                                     Thêm vào giỏ hàng
                                 </button>
-                                <button className="w-full border border-gray-900 font-bold py-3 rounded hover:bg-gray-50 transition-colors">
-                                    Mua ngay
+                                <button 
+                                    onClick={handleEnroll}
+                                    disabled={isEnrolling}
+                                    className="w-full border border-gray-900 font-bold py-3 rounded hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                >
+                                    {isEnrolling ? 'Đang xử lý...' : 'Mua ngay'}
                                 </button>
                             </div>
 

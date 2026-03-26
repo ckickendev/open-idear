@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { courseApi } from '@/features/series/api/course.api';
+import { categoryApi } from '@/features/categories/api/category.api';
+import { topicApi } from '@/features/topics/api/topic.api';
 import alertStore from '@/store/AlertStore';
 import loadingStore from '@/store/LoadingStore';
 import LoadingComponent from '@/components/common/Loading';
@@ -23,6 +25,10 @@ type Course = {
     thumbnail?: { url: string };
     instructor: { username: string; name: string; avatar?: string };
     createdAt?: string;
+    categoryIds?: string[];
+    categories?: { _id: string; name: string }[];
+    topicIds?: string[];
+    topics?: { _id: string; name: string }[];
 };
 
 // ─── Modal ─────────────────────────────────────────────────────────────────
@@ -34,14 +40,37 @@ type CourseModalProps = {
 };
 
 const CourseModal = ({ course, onClose, onSaved }: CourseModalProps) => {
+    const [categoriesList, setCategoriesList] = useState<{_id: string; name: string}[]>([]);
+    const [topicsList, setTopicsList] = useState<{_id: string; name: string}[]>([]);
     const [formData, setFormData] = useState({
         title: course?.title ?? '',
         description: course?.description ?? '',
         price: course?.price ?? 0,
         discountPrice: course?.discountPrice ?? 0,
+        categoryIds: course?.categoryIds ?? [],
+        topicIds: course?.topicIds ?? (course?.topics?.map(t => t._id) || []),
     });
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        const fetchCategoriesAndTopics = async () => {
+            try {
+                const [catRes, topRes] = await Promise.all([
+                    categoryApi.getCategories() as any,
+                    topicApi.getTopics() as any
+                ]);
+                const catData = catRes.data || catRes;
+                if (catData.categories) setCategoriesList(catData.categories);
+
+                const topData = topRes.data || topRes;
+                if (topData.data) setTopicsList(topData.data);
+            } catch (err) {
+                console.error("Failed to fetch categories or topics", err);
+            }
+        };
+        fetchCategoriesAndTopics();
+    }, []);
 
     const setType = alertStore((s) => s.setType);
     const setMessage = alertStore((s) => s.setMessage);
@@ -55,7 +84,7 @@ const CourseModal = ({ course, onClose, onSaved }: CourseModalProps) => {
             if (course) {
                 res = await courseApi.updateCourse({ courseId: course._id, ...formData });
             } else {
-                res = await courseApi.createCourse({ title: formData.title });
+                res = await courseApi.createCourse({ title: formData.title, categoryIds: formData.categoryIds, topicIds: formData.topicIds });
             }
             if (!res.success) throw new Error(res.message);
             setType('info');
@@ -120,6 +149,54 @@ const CourseModal = ({ course, onClose, onSaved }: CourseModalProps) => {
                                         onChange={(e) => setFormData({ ...formData, discountPrice: parseInt(e.target.value) || 0 })}
                                         className="w-full px-4 py-3 border border-gray-900 rounded-none text-base focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none"
                                     />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-900 mb-2">Danh mục khóa học</label>
+                                <div className="grid grid-cols-2 gap-2 mt-2 max-h-48 overflow-y-auto border border-gray-200 p-3">
+                                    {categoriesList.map(category => (
+                                        <label key={category._id} className="flex items-center space-x-2">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={formData.categoryIds.includes(category._id)}
+                                                onChange={(e) => {
+                                                    const checked = e.target.checked;
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        categoryIds: checked 
+                                                            ? [...prev.categoryIds, category._id]
+                                                            : prev.categoryIds.filter(id => id !== category._id)
+                                                    }));
+                                                }}
+                                                className="rounded text-gray-900 focus:ring-gray-900"
+                                            />
+                                            <span className="text-sm text-gray-700">{category.name}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-900 mb-2">Chủ đề (Topic)</label>
+                                <div className="grid grid-cols-2 gap-2 mt-2 max-h-48 overflow-y-auto border border-gray-200 p-3">
+                                    {topicsList.map(topic => (
+                                        <label key={topic._id} className="flex items-center space-x-2">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={formData.topicIds.includes(topic._id)}
+                                                onChange={(e) => {
+                                                    const checked = e.target.checked;
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        topicIds: checked 
+                                                            ? [...prev.topicIds, topic._id]
+                                                            : prev.topicIds.filter(id => id !== topic._id)
+                                                    }));
+                                                }}
+                                                className="rounded text-gray-900 focus:ring-gray-900"
+                                            />
+                                            <span className="text-sm text-gray-700">{topic.name}</span>
+                                        </label>
+                                    ))}
                                 </div>
                             </div>
                         </>
@@ -211,6 +288,21 @@ const MyCourses = () => {
         } else {
             setType('error');
             setMessage(res.message || 'Không thể xóa khóa học');
+        }
+    };
+
+    const handleTogglePublish = async (courseId: string, currentStatus: string) => {
+        changeLoad();
+        const newStatus = currentStatus === 'published' ? 'draft' : 'published';
+        const res = await courseApi.updateCourse({ courseId, status: newStatus });
+        changeLoad();
+        if (res.success) {
+            setCourses((prev) => prev.map(c => c._id === courseId ? { ...c, status: newStatus } : c));
+            setType('info');
+            setMessage(newStatus === 'published' ? 'Đã xuất bản khóa học' : 'Đã đưa khóa học về bản nháp');
+        } else {
+            setType('error');
+            setMessage(res.message || 'Lỗi khi cập nhật trạng thái khóa học');
         }
     };
 
@@ -345,31 +437,36 @@ const MyCourses = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Actions */}
-                                            <div className="w-full sm:w-64 p-4 flex flex-row sm:flex-col justify-end sm:justify-center items-center sm:items-end gap-3 border-t sm:border-t-0 sm:border-l border-gray-100">
-                                                <Link
-                                                    href={`/management/course/${course._id}/curriculum`}
-                                                    className="w-full text-center border border-gray-900 hover:bg-gray-50 text-gray-900 font-bold px-4 py-2 transition-colors"
-                                                >
-                                                    Quản lý khóa học
-                                                </Link>
-                                                <div className="flex w-full gap-2">
-                                                    <button
-                                                        onClick={() => setModal({ open: true, course })}
-                                                        className="flex-1 border border-transparent hover:border-gray-900 text-gray-900 font-bold py-2 transition-colors flex justify-center items-center"
-                                                        title="Chỉnh sửa chung"
+                                                <div className="w-full sm:w-64 p-4 flex flex-row sm:flex-col justify-end sm:justify-center items-center sm:items-end gap-2 border-t sm:border-t-0 sm:border-l border-gray-100">
+                                                    <Link
+                                                        href={`/management/course/${course._id}/curriculum`}
+                                                        className="w-full text-center border border-gray-900 hover:bg-gray-50 text-gray-900 font-bold px-4 py-2 transition-colors"
                                                     >
-                                                        Cài đặt
-                                                    </button>
+                                                        Quản lý chương trình
+                                                    </Link>
                                                     <button
-                                                        onClick={() => handleDelete(course._id)}
-                                                        className="flex-1 border border-transparent hover:border-gray-900 text-gray-900 font-bold py-2 transition-colors flex justify-center items-center"
-                                                        title="Xóa khóa học"
+                                                        onClick={() => handleTogglePublish(course._id, course.status)}
+                                                        className={`w-full text-center border font-bold px-4 py-2 transition-colors ${course.status === 'published' ? 'border-gray-900 bg-white text-gray-900 hover:bg-gray-50' : 'border-gray-900 bg-gray-900 text-white hover:bg-gray-800'}`}
                                                     >
-                                                        Xóa
+                                                        {course.status === 'published' ? 'Hủy bản nháp' : 'Xuất bản khóa học'}
                                                     </button>
+                                                    <div className="flex w-full gap-2 mt-1">
+                                                        <button
+                                                            onClick={() => setModal({ open: true, course })}
+                                                            className="flex-1 border border-gray-300 hover:border-gray-900 text-gray-900 text-sm font-bold py-1.5 transition-colors flex justify-center items-center"
+                                                            title="Chỉnh sửa chung"
+                                                        >
+                                                            Cài đặt
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(course._id)}
+                                                            className="flex-1 border border-gray-300 hover:border-red-600 hover:text-red-600 text-gray-900 text-sm font-bold py-1.5 transition-colors flex justify-center items-center"
+                                                            title="Xóa khóa học"
+                                                        >
+                                                            Xóa
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
                                         </div>
                                     ))}
 
