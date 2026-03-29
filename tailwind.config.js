@@ -4,6 +4,7 @@ module.exports = {
     "./src/components/**/*.{js,ts,jsx,tsx}",
     "./src/app/**/*.{js,ts,jsx,tsx}",
     "./src/features/**/*.{js,ts,jsx,tsx}",
+    "./src/**/*.{js,ts,jsx,tsx}",
     "./pages/**/*.{js,ts,jsx,tsx}",
     "./components/**/*.{js,ts,jsx,tsx}",
     "./app/**/*.{js,ts,jsx,tsx}",
@@ -12,7 +13,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'dark-text' : "#9ca3af",
+        'dark-text': "#9ca3af",
       },
     },
   },

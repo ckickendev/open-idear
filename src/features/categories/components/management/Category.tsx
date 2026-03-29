@@ -157,7 +157,7 @@ const Category = () => {
                     slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
                     description: formData.description,
                 });
-                if(newCategory.success) {
+                if (newCategory.success) {
                     setCategories([...categories, newCategory.data.category]);
                     setFormData({ _id: '', name: '', slug: '', description: '' });
 
@@ -192,7 +192,7 @@ const Category = () => {
 
         categoryApi.updateCategory(selectedItem?._id as string, updatedCategory)
             .then(response => {
-                if(response.success) {
+                if (response.success) {
                     setCategories(categories.map(cat =>
                         cat._id === selectedItem?._id ? response.data.category : cat
                     ));
@@ -464,7 +464,7 @@ const Category = () => {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    {t('management.category.name')} <span className="text-red-500">*</span>
+                                    {t('management.category.name')} <span className="text-red-500 text-xs">*</span>
                                 </label>
                                 <input
                                     type="text"

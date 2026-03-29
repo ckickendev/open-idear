@@ -173,7 +173,7 @@ const Series = () => {
                     description: formData.description,
                     price: formData.price,
                 });
-                if(newSeries.success) {
+                if (newSeries.success) {
                     setSeries([...series, newSeries.data.series]);
                     setFormData({ _id: '', title: '', slug: '', description: '', price: 0 });
 
@@ -209,7 +209,7 @@ const Series = () => {
 
         seriesApi.updateSeries(updatedSeries)
             .then(response => {
-                if(response.success){
+                if (response.success) {
                     setSeries(series.map(item =>
                         item._id === selectedItem?._id ? response.data.series : item
                     ));
@@ -500,7 +500,7 @@ const Series = () => {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Tiêu đề <span className="text-red-500">*</span>
+                                    Tiêu đề <span className="text-red-500 text-xs">*</span>
                                 </label>
                                 <input
                                     type="text"

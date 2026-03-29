@@ -62,7 +62,7 @@ const MediaBrowser: React.FC<MediaBrowserProps> = ({ onSelect, onClose }) => {
                             <p className="text-gray-500 font-medium">Loading your media...</p>
                         </div>
                     ) : error ? (
-                        <div className="flex flex-col items-center justify-center h-full text-red-500">
+                        <div className="flex flex-col items-center justify-center h-full text-red-500 text-xs">
                             <p className="font-medium bg-red-50 px-4 py-2 rounded-lg">{error}</p>
                             <button
                                 onClick={fetchMedia}

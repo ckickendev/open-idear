@@ -39,7 +39,10 @@ const Topic = () => {
                 const response = await topicApi.getTopics();
                 // Depending on the backend the topics array might be directly in response.data
                 if (response.success) {
-                    setTopics(response.data || []);
+                    console.log(response.data);
+
+                    const topicsList = Array.isArray(response.data?.data) ? response.data.data : (Array.isArray(response.data) ? response.data : []);
+                    setTopics(topicsList);
                 } else throw new Error(response.message);
             } catch (error: any) {
                 setType('error');
@@ -59,8 +62,8 @@ const Topic = () => {
     });
 
     // Pagination logic
-    const filteredTopics = topics.filter(topic =>
-        topic.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredTopics = (Array.isArray(topics) ? topics : []).filter(topic =>
+        (topic?.name || '').toLowerCase().includes((searchTerm || '').toLowerCase())
     );
 
     const totalPages = Math.ceil(filteredTopics.length / itemsPerPage);
@@ -150,7 +153,8 @@ const Topic = () => {
                 description: formData.description,
             });
             if (newTopic.success) {
-                setTopics([...topics, newTopic.data]);
+                const createdTopic = newTopic.data?.data || newTopic.data;
+                setTopics([...topics, createdTopic]);
                 setFormData({ _id: '', name: '', description: '' });
 
                 setType('info');
@@ -426,7 +430,7 @@ const Topic = () => {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Tên Chủ đề <span className="text-red-500">*</span>
+                                    Tên Chủ đề <span className="text-red-500 text-xs">*</span>
                                 </label>
                                 <input
                                     type="text"
@@ -441,7 +445,7 @@ const Topic = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Mô tả
                                 </label>
-                                <TextAreaCustom id="description" value={formData.description} onChange={(e: any) => setFormData({ ...formData, description: e.target.value })} rows={3} placeholder="Nhập mô tả chủ đề" />
+                                <TextAreaCustom id="description" value={formData.description} onChange={(e: any) => setFormData({ ...formData, description: e.target.value })} rows={7} placeholder="Nhập mô tả chủ đề" />
                             </div>
                         </div>
 

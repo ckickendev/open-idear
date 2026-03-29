@@ -174,7 +174,7 @@ const CourseDetail = () => {
                                     <>
                                         <span className="text-3xl font-bold">{course.discountPrice.toLocaleString()} VNĐ</span>
                                         <span className="text-gray-500 line-through text-lg">{course.price.toLocaleString()} VNĐ</span>
-                                        <span className="text-red-500 font-bold text-sm">
+                                        <span className="text-red-500 text-xs font-bold text-sm">
                                             {Math.round(((course.price - course.discountPrice) / course.price) * 100)}% Giảm
                                         </span>
                                     </>
@@ -187,7 +187,7 @@ const CourseDetail = () => {
                                 <button className="w-full bg-purple-600 text-white font-bold py-3 rounded hover:bg-purple-700 transition-colors">
                                     Thêm vào giỏ hàng
                                 </button>
-                                <button 
+                                <button
                                     onClick={handleEnroll}
                                     disabled={isEnrolling}
                                     className="w-full border border-gray-900 font-bold py-3 rounded hover:bg-gray-50 transition-colors disabled:opacity-50"

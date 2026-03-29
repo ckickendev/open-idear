@@ -1,6 +1,6 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
-import { Heart , MessageCircle, Share2, User, Plus, Bookmark, Check } from "lucide-react";
+import { Heart, MessageCircle, Share2, User, Plus, Bookmark, Check } from "lucide-react";
 import authenticationStore from "@/store/AuthenticationStore";
 import { getHeadersToken } from "@/lib/api/axios";
 import { REACT_APP_ROOT_BACKEND } from "@/features/auth/components/authentication";
@@ -9,8 +9,8 @@ import alertStore from "@/store/AlertStore";
 import Notification from "@/components/common/Notification";
 import Link from "next/link";
 
-export default function PostSidebarActions({postData}: any) {
-  
+export default function PostSidebarActions({ postData }: any) {
+
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isFollowed, setIsFollowed] = useState(false);
@@ -23,19 +23,19 @@ export default function PostSidebarActions({postData}: any) {
 
   const handleLike = async () => {
     try {
-      const res = await axios.post(`${REACT_APP_ROOT_BACKEND}/comments/voteLike/${postData._id}`, {headers: getHeadersToken()});
+      const res = await axios.post(`${REACT_APP_ROOT_BACKEND}/comments/voteLike/${postData._id}`, { headers: getHeadersToken() });
 
       if (res.status !== 200) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
       console.log("data.post.postlike: ", res.data.postLike);
       const { postLike } = res.data;
-      if(postLike) {
+      if (postLike) {
         setIsLiked(true);
-        setLikeCount(likeCount+1);
-      } else { 
+        setLikeCount(likeCount + 1);
+      } else {
         setIsLiked(false);
-        setLikeCount(likeCount-1);
+        setLikeCount(likeCount - 1);
       }
     } catch (error) {
       setType('error');
@@ -46,14 +46,14 @@ export default function PostSidebarActions({postData}: any) {
   const handleBookmark = async () => {
     try {
       // Using native fetch with Next.js optimizations
-      const res = await axios.post(`${REACT_APP_ROOT_BACKEND}/post/marked?postId=${postData._id}`, {headers: getHeadersToken()});
+      const res = await axios.post(`${REACT_APP_ROOT_BACKEND}/post/marked?postId=${postData._id}`, { headers: getHeadersToken() });
 
       if (res.status !== 200) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
       console.log("data.post.postlike: ", res.data.isMarked);
       const { isMarked } = res.data;
-      if(isMarked) {
+      if (isMarked) {
         setType('info');
         setMessage("Post bookmarked successfully");
       } else {
@@ -70,14 +70,14 @@ export default function PostSidebarActions({postData}: any) {
   const handleFollow = async () => {
     try {
       // Using native fetch with Next.js optimizations
-      const res = await axios.patch(`${REACT_APP_ROOT_BACKEND}/post/followUser?postId=${postData._id}`, {headers: getHeadersToken()});
+      const res = await axios.patch(`${REACT_APP_ROOT_BACKEND}/post/followUser?postId=${postData._id}`, { headers: getHeadersToken() });
 
       if (res.status !== 200) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
       console.log("data.post.postlike: ", res.data.isFollowed);
       const { isFollowed } = res.data;
-      if(isFollowed) {
+      if (isFollowed) {
         setType('info');
         setMessage("User followed successfully");
       } else {
@@ -94,7 +94,7 @@ export default function PostSidebarActions({postData}: any) {
   useEffect(() => {
     const getStatus = async () => {
       try {
-        const res = await axios.get(`${REACT_APP_ROOT_BACKEND}/post/getSideInformation?postId=${postData._id}`, { headers: getHeadersToken()});
+        const res = await axios.get(`${REACT_APP_ROOT_BACKEND}/post/getSideInformation?postId=${postData._id}`, { headers: getHeadersToken() });
 
         if (res.status !== 200) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -122,7 +122,7 @@ export default function PostSidebarActions({postData}: any) {
       setDisplay(false);
     }
 
-    if(window.scrollY > 3000) {
+    if (window.scrollY > 3000) {
       setDisplay(false);
     }
   }, []); // Empty dependency array means this function is memoized and won't re-create on every render
@@ -143,11 +143,10 @@ export default function PostSidebarActions({postData}: any) {
           <div className="flex flex-col items-center">
             <button
               onClick={handleLike}
-              className={`p-3 rounded-full transition-all duration-200 hover:scale-110 ${
-                isLiked
-                  ? "bg-red-100 text-red-500 hover:bg-red-200"
+              className={`p-3 rounded-full transition-all duration-200 hover:scale-110 ${isLiked
+                  ? "bg-red-100 text-red-500 text-xs hover:bg-red-200"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              } cursor-pointer`}
+                } cursor-pointer`}
             >
               <Heart size={20} className={isLiked ? "fill-current" : ""} />
             </button>
@@ -164,10 +163,10 @@ export default function PostSidebarActions({postData}: any) {
                 alt="Author avatar image"
                 className="w-full h-full object-cover"
               /></Link>
-              
+
             </div>
             {/* Small plus icon for follow */}
-            { isFollowed ? (
+            {isFollowed ? (
               <div onClick={handleFollow} className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors">
                 <Check size={12} className="text-white" />
               </div>
@@ -181,13 +180,12 @@ export default function PostSidebarActions({postData}: any) {
           {/* Bookmark Button */}
           <button
             onClick={handleBookmark}
-            className={`p-3 rounded-full transition-all duration-200 hover:scale-110 ${
-              isBookmarked
+            className={`p-3 rounded-full transition-all duration-200 hover:scale-110 ${isBookmarked
                 ? "bg-blue-100 text-blue-500 hover:bg-blue-200"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            } cursor-pointer`}
+              } cursor-pointer`}
           >
-            <Bookmark 
+            <Bookmark
               size={20}
               className={isBookmarked ? "fill-current" : ""}
             />

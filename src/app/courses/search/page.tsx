@@ -243,7 +243,7 @@ const SearchResultsContent = () => {
 
                             <button
                                 onClick={clearFilters}
-                                className="w-full py-4 border-2 border-dashed border-gray-200 text-gray-400 font-bold rounded-2xl hover:border-red-500 hover:text-red-500 transition-all text-sm mb-12"
+                                className="w-full py-4 border-2 border-dashed border-gray-200 text-gray-400 font-bold rounded-2xl hover:border-red-500 hover:text-red-500 text-xs transition-all text-sm mb-12"
                             >
                                 Xóa tất cả bộ lọc
                             </button>

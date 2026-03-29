@@ -178,7 +178,7 @@ const UserList = () => {
                     activate: formData.activate,
                     phone: formData.phone,
                 });
-                if(newUser.success){
+                if (newUser.success) {
                     setUsers([...users, newUser.data.user]);
                     setFormData({ _id: '', name: '', username: '', email: '', role: 0, activate: "false", phone: '' });
                     setShowModal(false);
@@ -219,7 +219,7 @@ const UserList = () => {
 
         userApi.updateUser(selectedItem?._id as string, updatedUser)
             .then(response => {
-                if(response.success){
+                if (response.success) {
                     setUsers(users.map(user =>
                         user._id === selectedItem?._id ? response.data.user : user
                     ));
@@ -230,7 +230,7 @@ const UserList = () => {
                     setType('info');
                     setMessage('Cập nhật người dùng thành công');
                 } else {
-                     throw new Error(response.message);
+                    throw new Error(response.message);
                 }
                 changeLoad();
             })
@@ -377,7 +377,7 @@ const UserList = () => {
                                     <div className="flex items-center">
                                         <div className="flex-shrink-0 h-10 w-10">
                                             {user.avatar ? (
-                                                <Image 
+                                                <Image
                                                     src={user.avatar} alt="avatar user" width={40} height={40} className="h-10 w-10 rounded-full" />
                                             ) : (
                                                 <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
@@ -612,7 +612,7 @@ const UserList = () => {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Họ và tên <span className="text-red-500">*</span>
+                                    Họ và tên <span className="text-red-500 text-xs">*</span>
                                 </label>
                                 <input
                                     type="text"
@@ -625,7 +625,7 @@ const UserList = () => {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Tên đăng nhập <span className="text-red-500">*</span>
+                                    Tên đăng nhập <span className="text-red-500 text-xs">*</span>
                                 </label>
                                 <input
                                     type="text"
@@ -638,7 +638,7 @@ const UserList = () => {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Email <span className="text-red-500">*</span>
+                                    Email <span className="text-red-500 text-xs">*</span>
                                 </label>
                                 <input
                                     type="email"
