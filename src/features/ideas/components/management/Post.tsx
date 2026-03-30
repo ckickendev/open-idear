@@ -4,18 +4,21 @@ import alertStore from "@/store/AlertStore";
 import loadingStore from "@/store/LoadingStore";
 import { postApi } from '@/features/ideas/api/post.api';
 import { categoryApi } from '@/features/categories/api/category.api';
-import { Edit, Eye, EyeOff, Search, Trash2, Filter, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Eye, EyeOff, Trash2, FileText } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from '@/app/hook/useTranslation';
-import HoverTooltip from "@/components/common/TooltipNote";
 import Link from "next/link";
+import AdminSearchInput from '@/components/admin/AdminSearchInput';
+import AdminFilterSelect from '@/components/admin/AdminFilterSelect';
+import AdminPagination from '@/components/admin/AdminPagination';
+import StatusBadge from '@/components/admin/StatusBadge';
+import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import EmptyState from '@/components/admin/EmptyState';
+import TableSkeleton from '@/components/admin/TableSkeleton';
 
 type PostType = {
     _id: string;
-    image: {
-        url: string;
-        description?: string;
-    };
+    image: { url: string; description?: string };
     title: string;
     description: string;
     author: any;
@@ -35,123 +38,73 @@ const Post = () => {
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [allCategories, setAllCategories] = useState<any[]>([]);
     const [page, setPage] = useState(1);
+    const [isDataLoading, setIsDataLoading] = useState(true);
+    const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
-    // Pagination settings
     const itemsPerPage = 15;
 
     const setType = alertStore((state) => state.setType);
     const setMessage = alertStore((state) => state.setMessage);
     const changeLoad = loadingStore((state) => state.changeLoad);
-
     const { t } = useTranslation();
 
     useEffect(() => {
         const fetchPosts = async () => {
             try {
                 changeLoad();
+                setIsDataLoading(true);
                 const response = await postApi.getAllPosts();
-                console.log("response", response);
-
                 const categoriesResponse = await categoryApi.getCategories();
                 if (categoriesResponse.success) {
                     setAllCategories(categoriesResponse.data.categories);
                 }
-
                 if (response.success) {
                     setPosts(response.data.posts);
                 } else throw new Error(response.message);
-                changeLoad();
             } catch (error: any) {
                 setType('error');
                 setMessage(error?.message);
+            } finally {
                 changeLoad();
-                console.error('Error fetching posts:', error);
+                setIsDataLoading(false);
             }
         };
         fetchPosts();
     }, []);
 
-    // Filter and pagination logic
     const filteredPosts = posts.filter(post => {
         const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            post.author.toLowerCase().includes(searchTerm.toLowerCase());
+            post.author?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (typeof post.author === 'string' && post.author.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchesPublished = statusFilter === 'all' || post.published == (statusFilter == "true");
-        const matchesCategory = categoryFilter === 'all' || post.category._id === categoryFilter;
-
+        const matchesCategory = categoryFilter === 'all' || post.category?._id === categoryFilter;
         return matchesSearch && matchesPublished && matchesCategory;
     });
 
     const totalPages = Math.ceil(filteredPosts.length / itemsPerPage);
     const startIndex = (page - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentPosts = filteredPosts.slice(startIndex, endIndex);
+    const currentPosts = filteredPosts.slice(startIndex, startIndex + itemsPerPage);
 
-    // Reset to first page when filters change
-    useEffect(() => {
-        setPage(1);
-    }, [searchTerm, statusFilter, categoryFilter]);
+    useEffect(() => { setPage(1); }, [searchTerm, statusFilter, categoryFilter]);
 
-    // Pagination functions
-    const goToPage = (pageNumber: number) => {
-        if (pageNumber >= 1 && pageNumber <= totalPages) {
-            setPage(pageNumber);
-        }
-    };
+    const hasActiveFilters = searchTerm || statusFilter !== 'all' || categoryFilter !== 'all';
 
-    const goToPreviousPage = () => {
-        if (page > 1) {
-            setPage(page - 1);
-        }
-    };
-
-    const goToNextPage = () => {
-        if (page < totalPages) {
-            setPage(page + 1);
-        }
-    };
-
-    // Generate page numbers to display
-    const getPageNumbers = () => {
-        const pageNumbers = [];
-        const maxVisiblePages = 5;
-
-        if (totalPages <= maxVisiblePages) {
-            for (let i = 1; i <= totalPages; i++) {
-                pageNumbers.push(i);
-            }
-        } else {
-            let startPage = Math.max(1, page - 2);
-            let endPage = Math.min(totalPages, page + 2);
-
-            if (page <= 3) {
-                endPage = maxVisiblePages;
-            } else if (page >= totalPages - 2) {
-                startPage = totalPages - maxVisiblePages + 1;
-            }
-
-            for (let i = startPage; i <= endPage; i++) {
-                pageNumbers.push(i);
-            }
-        }
-
-        return pageNumbers;
+    const resetFilters = () => {
+        setSearchTerm('');
+        setPublishedFilter('all');
+        setCategoryFilter('all');
     };
 
     const changePostPublished = async (id: string) => {
         try {
             changeLoad();
             const post = posts.find(p => p._id === id);
-            const newPublished = post?.published === true ? false : true;
-
+            const newPublished = !post?.published;
             const res = await postApi.changePublicManager(id, newPublished);
             if (!res.success) throw new Error(res.message);
-
-            setPosts(posts.map(post =>
-                post._id === id ? { ...post, published: newPublished } : post
-            ));
-
+            setPosts(posts.map(p => p._id === id ? { ...p, published: newPublished } : p));
             setType('info');
-            setMessage(`Đã ${newPublished === true ? 'duyệt' : 'ẩn'} bài viết thành công`);
+            setMessage(`Đã ${newPublished ? 'duyệt' : 'ẩn'} bài viết thành công`);
         } catch (error: any) {
             setType('error');
             setMessage(error?.message);
@@ -161,295 +114,201 @@ const Post = () => {
     };
 
     const handleDeletePost = (id: string) => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
-            changeLoad();
+        changeLoad();
+        postApi.deletePost(id)
+            .then(response => {
+                if (response.success) {
+                    setType('info');
+                    setMessage('Xóa bài viết thành công');
+                } else throw new Error(response.message);
+            })
+            .catch(error => {
+                setType('error');
+                setMessage(error?.message);
+            })
+            .finally(() => changeLoad());
 
-            postApi.deletePost(id)
-                .then(response => {
-                    if (response.success) {
-                        setType('info');
-                        setMessage('Xóa bài viết thành công');
-                    } else throw new Error(response.message);
-                })
-                .catch(error => {
-                    setType('error');
-                    setMessage(error?.message);
-                })
-                .finally(() => changeLoad());
-
-            const newPosts = posts.filter(post => post._id !== id);
-            setPosts(newPosts);
-
-            // Adjust current page if necessary after deletion
-            const newFilteredPosts = newPosts.filter(post => {
-                const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    post.author.toLowerCase().includes(searchTerm.toLowerCase());
-                const matchesPublished = statusFilter === 'all' || post.published === statusFilter;
-                const matchesCategory = categoryFilter === 'all' || post.category._id === categoryFilter;
-
-                return matchesSearch && matchesPublished && matchesCategory;
-            });
-            const newTotalPages = Math.ceil(newFilteredPosts.length / itemsPerPage);
-            if (page > newTotalPages && newTotalPages > 0) {
-                setPage(newTotalPages);
-            }
-        }
+        const newPosts = posts.filter(post => post._id !== id);
+        setPosts(newPosts);
     };
 
+    const statusOptions = [
+        { value: 'all', label: 'Tất cả trạng thái' },
+        { value: 'true', label: 'Đã duyệt' },
+        { value: 'false', label: 'Chờ duyệt' },
+    ];
+
+    const categoryOptions = [
+        { value: 'all', label: 'Tất cả danh mục' },
+        ...allCategories.map(c => ({ value: c._id, label: c.name })),
+    ];
+
     return (
-        <div className="h-full space-y-6 relative flex flex-col justify-between">
-            <div className="w-full">
-                <div className="flex justify-between items-center mb-4">
-                    <h1 className="text-2xl font-bold text-gray-900">Quản lý Ý tưởng/Bài viết</h1>
-                </div>
+        <div className="space-y-6">
+            {/* Header */}
+            <div>
+                <h1 className="text-xl font-semibold text-gray-900">Quản lý Ý tưởng/Bài viết</h1>
+                <p className="text-sm text-gray-500 mt-1">Duyệt, quản lý và theo dõi tất cả bài viết</p>
+            </div>
 
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                        <input
-                            type="text"
-                            placeholder="Tìm kiếm bài viết..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
-                        />
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setPublishedFilter(e.target.value)}
-                            className="px-4 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
-                        >
-                            <option value="all">Tất cả trạng thái</option>
-                            <option value="true">Đã duyệt</option>
-                            <option value="false">Chờ duyệt</option>
-                        </select>
-                        <select
-                            value={categoryFilter}
-                            onChange={(e) => setCategoryFilter(e.target.value)}
-                            className="px-4 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
-                        >
-                            <option value="all">Tất cả danh mục</option>
-                            {allCategories.map(category => (
-                                <option key={category._id} value={category._id}>{category.name}</option>
-                            ))}
-                        </select>
-                        <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors">
-                            <Filter size={16} />
-                            <span className="hidden sm:inline">Lọc</span>
-                        </button>
-                    </div>
-                </div>
-
-                {/* Results info */}
-                <div className="text-sm text-gray-600 mb-4">
-                    Hiển thị {startIndex + 1}-{Math.min(endIndex, filteredPosts.length)} / {filteredPosts.length} bài viết
-                    {(searchTerm || statusFilter !== 'all' || categoryFilter !== 'all') &&
-                        ` (lọc từ ${posts.length} tổng cộng)`
-                    }
-                </div>
-
-                {/* Single Responsive Table */}
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    {/* Table for larger screens */}
-                    <table className="min-w-full divide-y divide-gray-200 hidden sm:table">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STT</th>
-                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiêu đề</th>
-                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Tác giả</th>
-                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Danh mục</th>
-                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Ngày tạo</th>
-                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {currentPosts.map((post, index) => (
-                                <tr key={post._id} className="hover:bg-gray-50">
-                                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {startIndex + index + 1}
-                                    </td>
-                                    <td className="px-3 sm:px-6 py-4">
-                                        <div className="space-y-1">
-                                            <div className="text-sm font-medium text-gray-900">
-                                                <Link href={`/post/${post.slug}`} className="hover:underline">
-                                                    {post.title}
-                                                </Link>
-                                            </div>
-                                            {/* Show author, category, date on mobile/tablet in subtitle */}
-                                            <div className="text-xs text-gray-500 lg:hidden">
-                                                <div>Tác giả: {post.author?.username}</div>
-                                                <div>Danh mục: {post.category?.name}</div>
-                                                <div>Ngày: {convertDate(post.createdAt)}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden lg:table-cell">
-                                        {post.author?.username}
-                                    </td>
-                                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                            {post.category?.name}
-                                        </span>
-                                    </td>
-                                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${post.published === true
-                                            ? 'bg-green-100 text-green-800'
-                                            : 'bg-yellow-100 text-yellow-800'
-                                            }`}>
-                                            {post.published === true ? 'Đã public' : 'Chưa public'}
-                                        </span>
-                                    </td>
-                                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
-                                        {convertDate(post.createdAt)}
-                                    </td>
-                                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div className="flex items-center gap-1 sm:gap-2">
-                                            <HoverTooltip tooltipText={post.published === true ? 'Ẩn bài viết' : 'Duyệt bài viết'}>
-                                                <button
-                                                    onClick={() => changePostPublished(post._id)}
-                                                    className={`p-1 sm:p-2 rounded hover:bg-opacity-10 transition-colors ${post.published === true
-                                                        ? 'text-yellow-600 hover:bg-yellow-50'
-                                                        : 'text-green-600 hover:bg-green-50'
-                                                        }`}
-                                                    title={post.published === true ? 'Ẩn bài viết' : 'Duyệt bài viết'}
-                                                >
-                                                    {post.published === true ? <EyeOff size={16} /> : <Eye size={16} />}
-                                                </button>
-                                            </HoverTooltip>
-                                            <HoverTooltip tooltipText="Xóa bài viết">
-                                                <button
-                                                    onClick={() => handleDeletePost(post._id)}
-                                                    className="text-red-600 hover:text-red-900 p-1 sm:p-2 rounded hover:bg-red-50 transition-colors"
-                                                    title="Xóa bài viết"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </HoverTooltip>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                            {currentPosts.length === 0 && (
-                                <tr>
-                                    <td colSpan={7} className="px-3 sm:px-6 py-4 text-center text-gray-500">
-                                        {searchTerm || statusFilter !== 'all' || categoryFilter !== 'all'
-                                            ? 'Không tìm thấy bài viết nào phù hợp'
-                                            : 'Chưa có bài viết nào'
-                                        }
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-
-                    {/* Mobile Card View */}
-                    <div className="sm:hidden space-y-4 p-4">
-                        {currentPosts.map((post, index) => (
-                            <div key={post._id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                <div className="flex justify-between items-start mb-3">
-                                    <div className="flex-1">
-                                        <div className="text-sm font-semibold text-gray-900 mb-1">
-                                            <Link href={`/post/${post.slug}`} className="hover:underline">
-                                                #{startIndex + index + 1} - {post.title}
-                                            </Link>
-                                        </div>
-                                        <div className="text-xs text-gray-500 space-y-1">
-                                            <div>Tác giả: <span className="font-medium">{post.author?.username}</span></div>
-                                            <div>Danh mục: <span className="font-medium">{post.category?.name}</span></div>
-                                            <div>Ngày tạo: <span className="font-medium">{convertDate(post.createdAt)}</span></div>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 ml-4">
-                                        <button
-                                            onClick={() => changePostPublished(post._id)}
-                                            className={`p-2 rounded-full transition-colors ${post.published === true
-                                                ? 'text-yellow-600 bg-yellow-50 hover:bg-yellow-100'
-                                                : 'text-green-600 bg-green-50 hover:bg-green-100'
-                                                }`}
-                                            title={post.published === true ? 'Ẩn bài viết' : 'Duyệt bài viết'}
-                                        >
-                                            {post.published === true ? <EyeOff size={18} /> : <Eye size={18} />}
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeletePost(post._id)}
-                                            className="text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
-                                            title="Xóa bài viết"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="flex justify-between items-center pt-3 border-t border-gray-300">
-                                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${post.published === true
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-yellow-100 text-yellow-800'
-                                        }`}>
-                                        {post.published === true ? 'Đã public' : 'Chưa public'}
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
-                        {currentPosts.length === 0 && (
-                            <div className="text-center py-8 text-gray-500">
-                                {searchTerm || statusFilter !== 'all' || categoryFilter !== 'all'
-                                    ? 'Không tìm thấy bài viết nào phù hợp'
-                                    : 'Chưa có bài viết nào'
-                                }
-                            </div>
-                        )}
-                    </div>
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-3">
+                <AdminSearchInput
+                    value={searchTerm}
+                    onChange={setSearchTerm}
+                    placeholder="Tìm kiếm bài viết..."
+                />
+                <div className="flex gap-3">
+                    <AdminFilterSelect value={statusFilter} onChange={setPublishedFilter} options={statusOptions} />
+                    <AdminFilterSelect value={categoryFilter} onChange={setCategoryFilter} options={categoryOptions} />
                 </div>
             </div>
 
+            {/* Active filters info */}
+            <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-500">
+                    {filteredPosts.length} bài viết
+                    {hasActiveFilters && <span className="text-gray-400"> (lọc từ {posts.length} tổng cộng)</span>}
+                </p>
+                {hasActiveFilters && (
+                    <button onClick={resetFilters} className="text-sm text-admin-primary hover:underline font-medium">
+                        Xóa bộ lọc
+                    </button>
+                )}
+            </div>
 
-            {/* Enhanced Pagination */}
-            {totalPages > 1 && (
-                <div className="flex justify-center items-center mt-6">
-                    <div className="flex items-center space-x-1">
-                        {/* Previous Button */}
-                        <button
-                            onClick={goToPreviousPage}
-                            disabled={page === 1}
-                            className={`flex items-center justify-center px-3 h-8 leading-tight border border-gray-300 rounded-l-lg transition-colors ${page === 1
-                                ? 'text-gray-300 bg-gray-100 cursor-not-allowed'
-                                : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700'
-                                }`}
-                        >
-                            <ChevronLeft size={16} />
-                            <span className="ml-1">Trước</span>
-                        </button>
+            {/* Table */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-admin-sm overflow-hidden">
+                {isDataLoading ? (
+                    <TableSkeleton columns={6} rows={8} />
+                ) : currentPosts.length === 0 ? (
+                    <EmptyState
+                        icon={FileText}
+                        title={hasActiveFilters ? 'Không tìm thấy bài viết' : 'Chưa có bài viết nào'}
+                        description={hasActiveFilters ? 'Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm' : undefined}
+                    />
+                ) : (
+                    <>
+                        {/* Desktop Table */}
+                        <div className="hidden sm:block overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="bg-gray-50/80 border-b border-gray-100">
+                                        <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-12">#</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tiêu đề</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Tác giả</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Danh mục</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Ngày tạo</th>
+                                        <th className="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {currentPosts.map((post, index) => (
+                                        <tr key={post._id} className="hover:bg-gray-50/50 transition-colors duration-100">
+                                            <td className="px-6 py-4 text-sm text-gray-400 font-medium">{startIndex + index + 1}</td>
+                                            <td className="px-6 py-4">
+                                                <div>
+                                                    <Link href={`/post/${post.slug}`} className="text-sm font-medium text-gray-900 hover:text-admin-primary transition-colors line-clamp-1">
+                                                        {post.title}
+                                                    </Link>
+                                                    <div className="text-xs text-gray-400 mt-0.5 lg:hidden">
+                                                        {post.author?.username} · {post.category?.name} · {convertDate(post.createdAt)}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-600 hidden lg:table-cell">{post.author?.username}</td>
+                                            <td className="px-6 py-4 hidden lg:table-cell">
+                                                <StatusBadge variant="neutral">{post.category?.name}</StatusBadge>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <StatusBadge variant={post.published ? 'success' : 'warning'} dot>
+                                                    {post.published ? 'Đã duyệt' : 'Chờ duyệt'}
+                                                </StatusBadge>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-500 hidden lg:table-cell whitespace-nowrap">
+                                                {convertDate(post.createdAt)}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <button
+                                                        onClick={() => changePostPublished(post._id)}
+                                                        className={`p-2 rounded-lg transition-colors ${post.published
+                                                            ? 'text-amber-600 hover:bg-amber-50'
+                                                            : 'text-emerald-600 hover:bg-emerald-50'
+                                                            }`}
+                                                        title={post.published ? 'Ẩn bài viết' : 'Duyệt bài viết'}
+                                                    >
+                                                        {post.published ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setConfirmDelete(post._id)}
+                                                        className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                                                        title="Xóa bài viết"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
 
-                        {/* Page Numbers */}
-                        {getPageNumbers().map((pageNumber) => (
-                            <button
-                                key={pageNumber}
-                                onClick={() => goToPage(pageNumber)}
-                                className={`flex items-center justify-center px-3 h-8 leading-tight border border-gray-300 transition-colors ${pageNumber === page
-                                    ? 'text-blue-600 bg-blue-50 border-blue-300 hover:bg-blue-100 hover:text-blue-700'
-                                    : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700'
-                                    }`}
-                            >
-                                {pageNumber}
-                            </button>
-                        ))}
+                        {/* Mobile Cards */}
+                        <div className="sm:hidden divide-y divide-gray-100">
+                            {currentPosts.map((post, index) => (
+                                <div key={post._id} className="p-4 hover:bg-gray-50/50 transition-colors">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <Link href={`/post/${post.slug}`} className="text-sm font-medium text-gray-900 hover:text-admin-primary line-clamp-2">
+                                                {post.title}
+                                            </Link>
+                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2">
+                                                <span className="text-xs text-gray-500">{post.author?.username}</span>
+                                                <span className="text-gray-300">·</span>
+                                                <span className="text-xs text-gray-500">{convertDate(post.createdAt)}</span>
+                                            </div>
+                                            <div className="mt-2">
+                                                <StatusBadge variant={post.published ? 'success' : 'warning'} dot>
+                                                    {post.published ? 'Đã duyệt' : 'Chờ duyệt'}
+                                                </StatusBadge>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1 flex-shrink-0">
+                                            <button
+                                                onClick={() => changePostPublished(post._id)}
+                                                className={`p-2 rounded-lg ${post.published ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
+                                            >
+                                                {post.published ? <EyeOff size={16} /> : <Eye size={16} />}
+                                            </button>
+                                            <button
+                                                onClick={() => setConfirmDelete(post._id)}
+                                                className="p-2 rounded-lg text-red-500 hover:bg-red-50"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
+            </div>
 
-                        {/* Next Button */}
-                        <button
-                            onClick={goToNextPage}
-                            disabled={page === totalPages}
-                            className={`flex items-center justify-center px-3 h-8 leading-tight border border-gray-300 rounded-r-lg transition-colors ${page === totalPages
-                                ? 'text-gray-300 bg-gray-100 cursor-not-allowed'
-                                : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700'
-                                }`}
-                        >
-                            <span className="mr-1">Sau</span>
-                            <ChevronRight size={16} />
-                        </button>
-                    </div>
-                </div>
-            )}
+            <AdminPagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+
+            <ConfirmDialog
+                isOpen={!!confirmDelete}
+                onClose={() => setConfirmDelete(null)}
+                onConfirm={() => confirmDelete && handleDeletePost(confirmDelete)}
+                title="Xóa bài viết"
+                message="Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác."
+                confirmText="Xóa"
+                variant="danger"
+            />
         </div>
     );
 }

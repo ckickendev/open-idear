@@ -1,4 +1,3 @@
-
 @import "tw-animate-css";
 
 @plugin "tailwindcss-animate";
@@ -18,7 +17,8 @@
 }
 
 .dark .card {
-  background-color: #1f2937; /* custom dark color */
+  background-color: #1f2937;
+  /* custom dark color */
   color: white;
 }
 
@@ -119,6 +119,40 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Admin Dashboard Design Tokens */
+  --admin-primary: #8280b4;
+  --admin-primary-hover: #837faf;
+  --admin-primary-light: #EEF2FF;
+  --admin-primary-ring: rgba(79, 70, 229, 0.25);
+  --admin-success: #059669;
+  --admin-success-light: #ECFDF5;
+  --admin-success-text: #065F46;
+  --admin-warning: #D97706;
+  --admin-warning-light: #FFFBEB;
+  --admin-warning-text: #92400E;
+  --admin-danger: #DC2626;
+  --admin-danger-hover: #B91C1C;
+  --admin-danger-light: #FEF2F2;
+  --admin-danger-text: #991B1B;
+  --admin-info: #2563EB;
+  --admin-info-light: #EFF6FF;
+  --admin-info-text: #1E40AF;
+  --admin-neutral: #6B7280;
+  --admin-neutral-light: #F3F4F6;
+  --admin-neutral-text: #374151;
+  --admin-text: #111827;
+  --admin-text-secondary: #6B7280;
+  --admin-text-muted: #9CA3AF;
+  --admin-border: #E5E7EB;
+  --admin-border-hover: #D1D5DB;
+  --admin-bg: #F9FAFB;
+  --admin-surface: #FFFFFF;
+  --admin-radius: 0.5rem;
+  --admin-radius-lg: 0.75rem;
+  --admin-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --admin-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --admin-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
 .dark {
@@ -159,8 +193,8 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
-
