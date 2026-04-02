@@ -43,7 +43,7 @@ const CourseCategory = () => {
                 setIsDataLoading(true);
                 const response = await courseCategoryApi.getCourseCategories();
                 if (response.success) {
-                    setCategories(response.data.categories || response.categories);
+                    setCategories(response.data.categories || (response.data as any));
                 } else throw new Error(response.message);
             } catch (error: any) {
                 setType('error');
@@ -93,9 +93,9 @@ const CourseCategory = () => {
                     slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
                     description: formData.description,
                 });
-                if (newCategory.success || newCategory.category) {
+                if (newCategory.success || newCategory.data?.category) {
                     // Adjust depending on axios interceptor wrapping structure
-                    setCategories([...categories, newCategory.data?.category || newCategory.category]);
+                    setCategories([...categories, newCategory.data?.category || (newCategory.data as any)]);
                     setType('info');
                     setMessage('Thêm danh mục khoá học thành công');
                 } else throw new Error(newCategory.message);
@@ -123,8 +123,8 @@ const CourseCategory = () => {
             description: formData.description,
         })
             .then(response => {
-                if (response.success || response.category) {
-                    const updatedCategory = response.data?.category || response.category;
+                if (response.success || response.data?.category) {
+                    const updatedCategory = response.data?.category || (response.data as any);
                     setCategories(categories.map(cat =>
                         cat._id === selectedItem?._id ? updatedCategory : cat
                     ));
