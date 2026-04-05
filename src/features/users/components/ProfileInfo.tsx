@@ -86,7 +86,7 @@ const ProfileInfo = ({ userInfor }: any) => {
                         <div className="opacity-80">
                             <div className="bg-black flex items-center justify-center">
                                 <img
-                                    src={currentUser?.background || "/transparent-background.png"}
+                                    src={userInfor?.background || "/transparent-background.png"}
                                     alt="cover-image of user section open idear"
                                     className="object-fill w-full h-100"
                                 />
@@ -166,7 +166,7 @@ const ProfileInfo = ({ userInfor }: any) => {
                 <div className="absolute -bottom-30 left-6 flex items-center">
                     <div className="w-50 h-50 rounded-full border-4 border-white relative hover:bg-sky-700">
                         <img
-                            src={userInfor?.avatar || currentUser?.avatar || "http://localhost:3000/icon/profile/hippo.png"}
+                            src={userInfor?.avatar || "/icon/profile/hippo.png"}
                             alt="Profile image of user"
                             className="w-full h-full object-cover rounded-full cursor-pointer"
                             onClick={handleProfileImageClick}
@@ -238,10 +238,10 @@ const ProfileInfo = ({ userInfor }: any) => {
                     <div className="pt-14 px-6 pb-4">
                         <div className="flex items-start justify-between">
                             <div>
-                                <h1 className="text-xl font-semibold text-gray-900">{userInfor?.name ? userInfor?.name : userInfor?.username || currentUser.name ? currentUser.name : currentUser.username}</h1>
-                                <p className="text-gray-700">{userInfor?.email || currentUser.email}</p>
+                                <h1 className="text-xl font-semibold text-gray-900">{userInfor?.name || userInfor?.username || "Unknown User"}</h1>
+                                <p className="text-gray-700">{userInfor?.email}</p>
                                 <div className="flex items-center gap-1 text-gray-500 text-sm mt-1">
-                                    <span>{userInfor?.bio || currentUser.bio || "No bio"}</span>
+                                    <span>{userInfor?.bio || "No bio"}</span>
                                 </div>
                             </div>
                         </div>

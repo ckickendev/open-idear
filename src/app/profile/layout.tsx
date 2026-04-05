@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import Sidebar from '@/components/profile/Sidebar';
 import authenticationStore from '@/store/AuthenticationStore';
@@ -14,6 +14,8 @@ export default function ProfileLayout({
     children: React.ReactNode;
 }) {
     const router = useRouter();
+    const params = useParams();
+    const isPublicProfile = !!params?.profileId;
     const [mounted, setMounted] = useState(false);
 
     const currentUser = authenticationStore((state) => state.currentUser);
@@ -22,10 +24,11 @@ export default function ProfileLayout({
     useEffect(() => {
         setMounted(true);
         const token = localStorage.getItem('access_token');
-        if (!token) {
+        // If not logged in and trying to access a private dashboard route
+        if (!token && !isPublicProfile) {
             router.push('/');
         }
-    }, [router]);
+    }, [router, isPublicProfile]);
 
     if (!mounted) {
         return (
@@ -35,7 +38,8 @@ export default function ProfileLayout({
         );
     }
 
-    if (!currentUser?._id) {
+    // Only block and show infinite loading if it's a private route and currentUser isn't loaded
+    if (!currentUser?._id && !isPublicProfile) {
         return (
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
                 <div className="text-center">

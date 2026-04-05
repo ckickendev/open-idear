@@ -2,8 +2,10 @@
 import React, { useState } from 'react';
 import { Edit, Camera, Shield, GraduationCap, User, X, Upload } from 'lucide-react';
 import authenticationStore from '@/store/AuthenticationStore';
+import { useParams } from 'next/navigation';
 import { CldUploadWidget } from 'next-cloudinary';
 import axios from 'axios';
+import { getHeadersToken } from '@/lib/api/axios';
 import alertStore from '@/store/AlertStore';
 import loadingStore from '@/store/LoadingStore';
 
@@ -35,7 +37,44 @@ const ProfileHeader: React.FC = () => {
     const setMessage = alertStore((state) => state.setMessage);
     const changeLoad = loadingStore((state) => state.changeLoad);
 
-    const role = roleConfig[Number(currentUser.role)] || roleConfig[0];
+    const params = useParams();
+    const profileId = params?.profileId as string | undefined;
+    const [publicUser, setPublicUser] = useState<any>(null);
+    const [isFollowed, setIsFollowed] = useState<boolean>(false);
+
+    React.useEffect(() => {
+        if (profileId && profileId !== currentUser?._id) {
+            axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/auth/getProfileById?id=${profileId}`, { headers: getHeadersToken() })
+                .then(res => {
+                    setPublicUser(res.data.userInfo);
+                    setIsFollowed(res.data.userInfo?.isFollowed || false);
+                })
+                .catch(err => console.error("Failed to load user profile", err));
+        } else {
+            setPublicUser(null);
+        }
+    }, [profileId, currentUser?._id]);
+
+    const displayUser = publicUser || currentUser;
+    const isOwner = !profileId || profileId === currentUser?._id;
+
+    const role = roleConfig[Number(displayUser.role)] || roleConfig[0];
+
+    const handleFollowUser = async () => {
+        if (!displayUser?._id) return;
+        try {
+            const res = await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/followUser?userId=${displayUser._id}`, {}, { headers: getHeadersToken() });
+            if (res.status === 200) {
+                const followed = res.data.isFollowed;
+                setType('info');
+                setMessage(followed ? "User followed successfully" : "User unfollowed successfully");
+                setIsFollowed(followed);
+            }
+        } catch (error) {
+            setType('error');
+            setMessage("Error when following user");
+        }
+    };
 
     const handleImageUpload = async (type: 'avatar' | 'background', url: string) => {
         try {
@@ -65,9 +104,9 @@ const ProfileHeader: React.FC = () => {
         <div className="relative mb-8">
             {/* Cover Image */}
             <div className="relative h-48 sm:h-56 lg:h-64 rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700">
-                {currentUser.background ? (
+                {displayUser?.background ? (
                     <img
-                        src={currentUser.background}
+                        src={displayUser.background}
                         alt="Cover"
                         className="w-full h-full object-cover"
                     />
@@ -86,43 +125,45 @@ const ProfileHeader: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
                 {/* Change cover button */}
-                <div className="absolute top-4 right-4">
-                    {showBgUpload ? (
-                        <div className="flex items-center gap-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl p-2 shadow-lg">
-                            <CldUploadWidget
-                                signatureEndpoint="/api/image_upload"
-                                onSuccess={(result, { widget }) => {
-                                    if (typeof result?.info !== 'string' && result?.info?.url) {
-                                        handleImageUpload('background', result.info.url);
-                                    }
-                                    widget.close();
-                                }}
-                            >
-                                {({ open }) => (
-                                    <button
-                                        onClick={() => open()}
-                                        className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer"
-                                    >
-                                        <Upload size={14} /> Upload
-                                    </button>
-                                )}
-                            </CldUploadWidget>
+                {isOwner && (
+                    <div className="absolute top-4 right-4">
+                        {showBgUpload ? (
+                            <div className="flex items-center gap-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl p-2 shadow-lg">
+                                <CldUploadWidget
+                                    signatureEndpoint="/api/image_upload"
+                                    onSuccess={(result, { widget }) => {
+                                        if (typeof result?.info !== 'string' && result?.info?.url) {
+                                            handleImageUpload('background', result.info.url);
+                                        }
+                                        widget.close();
+                                    }}
+                                >
+                                    {({ open }) => (
+                                        <button
+                                            onClick={() => open()}
+                                            className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer"
+                                        >
+                                            <Upload size={14} /> Upload
+                                        </button>
+                                    )}
+                                </CldUploadWidget>
+                                <button
+                                    onClick={() => setShowBgUpload(false)}
+                                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+                                >
+                                    <X size={14} className="text-gray-600 dark:text-gray-300" />
+                                </button>
+                            </div>
+                        ) : (
                             <button
-                                onClick={() => setShowBgUpload(false)}
-                                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+                                onClick={() => setShowBgUpload(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-700 dark:text-gray-200 text-xs font-medium rounded-xl hover:bg-white dark:hover:bg-gray-800 transition-all shadow-sm cursor-pointer"
                             >
-                                <X size={14} className="text-gray-600 dark:text-gray-300" />
+                                <Camera size={14} /> Edit Cover
                             </button>
-                        </div>
-                    ) : (
-                        <button
-                            onClick={() => setShowBgUpload(true)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-700 dark:text-gray-200 text-xs font-medium rounded-xl hover:bg-white dark:hover:bg-gray-800 transition-all shadow-sm cursor-pointer"
-                        >
-                            <Camera size={14} /> Edit Cover
-                        </button>
-                    )}
-                </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Profile Info Bar */}
@@ -133,13 +174,14 @@ const ProfileHeader: React.FC = () => {
                         <div className="relative -mt-16 sm:-mt-20 flex-shrink-0">
                             <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border-4 border-white dark:border-gray-800 shadow-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
                                 <img
-                                    src={currentUser.avatar || '/icon/profile/hippo.png'}
+                                    src={displayUser?.avatar || '/icon/profile/hippo.png'}
                                     alt="Avatar"
                                     className="w-full h-full object-cover"
                                 />
                             </div>
                             {/* Avatar edit button */}
-                            <div className="absolute -bottom-1 -right-1">
+                            {isOwner && (
+                                <div className="absolute -bottom-1 -right-1">
                                 {showAvatarUpload ? (
                                     <div className="absolute bottom-full right-0 mb-2 flex items-center gap-2 bg-white dark:bg-gray-800 rounded-xl p-2 shadow-lg border border-gray-100 dark:border-gray-700 min-w-max">
                                         <CldUploadWidget
@@ -175,36 +217,46 @@ const ProfileHeader: React.FC = () => {
                                     <Camera size={14} />
                                 </button>
                             </div>
+                            )}
                         </div>
 
                         {/* User Info */}
                         <div className="flex-1 min-w-0">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
-                                    {currentUser.name || currentUser.username || 'User'}
+                                    {displayUser?.name || displayUser?.username || 'User'}
                                 </h1>
                                 <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold w-fit ${role.color}`}>
                                     {role.icon} {role.label}
                                 </span>
                             </div>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
-                                {String(currentUser.email)}
+                                {String(displayUser?.email || '')}
                             </p>
-                            {currentUser.bio && (
+                            {displayUser?.bio && (
                                 <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-1">
-                                    {currentUser.bio}
+                                    {displayUser?.bio}
                                 </p>
                             )}
                         </div>
 
                         {/* Actions */}
                         <div className="flex items-center gap-2 flex-shrink-0">
-                            <a
-                                href="/profile/settings"
-                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm"
-                            >
-                                <Edit size={14} /> Edit Profile
-                            </a>
+                            {isOwner ? (
+                                <a
+                                    href="/profile/settings"
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm"
+                                >
+                                    <Edit size={14} /> Edit Profile
+                                </a>
+                            ) : (
+                                <button
+                                    onClick={handleFollowUser}
+                                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl transition-colors shadow-sm cursor-pointer ${isFollowed ? 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+                                >
+                                    {isFollowed ? 'Following' : 'Follow'}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

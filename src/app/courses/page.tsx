@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import loadingStore from "@/store/LoadingStore";
+import RecentCourses from '@/features/series/components/recent_courses/RecentCourses';
 import {
     Search, Star, ArrowRight, ChevronLeft, ChevronRight,
     Users, Award, BookOpen, LayoutDashboard, Clock, PlayCircle,
@@ -272,6 +273,8 @@ const CourseListing = () => {
                     </Link>
                 </div>
             </section>
+
+            <RecentCourses />
 
             {/* ═══════ Topic Tabs + Course Carousel ═══════ */}
             <section className="py-12 max-w-7xl mx-auto px-6">

@@ -2,7 +2,7 @@ import HotPost from '@/features/ideas/components/hot_post/HotPost';
 import { Mail, Link } from "lucide-react";
 import CommentSection from "./CommentSection";
 import PostSidebarActions from "./PostSideBarActions";
-import { CategoryLinkCustom } from "@/components/common/LinkCustom";
+import { CategoryLinkCustom, UserLinkCustom } from "@/components/common/LinkCustom";
 
 export default async function PostLists({
   params,
@@ -110,7 +110,9 @@ export default async function PostLists({
           {/* Author and Date Info */}
           <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-200">
             <div>
-              <p className="text-sm font-medium text-gray-900">By <a href={`/profile/${postData.author.id}`} className="hover:underline">{postData.author.username}</a></p>
+              <p className="text-sm font-medium text-gray-900">By {" "}
+                <UserLinkCustom className="text-sm font-medium cursor-pointer hover:underline" id={postData?.author?._id} name={postData?.author?.username} />
+              </p>
               <p className="text-sm text-gray-600">Created date: {new Date(postData.createdAt).toLocaleDateString()}</p>
             </div>
 

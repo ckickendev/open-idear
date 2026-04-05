@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
 import {
     LayoutDashboard,
     BookOpen,
@@ -12,6 +12,7 @@ import {
     ChevronRight,
     Menu,
     X,
+    SquarePen,
 } from 'lucide-react';
 import authenticationStore from '@/store/AuthenticationStore';
 
@@ -25,6 +26,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
     { id: 'overview', label: 'Overview', href: '/profile', icon: <LayoutDashboard size={20} /> },
+    { id: 'posts', label: 'My Posts', href: '/profile/posts', icon: <SquarePen size={20} /> },
     { id: 'courses', label: 'My Courses', href: '/profile/courses', icon: <BookOpen size={20} /> },
     { id: 'saved', label: 'Saved', href: '/profile/saved', icon: <Bookmark size={20} /> },
     { id: 'analytics', label: 'Analytics', href: '/profile/analytics', icon: <BarChart3 size={20} />, roles: [1, 2] },
@@ -33,16 +35,27 @@ const navItems: NavItem[] = [
 
 const Sidebar: React.FC = () => {
     const pathname = usePathname();
+    const params = useParams();
+    const profileId = params?.profileId as string | undefined;
+
     const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const currentUser = authenticationStore((state) => state.currentUser);
-    const userRole = Number(currentUser.role);
+    const userRole = Number(currentUser?.role || 0);
+    const isOwner = !profileId || profileId === currentUser?._id;
 
-    const visibleItems = navItems.filter((item) => !item.roles || item.roles.includes(userRole));
+    let visibleItems = navItems.filter((item) => !item.roles || item.roles.includes(userRole));
+
+    if (!isOwner) {
+        visibleItems = [
+            { id: 'overview', label: 'Overview', href: `/profile/${profileId}`, icon: <LayoutDashboard size={20} /> },
+        ];
+    }
 
     const isActive = (href: string) => {
-        if (href === '/profile') return pathname === '/profile';
+        if (!isOwner && href.includes(profileId!)) return true;
+        if (href === '/profile') return pathname === '/profile' || pathname === `/profile/${currentUser?._id}`;
         return pathname.startsWith(href);
     };
 

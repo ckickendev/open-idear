@@ -5,6 +5,7 @@ import { calculateGapTime } from "@/common/datetime";
 import { CategoryLinkCustom, PostLinkCustom } from "@/components/common/LinkCustom";
 
 import Image from "next/image";
+import Link from "next/link";
 
 const ArticleRightSide = ({ postData }: { postData: PostInterface }) => {
   return (
@@ -36,7 +37,7 @@ const ArticleRightSide = ({ postData }: { postData: PostInterface }) => {
             />
           </div>
           <div className="flex items-center text-xs text-gray-600 dark:text-white mt-1 float-bottom">
-            <span className="font-medium cursor-pointer hover:underline">{postData?.author?.username || 'Unknown Author'}</span>
+            <Link href={`/profile/${postData?.author?._id}`} className="font-medium cursor-pointer hover:underline">{postData?.author?.username || 'Unknown Author'}</Link>
             <span className="mx-1">•</span>
             <span>{calculateGapTime(postData?.createdAt) || 'Unknown Date'}</span>
           </div>

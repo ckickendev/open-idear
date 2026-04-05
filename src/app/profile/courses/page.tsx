@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { BookOpen } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { courseApi } from '@/features/series/api/course.api';
 import CourseCard, { CourseCardData } from '@/components/profile/CourseCard';
 import SkeletonCard from '@/components/profile/SkeletonCard';
@@ -9,7 +10,9 @@ import EmptyState from '@/components/profile/EmptyState';
 type TabKey = 'enrolled' | 'created';
 
 export default function ProfileCoursesPage() {
-    const [activeTab, setActiveTab] = useState<TabKey>('enrolled');
+    const searchParams = useSearchParams();
+    const initialTab = (searchParams.get('tab') as TabKey) || 'enrolled';
+    const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
     const [createdCourses, setCreatedCourses] = useState<CourseCardData[]>([]);
     const [enrolledCourses, setEnrolledCourses] = useState<CourseCardData[]>([]);
     const [loading, setLoading] = useState(true);
