@@ -1,6 +1,6 @@
 import { useTranslation } from "@/app/hook/useTranslation";
 import Logo from "@/components/common/Logo";
-import { PostInterface } from "@/app/profile/[profileId]/page";
+import { PostInterface } from "@/app/profile/[username]/page";
 import { calculateGapTime } from "@/common/datetime";
 import { CategoryLinkCustom, PostLinkCustom, UserLinkCustom } from "@/components/common/LinkCustom";
 
@@ -40,7 +40,7 @@ const MainFeature = ({ postData }: { postData: PostInterface }) => {
             </h2>
 
             <div className="flex items-center text-sm text-gray-600 mb-4">
-                <UserLinkCustom className="text-sm font-medium cursor-pointer hover:underline" id={postData?.author?._id} name={postData?.author?.username} />
+                <UserLinkCustom className="text-sm font-medium cursor-pointer hover:underline" username={postData?.author?.username} name={postData?.author?.username} />
                 <span className="mx-2">•</span>
                 <span>{calculateGapTime(postData?.createdAt)}</span>
             </div>

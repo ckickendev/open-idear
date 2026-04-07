@@ -30,36 +30,42 @@ export interface PostInterface {
 export default function PublicProfileOverview({
     params,
 }: {
-    params: Promise<{ profileId: string }>;
+    params: Promise<{ username: string }>;
 }) {
-    const { profileId } = use(params);
+    const { username } = use(params);
     const [loading, setLoading] = useState(true);
     const [posts, setPosts] = useState<PostInterface[]>([]);
-    const [courses, setCourses] = useState<any[]>([]);
+    const [userProfile, setUserProfile] = useState<any>(null);
 
     useEffect(() => {
         const fetchPublicData = async () => {
             setLoading(true);
             try {
-                // Determine headers optionally if they are not strictly required for public gets
                 const headers = getHeadersToken();
 
-                // Fetch published posts by this author
-                const postsRes = await axios.get(
-                    `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor?profileId=${profileId}`,
+                // Fetch user profile by username
+                const profileRes = await axios.get(
+                    `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/auth/getProfileByUsername?username=${username}`,
                     { headers }
                 );
-                
-                if (postsRes.status === 200) {
-                    const allPosts = postsRes.data.posts || [];
-                    // Only show published posts publicly
-                    const publishedPosts = allPosts.filter((p: PostInterface) => p.published !== false);
-                    setPosts(publishedPosts);
-                }
 
-                // Actually, courseApi doesn't easily expose "get public courses by creator ID"
-                // But we can skip courses for now, or just show an empty array if the API is lacking for public view.
-                
+                if (profileRes.status === 200) {
+                    const user = profileRes.data.userInfo;
+                    setUserProfile(user);
+
+                    // Fetch published posts by this author using the _id
+                    const postsRes = await axios.get(
+                        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor?profileId=${user._id}`,
+                        { headers }
+                    );
+
+                    if (postsRes.status === 200) {
+                        const allPosts = postsRes.data.posts || [];
+                        // Only show published posts publicly
+                        const publishedPosts = allPosts.filter((p: PostInterface) => p.published !== false);
+                        setPosts(publishedPosts);
+                    }
+                }
             } catch (error) {
                 console.error('Error fetching public profile details:', error);
             } finally {
@@ -67,16 +73,16 @@ export default function PublicProfileOverview({
             }
         };
 
-        if (profileId) {
+        if (username) {
             fetchPublicData();
         }
-    }, [profileId]);
+    }, [username]);
 
     return (
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Public Overview
+                    {userProfile?.name || username}&apos;s Profile
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     Check out what they have been sharing.
@@ -99,8 +105,8 @@ export default function PublicProfileOverview({
                     />
                     <StatCard
                         icon={<BookOpen size={20} />}
-                        value={courses.length}
-                        label="Published Courses"
+                        value={userProfile?.followers || 0}
+                        label="Followers"
                         accentColor="from-emerald-500 to-teal-500"
                     />
                 </div>
@@ -139,8 +145,6 @@ export default function PublicProfileOverview({
                     </div>
                 )}
             </div>
-            
-            {/* Courses section placeholder */}
         </div>
     );
 }

@@ -6,7 +6,7 @@ import authenticationStore from '@/store/AuthenticationStore';
 import alertStore from '@/store/AlertStore';
 import PostElement from '../PostElement';
 import SeriesElement from '../SeriesElement';
-import { PostInterface } from '../[profileId]/page';
+import { PostInterface } from '../[username]/page';
 import SkeletonCard from '@/components/profile/SkeletonCard';
 import EmptyState from '@/components/profile/EmptyState';
 

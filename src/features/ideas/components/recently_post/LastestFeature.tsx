@@ -7,7 +7,7 @@ import axios from "axios";
 import loadingStore from "@/store/LoadingStore";
 import LoadingComponent from '@/components/common/Loading';
 import MainFeature from "./MainFeature";
-import { PostInterface } from "@/app/profile/[profileId]/page";
+import { PostInterface } from "@/app/profile/[username]/page";
 import ArticleRightSide from "./ArticleRightSide";
 import Link from "next/link";
 

@@ -36,26 +36,26 @@ const navItems: NavItem[] = [
 const Sidebar: React.FC = () => {
     const pathname = usePathname();
     const params = useParams();
-    const profileId = params?.profileId as string | undefined;
+    const usernameParam = params?.username as string | undefined;
 
     const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const currentUser = authenticationStore((state) => state.currentUser);
     const userRole = Number(currentUser?.role || 0);
-    const isOwner = !profileId || profileId === currentUser?._id;
+    const isOwner = !usernameParam || usernameParam.toLowerCase() === String(currentUser?.username).toLowerCase();
 
     let visibleItems = navItems.filter((item) => !item.roles || item.roles.includes(userRole));
 
     if (!isOwner) {
         visibleItems = [
-            { id: 'overview', label: 'Overview', href: `/profile/${profileId}`, icon: <LayoutDashboard size={20} /> },
+            { id: 'overview', label: 'Overview', href: `/profile/${usernameParam}`, icon: <LayoutDashboard size={20} /> },
         ];
     }
 
     const isActive = (href: string) => {
-        if (!isOwner && href.includes(profileId!)) return true;
-        if (href === '/profile') return pathname === '/profile' || pathname === `/profile/${currentUser?._id}`;
+        if (!isOwner && usernameParam && href.includes(usernameParam)) return true;
+        if (href === '/profile') return pathname === '/profile' || pathname === `/profile/${currentUser?.username}`;
         return pathname.startsWith(href);
     };
 

@@ -1,10 +1,10 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
-import { Bookmark, BookOpen, BarChart3, FileText } from 'lucide-react';
+import { Bookmark, BookOpen, BarChart3, FileText, Layers } from 'lucide-react';
 
 interface EmptyStateProps {
-    type: 'courses' | 'saved' | 'analytics' | 'posts' | 'general';
+    type: 'courses' | 'saved' | 'analytics' | 'posts' | 'series' | 'general';
     title?: string;
     description?: string;
     ctaText?: string;
@@ -16,6 +16,7 @@ const iconMap = {
     saved: Bookmark,
     analytics: BarChart3,
     posts: FileText,
+    series: Layers,
     general: BookOpen,
 };
 
@@ -58,6 +59,12 @@ const EmptyState: React.FC<EmptyStateProps> = ({
             description: 'This section is empty. Check back later!',
             ctaText: 'Go Home',
             ctaHref: '/',
+        },
+        series: {
+            title: 'No series yet',
+            description: 'Create a series to organize your content into structured learning paths.',
+            ctaText: 'Create a Series',
+            ctaHref: '/create',
         },
     };
 

@@ -38,13 +38,13 @@ const ProfileHeader: React.FC = () => {
     const changeLoad = loadingStore((state) => state.changeLoad);
 
     const params = useParams();
-    const profileId = params?.profileId as string | undefined;
+    const usernameParam = params?.username as string | undefined;
     const [publicUser, setPublicUser] = useState<any>(null);
     const [isFollowed, setIsFollowed] = useState<boolean>(false);
 
     React.useEffect(() => {
-        if (profileId && profileId !== currentUser?._id) {
-            axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/auth/getProfileById?id=${profileId}`, { headers: getHeadersToken() })
+        if (usernameParam && usernameParam.toLowerCase() !== String(currentUser?.username).toLowerCase()) {
+            axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/auth/getProfileByUsername?username=${usernameParam}`, { headers: getHeadersToken() })
                 .then(res => {
                     setPublicUser(res.data.userInfo);
                     setIsFollowed(res.data.userInfo?.isFollowed || false);
@@ -53,10 +53,10 @@ const ProfileHeader: React.FC = () => {
         } else {
             setPublicUser(null);
         }
-    }, [profileId, currentUser?._id]);
+    }, [usernameParam, currentUser?.username]);
 
     const displayUser = publicUser || currentUser;
-    const isOwner = !profileId || profileId === currentUser?._id;
+    const isOwner = !usernameParam || usernameParam.toLowerCase() === String(currentUser?.username).toLowerCase();
 
     const role = roleConfig[Number(displayUser.role)] || roleConfig[0];
 

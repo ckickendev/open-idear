@@ -111,7 +111,7 @@ export default async function PostLists({
           <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-200">
             <div>
               <p className="text-sm font-medium text-gray-900">By {" "}
-                <UserLinkCustom className="text-sm font-medium cursor-pointer hover:underline" id={postData?.author?._id} name={postData?.author?.username} />
+                <UserLinkCustom className="text-sm font-medium cursor-pointer hover:underline" username={postData?.author?.username} name={postData?.author?.username} />
               </p>
               <p className="text-sm text-gray-600">Created date: {new Date(postData.createdAt).toLocaleDateString()}</p>
             </div>

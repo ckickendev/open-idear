@@ -15,7 +15,7 @@ export default function ProfileLayout({
 }) {
     const router = useRouter();
     const params = useParams();
-    const isPublicProfile = !!params?.profileId;
+    const isPublicProfile = !!params?.username;
     const [mounted, setMounted] = useState(false);
 
     const currentUser = authenticationStore((state) => state.currentUser);

@@ -19,8 +19,8 @@ export const PostLinkCustom = ({ className, slug, name }: any) => {
     </Link>
 };
 
-export const UserLinkCustom = ({ className, id, name }: any) => {
-    return <Link href={`/profile/${id}`} className={`${className} cursor-pointer hover:underline`}>
+export const UserLinkCustom = ({ className, username, name }: any) => {
+    return <Link href={`/profile/${username}`} className={`${className} cursor-pointer hover:underline`}>
         <span>{name}</span>
     </Link>
 }
