@@ -325,21 +325,6 @@ const CourseListing = () => {
                 </div>
             </section>
 
-            {/* ═══════ Real Courses from API ═══════ */}
-            {courses?.length > 0 && (
-                <section className="py-16 max-w-7xl mx-auto px-6">
-                    <div className="flex items-end justify-between mb-8">
-                        <div>
-                            <h2 className="text-3xl font-bold mb-1">Khóa học mới nhất</h2>
-                            <p className="text-gray-500">Những khóa học vừa được thêm vào hệ thống.</p>
-                        </div>
-                        <Link href="/courses/search?q=" className="font-bold text-[#5624d0] hover:text-[#401b9c] text-sm flex items-center gap-1">
-                            Xem tất cả <ArrowRight size={16} />
-                        </Link>
-                    </div>
-                    <CourseRow courses={courses} />
-                </section>
-            )}
 
             {/* ═══════ Why Learn With Us ═══════ */}
             <section className="bg-[#1c1d1f] text-white py-16">
