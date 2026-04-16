@@ -8,10 +8,10 @@ export const authApi = {
         return await api.post('/auth/register', data);
     },
     confirmRegister: async (data: any) => {
-        return await api.post('/auth/confirm-register', data);
+        return await api.post('/auth/confirmSignup', data);
     },
     resetPasswordLink: async (data: any) => {
-        return await api.post('/auth/reset-password-link', data);
+        return await api.post('/auth/sendEmailResetPassword', data);
     },
     resetPasswordConfirm: async (data: any) => {
         return await api.post('/auth/reset-password-confirm', data);

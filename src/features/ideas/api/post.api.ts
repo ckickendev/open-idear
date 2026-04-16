@@ -14,7 +14,7 @@ export const postApi = {
         return await api.post('/post/public', data);
     },
     getHotPosts: async () => {
-        return await api.get('/post/getHotPosts');
+        return await api.get('/post/getHotTopics');
     },
     getRecentlyPosts: async () => {
         return await api.get('/post/getRecentlyPosts');
@@ -23,16 +23,16 @@ export const postApi = {
         return await api.get('/post');
     },
     getPostsByProfile: async (profileId: string) => {
-        return await api.get(`/post/profilePaging?targetId=${profileId}`);
+        return await api.get(`/post/getPostByAuthorId?profileId=${profileId}`);
     },
-    getMarkedPosts: async () => {
-        return await api.get('/post/getPagingMarkingPost');
+    getMarkedPosts: async (profileId?: string) => {
+        return await api.get(`/post/getMarkedByUser${profileId ? `?profileId=${profileId}` : ''}`);
     },
     toggleMarkPost: async (postId: string) => {
-        return await api.post(`/post/markPost?postId=${postId}`);
+        return await api.post(`/post/marked?postId=${postId}`);
     },
     deletePost: async (postId: string) => {
-        return await api.delete(`/post/delete/${postId}`);
+        return await api.post('/post/deletePost', { postId });
     },
     changePublicManager: async (postId: string, published: boolean) => {
         return await api.patch(`/post/changePublicManager?id=${postId}`, { published });
