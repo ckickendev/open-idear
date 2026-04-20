@@ -27,6 +27,8 @@ const LastestFeature = () => {
         const token = localStorage.getItem("access_token");
         if (token) {
           const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getRecentlyData`);
+          console.log("recently data:", response.data);
+
           if (response.status === 200) {
             setAllCategory((old) => [...old, ...response.data.recentlyData.categories]);
             setAllPosts(response.data.recentlyData.posts);

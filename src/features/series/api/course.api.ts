@@ -4,8 +4,8 @@ export const courseApi = {
     getAllCourses: async () => {
         return await api.get('/course');
     },
-    getCoursesByUser: async () => {
-        return await api.get('/course/me');
+    getCoursesByUser: async (status?: string) => {
+        return await api.get(`/course/me${status ? `?status=${status}` : ''}`);
     },
     getEnrolledCourses: async () => {
         return await api.get('/course/enrolled');
@@ -48,5 +48,8 @@ export const courseApi = {
     },
     deleteCourse: async (courseId: string) => {
         return await api.delete(`/course?courseId=${courseId}`);
+    },
+    restoreCourse: async (courseId: string) => {
+        return await api.patch(`/course/restore?courseId=${courseId}`);
     }
 };

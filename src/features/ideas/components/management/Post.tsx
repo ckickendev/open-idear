@@ -40,6 +40,7 @@ const Post = () => {
     const [page, setPage] = useState(1);
     const [isDataLoading, setIsDataLoading] = useState(true);
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+    const [listStatus, setListStatus] = useState<'all' | 'trash'>('all');
 
     const itemsPerPage = 15;
 
@@ -53,7 +54,7 @@ const Post = () => {
             try {
                 changeLoad();
                 setIsDataLoading(true);
-                const response = await postApi.getAllPosts();
+                const response = await postApi.getAllPosts(listStatus);
                 const categoriesResponse = await categoryApi.getCategories();
                 if (categoriesResponse.success) {
                     setAllCategories(categoriesResponse.data.categories);
@@ -70,7 +71,7 @@ const Post = () => {
             }
         };
         fetchPosts();
-    }, []);
+    }, [listStatus]);
 
     const filteredPosts = posts.filter(post => {
         const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -120,6 +121,8 @@ const Post = () => {
                 if (response.success) {
                     setType('info');
                     setMessage('Xóa bài viết thành công');
+                    const newPosts = posts.filter(post => post._id !== id);
+                    setPosts(newPosts);
                 } else throw new Error(response.message);
             })
             .catch(error => {
@@ -127,9 +130,24 @@ const Post = () => {
                 setMessage(error?.message);
             })
             .finally(() => changeLoad());
+    };
 
-        const newPosts = posts.filter(post => post._id !== id);
-        setPosts(newPosts);
+    const handleRestorePost = (id: string) => {
+        changeLoad();
+        postApi.restorePost(id)
+            .then(response => {
+                if (response.success) {
+                    setType('info');
+                    setMessage('Khôi phục bài viết thành công');
+                    const newPosts = posts.filter(post => post._id !== id);
+                    setPosts(newPosts);
+                } else throw new Error(response.message);
+            })
+            .catch(error => {
+                setType('error');
+                setMessage(error?.message);
+            })
+            .finally(() => changeLoad());
     };
 
     const statusOptions = [
@@ -149,6 +167,27 @@ const Post = () => {
             <div>
                 <h1 className="text-xl font-semibold text-gray-900">Quản lý Ý tưởng/Bài viết</h1>
                 <p className="text-sm text-gray-500 mt-1">Duyệt, quản lý và theo dõi tất cả bài viết</p>
+            </div>
+
+            <div className="flex gap-4 border-b border-gray-200">
+                <button
+                    onClick={() => setListStatus('all')}
+                    className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${listStatus === 'all'
+                        ? 'border-admin-primary text-admin-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                >
+                    Tất cả
+                </button>
+                <button
+                    onClick={() => setListStatus('trash')}
+                    className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${listStatus === 'trash'
+                        ? 'border-admin-primary text-admin-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                >
+                    Thùng rác
+                </button>
             </div>
 
             {/* Filters */}
@@ -231,23 +270,35 @@ const Post = () => {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center justify-end gap-1">
-                                                    <button
-                                                        onClick={() => changePostPublished(post._id)}
-                                                        className={`p-2 rounded-lg transition-colors ${post.published
-                                                            ? 'text-amber-600 hover:bg-amber-50'
-                                                            : 'text-emerald-600 hover:bg-emerald-50'
-                                                            }`}
-                                                        title={post.published ? 'Ẩn bài viết' : 'Duyệt bài viết'}
-                                                    >
-                                                        {post.published ? <EyeOff size={16} /> : <Eye size={16} />}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setConfirmDelete(post._id)}
-                                                        className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                                                        title="Xóa bài viết"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
+                                                    {listStatus === 'trash' ? (
+                                                        <button
+                                                            onClick={() => handleRestorePost(post._id)}
+                                                            className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap"
+                                                            title="Khôi phục bài viết"
+                                                        >
+                                                            Khôi phục
+                                                        </button>
+                                                    ) : (
+                                                        <>
+                                                            <button
+                                                                onClick={() => changePostPublished(post._id)}
+                                                                className={`p-2 rounded-lg transition-colors ${post.published
+                                                                    ? 'text-amber-600 hover:bg-amber-50'
+                                                                    : 'text-emerald-600 hover:bg-emerald-50'
+                                                                    }`}
+                                                                title={post.published ? 'Ẩn bài viết' : 'Duyệt bài viết'}
+                                                            >
+                                                                {post.published ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setConfirmDelete(post._id)}
+                                                                className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                                                                title="Xóa bài viết"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -277,18 +328,29 @@ const Post = () => {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1 flex-shrink-0">
-                                            <button
-                                                onClick={() => changePostPublished(post._id)}
-                                                className={`p-2 rounded-lg ${post.published ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
-                                            >
-                                                {post.published ? <EyeOff size={16} /> : <Eye size={16} />}
-                                            </button>
-                                            <button
-                                                onClick={() => setConfirmDelete(post._id)}
-                                                className="p-2 rounded-lg text-red-500 hover:bg-red-50"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
+                                            {listStatus === 'trash' ? (
+                                                <button
+                                                    onClick={() => handleRestorePost(post._id)}
+                                                    className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap"
+                                                >
+                                                    Khôi phục
+                                                </button>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        onClick={() => changePostPublished(post._id)}
+                                                        className={`p-2 rounded-lg ${post.published ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
+                                                    >
+                                                        {post.published ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setConfirmDelete(post._id)}
+                                                        className="p-2 rounded-lg text-red-500 hover:bg-red-50"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

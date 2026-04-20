@@ -31,6 +31,7 @@ const UserList = () => {
     const [activateFilter, setStatusFilter] = useState('all');
     const [isDataLoading, setIsDataLoading] = useState(true);
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+    const [listStatus, setListStatus] = useState<'all' | 'trash'>('all');
 
     const itemsPerPage = 10;
     const setType = alertStore((state) => state.setType);
@@ -41,14 +42,14 @@ const UserList = () => {
         const fetchUsers = async () => {
             try {
                 changeLoad(); setIsDataLoading(true);
-                const response = await userApi.getUsersList();
+                const response = await userApi.getUsersList({ status: listStatus });
                 if (response.success) { setUsers(response.data.users); }
                 else { setType('error'); setMessage(response.message || "Authentication error!"); }
             } catch (error: any) { setType('error'); setMessage(error?.message); }
             finally { changeLoad(); setIsDataLoading(false); }
         };
         fetchUsers();
-    }, []);
+    }, [listStatus]);
 
     const [formData, setFormData] = useState({ _id: '', name: '', username: '', email: '', role: 0, activate: 'false', phone: '' });
 
@@ -111,6 +112,20 @@ const UserList = () => {
         setUsers(users.filter(u => u._id !== id));
     };
 
+    const handleRestoreUser = (id: string) => {
+        changeLoad();
+        userApi.restoreUser(id)
+            .then(response => {
+                if (response.success) {
+                    setType('info');
+                    setMessage('Khôi phục người dùng thành công');
+                    setUsers(users.filter(u => u._id !== id));
+                } else throw new Error(response.message);
+                changeLoad();
+            })
+            .catch(error => { setType('error'); setMessage(error?.message); changeLoad(); });
+    };
+
     const toggleUserStatus = async (userId: string, currentActivate: string) => {
         const newActivate = currentActivate === 'true' ? 'false' : 'true';
         try {
@@ -135,6 +150,27 @@ const UserList = () => {
                 </div>
                 <button onClick={() => openModal('add')} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors">
                     <Plus size={16} /> Thêm mới
+                </button>
+            </div>
+
+            <div className="flex gap-4 border-b border-gray-200">
+                <button
+                    onClick={() => setListStatus('all')}
+                    className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${listStatus === 'all'
+                        ? 'border-admin-primary text-admin-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                >
+                    Tất cả
+                </button>
+                <button
+                    onClick={() => setListStatus('trash')}
+                    className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${listStatus === 'trash'
+                        ? 'border-admin-primary text-admin-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                >
+                    Thùng rác
                 </button>
             </div>
 
@@ -206,13 +242,25 @@ const UserList = () => {
                                             <td className="px-6 py-4 text-sm text-gray-500 hidden lg:table-cell whitespace-nowrap">{convertDate(user.joinDate)}</td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center justify-end gap-1">
-                                                    <button onClick={() => openModal('edit', user)} className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light transition-colors" title="Chỉnh sửa"><Edit size={16} /></button>
-                                                    <button onClick={() => toggleUserStatus(user._id, user.activate)}
-                                                        className={`p-2 rounded-lg transition-colors ${user.activate === true ? 'text-red-500 hover:bg-red-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
-                                                        title={user.activate === true ? 'Vô hiệu hóa' : 'Kích hoạt'}>
-                                                        {user.activate === true ? <UserX size={16} /> : <UserCheck size={16} />}
-                                                    </button>
-                                                    <button onClick={() => setConfirmDelete(user._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors" title="Xóa"><Trash2 size={16} /></button>
+                                                    {listStatus === 'trash' ? (
+                                                        <button
+                                                            onClick={() => handleRestoreUser(user._id)}
+                                                            className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap"
+                                                            title="Khôi phục"
+                                                        >
+                                                            Khôi phục
+                                                        </button>
+                                                    ) : (
+                                                        <>
+                                                            <button onClick={() => openModal('edit', user)} className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light transition-colors" title="Chỉnh sửa"><Edit size={16} /></button>
+                                                            <button onClick={() => toggleUserStatus(user._id, user.activate)}
+                                                                className={`p-2 rounded-lg transition-colors ${user.activate === true ? 'text-red-500 hover:bg-red-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
+                                                                title={user.activate === true ? 'Vô hiệu hóa' : 'Kích hoạt'}>
+                                                                {user.activate === true ? <UserX size={16} /> : <UserCheck size={16} />}
+                                                            </button>
+                                                            <button onClick={() => setConfirmDelete(user._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors" title="Xóa"><Trash2 size={16} /></button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -235,8 +283,16 @@ const UserList = () => {
                                                     <div className="text-xs text-gray-400">@{user.username}</div>
                                                 </div>
                                                 <div className="flex items-center gap-1">
-                                                    <button onClick={() => openModal('edit', user)} className="p-1.5 rounded-lg text-admin-primary hover:bg-admin-primary-light"><Edit size={14} /></button>
-                                                    <button onClick={() => setConfirmDelete(user._id)} className="p-1.5 rounded-lg text-red-500 hover:bg-red-50"><Trash2 size={14} /></button>
+                                                    {listStatus === 'trash' ? (
+                                                        <button onClick={() => handleRestoreUser(user._id)} className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap">
+                                                            Khôi phục
+                                                        </button>
+                                                    ) : (
+                                                        <>
+                                                            <button onClick={() => openModal('edit', user)} className="p-1.5 rounded-lg text-admin-primary hover:bg-admin-primary-light"><Edit size={14} /></button>
+                                                            <button onClick={() => setConfirmDelete(user._id)} className="p-1.5 rounded-lg text-red-500 hover:bg-red-50"><Trash2 size={14} /></button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="flex flex-wrap gap-2 mt-2">

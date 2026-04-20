@@ -23,6 +23,7 @@ const Courses = () => {
     const [showModal, setShowModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState<CourseType | null>(null);
     const [isDataLoading, setIsDataLoading] = useState(true);
+    const [listStatus, setListStatus] = useState<'all' | 'trash'>('all');
     const [formData, setFormData] = useState({ _id: '', title: '', slug: '', description: '', thumbnail: '', price: 0, discountPrice: 0 });
 
     const setType = alertStore((state) => state.setType);
@@ -30,12 +31,12 @@ const Courses = () => {
     const changeLoad = loadingStore((state) => state.changeLoad);
     const { t } = useTranslation();
 
-    useEffect(() => { fetchCourses(); }, []);
+    useEffect(() => { fetchCourses(); }, [listStatus]);
 
     const fetchCourses = async () => {
         try {
             changeLoad(); setIsDataLoading(true);
-            const response = await courseApi.getCoursesByUser();
+            const response = await courseApi.getCoursesByUser(listStatus);
             if (response.success) setCourses(response.data.courses);
             else throw new Error(response.message);
         } catch (error: any) { setType('error'); setMessage(error?.message); }
@@ -71,6 +72,38 @@ const Courses = () => {
         finally { changeLoad(); }
     };
 
+    const handleDeleteCourse = async (id: string) => {
+        changeLoad();
+        try {
+            const response = await courseApi.deleteCourse(id);
+            if (response.success) {
+                setCourses(courses.filter(c => c._id !== id));
+                setMessage('Xóa khóa học thành công');
+                setType('info');
+            } else throw new Error(response.message);
+        } catch (error: any) {
+            setType('error'); setMessage(error?.message);
+        } finally {
+            changeLoad();
+        }
+    };
+
+    const handleRestoreCourse = async (id: string) => {
+        changeLoad();
+        try {
+            const response = await courseApi.restoreCourse(id);
+            if (response.success) {
+                setCourses(courses.filter(c => c._id !== id));
+                setMessage('Khôi phục khóa học thành công');
+                setType('info');
+            } else throw new Error(response.message);
+        } catch (error: any) {
+            setType('error'); setMessage(error?.message);
+        } finally {
+            changeLoad();
+        }
+    };
+
     const handleImageUploadSuccess = (media: any) => { setFormData(prev => ({ ...prev, thumbnail: media._id })); };
 
     return (
@@ -82,6 +115,27 @@ const Courses = () => {
                 </div>
                 <button onClick={() => openModal()} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors">
                     <Plus size={16} /> Thêm khóa học
+                </button>
+            </div>
+
+            <div className="flex gap-4 border-b border-gray-200">
+                <button
+                    onClick={() => setListStatus('all')}
+                    className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${listStatus === 'all'
+                        ? 'border-admin-primary text-admin-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                >
+                    Tất cả
+                </button>
+                <button
+                    onClick={() => setListStatus('trash')}
+                    className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${listStatus === 'trash'
+                        ? 'border-admin-primary text-admin-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                >
+                    Thùng rác
                 </button>
             </div>
 
@@ -122,12 +176,23 @@ const Courses = () => {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center justify-end gap-1">
-                                                    <HoverNote note="Chỉnh sửa thông tin">
-                                                        <button onClick={() => openModal(course)} className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light transition-colors"><Edit size={16} /></button>
-                                                    </HoverNote>
-                                                    <HoverNote note="Chỉnh sửa chi tiết">
-                                                        <Link href={`/management/course/${course._id}/curriculum`} className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors inline-flex"><BookOpen size={16} /></Link>
-                                                    </HoverNote>
+                                                    {listStatus === 'trash' ? (
+                                                        <button onClick={() => handleRestoreCourse(course._id)} className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap">
+                                                            Khôi phục
+                                                        </button>
+                                                    ) : (
+                                                        <>
+                                                            <HoverNote note="Chỉnh sửa thông tin">
+                                                                <button onClick={() => openModal(course)} className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light transition-colors"><Edit size={16} /></button>
+                                                            </HoverNote>
+                                                            <HoverNote note="Chỉnh sửa chi tiết">
+                                                                <Link href={`/management/course/${course._id}/curriculum`} className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors inline-flex"><BookOpen size={16} /></Link>
+                                                            </HoverNote>
+                                                            <HoverNote note="Xóa khóa học">
+                                                                <button onClick={() => handleDeleteCourse(course._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors inline-flex"><Trash2 size={16} /></button>
+                                                            </HoverNote>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -149,8 +214,17 @@ const Courses = () => {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1 flex-shrink-0">
-                                            <button onClick={() => openModal(course)} className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light"><Edit size={16} /></button>
-                                            <Link href={`/management/course/${course._id}/curriculum`} className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 inline-flex"><BookOpen size={16} /></Link>
+                                            {listStatus === 'trash' ? (
+                                                <button onClick={() => handleRestoreCourse(course._id)} className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap" title="Khôi phục">
+                                                    Khôi phục
+                                                </button>
+                                            ) : (
+                                                <>
+                                                    <button onClick={() => openModal(course)} className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light"><Edit size={16} /></button>
+                                                    <Link href={`/management/course/${course._id}/curriculum`} className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 inline-flex"><BookOpen size={16} /></Link>
+                                                    <button onClick={() => handleDeleteCourse(course._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 inline-flex"><Trash2 size={16} /></button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

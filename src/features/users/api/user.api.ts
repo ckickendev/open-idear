@@ -25,6 +25,9 @@ export const userApi = {
     deleteUser: async (userId: string) => {
         return await api.delete(`/user/delete/${userId}`);
     },
+    restoreUser: async (userId: string) => {
+        return await api.patch(`/user/restore/${userId}`);
+    },
     toggleUserStatus: async (userId: string, data: any) => {
         return await api.patch(`/user/toggle-status/${userId}`, data);
     }

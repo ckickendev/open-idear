@@ -31,6 +31,7 @@ const Category = () => {
     const [page, setPage] = useState(1);
     const [isDataLoading, setIsDataLoading] = useState(true);
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+    const [listStatus, setListStatus] = useState<'all' | 'trash'>('all');
 
     const itemsPerPage = 15;
     const setType = alertStore((state) => state.setType);
@@ -43,7 +44,7 @@ const Category = () => {
             try {
                 changeLoad();
                 setIsDataLoading(true);
-                const response = await categoryApi.getCategories();
+                const response = await categoryApi.getCategories(listStatus);
                 if (response.success) {
                     setCategories(response.data.categories);
                 } else throw new Error(response.message);
@@ -56,7 +57,7 @@ const Category = () => {
             }
         };
         fetchCategories();
-    }, []);
+    }, [listStatus]);
 
     const [formData, setFormData] = useState({ _id: '', name: '', slug: '', description: '' });
 
@@ -149,6 +150,21 @@ const Category = () => {
         setCategories(categories.filter(cat => cat._id !== id));
     };
 
+    const handleRestoreCategory = (id: string) => {
+        changeLoad();
+        categoryApi.restoreCategory(id)
+            .then(response => {
+                if (response.success) {
+                    setType('info');
+                    setMessage('Khôi phục danh mục thành công');
+                    setCategories(categories.filter(cat => cat._id !== id));
+                }
+                else throw new Error(response.message);
+            })
+            .catch(error => { setType('error'); setMessage(error?.message); })
+            .finally(() => changeLoad());
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -163,6 +179,28 @@ const Category = () => {
                 >
                     <Plus size={16} />
                     {t('management.category.add')}
+                </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-4 border-b border-gray-200">
+                <button
+                    onClick={() => setListStatus('all')}
+                    className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${listStatus === 'all'
+                        ? 'border-admin-primary text-admin-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                >
+                    Tất cả
+                </button>
+                <button
+                    onClick={() => setListStatus('trash')}
+                    className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${listStatus === 'trash'
+                        ? 'border-admin-primary text-admin-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                >
+                    Thùng rác
                 </button>
             </div>
 
@@ -224,12 +262,20 @@ const Category = () => {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center justify-end gap-1">
-                                                    <button onClick={() => openModal('edit', category)} className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light transition-colors" title="Chỉnh sửa">
-                                                        <Edit size={16} />
-                                                    </button>
-                                                    <button onClick={() => setConfirmDelete(category._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors" title="Xóa">
-                                                        <Trash2 size={16} />
-                                                    </button>
+                                                    {listStatus === 'trash' ? (
+                                                        <button onClick={() => handleRestoreCategory(category._id)} className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap" title="Khôi phục">
+                                                            Khôi phục
+                                                        </button>
+                                                    ) : (
+                                                        <>
+                                                            <button onClick={() => openModal('edit', category)} className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light transition-colors" title="Chỉnh sửa">
+                                                                <Edit size={16} />
+                                                            </button>
+                                                            <button onClick={() => setConfirmDelete(category._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors" title="Xóa">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -249,12 +295,20 @@ const Category = () => {
                                             <p className="text-xs text-gray-400 mt-1">{convertDate(category.createdAt)}</p>
                                         </div>
                                         <div className="flex items-center gap-1 flex-shrink-0">
-                                            <button onClick={() => openModal('edit', category)} className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light">
-                                                <Edit size={16} />
-                                            </button>
-                                            <button onClick={() => setConfirmDelete(category._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50">
-                                                <Trash2 size={16} />
-                                            </button>
+                                            {listStatus === 'trash' ? (
+                                                <button onClick={() => handleRestoreCategory(category._id)} className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap">
+                                                    Khôi phục
+                                                </button>
+                                            ) : (
+                                                <>
+                                                    <button onClick={() => openModal('edit', category)} className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light">
+                                                        <Edit size={16} />
+                                                    </button>
+                                                    <button onClick={() => setConfirmDelete(category._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50">
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

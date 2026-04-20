@@ -4,6 +4,50 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-standard: 'Arial, sans-serif';
+
+  /* Admin Dashboard Design Tokens */
+  --color-admin-primary: #8280b4;
+  --color-admin-primary-hover: #837faf;
+  --color-admin-primary-light: #EEF2FF;
+  --color-admin-primary-ring: rgba(79, 70, 229, 0.25);
+
+  --color-admin-success: #059669;
+  --color-admin-success-light: #ECFDF5;
+  --color-admin-success-text: #065F46;
+
+  --color-admin-warning: #D97706;
+  --color-admin-warning-light: #FFFBEB;
+  --color-admin-warning-text: #92400E;
+
+  --color-admin-danger: #DC2626;
+  --color-admin-danger-hover: #B91C1C;
+  --color-admin-danger-light: #FEF2F2;
+  --color-admin-danger-text: #991B1B;
+
+  --color-admin-info: #2563EB;
+  --color-admin-info-light: #EFF6FF;
+  --color-admin-info-text: #1E40AF;
+
+  --color-admin-neutral: #6B7280;
+  --color-admin-neutral-light: #F3F4F6;
+  --color-admin-neutral-text: #374151;
+
+  --color-admin-text: #111827;
+  --color-admin-text-secondary: #6B7280;
+  --color-admin-text-muted: #9CA3AF;
+
+  --color-admin-border: #E5E7EB;
+  --color-admin-border-hover: #D1D5DB;
+
+  --color-admin-bg: #F9FAFB;
+  --color-admin-surface: #FFFFFF;
+
+  --radius-admin: 0.5rem;
+  --radius-admin-lg: 0.75rem;
+
+  --shadow-admin-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-admin: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-admin-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
 :root {

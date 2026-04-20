@@ -19,8 +19,8 @@ export const postApi = {
     getRecentlyPosts: async () => {
         return await api.get('/post/getRecentlyPosts');
     },
-    getAllPosts: async () => {
-        return await api.get('/post');
+    getAllPosts: async (status?: string) => {
+        return await api.get(`/post${status ? `?status=${status}` : ''}`);
     },
     getPostsByProfile: async (profileId: string) => {
         return await api.get(`/post/getPostByAuthorId?profileId=${profileId}`);
@@ -33,6 +33,9 @@ export const postApi = {
     },
     deletePost: async (postId: string) => {
         return await api.post('/post/deletePost', { postId });
+    },
+    restorePost: async (postId: string) => {
+        return await api.post('/post/restorePost', { postId });
     },
     changePublicManager: async (postId: string, published: boolean) => {
         return await api.patch(`/post/changePublicManager?id=${postId}`, { published });
