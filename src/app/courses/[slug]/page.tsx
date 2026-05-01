@@ -246,16 +246,24 @@ const CourseDetail = () => {
                             </div>
 
                             <div className="flex flex-col gap-3 mb-6">
-                                <button className="w-full bg-purple-600 text-white font-bold py-3 rounded hover:bg-purple-700 transition-colors">
-                                    Thêm vào giỏ hàng
-                                </button>
-                                <button
-                                    onClick={handleEnroll}
-                                    disabled={isEnrolling}
-                                    className="w-full border border-gray-900 font-bold py-3 rounded hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                <button 
+                                    onClick={() => router.push(`/courses/${course.slug}/learn`)}
+                                    className="w-full bg-[var(--color-admin-primary)] text-white font-bold py-3 rounded hover:bg-[var(--color-admin-primary-hover)] transition-colors shadow-md flex items-center justify-center gap-2"
                                 >
-                                    {isEnrolling ? 'Đang xử lý...' : 'Mua ngay'}
+                                    <Play size={18} /> Vào học ngay
                                 </button>
+                                <div className="flex gap-3">
+                                    <button className="flex-1 border border-gray-900 font-bold py-3 rounded hover:bg-gray-50 transition-colors">
+                                        Giỏ hàng
+                                    </button>
+                                    <button
+                                        onClick={handleEnroll}
+                                        disabled={isEnrolling}
+                                        className="flex-1 bg-gray-900 text-white font-bold py-3 rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                    >
+                                        {isEnrolling ? 'Đang...' : 'Mua ngay'}
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="text-center text-xs text-gray-500 mb-6">30-Day Money-Back Guarantee</div>
