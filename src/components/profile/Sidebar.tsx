@@ -67,29 +67,30 @@ const Sidebar: React.FC = () => {
                     {visibleItems.map((item) => {
                         const active = isActive(item.href);
                         return (
-                            <li key={item.id}>
+                            <li key={item.id} className="relative">
+                                {active && (
+                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[var(--color-admin-primary)] rounded-r-full" />
+                                )}
                                 <Link
                                     href={item.href}
                                     onClick={() => setMobileOpen(false)}
-                                    className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                                    className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 overflow-hidden relative ${
                                         active
-                                            ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 shadow-sm'
-                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white'
+                                            ? 'bg-[var(--color-admin-primary-light)] dark:bg-indigo-900/30 text-[var(--color-admin-primary)] dark:text-indigo-300 shadow-[inset_0px_2px_4px_rgba(0,0,0,0.02)]'
+                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white hover:pl-4'
                                     }`}
                                     title={collapsed ? item.label : undefined}
                                 >
-                                    <span className={`flex-shrink-0 transition-colors ${
+                                    {active && <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-admin-primary)]/10 to-transparent opacity-50" />}
+                                    <span className={`relative z-10 flex-shrink-0 transition-all duration-300 ${
                                         active
-                                            ? 'text-indigo-600 dark:text-indigo-400'
+                                            ? 'text-[var(--color-admin-primary)] dark:text-indigo-400 scale-110'
                                             : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'
                                     }`}>
                                         {item.icon}
                                     </span>
                                     {!collapsed && (
-                                        <span className="truncate">{item.label}</span>
-                                    )}
-                                    {active && !collapsed && (
-                                        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+                                        <span className="relative z-10 truncate">{item.label}</span>
                                     )}
                                 </Link>
                             </li>
@@ -97,6 +98,19 @@ const Sidebar: React.FC = () => {
                     })}
                 </ul>
             </nav>
+
+            {/* Gamification Widget */}
+            {!collapsed && isOwner && (
+                <div className="px-4 py-4 mx-2 mb-2 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl border border-indigo-100/50 dark:border-indigo-800/50">
+                    <div className="flex justify-between items-end mb-2">
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Level 5</span>
+                        <span className="text-[10px] text-gray-500 font-semibold">120/500 XP</span>
+                    </div>
+                    <div className="w-full bg-white dark:bg-gray-800 rounded-full h-1.5 overflow-hidden shadow-inner">
+                        <div className="bg-[var(--color-admin-primary)] h-full rounded-full transition-all duration-1000" style={{ width: '24%' }} />
+                    </div>
+                </div>
+            )}
 
             {/* Collapse toggle (desktop) */}
             <div className="hidden lg:block px-3 py-4 border-t border-gray-100 dark:border-gray-700">

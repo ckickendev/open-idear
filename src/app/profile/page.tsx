@@ -61,6 +61,10 @@ export default function ProfileOverviewPage() {
 
     const currentUser = authenticationStore((state) => state.currentUser);
 
+    // Dynamic greeting
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+
     useEffect(() => {
         const fetchOverview = async () => {
             setLoading(true);
@@ -109,8 +113,8 @@ export default function ProfileOverviewPage() {
         <div className="space-y-6">
             {/* Page Title */}
             <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Welcome back, {currentUser.name || String(currentUser.username) || 'there'}! 👋
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    {greeting}, {currentUser.name || String(currentUser.username) || 'there'}! 👋
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     Here&apos;s what&apos;s happening with your account today.
@@ -151,7 +155,33 @@ export default function ProfileOverviewPage() {
                         accentColor="from-amber-500 to-orange-500"
                     />
                 </div>
+                </div>
             )}
+
+            {/* Activity Heatmap */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Activity Heatmap</h2>
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                    {/* Mock 30-day heatmap data */}
+                    {Array.from({ length: 30 }).map((_, i) => {
+                        // Mock random intensity
+                        const intensity = [
+                            'bg-gray-100 dark:bg-gray-700',
+                            'bg-indigo-200 dark:bg-indigo-900/40',
+                            'bg-indigo-400 dark:bg-indigo-700',
+                            'bg-indigo-600 dark:bg-indigo-500',
+                        ][Math.floor(Math.random() * 4)];
+                        
+                        return (
+                            <div 
+                                key={i} 
+                                className={`w-6 h-6 rounded-md flex-shrink-0 transition-all hover:scale-110 cursor-pointer ${intensity}`}
+                                title={`Day ${i + 1}`}
+                            />
+                        );
+                    })}
+                </div>
+            </div>
 
             {/* Recent Enrolled Courses */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
@@ -183,36 +213,45 @@ export default function ProfileOverviewPage() {
                             <Link
                                 key={course._id}
                                 href={`/courses/${course._id}`}
-                                className="group flex gap-4 p-4 rounded-xl border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200"
+                                className="relative group flex gap-4 p-4 rounded-xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/80 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-200 dark:hover:border-indigo-800 overflow-hidden"
                             >
-                                <div className="w-20 h-14 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
+                                {/* Ambient Glass Glow */}
+                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/10 dark:to-blue-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
+                                
+                                <div className="w-24 h-16 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0 shadow-inner">
                                     {course.thumbnail?.url ? (
                                         <img
                                             src={course.thumbnail.url}
                                             alt={course.title}
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center">
                                             <BookOpen
                                                 size={20}
-                                                className="text-gray-300 dark:text-gray-600"
+                                                className="text-gray-300 dark:text-gray-600 transition-transform duration-500 group-hover:scale-110"
                                             />
                                         </div>
                                     )}
                                 </div>
-                                <div className="flex-1 min-w-0">
+                                <div className="flex-1 min-w-0 flex flex-col justify-center">
                                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                                         {course.title}
                                     </h3>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <Clock size={12} className="text-gray-400" />
-                                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                                            In Progress
-                                        </span>
-                                    </div>
-                                    <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1 mt-2">
-                                        <div className="bg-gradient-to-r from-indigo-500 to-blue-500 h-1 rounded-full w-0" />
+                                    <div className="flex items-center gap-3 mt-1.5">
+                                        <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-md">
+                                            <Clock size={12} className="text-gray-500" />
+                                            <span className="text-[10px] font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                                In Progress
+                                            </span>
+                                        </div>
+                                        {/* Mock Circular Progress Indicator using conic-gradient */}
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ background: 'conic-gradient(#6366f1 60%, #e5e7eb 0)' }}>
+                                                <div className="w-3 h-3 bg-white dark:bg-gray-800 rounded-full" />
+                                            </div>
+                                            <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">60%</span>
+                                        </div>
                                     </div>
                                 </div>
                             </Link>
@@ -244,15 +283,18 @@ export default function ProfileOverviewPage() {
                         <Link
                             key={action.label}
                             href={action.href}
-                            className="group flex items-center gap-4 p-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 hover:-translate-y-0.5 transition-all duration-300"
+                            className="group relative flex items-center gap-4 p-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-indigo-100 dark:hover:border-indigo-900/50 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:hover:shadow-indigo-900/20 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
                         >
+                            {/* Subtle background glow on hover */}
+                            <div className={`absolute inset-0 bg-gradient-to-r ${action.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+                            
                             <div
-                                className={`w-11 h-11 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center text-white shadow-lg flex-shrink-0`}
+                                className={`w-12 h-12 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center text-white shadow-lg flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}
                             >
                                 {action.icon}
                             </div>
-                            <div>
-                                <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            <div className="relative z-10">
+                                <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-indigo-600 group-hover:to-blue-600 dark:group-hover:from-indigo-400 dark:group-hover:to-blue-400 transition-all duration-300">
                                     {action.label}
                                 </p>
                                 <p className="text-xs text-gray-500 dark:text-gray-400">

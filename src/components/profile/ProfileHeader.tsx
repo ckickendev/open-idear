@@ -111,13 +111,9 @@ const ProfileHeader: React.FC = () => {
                         className="w-full h-full object-cover"
                     />
                 ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700">
-                        {/* Abstract pattern overlay */}
-                        <div className="absolute inset-0 opacity-10"
-                            style={{
-                                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                            }}
-                        />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[var(--color-admin-primary)] via-indigo-500 to-blue-900 opacity-90">
+                        {/* Dynamic glass overlay */}
+                        <div className="absolute inset-0 bg-white/5 backdrop-blur-3xl" />
                     </div>
                 )}
 
@@ -171,8 +167,8 @@ const ProfileHeader: React.FC = () => {
                 <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 p-4 sm:p-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
                         {/* Avatar */}
-                        <div className="relative -mt-16 sm:-mt-20 flex-shrink-0">
-                            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border-4 border-white dark:border-gray-800 shadow-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+                        <div className="relative -mt-16 sm:-mt-20 flex-shrink-0 group">
+                            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border-4 border-white dark:border-gray-800 shadow-2xl shadow-[var(--color-admin-primary-ring)] overflow-hidden bg-gray-100 dark:bg-gray-700 transition-transform duration-300 group-hover:scale-105">
                                 <img
                                     src={displayUser?.avatar || '/icon/profile/hippo.png'}
                                     alt="Avatar"
@@ -245,14 +241,14 @@ const ProfileHeader: React.FC = () => {
                             {isOwner ? (
                                 <a
                                     href="/profile/settings"
-                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm"
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[var(--color-admin-primary)] hover:bg-[var(--color-admin-primary-hover)] text-white text-sm font-bold rounded-xl transition-all duration-300 shadow-[inset_0px_1px_1px_rgba(255,255,255,0.2)] hover:shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] hover:-translate-y-0.5"
                                 >
                                     <Edit size={14} /> Edit Profile
                                 </a>
                             ) : (
                                 <button
                                     onClick={handleFollowUser}
-                                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl transition-colors shadow-sm cursor-pointer ${isFollowed ? 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+                                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all duration-300 hover:-translate-y-0.5 ${isFollowed ? 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600' : 'bg-[var(--color-admin-primary)] text-white hover:bg-[var(--color-admin-primary-hover)] shadow-[inset_0px_1px_1px_rgba(255,255,255,0.2)] hover:shadow-[0_4px_14px_0_rgba(79,70,229,0.39)]'}`}
                                 >
                                     {isFollowed ? 'Following' : 'Follow'}
                                 </button>

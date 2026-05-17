@@ -83,10 +83,9 @@ const LastestFeature = () => {
     });
   };
 
-  return (
+    return (
     <>
-      <div className="max-w-6xl mx-auto p-4 border-1 border-gray-300 rounded p-4">
-        <LoadingComponent isLoading={isLoading} />
+      <div className="max-w-6xl mx-auto p-4 border-1 border-gray-300 rounded">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
             <h2 className="font-bold text-xl text-gray-800 mr-6">

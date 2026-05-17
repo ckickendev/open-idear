@@ -21,10 +21,13 @@ const StatCard: React.FC<StatCardProps> = ({
     return (
         <div
             onClick={onClick}
-            className={`group relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 transition-all duration-300 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 hover:-translate-y-0.5 ${onClick ? 'cursor-pointer' : ''}`}
+            className={`group relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:border-indigo-100 dark:hover:border-indigo-900/50 hover:-translate-y-1 ${onClick ? 'cursor-pointer' : ''}`}
         >
+            {/* Ambient Glow */}
+            <div className={`absolute -inset-0.5 bg-gradient-to-br ${accentColor} opacity-0 group-hover:opacity-10 blur transition duration-500 rounded-2xl`} />
+            
             {/* Gradient accent bar */}
-            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${accentColor} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+            <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${accentColor} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
             <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -42,8 +45,9 @@ const StatCard: React.FC<StatCardProps> = ({
                         </div>
                     )}
                 </div>
-                <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${accentColor} flex items-center justify-center text-white shadow-lg shadow-indigo-200/50 dark:shadow-indigo-900/30`}>
-                    {icon}
+                <div className={`relative flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${accentColor} flex items-center justify-center text-white shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
+                    <div className="relative z-10">{icon}</div>
+                    <div className={`absolute inset-0 bg-gradient-to-br ${accentColor} opacity-50 blur-md rounded-xl transition-opacity duration-300 group-hover:opacity-100 -z-10`} />
                 </div>
             </div>
         </div>
