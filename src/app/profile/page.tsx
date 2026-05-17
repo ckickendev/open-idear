@@ -155,7 +155,6 @@ export default function ProfileOverviewPage() {
                         accentColor="from-amber-500 to-orange-500"
                     />
                 </div>
-                </div>
             )}
 
             {/* Activity Heatmap */}
