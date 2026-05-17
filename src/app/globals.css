@@ -48,6 +48,27 @@
   --shadow-admin-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-admin: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
   --shadow-admin-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+
+  /* Editor Design Tokens — Light & Friendly */
+  --color-editor-bg: #F7F8FC;
+  --color-editor-surface: #FFFFFF;
+  --color-editor-elevated: #F0F1F5;
+  --color-editor-border: #E2E4EC;
+  --color-editor-text: #1E1F2B;
+  --color-editor-secondary: #6B7085;
+  --color-editor-muted: #A0A4B8;
+  --color-editor-accent: #6C5CE7;
+  --color-editor-accent-hover: #5A4BD6;
+  --color-editor-success: #00B894;
+  --color-editor-warning: #F39C12;
+  --color-editor-danger: #E74C3C;
+
+  /* Editor Animations */
+  --animate-fade-in: fade-in 0.15s ease-out;
+  --animate-slide-up: slide-up 0.2s ease-out;
+  --animate-slide-in-right: slide-in-right 0.3s ease-out;
+  --animate-slide-out-right: slide-out-right 0.25s ease-in;
+  --animate-pulse-dot: pulse-dot 1.5s ease-in-out infinite;
 }
 
 :root {
@@ -116,4 +137,30 @@ body {
 
 .animate-slide-in-left {
   animation: slide-in-left 0.25s ease-out;
+}
+
+/* Editor micro-animations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slide-out-right {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.7; }
 }

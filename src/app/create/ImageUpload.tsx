@@ -1,274 +1,279 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Upload, X, FileImage, Loader2, Check, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, FileImage, Loader2, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { getHeadersToken } from '@/lib/api/axios';
 import MediaBrowser from './MediaBrowser';
 
-const ImageUpload = ({ onImageUploaded, onClose, isTitleDisplay }: any) => {
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [preview, setPreview] = useState<string | null>(null);
-    const [uploading, setUploading] = useState(false);
-    const [isUploadDone, setIsUploadDone] = useState(false);
-    const [description, setDescription] = useState('');
-    const [error, setError] = useState<string | null>(null);
-    const [showBrowser, setShowBrowser] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+interface ImageUploadProps {
+  onImageUploaded: (image: any) => void;
+  onClose?: () => void;
+  isTitleDisplay?: boolean;
+  darkMode?: boolean;
+}
 
-    const handleFileSelect = (event: any) => {
-        const file = event.target.files[0];
-        if (file) {
-            // Validate file type
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            if (!allowedTypes.includes(file.type)) {
-                setError('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
-                return;
-            }
+const ImageUpload = ({ onImageUploaded, onClose = () => {}, isTitleDisplay = false, darkMode = false }: ImageUploadProps) => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [isUploadDone, setIsUploadDone] = useState(false);
+  const [description, setDescription] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [showBrowser, setShowBrowser] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-            // Validate file size (5MB limit)
-            if (file.size > 5 * 1024 * 1024) {
-                setError('File size must be less than 5MB');
-                return;
-            }
+  // Dark mode class helpers
+  const bg = darkMode ? 'bg-[var(--color-editor-surface)]' : 'bg-white';
+  const bgElevated = darkMode ? 'bg-[var(--color-editor-elevated)]' : 'bg-gray-50';
+  const text = darkMode ? 'text-[var(--color-editor-text)]' : 'text-gray-800';
+  const textSec = darkMode ? 'text-[var(--color-editor-secondary)]' : 'text-gray-500';
+  const textMuted = darkMode ? 'text-[var(--color-editor-muted)]' : 'text-gray-400';
+  const border = darkMode ? 'border-[var(--color-editor-border)]' : 'border-gray-300';
+  const borderHover = darkMode ? 'hover:border-[var(--color-editor-accent)]' : 'hover:border-blue-400';
+  const accent = darkMode ? 'bg-[var(--color-editor-accent)]' : 'bg-blue-500';
+  const accentHover = darkMode ? 'hover:bg-[var(--color-editor-accent-hover)]' : 'hover:bg-blue-600';
+  const accentText = darkMode ? 'text-[var(--color-editor-accent)]' : 'text-blue-600';
+  const ring = darkMode ? 'focus:ring-[var(--color-editor-accent)]/40' : 'focus:ring-blue-500';
 
-            setSelectedFile(file);
-            setError(null);
-            setIsUploadDone(false);
-            setDescription('');
+  const handleFileSelect = (event: any) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-            // Create preview
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                if (e.target && typeof e.target.result === 'string') {
-                    setPreview(e.target.result);
-                }
-            };
-            reader.readAsDataURL(file);
-        }
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File size must be less than 5MB');
+      return;
+    }
+
+    setSelectedFile(file);
+    setError(null);
+    setIsUploadDone(false);
+    setDescription('');
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target && typeof e.target.result === 'string') {
+        setPreview(e.target.result);
+      }
     };
+    reader.readAsDataURL(file);
+  };
 
-    const handleUpload = async () => {
-        if (!selectedFile) return;
+  const handleUpload = async () => {
+    if (!selectedFile) return;
 
-        setUploading(true);
-        setError(null);
+    setUploading(true);
+    setError(null);
 
-        const formData = new FormData();
-        formData.append('image', selectedFile);
-        formData.append('description', description);
+    const formData = new FormData();
+    formData.append('image', selectedFile);
+    formData.append('description', description);
 
-        try {
-            const response = await fetch('http://localhost:5001/media/uploadImage', {
-                method: 'POST',
-                body: formData,
-                headers: getHeadersToken(),
-            });
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/media/uploadImage`, {
+        method: 'POST',
+        body: formData,
+        headers: getHeadersToken(),
+      });
 
-            if (!response.ok) {
-                throw new Error('Upload failed');
-            }
+      if (!response.ok) throw new Error('Upload failed');
 
-            const data = await response.json();
-
-            if (data.status === 'success') {
-                // Call the callback with the uploaded image data
-                console.log('Image uploaded successfully:', data.image);
-                
-                onImageUploaded(
-                    data.image
-                );
-                setIsUploadDone(true);
-                // Close the modal
-                onClose();
-            } else {
-                throw new Error(data.error || 'Upload failed');
-            }
-        } catch (err : any) {
-            setError(err?.message || 'Upload failed. Please try again.');
-        } finally {
-            setUploading(false);
-        }
-    };
-
-    const handleClearSelection = () => {
-        setSelectedFile(null);
-        setPreview(null);
-        setError(null);
-        setIsUploadDone(false);
-        setDescription('');
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-    };
-
-    const handleBrowserSelect = (media: any) => {
-        onImageUploaded(media);
+      const data = await response.json();
+      if (data.status === 'success') {
+        onImageUploaded(data.image);
         setIsUploadDone(true);
-        setShowBrowser(false);
         onClose();
-    };
+      } else {
+        throw new Error(data.error || 'Upload failed');
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
-    const handleDragOver = (e : any) => {
-        e.preventDefault();
-        e.stopPropagation();
-    };
+  const handleClearSelection = () => {
+    setSelectedFile(null);
+    setPreview(null);
+    setError(null);
+    setIsUploadDone(false);
+    setDescription('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
-    const handleDrop = (e : any) => {
-        e.preventDefault();
-        e.stopPropagation();
+  const handleBrowserSelect = (media: any) => {
+    onImageUploaded(media);
+    setIsUploadDone(true);
+    setShowBrowser(false);
+    onClose();
+  };
 
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            const file = files[0];
-            const event = { target: { files: [file] } };
-            handleFileSelect(event);
-        }
-    };
+  const handleDragOver = (e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
 
-    return (
-        <div className="max-w-2xl p-6 bg-white rounded-lg shadow-lg">
-            {isTitleDisplay && (
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800">Upload Image</h2>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-                    >
-                        <X size={24} />
-                    </button>
-                </div>
-            )}
+  const handleDrop = (e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      handleFileSelect({ target: { files: [files[0]] } });
+    }
+  };
 
-            {/* Upload Area */}
-            <div
-                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors cursor-pointer"
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-            >
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                />
-
-                {preview ? (
-                    <div className="relative">
-                        <img
-                            src={preview}
-                            alt="Preview of uploaded image"
-                            className="max-w-full max-h-64 mx-auto rounded-lg shadow-md"
-                        />
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleClearSelection();
-                            }}
-                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                        >
-                            <X size={16} />
-                        </button>
-                    </div>
-                ) : (
-                    <div className="space-y-4">
-                        <div className="flex justify-center">
-                            <FileImage size={48} className="text-gray-400" />
-                        </div>
-                        <div>
-                            <p className="text-lg font-medium text-gray-700">
-                                Click to upload or drag and drop
-                            </p>
-                            <p className="text-sm text-gray-500 mt-1">
-                                JPEG, PNG, GIF, or WebP (max 5MB)
-                            </p>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Description Input - Shows after file selection */}
-            {selectedFile && (
-                <div className="mt-6 space-y-2">
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                        Image Description
-                    </label>
-                    <textarea
-                        id="description"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Enter a description for this image..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                        rows={3}
-                    />
-                    <p className="text-xs text-gray-500">
-                        Optional: Add a description to help identify this image later
-                    </p>
-                </div>
-            )}
-
-            {/* Error Message */}
-            {error && (
-                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-600 text-sm">{error}</p>
-                </div>
-            )}
-
-            {/* Upload Button */}
-            {selectedFile && !isUploadDone && (
-                <div className="mt-6 flex gap-3">
-                    <button
-                        onClick={handleUpload}
-                        disabled={uploading}
-                        className="flex-1 bg-blue-500 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                    >
-                        {uploading ? (
-                            <>
-                                <Loader2 size={20} className="animate-spin" />
-                                Uploading...
-                            </>
-                        ) : (
-                            <>
-                                <Upload size={20} />
-                                Upload Image
-                            </>
-                        )}
-                    </button>
-
-                    <button
-                        onClick={handleClearSelection}
-                        disabled={uploading}
-                        className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                        Clear
-                    </button>
-                </div>
-            )}
-
-            {isUploadDone && (<div className="mt-4 p-3 border border-green-200 rounded-lg flex align-center justify-center"><CheckCircle size={24} className="text-green-500 mr-1" /> Image uploaded successfully!</div>)}
-
-            {/* Browse Existing Media Button */}
-            {!selectedFile && !isUploadDone && (
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                    <button
-                        onClick={() => setShowBrowser(true)}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 hover:border-blue-500 transition-colors font-medium"
-                    >
-                        <ImageIcon size={20} />
-                        Browse Your Media Library
-                    </button>
-                </div>
-            )}
-
-            {showBrowser && (
-                <MediaBrowser 
-                    onSelect={handleBrowserSelect} 
-                    onClose={() => setShowBrowser(false)} 
-                />
-            )}
+  return (
+    <div className={`max-w-2xl p-6 ${bg} rounded-xl`}>
+      {isTitleDisplay && (
+        <div className="flex justify-between items-center mb-6">
+          <h2 className={`text-xl font-bold ${text}`}>Upload Image</h2>
+          <button
+            onClick={onClose}
+            className={`${textMuted} hover:${text} transition-colors cursor-pointer p-1 rounded-lg hover:${bgElevated}`}
+          >
+            <X size={20} />
+          </button>
         </div>
-    );
+      )}
+
+      {/* Upload Area */}
+      <div
+        className={`border-2 border-dashed ${border} ${borderHover} rounded-xl p-8 text-center transition-all duration-200 cursor-pointer`}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+
+        {preview ? (
+          <div className="relative">
+            <img
+              src={preview}
+              alt="Preview"
+              className="max-w-full max-h-64 mx-auto rounded-xl shadow-lg"
+            />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClearSelection();
+              }}
+              className="absolute top-2 right-2 bg-[var(--color-editor-danger)] text-white rounded-full p-1.5 hover:opacity-90 transition-opacity cursor-pointer shadow-lg"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex justify-center">
+              <div className={`p-3 rounded-xl ${bgElevated}`}>
+                <FileImage size={32} className={textMuted} />
+              </div>
+            </div>
+            <div>
+              <p className={`text-sm font-medium ${text}`}>
+                Click to upload or drag and drop
+              </p>
+              <p className={`text-xs ${textSec} mt-1`}>
+                JPEG, PNG, GIF, or WebP (max 5MB)
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Description Input */}
+      {selectedFile && (
+        <div className="mt-5 space-y-2 animate-[fade-in_0.15s_ease-out]">
+          <label htmlFor="img-description" className={`block text-sm font-medium ${text}`}>
+            Image Description
+          </label>
+          <textarea
+            id="img-description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Describe this image..."
+            className={`w-full px-4 py-3 ${bgElevated} border ${border} rounded-xl text-sm ${text} placeholder:${textMuted} focus:outline-none focus:ring-2 ${ring} resize-none transition-all duration-150`}
+            rows={2}
+          />
+          <p className={`text-[11px] ${textMuted}`}>
+            Optional: Helps with accessibility and SEO
+          </p>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div className="mt-4 p-3 bg-[var(--color-editor-danger)]/10 border border-[var(--color-editor-danger)]/30 rounded-xl">
+          <p className="text-sm text-[var(--color-editor-danger)]">{error}</p>
+        </div>
+      )}
+
+      {/* Upload Button */}
+      {selectedFile && !isUploadDone && (
+        <div className="mt-5 flex gap-3 animate-[fade-in_0.15s_ease-out]">
+          <button
+            onClick={handleUpload}
+            disabled={uploading}
+            className={`flex-1 ${accent} text-white py-3 px-6 rounded-xl font-medium ${accentHover} disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer`}
+          >
+            {uploading ? (
+              <><Loader2 size={18} className="animate-spin" /> Uploading...</>
+            ) : (
+              <><Upload size={18} /> Upload Image</>
+            )}
+          </button>
+          <button
+            onClick={handleClearSelection}
+            disabled={uploading}
+            className={`px-4 py-3 border ${border} ${text} rounded-xl hover:${bgElevated} disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer text-sm`}
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
+      {/* Upload success */}
+      {isUploadDone && (
+        <div className="mt-4 p-3 bg-[var(--color-editor-success)]/10 border border-[var(--color-editor-success)]/30 rounded-xl flex items-center justify-center gap-2 animate-[fade-in_0.15s_ease-out]">
+          <CheckCircle size={18} className="text-[var(--color-editor-success)]" />
+          <span className="text-sm text-[var(--color-editor-success)] font-medium">Image uploaded successfully!</span>
+        </div>
+      )}
+
+      {/* Browse Media */}
+      {!selectedFile && !isUploadDone && (
+        <div className="mt-4 pt-4 border-t border-[var(--color-editor-border)]/40">
+          <button
+            onClick={() => setShowBrowser(true)}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed ${border} ${accentText} rounded-xl ${borderHover} transition-all duration-200 font-medium text-sm cursor-pointer`}
+          >
+            <ImageIcon size={18} />
+            Browse Your Media Library
+          </button>
+        </div>
+      )}
+
+      {showBrowser && (
+        <MediaBrowser
+          onSelect={handleBrowserSelect}
+          onClose={() => setShowBrowser(false)}
+        />
+      )}
+    </div>
+  );
 };
 
 export default ImageUpload;
