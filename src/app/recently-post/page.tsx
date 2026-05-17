@@ -1,6 +1,6 @@
 import axios from 'axios';
 import RecentlyPost from './RecentlyPost';
-import HotSeries from '@/components/hot_series/HotSeries';
+import HotSeries from '@/features/series/components/hot_series/HotSeries';
 
 export default async function MainPage() {
     return (

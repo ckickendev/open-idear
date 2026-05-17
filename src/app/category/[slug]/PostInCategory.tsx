@@ -1,6 +1,6 @@
 'use client';
 
-import Category from "@/app/management/Category";
+import Category from '@/features/categories/components/management/Category';
 import { CategoryLinkCustom, PostLinkCustom } from "@/components/common/LinkCustom";
 import { PaginationComponent } from "@/components/common/PaginationComponent";
 import axios from "axios";

@@ -3,11 +3,11 @@ import React, { useEffect } from "react";
 import axios from "axios";
 import loadingStore from "@/store/LoadingStore";
 import PostElement from "./PostElement";
-import { PostInterface } from "./[profileId]/page";
+import { PostInterface } from "./[username]/page";
 import SeriesElement from "./SeriesElement";
 import { Bookmark, FileText, Layers, Pen } from "lucide-react";
 import EmptyState from "./EmptyState";
-import { getHeadersToken } from "@/api/authentication";
+import { getHeadersToken } from "@/lib/api/axios";
 import alertStore from "@/store/AlertStore";
 
 const AllPost = ({ profileId }: any) => {

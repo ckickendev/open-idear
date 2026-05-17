@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^4.1.3",
     "@radix-ui/react-slot": "^1.2.4",
     "@tiptap/core": "^3.0.3",

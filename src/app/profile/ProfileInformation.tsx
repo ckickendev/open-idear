@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import convertDate from "@/common/datetime";
+import convertDate from '@/common/datetime';
 import authenticationStore from "@/store/AuthenticationStore";
 import loadingStore from '@/store/LoadingStore';
 import axios from 'axios';
@@ -123,7 +123,7 @@ const ProfileInformation = () => {
                                             type="text"
                                         />
                                         {errors.name && (
-                                            <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                                            <p className="text-red-500 text-xs text-sm mt-1">{errors.name.message}</p>
                                         )}
                                     </div>
                                 ) : (
@@ -178,7 +178,7 @@ const ProfileInformation = () => {
                                             placeholder="Nhập tiểu sử của bạn..."
                                         />
                                         {errors.bio && (
-                                            <p className="text-red-500 text-sm mt-1">{errors.bio.message}</p>
+                                            <p className="text-red-500 text-xs text-sm mt-1">{errors.bio.message}</p>
                                         )}
                                     </div>
                                 ) : (

@@ -1,9 +1,9 @@
 "use client"
 import { useEffect, useState } from "react"
 import { AuthenPage } from "./authen/AuthenPage";
-import Profile from "./authen/Profile";
+import Profile from "@/features/users/components/Profile";
 import axios from "axios";
-import { getHeadersToken } from "@/api/authentication";
+import { getHeadersToken } from "@/lib/api/axios";
 import authenticationStore from "@/store/AuthenticationStore";
 
 import { useTranslation } from "@/app/hook/useTranslation";
@@ -22,7 +22,7 @@ export default function Header() {
   const currentUser = authenticationStore((state) => state.currentUser);
   const setCurrentUser = authenticationStore((state) => state.setCurrentUser);
 
-   const initializeLang = useLanguageStore((state) => state.initializeLang);
+  const initializeLang = useLanguageStore((state) => state.initializeLang);
 
   useEffect(() => {
     initializeLang(); // initialize from localStorage on mount
@@ -74,9 +74,9 @@ export default function Header() {
             <Link href='/' className='font-medium lg:hover:text-blue-700 text-slate-900 block text-[15px]'>{t('component.header.home')}</Link>
           </li> */}
           <li className='max-lg:border-b max-lg:py-3 px-3'>
-            <Link href='/course' className='text-white bg-gradient-to-br from-pink-500 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800 font-medium rounded-md text-sm px-4 py-2.5 text-center leading-5 border-'>{t('component.header.course')}</Link>
+            <Link href='/courses' className='text-white bg-gradient-to-br from-pink-500 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800 font-medium rounded-md text-sm px-4 py-2.5 text-center leading-5 border-'>{t('component.header.course')}</Link>
           </li>
-          
+
         </ul>
       </div>
 

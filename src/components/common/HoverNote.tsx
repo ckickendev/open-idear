@@ -59,3 +59,5 @@ const HoverNote = ({ children, note, position = 'top', className = '' }: HoverNo
     </div>
   );
 };
+
+export default HoverNote;

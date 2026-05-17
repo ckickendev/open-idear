@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { SignUp } from "./SignUp";
-import Login from "./Login";
-import LoadingComponent from "../common/Loading";
-import ConfirmSignUp from "./ConfirmSignUp";
-import { ForgotPassword } from "./ForgotPassword";
+import { SignUp } from "@/features/auth/components/SignUp";
+import Login from '@/features/auth/components/Login';
+import LoadingComponent from '@/components/common/Loading';
+import ConfirmSignUp from '@/features/auth/components/ConfirmSignUp';
+import { ForgotPassword } from "@/features/auth/components/ForgotPassword";
 import authenticationStore from "@/store/AuthenticationStore";
 
 

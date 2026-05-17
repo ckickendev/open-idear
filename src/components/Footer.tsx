@@ -1,6 +1,6 @@
 'use client';
 import { useTranslation } from "@/app/hook/useTranslation";
-import Logo from "./common/Logo";
+import Logo from '@/components/common/Logo';
 import Image from "next/image";
 
 export default function Footer() {

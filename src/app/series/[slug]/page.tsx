@@ -1,4 +1,4 @@
-import HotSeries from '@/components/hot_series/HotSeries';
+import HotSeries from '@/features/series/components/hot_series/HotSeries';
 import PostDisplayPageElement from '@/components/PostDisplayPageElement';
 import axios from 'axios';
 import AnotherSeries from './AnotherSeries';

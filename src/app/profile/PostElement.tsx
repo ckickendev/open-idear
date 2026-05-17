@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Bookmark } from "lucide-react";
-import { PostInterface } from "./[profileId]/page";
+import { PostInterface } from "./[username]/page";
 import authenticationStore from "@/store/AuthenticationStore";
 import axios from "axios";
 import alertStore from "@/store/AlertStore";
-import { getHeadersToken } from "@/api/authentication";
+import { getHeadersToken } from "@/lib/api/axios";
 import { CategoryLinkCustom } from "@/components/common/LinkCustom";
 
 const PostElement = ({ post }: { post: PostInterface }) => {

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { getHeadersToken } from "@/api/authentication";
+import { getHeadersToken } from "@/lib/api/axios";
 import axios from "axios";
 import loadingStore from "@/store/LoadingStore";
 import authenticationStore from "@/store/AuthenticationStore";
 import PostElement from "./PostElement";
-import { PostInterface } from "./[profileId]/page";
+import { PostInterface } from "./[username]/page";
 import alertStore from "@/store/AlertStore";
 import SeriesElement from "./SeriesElement";
 import { Bookmark, FileText, Layers } from "lucide-react";

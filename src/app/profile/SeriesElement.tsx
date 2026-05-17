@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Bookmark, Upload } from "lucide-react";
 import authenticationStore from "@/store/AuthenticationStore";
-import { getHeadersToken } from "@/api/authentication";
+import { getHeadersToken } from "@/lib/api/axios";
 import axios from "axios";
 import alertStore from "@/store/AlertStore";
-import ImageUpload from "../create/ImageUpload";
+import ImageUpload from '@/app/create/ImageUpload';
 import { SeriesLinkCustom } from "@/components/common/LinkCustom";
 import { TextAreaCustom } from "@/components/common/TextAreaCustom";
 import { ButtonCyanToBlue, ButtonGreenToBlue, ButtonPinkToOrange, ButtonPurpleToBlue, ButtonRedToYellow } from "@/components/common/ButtonCustom";

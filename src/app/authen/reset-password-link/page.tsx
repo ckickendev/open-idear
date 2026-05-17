@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import LoadingComponent from "@/components/common/Loading";
 import Dialog from "@/components/common/Dialog";
-import axios from "axios";
 import { redirect } from "next/navigation";
-import { REACT_APP_ROOT_BACKEND, resetPassSchema } from "@/components/authen/authentication";
+import { resetPassSchema } from "@/features/auth/components/authentication";
+import { authApi } from '@/features/auth/api/auth.api';
+import { api } from "@/lib/api/axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
+import Banner from "@/components/Banner";
 
 type ResetPassForm = {
     password: string;
@@ -51,15 +53,15 @@ const ConfirmResetPassword = () => {
 
             try {
                 if (access_token && email) {
-                    const res = await axios.post(
-                        `${REACT_APP_ROOT_BACKEND}/auth/confirm-token-access`,
-                        loginInfo
-                    );
-                    if (res.data) {
+                    // Assuming this is custom endpoint not explicitly in authApi
+                    const res = await api.post('/auth/confirm-token-access', loginInfo);
+                    if (res.success) {
                         setUser(res.data.user)
 
                         setIsLoading(false);
                         setFormResetDisp(true);
+                    } else {
+                        throw new Error(res.message);
                     }
                 }
             } catch (err: any) {
@@ -77,11 +79,13 @@ const ConfirmResetPassword = () => {
         setIsLoading(true);
         event.preventDefault();
         try {
-            const res = await axios.post(`${REACT_APP_ROOT_BACKEND}/auth/confirm-new-password`, { password: data.password, emailSent });
-            if (res.data.message) {
+            const res = await authApi.resetPasswordConfirm({ password: data.password, emailSent });
+            if (res.success) {
                 setIsConfirmSuccess(true);
                 setIsLoading(false);
                 return;
+            } else {
+                throw new Error(res.message);
             }
         }
         catch (err: any) {
@@ -156,7 +160,7 @@ const ConfirmResetPassword = () => {
                                                     placeholder="Enter your password"
                                                     required
                                                     {...register("password")} />
-                                                {errors.password && <p className="text-red-500">{errors.password.message}</p>}
+                                                {errors.password && <p className="text-red-500 text-xs">{errors.password.message}</p>}
                                                 <label
                                                     htmlFor="password"
                                                     className="absolute cursor-text left-4 -top-3 text-sm text-gray-600 bg-white px-1 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-placeholder-shown:top-3 peer-focus:-top-3 peer-focus:text-sky-600 peer-focus:text-sm transition-all"
@@ -175,7 +179,7 @@ const ConfirmResetPassword = () => {
                                                     placeholder="Confirm your new password"
                                                     required
                                                     {...register("repassword")} />
-                                                {errors.repassword && <p className="text-red-500">{errors.repassword.message}</p>}
+                                                {errors.repassword && <p className="text-red-500 text-xs">{errors.repassword.message}</p>}
                                                 <label
                                                     htmlFor="repassword"
                                                     className="absolute cursor-text left-4 -top-3 text-sm text-gray-600 bg-white px-1 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-placeholder-shown:top-3 peer-focus:-top-3 peer-focus:text-sky-600 peer-focus:text-sm transition-all"
@@ -186,7 +190,7 @@ const ConfirmResetPassword = () => {
                                         </div>
 
 
-                                        {errorSv && <p className="text-red-500">{errorSv}</p>}
+                                        {errorSv && <p className="text-red-500 text-xs">{errorSv}</p>}
                                         <div>
                                             <button type="submit"
                                                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -213,6 +217,7 @@ const ConfirmResetPassword = () => {
                     />
                 )
             }
+            <Banner />
         </>
     );
 };
