@@ -14,6 +14,6 @@ export const seriesApi = {
         return await api.patch('/series/update', data);
     },
     deleteSeries: async (seriesId: string) => {
-        return await api.delete(`/series/delete/${seriesId}`);
+        return await api.delete('/series/delete', { data: { seriesId } });
     }
 };

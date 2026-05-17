@@ -2,13 +2,16 @@ import { api } from '@/lib/api/axios';
 
 export const courseApi = {
     getAllCourses: async () => {
-        return await api.get('/course/search');
-    },
-    getCoursesByUser: async () => {
         return await api.get('/course');
     },
+    getCoursesByUser: async (status?: string) => {
+        return await api.get(`/course/me${status ? `?status=${status}` : ''}`);
+    },
+    getEnrolledCourses: async () => {
+        return await api.get('/course/enrolled');
+    },
     getCourseById: async (courseId: string) => {
-        return await api.get(`/course/detail?courseId=${courseId}`);
+        return await api.get(`/course/getById?id=${courseId}`);
     },
     createCourse: async (data: any) => {
         return await api.post('/course/create', data);
@@ -45,5 +48,8 @@ export const courseApi = {
     },
     deleteCourse: async (courseId: string) => {
         return await api.delete(`/course?courseId=${courseId}`);
+    },
+    restoreCourse: async (courseId: string) => {
+        return await api.patch(`/course/restore?courseId=${courseId}`);
     }
 };

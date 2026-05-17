@@ -123,7 +123,7 @@ const ProfileInformation = () => {
                                             type="text"
                                         />
                                         {errors.name && (
-                                            <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                                            <p className="text-red-500 text-xs text-sm mt-1">{errors.name.message}</p>
                                         )}
                                     </div>
                                 ) : (
@@ -178,7 +178,7 @@ const ProfileInformation = () => {
                                             placeholder="Nhập tiểu sử của bạn..."
                                         />
                                         {errors.bio && (
-                                            <p className="text-red-500 text-sm mt-1">{errors.bio.message}</p>
+                                            <p className="text-red-500 text-xs text-sm mt-1">{errors.bio.message}</p>
                                         )}
                                     </div>
                                 ) : (

@@ -1,10 +1,26 @@
 'use client';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import loadingStore from "@/store/LoadingStore";
 import { Play, Check, ChevronDown, ChevronUp, Globe, Info, Clock, Smartphone, Infinity, Award } from 'lucide-react';
 import Link from 'next/link';
+import { api } from '@/lib/api/axios';
+
+type Lesson = {
+    _id: string;
+    title: string;
+    type: string;
+    isFreePreview: boolean;
+    order: number;
+};
+
+type Chapter = {
+    _id: string;
+    title: string;
+    order: number;
+    lessons: Lesson[];
+};
 
 type Course = {
     _id: string;
@@ -15,19 +31,34 @@ type Course = {
     discountPrice?: number;
     thumbnail: { url: string };
     instructor: { name: string; avatar: string; bio: string };
-    lessons: {
-        _id: string;
-        title: string;
-        type: string;
-        isFreePreview: boolean;
-        order: number;
-    }[];
+    chapters: Chapter[];
 };
 
 const CourseDetail = () => {
     const { slug } = useParams();
+    const router = useRouter();
     const [course, setCourse] = useState<Course | null>(null);
+    const [isEnrolling, setIsEnrolling] = useState(false);
+    const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
     const changeLoad = loadingStore(state => state.changeLoad);
+
+    const toggleChapter = (chapterId: string) => {
+        setExpandedChapters(prev => 
+            prev.includes(chapterId) 
+                ? prev.filter(id => id !== chapterId)
+                : [...prev, chapterId]
+        );
+    };
+
+    const toggleAllChapters = () => {
+        if (expandedChapters.length === (course?.chapters?.length || 0)) {
+            setExpandedChapters([]);
+        } else {
+            setExpandedChapters(course?.chapters?.map(c => c._id) || []);
+        }
+    };
+
+    const totalLessons = course?.chapters?.reduce((acc, chap) => acc + (chap.lessons?.length || 0), 0) || 0;
 
     useEffect(() => {
         const fetchCourse = async () => {
@@ -43,6 +74,25 @@ const CourseDetail = () => {
         };
         fetchCourse();
     }, [slug]);
+
+    const handleEnroll = async () => {
+        if (!course) return;
+        try {
+            setIsEnrolling(true);
+            const response = await api.post('/course/enroll', { courseId: course._id });
+            if (response.success) {
+                alert('Đăng ký khóa học thành công!');
+                router.push('/management/my-courses');
+            } else {
+                alert(response.message || 'Có lỗi xảy ra khi đăng ký!');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Có lỗi xảy ra khi đăng ký!');
+        } finally {
+            setIsEnrolling(false);
+        }
+    };
 
     if (!course) return null;
 
@@ -95,23 +145,57 @@ const CourseDetail = () => {
                     {/* Curriculum */}
                     <div className="mb-8">
                         <h2 className="text-2xl font-bold mb-4">Nội dung khóa học</h2>
-                        <div className="flex justify-between text-sm text-gray-600 mb-2">
-                            <span>{course.lessons?.length || 0} bài giảng • Tổng thời lượng 12h 34m</span>
-                            <button className="text-blue-600 font-bold hover:text-blue-800">Mở rộng tất cả</button>
+                        <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
+                            <span>{course.chapters?.length || 0} phần • {totalLessons} bài giảng • Tổng thời lượng 12h 34m</span>
+                            <button 
+                                onClick={toggleAllChapters}
+                                className="text-blue-600 font-bold hover:text-blue-800"
+                            >
+                                {expandedChapters.length === (course.chapters?.length || 0) && course.chapters?.length > 0 ? 'Thu gọn tất cả' : 'Mở rộng tất cả'}
+                            </button>
                         </div>
                         <div className="border border-gray-200 rounded-lg overflow-hidden">
-                            {course.lessons?.map((lesson, idx) => (
-                                <div key={lesson._id} className="border-b border-gray-200 last:border-0 p-4 hover:bg-gray-50 flex items-center justify-between group">
-                                    <div className="flex items-center gap-3">
-                                        <Play size={14} className="text-gray-400" />
-                                        <span className="text-sm text-gray-800">{lesson.title}</span>
+                            {course.chapters?.length > 0 ? (
+                                course.chapters.map((chapter) => (
+                                    <div key={chapter._id} className="border-b border-gray-200 last:border-0">
+                                        <button 
+                                            onClick={() => toggleChapter(chapter._id)}
+                                            className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                {expandedChapters.includes(chapter._id) ? <ChevronUp size={18} className="text-gray-600" /> : <ChevronDown size={18} className="text-gray-600" />}
+                                                <span className="font-bold text-gray-900">{chapter.title}</span>
+                                            </div>
+                                            <span className="text-sm text-gray-500">{chapter.lessons?.length || 0} bài giảng</span>
+                                        </button>
+                                        
+                                        {expandedChapters.includes(chapter._id) && (
+                                            <div className="bg-white">
+                                                {chapter.lessons?.length > 0 ? (
+                                                    chapter.lessons.map((lesson) => (
+                                                        <div key={lesson._id} className="p-4 pl-10 hover:bg-gray-50 flex items-center justify-between group border-t border-gray-100 first:border-0">
+                                                            <div className="flex items-center gap-3">
+                                                                {lesson.type === 'video' ? <Play size={14} className="text-gray-400" /> : <Globe size={14} className="text-gray-400" />}
+                                                                <span className="text-sm text-gray-800">{lesson.title}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-4">
+                                                                {lesson.isFreePreview && <span className="text-blue-600 font-bold text-xs underline cursor-pointer">Xem trước</span>}
+                                                                <span className="text-xs text-gray-400">05:20</span>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="p-4 pl-10 text-sm text-gray-500 italic">Chưa có bài giảng nào trong phần này.</div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                        {lesson.isFreePreview && <button className="text-blue-600 font-bold text-xs underline">Xem trước</button>}
-                                        <span className="text-xs text-gray-400">05:20</span>
-                                    </div>
+                                ))
+                            ) : (
+                                <div className="p-6 text-center text-gray-500">
+                                    Khóa học này chưa có nội dung.
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </div>
 
@@ -152,7 +236,7 @@ const CourseDetail = () => {
                                     <>
                                         <span className="text-3xl font-bold">{course.discountPrice.toLocaleString()} VNĐ</span>
                                         <span className="text-gray-500 line-through text-lg">{course.price.toLocaleString()} VNĐ</span>
-                                        <span className="text-red-500 font-bold text-sm">
+                                        <span className="text-red-500 text-xs font-bold text-sm">
                                             {Math.round(((course.price - course.discountPrice) / course.price) * 100)}% Giảm
                                         </span>
                                     </>
@@ -162,12 +246,24 @@ const CourseDetail = () => {
                             </div>
 
                             <div className="flex flex-col gap-3 mb-6">
-                                <button className="w-full bg-purple-600 text-white font-bold py-3 rounded hover:bg-purple-700 transition-colors">
-                                    Thêm vào giỏ hàng
+                                <button 
+                                    onClick={() => router.push(`/courses/${course.slug}/learn`)}
+                                    className="w-full bg-[var(--color-admin-primary)] text-white font-bold py-3 rounded hover:bg-[var(--color-admin-primary-hover)] transition-colors shadow-md flex items-center justify-center gap-2"
+                                >
+                                    <Play size={18} /> Vào học ngay
                                 </button>
-                                <button className="w-full border border-gray-900 font-bold py-3 rounded hover:bg-gray-50 transition-colors">
-                                    Mua ngay
-                                </button>
+                                <div className="flex gap-3">
+                                    <button className="flex-1 border border-gray-900 font-bold py-3 rounded hover:bg-gray-50 transition-colors">
+                                        Giỏ hàng
+                                    </button>
+                                    <button
+                                        onClick={handleEnroll}
+                                        disabled={isEnrolling}
+                                        className="flex-1 bg-gray-900 text-white font-bold py-3 rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                    >
+                                        {isEnrolling ? 'Đang...' : 'Mua ngay'}
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="text-center text-xs text-gray-500 mb-6">30-Day Money-Back Guarantee</div>

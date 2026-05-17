@@ -2,13 +2,13 @@ import { api } from '@/lib/api/axios';
 
 export const userApi = {
     getUsersList: async (params?: any) => {
-        return await api.get('/user/getUsersList', { params });
+        return await api.get('/user', { params });
     },
     updateProfile: async (data: any) => {
-        return await api.post('/user/update-profile', data);
+        return await api.patch('/user/updateProfile', data);
     },
     getProfile: async (profileId: string) => {
-        return await api.get(`/user/profilePaging?targetId=${profileId}`);
+        return await api.get(`/auth/getProfileById?id=${profileId}`);
     },
     updateRole: async (userId: string, roleNum: number) => {
         return await api.post(`/user/updateRole?userId=${userId}&roleNum=${roleNum}`);
@@ -24,6 +24,9 @@ export const userApi = {
     },
     deleteUser: async (userId: string) => {
         return await api.delete(`/user/delete/${userId}`);
+    },
+    restoreUser: async (userId: string) => {
+        return await api.patch(`/user/restore/${userId}`);
     },
     toggleUserStatus: async (userId: string, data: any) => {
         return await api.patch(`/user/toggle-status/${userId}`, data);

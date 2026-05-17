@@ -218,7 +218,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
                         {!isUploading && uploadState !== 'done' && (
                             <button
                                 onClick={clearFile}
-                                className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                                className="text-gray-400 hover:text-red-500 text-xs transition-colors cursor-pointer"
                                 aria-label="Remove file"
                             >
                                 <X size={16} />

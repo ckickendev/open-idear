@@ -177,7 +177,7 @@ const ConfirmSignUp = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }:
                         onInput={(e) => handleInput(e, 6)}
                         ref={inputRef6} />
                 </div>
-                {errorSv && <p className="text-red-500">{errorSv}</p>}
+                {errorSv && <p className="text-red-500 text-xs">{errorSv}</p>}
 
                 <div className="max-w-[260px] mx-auto mt-4">
                     <button type="submit"

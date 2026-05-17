@@ -104,7 +104,7 @@ const HotPost: React.FC = () => {
                 </div>
                 <div className="flex-1 justify-between">
                   <div className="flex items-center">
-                    <UserLinkCustom className="text-sm font-medium cursor-pointer hover:underline" id={article.author._id} name={article.author.name} />
+                    <UserLinkCustom className="text-sm font-medium cursor-pointer hover:underline" username={article.author.username} name={article.author.name} />
                     {article.author.verified && (
                       <CheckCircle size={14} className="ml-1 text-blue-500" />
                     )}

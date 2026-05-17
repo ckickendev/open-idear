@@ -3,11 +3,15 @@ import convertDate from '@/common/datetime';
 import alertStore from "@/store/AlertStore";
 import loadingStore from "@/store/LoadingStore";
 import { categoryApi } from '@/features/categories/api/category.api';
-import { Edit, Filter, Plus, Search, Trash2, X, ChevronLeft, ChevronRight, Eye, ImageUp } from "lucide-react";
+import { Edit, Plus, Trash2, Eye, X, Folder } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from '@/app/hook/useTranslation';
-import ImageUpload from '@/app/create/ImageUpload';
 import { TextAreaCustom } from "@/components/common/TextAreaCustom";
+import AdminSearchInput from '@/components/admin/AdminSearchInput';
+import AdminPagination from '@/components/admin/AdminPagination';
+import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import EmptyState from '@/components/admin/EmptyState';
+import TableSkeleton from '@/components/admin/TableSkeleton';
 
 type CategoryType = {
     _id: string;
@@ -25,120 +29,55 @@ const Category = () => {
     const [selectedItem, setSelectedItem] = useState<CategoryType | null>(null);
     const [categories, setCategories] = useState<CategoryType[]>([]);
     const [page, setPage] = useState(1);
+    const [isDataLoading, setIsDataLoading] = useState(true);
+    const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+    const [listStatus, setListStatus] = useState<'all' | 'trash'>('all');
 
-    // Pagination settings
-    const itemsPerPage = 15; // You can adjust this number
-
+    const itemsPerPage = 15;
     const setType = alertStore((state) => state.setType);
     const setMessage = alertStore((state) => state.setMessage);
     const changeLoad = loadingStore((state) => state.changeLoad);
-
     const { t } = useTranslation();
 
     useEffect(() => {
         const fetchCategories = async () => {
             try {
                 changeLoad();
-                const response = await categoryApi.getCategories();
-                console.log('Fetched categories:', response.data.categories);
+                setIsDataLoading(true);
+                const response = await categoryApi.getCategories(listStatus);
                 if (response.success) {
                     setCategories(response.data.categories);
                 } else throw new Error(response.message);
             } catch (error: any) {
                 setType('error');
-                setMessage(error?.response?.data?.message || error?.message)
-                console.error('Error fetching categories:', error);
+                setMessage(error?.response?.data?.message || error?.message);
             } finally {
                 changeLoad();
+                setIsDataLoading(false);
             }
         };
         fetchCategories();
-    }, []);
+    }, [listStatus]);
 
-    const [formData, setFormData] = useState({
-        _id: '',
-        name: '',
-        slug: '',
-        description: '',
-    });
+    const [formData, setFormData] = useState({ _id: '', name: '', slug: '', description: '' });
 
-    // Pagination logic
     const filteredCategories = categories.filter(cat =>
         cat.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
     const startIndex = (page - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentCategories = filteredCategories.slice(startIndex, endIndex);
+    const currentCategories = filteredCategories.slice(startIndex, startIndex + itemsPerPage);
 
-    // Reset to first page when search term changes
-    useEffect(() => {
-        setPage(1);
-    }, [searchTerm]);
+    useEffect(() => { setPage(1); }, [searchTerm]);
 
-    // Pagination functions
-    const goToPage = (pageNumber: number) => {
-        if (pageNumber >= 1 && pageNumber <= totalPages) {
-            setPage(pageNumber);
-        }
-    };
-
-    const goToPreviousPage = () => {
-        if (page > 1) {
-            setPage(page - 1);
-        }
-    };
-
-    const goToNextPage = () => {
-        if (page < totalPages) {
-            setPage(page + 1);
-        }
-    };
-
-    // Generate page numbers to display
-    const getPageNumbers = () => {
-        const pageNumbers = [];
-        const maxVisiblePages = 5;
-
-        if (totalPages <= maxVisiblePages) {
-            // Show all pages if total pages is less than or equal to max visible pages
-            for (let i = 1; i <= totalPages; i++) {
-                pageNumbers.push(i);
-            }
-        } else {
-            // Show pages around current page
-            let startPage = Math.max(1, page - 2);
-            let endPage = Math.min(totalPages, page + 2);
-
-            // Adjust if we're near the beginning or end
-            if (page <= 3) {
-                endPage = maxVisiblePages;
-            } else if (page >= totalPages - 2) {
-                startPage = totalPages - maxVisiblePages + 1;
-            }
-
-            for (let i = startPage; i <= endPage; i++) {
-                pageNumbers.push(i);
-            }
-        }
-
-        return pageNumbers;
-    };
-
-    const openModal = (type: any, item: CategoryType | null = null) => {
+    const openModal = (type: string, item: CategoryType | null = null) => {
         setModalType(type);
         setSelectedItem(item);
-        if (item) {
-            setFormData({
-                _id: item._id,
-                name: item.name || '',
-                slug: item.slug,
-                description: item.description || '',
-            });
-        } else {
-            setFormData({ _id: '', name: '', slug: '', description: '' });
-        }
+        setFormData(item
+            ? { _id: item._id, name: item.name || '', slug: item.slug, description: item.description || '' }
+            : { _id: '', name: '', slug: '', description: '' }
+        );
         setShowModal(true);
     };
 
@@ -157,10 +96,8 @@ const Category = () => {
                     slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
                     description: formData.description,
                 });
-                if(newCategory.success) {
+                if (newCategory.success) {
                     setCategories([...categories, newCategory.data.category]);
-                    setFormData({ _id: '', name: '', slug: '', description: '' });
-
                     setType('info');
                     setMessage(t('management.category.add_success'));
                 } else throw new Error(newCategory.message);
@@ -182,332 +119,259 @@ const Category = () => {
             changeLoad();
             return;
         }
-
-        const updatedCategory = {
+        categoryApi.updateCategory(selectedItem?._id as string, {
             _id: selectedItem?._id,
             name: formData.name,
             slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
             description: formData.description,
-        };
-
-        categoryApi.updateCategory(selectedItem?._id as string, updatedCategory)
+        })
             .then(response => {
-                if(response.success) {
+                if (response.success) {
                     setCategories(categories.map(cat =>
                         cat._id === selectedItem?._id ? response.data.category : cat
                     ));
-                    setFormData({ _id: '', name: '', slug: '', description: '' });
-                    setSelectedItem(null);
-
                     setType('info');
                     setMessage(t('management.category.update_success'));
                 } else throw new Error(response.message);
             })
-            .catch(error => {
-                setType('error');
-                setMessage(error?.message);
-            })
-            .finally(() => {
-                setShowModal(false);
-                changeLoad();
-            });
+            .catch(error => { setType('error'); setMessage(error?.message); })
+            .finally(() => { setShowModal(false); changeLoad(); });
     };
 
     const handleDeleteCategory = (id: string) => {
-        if (window.confirm(t('management.category.are_you_sure_delete'))) {
-            changeLoad();
-            categoryApi.deleteCategory(id)
-                .then(response => {
-                    if (response.success) {
-                        setType('info');
-                        setMessage('Xóa danh mục thành công');
-                    } else throw new Error(response.message);
-                })
-                .catch(error => {
-                    setType('error');
-                    setMessage(error?.message);
-                })
-                .finally(() => changeLoad());
+        changeLoad();
+        categoryApi.deleteCategory(id)
+            .then(response => {
+                if (response.success) { setType('info'); setMessage('Xóa danh mục thành công'); }
+                else throw new Error(response.message);
+            })
+            .catch(error => { setType('error'); setMessage(error?.message); })
+            .finally(() => changeLoad());
+        setCategories(categories.filter(cat => cat._id !== id));
+    };
 
-            const newCategories = categories.filter(cat => cat._id !== id);
-            setCategories(newCategories);
-
-            // Adjust current page if necessary after deletion
-            const newFilteredCategories = newCategories.filter(cat =>
-                cat.name.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            const newTotalPages = Math.ceil(newFilteredCategories.length / itemsPerPage);
-            if (page > newTotalPages && newTotalPages > 0) {
-                setPage(newTotalPages);
-            }
-        }
+    const handleRestoreCategory = (id: string) => {
+        changeLoad();
+        categoryApi.restoreCategory(id)
+            .then(response => {
+                if (response.success) {
+                    setType('info');
+                    setMessage('Khôi phục danh mục thành công');
+                    setCategories(categories.filter(cat => cat._id !== id));
+                }
+                else throw new Error(response.message);
+            })
+            .catch(error => { setType('error'); setMessage(error?.message); })
+            .finally(() => changeLoad());
     };
 
     return (
-        <div className="h-full space-y-6 relative flex flex-col justify-between">
-            <div className="w-full">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-                    <h1 className="text-2xl font-bold text-gray-900">{t('management.category.title')}</h1>
-                    <button
-                        onClick={() => openModal('add')}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
-                    >
-                        <Plus size={16} />
-                        {t('management.category.add')}
-                    </button>
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 className="text-xl font-semibold text-gray-900">{t('management.category.title')}</h1>
+                    <p className="text-sm text-gray-500 mt-1">Quản lý các danh mục của hệ thống</p>
                 </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                        <input
-                            type="text"
-                            placeholder={t('management.category.find')}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
-                        />
-                    </div>
-                    <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors">
-                        <Filter size={16} />
-                        <span className="hidden sm:inline">Lọc</span>
-                    </button>
-                </div>
-
-                {/* Results info */}
-                <div className="text-sm text-gray-600 mb-4">
-                    {t('management.category.display')} {startIndex + 1}-{Math.min(endIndex, filteredCategories.length)} / {filteredCategories.length} {t('management.category.cate')}
-                    {searchTerm && ` (filter from ${categories.length} total)`}
-                </div>
-
-                {/* Single Responsive Table */}
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    {/* Table for larger screens */}
-                    <table className="min-w-full divide-y divide-gray-200 hidden sm:table">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.number')}</th>
-                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.name')}</th>
-                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">{t('management.category.description')}</th>
-                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.background_image')}</th>
-                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">{t('management.category.createDate')}</th>
-                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('management.category.action')}</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {currentCategories.map((category, index) => (
-                                <tr key={category._id} className="hover:bg-gray-50">
-                                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {startIndex + index + 1}
-                                    </td>
-                                    <td className="px-3 sm:px-6 py-4">
-                                        <div className="space-y-1">
-                                            <div className="text-sm font-medium text-gray-900">{category.name}</div>
-                                            {/* Show description and date on mobile/tablet in subtitle */}
-                                            <div className="text-xs text-gray-500 lg:hidden">
-                                                <div className="truncate max-w-xs">{category.description}</div>
-                                                <div>Ngày tạo: {convertDate(category.createdAt)}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-3 sm:px-6 py-4 hidden lg:table-cell">
-                                        <div className="text-sm text-gray-600 max-w-xs truncate">{category.description}</div>
-                                    </td>
-                                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-blue-800">
-                                            <a href={`${category.background_image || `background/category/${category._id}.png`}`} target="_blank" rel="noopener noreferrer">
-                                                <Eye size={14} className="mr-1" />
-                                            </a>
-                                        </span>
-                                    </td>
-                                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
-                                        {convertDate(category.createdAt)}
-                                    </td>
-                                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div className="flex items-center gap-1 sm:gap-2">
-                                            <button
-                                                onClick={() => openModal('edit', category)}
-                                                className="text-blue-600 hover:text-blue-900 p-1 sm:p-2 rounded hover:bg-blue-50 cursor-pointer transition-colors"
-                                            >
-                                                <Edit size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteCategory(category._id)}
-                                                className="text-red-600 hover:text-red-900 p-1 sm:p-2 rounded hover:bg-red-50 cursor-pointer transition-colors"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                            {currentCategories.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="px-3 sm:px-6 py-4 text-center text-gray-500">
-                                        {searchTerm ? 'Không tìm thấy danh mục nào phù hợp' : 'Chưa có danh mục nào'}
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-
-                    {/* Mobile Card View */}
-                    <div className="sm:hidden space-y-4 p-4">
-                        {currentCategories.map((category, index) => (
-                            <div key={category._id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                <div className="flex justify-between items-start mb-3">
-                                    <div className="flex-1">
-                                        <div className="text-sm font-semibold text-gray-900 mb-1">
-                                            #{startIndex + index + 1} - {category.name}
-                                        </div>
-                                        <div className="text-xs text-gray-500 space-y-1">
-                                            <div className="line-clamp-2">{category.description}</div>
-                                            <div>Ngày tạo: <span className="font-medium">{convertDate(category.createdAt)}</span></div>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 ml-4">
-                                        <button
-                                            onClick={() => openModal('edit', category)}
-                                            className="text-blue-600 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-colors"
-                                        >
-                                            <Edit size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteCategory(category._id)}
-                                            className="text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="flex justify-between items-center pt-3 border-t border-gray-300">
-                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-blue-800">
-                                        <a href={`${category.background_image}`} target="_blank" rel="noopener noreferrer">
-                                            <Eye size={14} className="mr-1" />
-                                        </a>
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
-                        {currentCategories.length === 0 && (
-                            <div className="text-center py-8 text-gray-500">
-                                {searchTerm ? 'Không tìm thấy danh mục nào phù hợp' : 'Chưa có danh mục nào'}
-                            </div>
-                        )}
-                    </div>
-                </div>
+                <button
+                    onClick={() => openModal('add')}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors focus:outline-none focus:ring-2 focus:ring-admin-primary-ring"
+                >
+                    <Plus size={16} />
+                    {t('management.category.add')}
+                </button>
             </div>
 
+            {/* Tabs */}
+            <div className="flex gap-4 border-b border-gray-200">
+                <button
+                    onClick={() => setListStatus('all')}
+                    className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${listStatus === 'all'
+                        ? 'border-admin-primary text-admin-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                >
+                    Tất cả
+                </button>
+                <button
+                    onClick={() => setListStatus('trash')}
+                    className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${listStatus === 'trash'
+                        ? 'border-admin-primary text-admin-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                >
+                    Thùng rác
+                </button>
+            </div>
 
-            {/* Enhanced Pagination */}
-            {totalPages > 1 && (
-                <div className="flex justify-center items-center mt-6">
-                    <div className="flex items-center space-x-1">
-                        {/* Previous Button */}
-                        <button
-                            onClick={goToPreviousPage}
-                            disabled={page === 1}
-                            className={`flex items-center justify-center px-3 h-8 leading-tight border border-gray-300 rounded-l-lg transition-colors ${page === 1
-                                ? 'text-gray-300 bg-gray-100 cursor-not-allowed'
-                                : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700'
-                                }`}
-                        >
-                            <ChevronLeft size={16} />
-                            <span className="ml-1">{t('management.category.previous')}</span>
-                        </button>
+            {/* Search */}
+            <AdminSearchInput value={searchTerm} onChange={setSearchTerm} placeholder={t('management.category.find')} />
 
-                        {/* Page Numbers */}
-                        {getPageNumbers().map((pageNumber) => (
-                            <button
-                                key={pageNumber}
-                                onClick={() => goToPage(pageNumber)}
-                                className={`flex items-center justify-center px-3 h-8 leading-tight border border-gray-300 transition-colors ${pageNumber === page
-                                    ? 'text-blue-600 bg-blue-50 border-blue-300 hover:bg-blue-100 hover:text-blue-700'
-                                    : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700'
-                                    }`}
-                            >
-                                {pageNumber}
-                            </button>
-                        ))}
+            {/* Results */}
+            <p className="text-sm text-gray-500">
+                {filteredCategories.length} {t('management.category.cate')}
+                {searchTerm && <span className="text-gray-400"> (lọc từ {categories.length} tổng cộng)</span>}
+            </p>
 
-                        {/* Next Button */}
-                        <button
-                            onClick={goToNextPage}
-                            disabled={page === totalPages}
-                            className={`flex items-center justify-center px-3 h-8 leading-tight border border-gray-300 rounded-r-lg transition-colors ${page === totalPages
-                                ? 'text-gray-300 bg-gray-100 cursor-not-allowed'
-                                : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700'
-                                }`}
-                        >
-                            <span className="mr-1">{t('management.category.next')}</span>
-                            <ChevronRight size={16} />
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {showModal && (
-                <div className="fixed inset-0 bg-gray-500/50 bg-opacity-70 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-semibold">
-                                {modalType === 'add' ? 'Thêm danh mục mới' : 'Chỉnh sửa danh mục'}
-                            </h3>
-                            <button
-                                onClick={closeModal}
-                                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                            >
-                                <X size={20} />
-                            </button>
+            {/* Table */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-admin-sm overflow-hidden">
+                {isDataLoading ? (
+                    <TableSkeleton columns={5} rows={6} />
+                ) : currentCategories.length === 0 ? (
+                    <EmptyState
+                        icon={Folder}
+                        title={searchTerm ? 'Không tìm thấy danh mục' : 'Chưa có danh mục nào'}
+                        description={searchTerm ? 'Thử thay đổi từ khóa tìm kiếm' : 'Bắt đầu bằng cách thêm danh mục đầu tiên'}
+                        actionLabel={!searchTerm ? t('management.category.add') : undefined}
+                        onAction={!searchTerm ? () => openModal('add') : undefined}
+                    />
+                ) : (
+                    <>
+                        {/* Desktop */}
+                        <div className="hidden sm:block overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="bg-gray-50/80 border-b border-gray-100">
+                                        <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-12">#</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('management.category.name')}</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">{t('management.category.description')}</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('management.category.background_image')}</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">{t('management.category.createDate')}</th>
+                                        <th className="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('management.category.action')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {currentCategories.map((category, index) => (
+                                        <tr key={category._id} className="hover:bg-gray-50/50 transition-colors duration-100">
+                                            <td className="px-6 py-4 text-sm text-gray-400 font-medium">{startIndex + index + 1}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm font-medium text-gray-900">{category.name}</div>
+                                                <div className="text-xs text-gray-400 mt-0.5 lg:hidden truncate max-w-xs">{category.description}</div>
+                                            </td>
+                                            <td className="px-6 py-4 hidden lg:table-cell">
+                                                <div className="text-sm text-gray-500 max-w-xs truncate">{category.description}</div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <a href={category.background_image || `background/category/${category._id}.png`} target="_blank" rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1 text-admin-primary hover:underline text-sm">
+                                                    <Eye size={14} /> Xem
+                                                </a>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-500 hidden lg:table-cell whitespace-nowrap">
+                                                {convertDate(category.createdAt)}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    {listStatus === 'trash' ? (
+                                                        <button onClick={() => handleRestoreCategory(category._id)} className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap" title="Khôi phục">
+                                                            Khôi phục
+                                                        </button>
+                                                    ) : (
+                                                        <>
+                                                            <button onClick={() => openModal('edit', category)} className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light transition-colors" title="Chỉnh sửa">
+                                                                <Edit size={16} />
+                                                            </button>
+                                                            <button onClick={() => setConfirmDelete(category._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors" title="Xóa">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
 
-                        <div className="space-y-4">
+                        {/* Mobile */}
+                        <div className="sm:hidden divide-y divide-gray-100">
+                            {currentCategories.map((category, index) => (
+                                <div key={category._id} className="p-4 hover:bg-gray-50/50 transition-colors">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-medium text-gray-900">{category.name}</div>
+                                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{category.description}</p>
+                                            <p className="text-xs text-gray-400 mt-1">{convertDate(category.createdAt)}</p>
+                                        </div>
+                                        <div className="flex items-center gap-1 flex-shrink-0">
+                                            {listStatus === 'trash' ? (
+                                                <button onClick={() => handleRestoreCategory(category._id)} className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap">
+                                                    Khôi phục
+                                                </button>
+                                            ) : (
+                                                <>
+                                                    <button onClick={() => openModal('edit', category)} className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light">
+                                                        <Edit size={16} />
+                                                    </button>
+                                                    <button onClick={() => setConfirmDelete(category._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50">
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
+            </div>
+
+            <AdminPagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+
+            <ConfirmDialog
+                isOpen={!!confirmDelete}
+                onClose={() => setConfirmDelete(null)}
+                onConfirm={() => confirmDelete && handleDeleteCategory(confirmDelete)}
+                title="Xóa danh mục"
+                message="Bạn có chắc chắn muốn xóa danh mục này? Hành động này không thể hoàn tác."
+                confirmText="Xóa"
+                variant="danger"
+            />
+
+            {/* Add/Edit Modal */}
+            {showModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" onClick={closeModal} />
+                    <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                {modalType === 'add' ? 'Thêm danh mục mới' : 'Chỉnh sửa danh mục'}
+                            </h3>
+                            <button onClick={closeModal} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                                     {t('management.category.name')} <span className="text-red-500">*</span>
                                 </label>
                                 <input
-                                    type="text"
-                                    value={formData.name}
+                                    type="text" value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
+                                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-admin-primary focus:ring-2 focus:ring-admin-primary-ring transition-all"
                                     placeholder={t('management.category.input_name')}
                                 />
                             </div>
-
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    {t('management.category.description')}
-                                </label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('management.category.description')}</label>
                                 <TextAreaCustom id="description" value={formData.description} onChange={(e: any) => setFormData({ ...formData, description: e.target.value })} rows={3} placeholder={t('management.category.input_description')} />
                             </div>
-
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Slug
-                                </label>
-                                <input
-                                    disabled={true}
-                                    type="text"
-                                    value={formData.slug}
-                                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                                    className="w-full px-3 py-2 border bg-gray-200 border-gray-500 focus:outline-none focus:border-red-500 rounded-lg"
-                                    placeholder="Default slug will be generated from name"
-                                />
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Slug</label>
+                                <input disabled type="text" value={formData.slug}
+                                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-500"
+                                    placeholder="Slug sẽ được tạo tự động" />
                             </div>
                         </div>
-
-                        <div className="flex justify-end gap-3 mt-6">
-                            <button
-                                onClick={closeModal}
-                                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                            >
+                        <div className="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 rounded-b-xl border-t border-gray-100">
+                            <button onClick={closeModal} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                 {t('management.category.cancel')}
                             </button>
-                            <button
-                                onClick={modalType === 'add' ? handleAddCategory : handleEditCategory}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                            >
+                            <button onClick={modalType === 'add' ? handleAddCategory : handleEditCategory}
+                                className="px-4 py-2 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors">
                                 {modalType === 'add' ? 'Thêm mới' : 'Cập nhật'}
                             </button>
                         </div>

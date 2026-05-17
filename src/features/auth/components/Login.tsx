@@ -92,7 +92,7 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
                                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                 placeholder={t("component.authen.login.useroremail_placeholder")}
                                 {...register("account")} />
-                            {errors.account && <p className="text-red-500">{errors.account.message}</p>}
+                            {errors.account && <p className="text-red-500 text-xs">{errors.account.message}</p>}
                         </div>
                     </div>
 
@@ -105,7 +105,7 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
                                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                 placeholder={t("component.authen.login.password_placeholder")}
                                 {...register("password")} />
-                            {errors.password && <p className="text-red-500">{errors.password.message}</p>}
+                            {errors.password && <p className="text-red-500 text-xs">{errors.password.message}</p>}
                         </div>
                     </div>
 
@@ -124,7 +124,7 @@ const Login = ({ setAuthenState, setIsLoading, setIsAuthenFromDisplay }: ModalAu
                             </a>
                         </div>
                     </div>
-                    {errorSv && <p className="text-red-500">{errorSv}</p>}
+                    {errorSv && <p className="text-red-500 text-xs">{errorSv}</p>}
                     <div>
                         <button type="submit"
                             className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">

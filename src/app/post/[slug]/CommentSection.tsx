@@ -249,7 +249,7 @@ function CommentItem({ comment, onReply, onVote, onLoadMoreReplies }: CommentIte
       <div className="comment-header flex items-center gap-3 mb-2">
         <Image src={comment.author.avatar || '/default-avatar.png'} alt={comment.author.username} width={32} height={32} className="w-8 h-8 rounded-full" />
         <span className="font-semibold text-gray-800">
-          <Link href={`/profile/${comment?.author?._id}`}>
+          <Link href={`/profile/${comment?.author?.username}`}>
             {comment.author.username}
           </Link>
         </span>

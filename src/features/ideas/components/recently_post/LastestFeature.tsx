@@ -7,7 +7,7 @@ import axios from "axios";
 import loadingStore from "@/store/LoadingStore";
 import LoadingComponent from '@/components/common/Loading';
 import MainFeature from "./MainFeature";
-import { PostInterface } from "@/app/profile/[profileId]/page";
+import { PostInterface } from "@/app/profile/[username]/page";
 import ArticleRightSide from "./ArticleRightSide";
 import Link from "next/link";
 
@@ -27,6 +27,8 @@ const LastestFeature = () => {
         const token = localStorage.getItem("access_token");
         if (token) {
           const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getRecentlyData`);
+          console.log("recently data:", response.data);
+
           if (response.status === 200) {
             setAllCategory((old) => [...old, ...response.data.recentlyData.categories]);
             setAllPosts(response.data.recentlyData.posts);
@@ -81,10 +83,9 @@ const LastestFeature = () => {
     });
   };
 
-  return (
+    return (
     <>
-      <div className="max-w-6xl mx-auto p-4 border-1 border-gray-300 rounded p-4">
-        <LoadingComponent isLoading={isLoading} />
+      <div className="max-w-6xl mx-auto p-4 border-1 border-gray-300 rounded">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
             <h2 className="font-bold text-xl text-gray-800 mr-6">
