@@ -1,157 +1,157 @@
-'use client'
+'use client';
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useEditor, EditorContent, Editor } from '@tiptap/react';
+import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
-import Underline from '@tiptap/extension-underline'
-import { TextStyleKit } from '@tiptap/extension-text-style'
+import Underline from '@tiptap/extension-underline';
+import { TextStyleKit } from '@tiptap/extension-text-style';
 import { Extension } from '@tiptap/core';
-import Head from 'next/head';
 import Paragraph from '@tiptap/extension-paragraph';
-
-import "./edit.css";
-import Toolbar from './ToolBar';
 import Color from '@tiptap/extension-color';
-import { Code, Eye, EyeOff, Globe, MessageCircleQuestion, Plus, Save } from 'lucide-react';
-import FloatingToolbar from './FloatingToolbar';
 import CodeBlock from '@tiptap/extension-code-block';
+import FileHandler from '@tiptap/extension-file-handler';
+
+import './create-editor.css';
+import Toolbar from './ToolBar';
+import HtmlEditor, { RawHtmlExtension } from './HtmlEditor';
+import BlockInsertButton from './FloatingToolbar';
+import PostListPanel from './PostLists';
+import EditorHeader from './EditorHeader';
+import EditorTitle from './EditorTitle';
+import PublishDrawer from './PublishDrawer';
+import WriterMetrics from './WriterMetrics';
+import SaveStatusIndicator, { SaveStatus } from './SaveStatusIndicator';
+import Instruction from './Instruction';
+import ImageUpload from './ImageUpload';
+import Notification from '@/components/common/Notification';
+
 import contentStore from '@/store/ContentStore';
+import { useInstructionStore } from '@/store/useInstruction';
+import alertStore from '@/store/AlertStore';
 
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
-
-import { getHeadersToken } from '@/lib/api/axios';
-import { api } from '@/lib/api/axios';
 import { categoryApi } from '@/features/categories/api/category.api';
 import { seriesApi } from '@/features/series/api/series.api';
 import { postApi } from '@/features/ideas/api/post.api';
-import LoadingComponent from '@/components/common/Loading';
-import loadingStore from '@/store/LoadingStore';
-import PostLists from './PostLists';
+import { api } from '@/lib/api/axios';
 
-import HtmlEditor, { RawHtmlExtension } from './HtmlEditor';
-import Instruction from './Instruction';
-import { useInstructionStore } from '@/store/useInstruction';
-import authenticationStore from '@/store/AuthenticationStore';
-import FileHandler from '@tiptap/extension-file-handler';
-import ImageUpload from './ImageUpload';
-import alertStore from '@/store/AlertStore';
-import Notification from '@/components/common/Notification';
-import { ButtonCyanToBlue, ButtonGray, ButtonPinkToOrange, ButtonPurpleToBlue, ButtonPurpleToPink } from '@/components/common/ButtonCustom';
-import { TextAreaCustom } from '@/components/common/TextAreaCustom';
+// ─── Auto-save debounce delay (ms) ───
+const AUTO_SAVE_DELAY = 3000;
 
 export default function CreatePost() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  const editorContainerRef = useRef<HTMLDivElement>(null);
-  const [previewMode, setPreviewMode] = useState(false);
-
+  // ─── Editor state (from store) ───
   const title = contentStore((state) => state.title);
   const setTitle = contentStore((state) => state.setTitle);
   const content = contentStore((state) => state.content);
   const setContent = contentStore((state) => state.setContent);
   const modeHTML = contentStore((state) => state.modeHTML);
   const setModeHTML = contentStore((state) => state.setModeHTML);
-
-  const isLoading = loadingStore((state) => state.isLoading);
-  const changeLoad = loadingStore((state) => state.changeLoad);
   const showHtmlEditor = contentStore((state) => state.showHtmlEditor);
   const setShowHtmlEditor = contentStore((state) => state.setShowHtmlEditor);
 
-  const setDisplayInstructions = useInstructionStore((state) => state.setDisplayInstructions);
-
+  // ─── UI state ───
   const [idPost, setIdPost] = useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-
   const [isPublic, setIsPublic] = useState(false);
-  const [onPublic, setOnPublic] = useState(false);
-  const [category, setCategory] = useState<any[]>([]);
-  const [series, setSeries] = useState<any[]>([]);
+  const [previewMode, setPreviewMode] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [rawHtml, setRawHtml] = useState('');
-  const [onCreateNewSeries, setCreateNewSeries] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
+
+  // Panel states
+  const [postListOpen, setPostListOpen] = useState(false);
+  const [publishDrawerOpen, setPublishDrawerOpen] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [imageInsertPosition, setImageInsertPosition] = useState<number | null>(null);
 
-  const [newSeries, setNewSeries] = useState<string>('');
-  const [descriptionPublic, setDescriptionPublic] = useState<string>('');
-  const [seriesPublic, setSeriesPublic] = useState<string>('');
-  const [categoryPublic, setCategoryPublic] = useState<string>('');
+  // Publish form
+  const [category, setCategory] = useState<any[]>([]);
+  const [series, setSeries] = useState<any[]>([]);
+  const [descriptionPublic, setDescriptionPublic] = useState('');
+  const [seriesPublic, setSeriesPublic] = useState('');
+  const [categoryPublic, setCategoryPublic] = useState('');
   const [imagePublic, setImagePublic] = useState<{ _id: string } | null>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
 
+  // Save status
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Alerts
   const setType = alertStore((state) => state.setType);
   const setMessage = alertStore((state) => state.setMessage);
 
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+
+  // ─── Fetch initial data ───
   useEffect(() => {
     const fetchPreData = async () => {
-      changeLoad();
-      const token = localStorage.getItem("access_token");
-      if (token) {
-        const idPost = searchParams.get('id');
+      setPageLoading(true);
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        setPageLoading(false);
+        return;
+      }
 
-        // Get category
-        const resCategory = await categoryApi.getCategories();
-        if (resCategory.success) {
-          setCategory(resCategory.data.categories);
-        } else {
-          setType('error');
-          setMessage("Error fetching categories");
-        }
+      try {
+        const postId = searchParams.get('id');
 
-        // Get series 
-        const resSeries = await seriesApi.getSeriesByUser();
-        if (resSeries.success) {
-          setSeries(resSeries.data.series);
-        } else {
-          setType('error');
-          setMessage("Error fetching user data");
-        }
+        // Fetch categories + series in parallel
+        const [resCategory, resSeries] = await Promise.all([
+          categoryApi.getCategories(),
+          seriesApi.getSeriesByUser(),
+        ]);
 
-        setIdPost(idPost);
-        if (!idPost) {
-          setTitle("");
-          setContent("");
-          changeLoad();
+        if (resCategory.success) setCategory(resCategory.data.categories);
+        if (resSeries.success) setSeries(resSeries.data.series);
+
+        setIdPost(postId);
+        if (!postId) {
+          setTitle('');
+          setContent('');
+          setPageLoading(false);
           return;
         }
 
-        const resPost = await postApi.getPostToEdit(idPost);
+        const resPost = await postApi.getPostToEdit(postId);
         if (resPost.success) {
           setTitle(resPost.data.post.title);
           setContent(resPost.data.post.content);
-          // setImagePublic({ imageUrl: resPost.data.post.image.url, description: resPost.data.post.image.description });
           setIsPublic(resPost.data.post.published);
-        } else {
-          setType('error');
-          setMessage("Error fetching user data");
         }
-        changeLoad();
-      } else {
-        changeLoad();
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setPageLoading(false);
       }
     };
     fetchPreData();
   }, [searchParams, pathname]);
 
+  // ─── TipTap editor ───
   const editor = useEditor({
     extensions: [
       StarterKit,
       TextStyleKit,
       CodeBlock.configure({
-        exitOnArrowDown: true, // Allow exiting code block with down arrow at the end
-        exitOnTripleEnter: true, // Exit after three consecutive Enter presses
+        exitOnArrowDown: true,
+        exitOnTripleEnter: true,
         defaultLanguage: 'plaintext',
         HTMLAttributes: {
-          class: 'my-code-block p-4 bg-gray-100 rounded',
+          class: 'my-code-block',
         },
       }),
       Color,
       Paragraph.configure({
         HTMLAttributes: {
-          class: 'pb-2 pt-2 mb-4 mt-4',
+          class: '',
         },
       }),
       HardBreakExtension,
@@ -160,16 +160,16 @@ export default function CreatePost() {
         inline: false,
         allowBase64: true,
         HTMLAttributes: {
-          class: 'max-w-full rounded',
+          class: 'max-w-full rounded-xl',
         },
       }),
       Placeholder.configure({
-        placeholder: 'Start writing or drag elements here...',
+        placeholder: 'Start writing your ideas...',
       }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-blue-500 underline',
+          class: 'editor-link',
         },
       }),
       TextAlign.configure({
@@ -184,201 +184,139 @@ export default function CreatePost() {
       FileHandler.configure({
         allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
         onDrop: (currentEditor, files, pos) => {
-          files.forEach(file => {
-            const fileReader = new FileReader()
-
-            fileReader.readAsDataURL(file)
+          files.forEach((file) => {
+            const fileReader = new FileReader();
+            fileReader.readAsDataURL(file);
             fileReader.onload = () => {
               currentEditor
                 .chain()
                 .insertContentAt(pos, {
                   type: 'image',
-                  attrs: {
-                    src: fileReader.result,
-                  },
+                  attrs: { src: fileReader.result },
                 })
                 .focus()
-                .run()
-            }
-          })
+                .run();
+            };
+          });
         },
         onPaste: (currentEditor: any, files: any, htmlContent: any) => {
           files.forEach((file: any) => {
-            if (htmlContent) {
-              return false
-            }
-
-            const fileReader = new FileReader()
-
-            fileReader.readAsDataURL(file)
+            if (htmlContent) return false;
+            const fileReader = new FileReader();
+            fileReader.readAsDataURL(file);
             fileReader.onload = () => {
               currentEditor
                 .chain()
                 .insertContentAt(currentEditor.state.selection.anchor, {
                   type: 'image',
-                  attrs: {
-                    src: fileReader.result,
-                  },
+                  attrs: { src: fileReader.result },
                 })
                 .focus()
-                .run()
-            }
-          })
+                .run();
+            };
+          });
         },
       }),
     ],
     content: content,
     editorProps: {
       attributes: {
-        class: 'edit-container prose prose-lg focus:outline-none max-w-none',
+        class: 'editor-canvas prose prose-lg focus:outline-none max-w-none',
       },
     },
     immediatelyRender: false,
+    onUpdate: () => {
+      // Trigger auto-save on content change
+      if (idPost) {
+        setSaveStatus('unsaved');
+        triggerAutoSave();
+      }
+    },
   });
 
+  // Sync content from store to editor
   useEffect(() => {
     if (editor) {
       editor.commands.setContent(content);
     }
-
   }, [content, editor]);
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
+  // ─── Auto-save logic ───
+  const triggerAutoSave = useCallback(() => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      performSave(true);
+    }, AUTO_SAVE_DELAY);
+  }, [idPost, title]);
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      if (!editor) return;
+  // Cleanup auto-save timer
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    };
+  }, []);
 
-      e.preventDefault();
-      const elementType = e.dataTransfer.getData('application/reactflow');
-
-      // Calculate drop position
-      if (editorContainerRef.current) {
-        const editorRect = editorContainerRef.current.getBoundingClientRect();
-        const view = editor.view;
-
-        // Get the position relative to editor container
-        const x = e.clientX - editorRect.left;
-        const y = e.clientY - editorRect.top;
-
-        // Convert screen coordinates to editor position
-        const pos = view.posAtCoords({ left: e.clientX, top: e.clientY })?.pos;
-
-        if (pos !== undefined) {
-          insertElementAtPosition(elementType, pos);
-        } else {
-          // Fallback: insert at the end
-          insertElementAtPosition(elementType, editor.state.doc.content.size);
-        }
-      }
-    },
-    [editor]
-  );
-
-  const insertElementAtPosition = (type: string, position: number) => {
+  // ─── Save handler ───
+  const performSave = async (isAutoSave = false) => {
     if (!editor) return;
+    if (!title.toString().trim()) return;
 
-    switch (type) {
-      case 'paragraph':
-        editor.chain().focus().insertContentAt(position, '<p>Type your paragraph here</p>').run();
-        break;
-      case 'heading1':
-        editor.chain().focus().insertContentAt(position, '<h1>Heading 1</h1>').run();
-        break;
-      case 'heading2':
-        editor.chain().focus().insertContentAt(position, '<h2>Heading 2</h2>').run();
-        break;
-      case 'heading3':
-        editor.chain().focus().insertContentAt(position, '<h3>Heading 3</h3>').run();
-        break;
-      case 'image':
-        // Instead of prompting for URL, open the upload modal
-        setImageInsertPosition(position);
-        setShowImageUpload(true);
-        break;
-      case 'link':
-        const url = prompt('Enter URL:', 'https://example.com');
-        const text = prompt('Enter link text:', 'Link text');
-        if (url && text) {
-          // Instead of inserting HTML content which creates a new element
-          // Focus at the position, then use the built-in setLink command
-          editor
-            .chain()
-            .focus()
-            .insertContentAt(position, text)
-            .setTextSelection({ from: position, to: position + text.length })
-            .setLink({ href: url })
-            // Move cursor after the link to ensure new content is not part of the link
-            .setTextSelection(position + text.length)
-            .run();
+    const text = editor.getText().replace(/\n/g, '');
+    const editorContent = editor.getHTML();
+
+    setSaveStatus('saving');
+
+    try {
+      if (idPost) {
+        const res = await postApi.updatePost({
+          postId: idPost,
+          title: title,
+          text: text,
+          content: editorContent,
+        });
+        if (res.success) {
+          setSaveStatus('saved');
+          if (!isAutoSave) {
+            setType('success');
+            setMessage('Post updated successfully!');
+          }
+        } else {
+          setSaveStatus('error');
+          setType('error');
+          setMessage(res.message || 'Error updating post');
         }
-        break;
-      case 'blockquote':
-        editor.chain().focus().insertContentAt(position, '<blockquote>Add a quote here</blockquote>').run();
-        break;
-      case 'codeBlock':
-        editor.chain().focus().insertContentAt(position, '<pre><code>// insert code here</code></pre>').run();
-        break;
-      default:
-        break;
-    }
-  };
-
-  const onPublicPage = () => {
-    setOnPublic((prev) => !prev);
-  }
-
-  const applyHtml = () => {
-    if (editor) {
-      editor.commands.setContent(rawHtml);
-      setShowHtmlEditor(false);
-      setModeHTML(!modeHTML);
-    }
-  };
-
-  const syncWithEditor = () => {
-    if (editor) {
-      const html = editor.getHTML();
-      setRawHtml(formatHtml(html));
-    }
-  };
-
-  // Format HTML with indentation and line breaks
-  const formatHtml = (html: any) => {
-    if (!html) return '';
-
-    // Replace closing tags followed by opening tags with line break
-    let formatted = html.replace(/>\s*</g, '>\n<');
-
-    // Add indentation
-    const indent = 2;
-    const lines = formatted.split('\n');
-    let indentLevel = 0;
-
-    formatted = lines.map((line: any) => {
-      // Check for closing tag
-      if (line.match(/^<\//)) {
-        indentLevel = Math.max(0, indentLevel - 1);
+      } else {
+        const res = await postApi.createPost({
+          title: title,
+          text: text,
+          content: editorContent,
+        });
+        if (res.success) {
+          const params = new URLSearchParams();
+          params.set('id', res.data.post._id);
+          router.push(`${pathname}?${params.toString()}`);
+          setSaveStatus('saved');
+          if (!isAutoSave) {
+            setType('success');
+            setMessage('Post created successfully!');
+          }
+        } else {
+          setSaveStatus('error');
+          setType('error');
+          setMessage(res.message || 'Error creating post');
+        }
       }
+    } catch {
+      setSaveStatus('error');
+    }
 
-      // Add indentation
-      const indentation = ' '.repeat(indentLevel * indent);
-      const indentedLine = indentation + line;
-
-      // Check for opening tag (not self-closing)
-      if (line.match(/<[^/][^>]*[^/]>$/)) {
-        indentLevel++;
-      }
-
-      return indentedLine;
-    }).join('\n');
-
-    return formatted;
+    // Fade status after 4s
+    setTimeout(() => {
+      setSaveStatus((prev) => (prev === 'saved' ? 'idle' : prev));
+    }, 4000);
   };
 
+  // ─── AI Generate ───
   const handleAutoGenerate = async () => {
     if (!title.toString().trim()) {
       setType('error');
@@ -404,50 +342,91 @@ export default function CreatePost() {
     setIsGenerating(false);
   };
 
-  // Editor toolbar components
-  const savePost = async () => {
-    if (!editor) return;
-
-    const text = editor.getText().replace(/\n/g, '');
-    const content = editor.getHTML();
-
-    changeLoad();
-
-    if (idPost) {
-      const res = await postApi.updatePost({
-        postId: idPost,
-        title: title,
-        text: text,
-        content: content
-      });
-      changeLoad();
-      if (res.success) {
-        setType('success');
-        setMessage('Post updated successfully!');
-      } else {
-        setType('error');
-        setMessage(res.message || 'Error updating post');
-      }
-      return;
+  // ─── HTML mode ───
+  const applyHtml = () => {
+    if (editor) {
+      editor.commands.setContent(rawHtml);
+      setShowHtmlEditor(false);
+      setModeHTML(false);
     }
+  };
 
-    const res = await postApi.createPost({
-      title: title,
-      text: text,
-      content: content
-    });
+  const syncWithEditor = () => {
+    if (editor) {
+      const html = editor.getHTML();
+      setRawHtml(formatHtml(html));
+    }
+  };
 
-    changeLoad();
-    if (res.success) {
-      const params = new URLSearchParams();
-      params.set('id', res.data.post._id);
-      router.push(`${pathname}?${params.toString()}`);
-      setType('success');
-      setMessage('Post created successfully!');
+  const toggleHtmlMode = () => {
+    if (!modeHTML) {
+      syncWithEditor();
+      setShowHtmlEditor(true);
+      setModeHTML(true);
     } else {
-      setType('error');
-      setMessage(res.message || 'Error creating post');
+      applyHtml();
     }
+  };
+
+  // ─── Block insert ───
+  const insertElementAtPosition = (type: string) => {
+    if (!editor) return;
+    const position = editor.state.doc.content.size;
+
+    switch (type) {
+      case 'paragraph':
+        editor.chain().focus().insertContentAt(position, '<p>Type your paragraph here</p>').run();
+        break;
+      case 'heading1':
+        editor.chain().focus().insertContentAt(position, '<h1>Heading 1</h1>').run();
+        break;
+      case 'heading2':
+        editor.chain().focus().insertContentAt(position, '<h2>Heading 2</h2>').run();
+        break;
+      case 'heading3':
+        editor.chain().focus().insertContentAt(position, '<h3>Heading 3</h3>').run();
+        break;
+      case 'image':
+        setImageInsertPosition(position);
+        setShowImageUpload(true);
+        break;
+      case 'link':
+        const url = prompt('Enter URL:', 'https://example.com');
+        const text = prompt('Enter link text:', 'Link text');
+        if (url && text) {
+          editor
+            .chain()
+            .focus()
+            .insertContentAt(position, text)
+            .setTextSelection({ from: position, to: position + text.length })
+            .setLink({ href: url })
+            .setTextSelection(position + text.length)
+            .run();
+        }
+        break;
+      case 'blockquote':
+        editor.chain().focus().insertContentAt(position, '<blockquote>Add a quote here</blockquote>').run();
+        break;
+      case 'codeBlock':
+        editor.chain().focus().insertContentAt(position, '<pre><code>// insert code here</code></pre>').run();
+        break;
+    }
+  };
+
+  // ─── Image upload handlers ───
+  const handleImageUploaded = (image: any) => {
+    if (editor && imageInsertPosition !== null) {
+      editor
+        .chain()
+        .focus()
+        .insertContentAt(imageInsertPosition, {
+          type: 'image',
+          attrs: { src: image.url, alt: image.description },
+        })
+        .run();
+    }
+    setShowImageUpload(false);
+    setImageInsertPosition(null);
   };
 
   const handleImageUploadedPublic = (image: any) => {
@@ -456,48 +435,10 @@ export default function CreatePost() {
     setImagePublic(image._id);
   };
 
-  const handleImageUploaded = (image: any) => {
-    if (editor && imageInsertPosition !== null) {
-      editor
-        .chain()
-        .focus()
-        .insertContentAt(imageInsertPosition, {
-          type: 'image',
-          attrs: {
-            src: image.url,
-            alt: image.description,
-          },
-        },
-        )
-        // .insertContentAt(imageInsertPosition + 1, {
-        //   type: 'paragraph',
-        //   content: [
-        //     {
-        //       type: 'text',
-        //       text: description,
-        //       class: 'image-description',
-        //     },
-        //   ],
-        //   attrs: {
-        //     class: 'image-description',
-        //   },
-        // })
-        .run();
-
-    }
-    setShowImageUpload(false);
-    setImageInsertPosition(null);
-  };
-
-  const createNewSeriesHandler = async () => {
-    setCreateNewSeries(false);
-    changeLoad(); // Adding start load matching the end load.
-    const res = await seriesApi.createSeries({
-      newSeries: newSeries
-    });
-    changeLoad();
+  // ─── Create series ───
+  const createNewSeriesHandler = async (name: string) => {
+    const res = await seriesApi.createSeries({ newSeries: name });
     if (res.success) {
-      setNewSeries('');
       setSeries((prev) => [...prev, res.data.data]);
       setType('success');
       setMessage('New series created successfully!');
@@ -507,386 +448,240 @@ export default function CreatePost() {
     }
   };
 
+  // ─── Publish handler ───
   const onPublicHandle = async () => {
+    setIsPublishing(true);
     const publicInfo = {
       postId: idPost,
       description: descriptionPublic,
       image: imagePublic,
       series: seriesPublic,
-      category: categoryPublic
+      category: categoryPublic,
     };
 
-    changeLoad();
-    const res = await postApi.publishPost({
-      publicInfo
-    });
-    changeLoad();
+    const res = await postApi.publishPost({ publicInfo });
+    setIsPublishing(false);
+
     if (res.success) {
       setType('success');
-      setMessage("Public post successfully!");
-      setOnPublic(false);
+      setMessage('Post published successfully!');
+      setPublishDrawerOpen(false);
       setIsPublic(true);
     } else {
       setType('error');
-      setMessage(res.message || "Error publishing post");
+      setMessage(res.message || 'Error publishing post');
     }
   };
 
+  // ─── Drag & drop ───
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      if (!editor) return;
+      e.preventDefault();
+      const elementType = e.dataTransfer.getData('application/reactflow');
+      if (editorContainerRef.current) {
+        const view = editor.view;
+        const pos = view.posAtCoords({ left: e.clientX, top: e.clientY })?.pos;
+        if (pos !== undefined) {
+          insertElementAtPosition(elementType);
+        }
+      }
+    },
+    [editor]
+  );
+
+  // ─── Loading state ───
+  if (pageLoading) {
+    return (
+      <div className="min-h-screen bg-[var(--color-editor-bg)] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 animate-[fade-in_0.3s_ease-out]">
+          <div className="w-8 h-8 border-2 border-[var(--color-editor-accent)] border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-[var(--color-editor-muted)]">Loading editor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const editorText = editor?.getText() || '';
+
   return (
-    <div className="min-h-screen bg-white flex">
-      {/*All posts*/}
-      <PostLists />
+    <div className="min-h-screen bg-[var(--color-editor-bg)] flex flex-col">
       <Notification />
       <Instruction />
-      <Head>
-        <title>Create New Post</title>
-        <meta name="description" content="Create a new post with our drag and drop editor" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
 
-      <div className="w-7xl mx-auto px-4 py-6">
-        <div className='mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
-          <div className='w-full flex items-center mb-2'>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-600 truncate">{!idPost ? "Create new post" : "Edit your post"}</h1>
-            <div className='relative'>
-              <MessageCircleQuestion className=' m-2'
-                onClick={() => setDisplayInstructions(true)}
-              />
-            </div>
-          </div>
+      {/* Sticky header */}
+      <EditorHeader
+        isEditMode={!!idPost}
+        isPublished={isPublic}
+        previewMode={previewMode}
+        onTogglePreview={() => setPreviewMode(!previewMode)}
+        htmlMode={modeHTML}
+        onToggleHtmlMode={toggleHtmlMode}
+        onSave={() => performSave(false)}
+        onPublish={() => setPublishDrawerOpen(true)}
+        onTogglePostList={() => setPostListOpen(!postListOpen)}
+        saveStatus={saveStatus}
+        onRetrySave={() => performSave(false)}
+        hasTitle={!!title.toString().trim()}
+        onAIGenerate={handleAutoGenerate}
+        isGenerating={isGenerating}
+      />
 
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium w-fit ${isPublic
-            ? 'bg-emerald-100 text-emerald-700'
-            : 'bg-amber-100 text-amber-700'
-            }`}>
-            <div className={`w-2 h-2 rounded-full ${isPublic ? 'bg-emerald-500' : 'bg-amber-500'
-              }`} />
-            {isPublic ? 'Published' : 'Draft'}
-          </div>
-        </div>
+      {/* Post list panel (left drawer) */}
+      <PostListPanel
+        isOpen={postListOpen}
+        onClose={() => setPostListOpen(false)}
+      />
 
-
-        <div className="mb-6 w-full px-2 flex flex-col sm:flex-row gap-4">
-          <input
-            id="post-title"
-            type="text"
-            value={title.toString()}
-            onChange={(e) => setTitle(e.target.value)}
-            className="flex-1 w-full px-6 py-4 text-2xl font-semibold bg-white border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all placeholder:text-slate-400"
-            placeholder="Enter post title"
-          />
-          <button
-            onClick={handleAutoGenerate}
-            disabled={isGenerating || !title.toString().trim()}
-            className={`px-6 py-4 rounded-2xl font-bold flex items-center justify-center transition-all min-w-[280px] ${isGenerating || !title.toString().trim()
-              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-lg shadow-purple-200 hover:shadow-xl hover:-translate-y-0.5'
-              }`}
-          >
-            {isGenerating ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Generating Content...
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Auto generate by AI
-              </>
-            )}
-          </button>
-        </div>
-
-        <div className="relative w-full flex flex-col lg:flex-row outline-none hover:outline-none focus:ring-teal-200 focus:border-teal-200">
-          <LoadingComponent isLoading={isLoading} />
-
-          {/* Editor area */}
-          <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden w-full">
-            <div className="border-b border-slate-200 bg-slate-50/50 px-6 py-4 w-full">
-              {!previewMode && editor &&
-                <>
-                  <div className="flex items-center gap-2">
-                    <HtmlEditor editor={editor} setRawHtml={setRawHtml} rawHtml={rawHtml} />
-                  </div>
-                  {modeHTML || <Toolbar editor={editor} />}
-                </>
-              }
-
-              {modeHTML || <div
-                ref={editorContainerRef}
-                className="p-8 min-h-[500px]"
-                onDragOver={previewMode ? undefined : handleDragOver}
-                onDrop={previewMode ? undefined : handleDrop}
-              >
-                {previewMode ? (
-                  <div className="prose prose-lg max-w-none">
-
-                    <p className="text-3xl font-bold mb-4">{title || 'Untitled Post'}</p>
-                    {editor && (
-                      <div dangerouslySetInnerHTML={{ __html: editor.getHTML() }} />
-                    )}
-                  </div>
-                ) : (
-                  editor && <>
-                    <EditorContent editor={editor} />
-                  </>
-                )}
-              </div>
-              }
-            </div>
-          </div>
-          <div className="fixed w-full bg-white shadow-[0_3px_10px_rgb(0,0,0,0.2)] flex justify-between left-0 bottom-0 flex flex-col z-50 md:flex-row">
-            <div className="w-full px-4 flex items-left h-auto p-1">
-              <div className="flex items-center gap-2 justify-center px-2">
-                {modeHTML ||
-                  <ButtonPurpleToBlue
-                    onClick={() => setPreviewMode(!previewMode)}
-                    classAddition="flex items-center whitespace-nowrap px-8 py-2"
-                    title={previewMode ? 'Return to edit' : 'Click to Preview'}
-                    icon={previewMode ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-                  />
-                }
-              </div>
-              <div className="flex items-center gap-2 justify-center px-2">
-                <ButtonPurpleToPink
-                  onClick={() => {
-                    syncWithEditor();
-                    setShowHtmlEditor(!showHtmlEditor);
-                    setModeHTML(!modeHTML);
-                  }}
-                  classAddition="flex items-center whitespace-nowrap px-8 py-2 rounded-md"
-                  title={showHtmlEditor ? 'Hide HTML' : 'HTML Mode'}
-                  icon={<Code className="w-4 h-4 mr-2" />}
-                />
-
-                {showHtmlEditor && (
-                  <>
-                    <ButtonPurpleToPink
-                      onClick={() => {
-                        applyHtml();
-                      }}
-                      classAddition="flex items-center whitespace-nowrap px-8 py-2 rounded-md"
-                      title='Apply HTML'
-                      icon={<Code className="w-4 h-4 mr-2" />}
-                    />
-                  </>
-                )}
-              </div>
-            </div>
-            {title ?
-              <div className='w-full px-2 flex justify-end h-auto'>
-                <div className="flex items-center gap-2 justify-center px-2">
-                  {idPost ? (
-                    <ButtonPinkToOrange
-                      onClick={onPublicPage}
-                      classAddition={`flex items-center px-8 py-2 min-w-40 text-white ${isPublic ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      disabled={isPublic}
-                      title={isPublic ? 'Published' : 'Public'}
-                      icon={<Globe className="w-4 h-4 mr-2" />}
-                    />
-                  ) : (
-                    <ButtonGray
-                      classAddition="flex items-center px-8 py-2 rounded-md min-w-40 text-white"
-                      disabled
-                      title="Public"
-                      icon={<Globe className="w-4 h-4 mr-2" />}
-                    />
-                  )}
-                </div>
-                <div className="flex items-center gap-2 justify-center px-2">
-                  <ButtonCyanToBlue
-                    onClick={savePost}
-                    classAddition="flex items-center whitespace-nowrap px-8 py-2 rounded-md"
-                    title="Save Draft"
-                    icon={<Save className="w-4 h-4 mr-2" />}
-                  />
-                </div>
-              </div>
-              :
-              <div className='w-full px-2 flex justify-end h-auto'>
-                <div className="flex items-center gap-2 justify-center px-2">
-                  <ButtonGray
-                    classAddition="flex items-center px-8 py-2 rounded-md min-w-40 text-white"
-                    disabled
-                    title="Public"
-                    icon={<Globe className="w-4 h-4 mr-2" />}
-                  />
-                </div>
-                <div className="flex items-center gap-2 justify-center px-2" >
-                  <ButtonGray
-                    classAddition="flex items-center px-8 py-2 rounded-md min-w-40 text-white"
-                    disabled
-                    title="Save Draft"
-                    icon={<Save className="w-4 h-4 mr-2" />}
-                  />
-                </div>
-              </div>
+      {/* Main editor area */}
+      <main className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 animate-[slide-up_0.3s_ease-out]">
+        {/* Title */}
+        <EditorTitle
+          value={title.toString()}
+          onChange={(val) => {
+            setTitle(val);
+            if (idPost) {
+              setSaveStatus('unsaved');
+              triggerAutoSave();
             }
+          }}
+          placeholder="Untitled"
+        />
 
-          </div>
+        {/* Spacer */}
+        <div className="h-8" />
 
-          {showImageUpload && (
-            <div className="fixed inset-0 bg-white/50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-                <ImageUpload
-                  onImageUploaded={handleImageUploaded}
-                  onClose={() => {
-                    setShowImageUpload(false);
-                    setImageInsertPosition(null);
-                  }}
-                  isTitleDisplay={true}
-                />
-              </div>
+        {/* Editor content area */}
+        {modeHTML ? (
+          /* HTML mode */
+          <div className="animate-[fade-in_0.15s_ease-out]">
+            <HtmlEditor editor={editor} setRawHtml={setRawHtml} rawHtml={rawHtml} />
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={applyHtml}
+                className="px-4 py-2 text-sm font-medium bg-[var(--color-editor-accent)] text-white rounded-lg hover:bg-[var(--color-editor-accent-hover)] transition-all duration-150 cursor-pointer"
+              >
+                Apply HTML
+              </button>
             </div>
-          )}
+          </div>
+        ) : previewMode ? (
+          /* Preview mode */
+          <div className="preview-pane animate-[fade-in_0.15s_ease-out]">
+            <h1 className="text-[2.5rem] leading-[1.2] font-bold tracking-[-0.02em] text-[var(--color-editor-text)] mb-8">
+              {title || 'Untitled Post'}
+            </h1>
+            {editor && (
+              <div dangerouslySetInnerHTML={{ __html: editor.getHTML() }} />
+            )}
+          </div>
+        ) : (
+          /* Visual editor */
+          <div className="animate-[fade-in_0.15s_ease-out]">
+            {/* Toolbar */}
+            {editor && <Toolbar editor={editor} />}
+
+            {/* Editor canvas */}
+            <div
+              ref={editorContainerRef}
+              className="mt-1 min-h-[60vh]"
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
+              {editor && <EditorContent editor={editor} />}
+            </div>
+
+            {/* Floating Block insert button */}
+            <div className="fixed bottom-8 right-8 z-40 animate-[slide-up_0.3s_ease-out]">
+              <BlockInsertButton onInsert={insertElementAtPosition} />
+            </div>
+          </div>
+        )}
+
+        {/* Writer metrics */}
+        <WriterMetrics text={editorText} />
+      </main>
+
+      {/* Publish drawer */}
+      <PublishDrawer
+        isOpen={publishDrawerOpen}
+        onClose={() => setPublishDrawerOpen(false)}
+        onPublish={onPublicHandle}
+        categories={category}
+        selectedCategory={categoryPublic}
+        onCategoryChange={setCategoryPublic}
+        seriesList={series}
+        selectedSeries={seriesPublic}
+        onSeriesChange={setSeriesPublic}
+        onCreateSeries={createNewSeriesHandler}
+        description={descriptionPublic}
+        onDescriptionChange={setDescriptionPublic}
+        onCoverImageUploaded={handleImageUploadedPublic}
+        isPublishing={isPublishing}
+      />
+
+      {/* Image upload modal */}
+      {showImageUpload && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/30 backdrop-blur-sm animate-[fade-in_0.15s_ease-out]">
+          <div className="bg-[var(--color-editor-surface)] rounded-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-[var(--color-editor-border)] shadow-2xl">
+            <ImageUpload
+              onImageUploaded={handleImageUploaded}
+              onClose={() => {
+                setShowImageUpload(false);
+                setImageInsertPosition(null);
+              }}
+              isTitleDisplay={true}
+            />
+          </div>
         </div>
-        {/* Public page */}
-        {onPublic && <div className="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 w-full md:inset-0 flex justify-center items-center bg-gray-50/70">
-          <div className='absolute top-2 p-2 w-full max-w-xl bg-white shadow sm:rounded-xl sm:px-10 flex items-center justify-center py-0 sm:px-6 lg:px-8'>
-            <div className="w-full">
-              <div className="p-6 bg-white">
-                <div className='flex justify-end'>
-                  <button type="button" className="text-gray-400 bg-transparent p-2 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center cursor-pointer dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="static-modal" onClick={() => setOnPublic(false)}>
-                    <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                      <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                    </svg>
-                  </button>
-                </div>
-                {/* Title Section */}
-                <div className="mb-6">
-                  <h2 className="text-sm font-medium text-gray-800 mb-2">
-                    Desciption <span className="text-gray-400 italic">(no required but we recommend it for SEO)</span>
-                  </h2>
-                  <TextAreaCustom
-                    id="message"
-                    value={descriptionPublic} onChange={(e: any) => setDescriptionPublic(e.target.value)}
-                    rows={4}
-                    className=""
-                    placeholder="Write your thoughts here..."
-                  />
-                </div>
-
-                {/* Title Section */}
-                <div className='mb-2'>
-                  <h2 className="text-sm font-medium text-gray-800 mb-2">
-                    Image (Recommend for SEO)
-                  </h2>
-                  <ImageUpload
-                    onImageUploaded={handleImageUploadedPublic}
-                    onClose={() => {
-                      setShowImageUpload(false);
-                      setImageInsertPosition(null);
-                    }}
-                    isTitleDisplay={false}
-                  />
-                </div>
-
-                {/* Series Section */}
-                <div className="mb-6">
-                  <h2 className="text-sm font-medium text-gray-800 mb-3">Series</h2>
-
-                  {/* Dropdown */}
-                  <div className="relative mb-4">
-
-                    {!onCreateNewSeries ? <>
-                      <select defaultValue="" onChange={(e) => setSeriesPublic(e.target.value)} id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                        <option value="">No Select</option>
-                        {series.map((ser: any) => (
-                          <option key={ser._id} value={ser._id}>{ser.title} </option>
-                        ))}
-                      </select>
-                      <div className="flex gap-2 mt-3">
-                        <button className="px-4 py-2 text-gray-600 hover:text-gray-800 focus:outline-none">
-                          Hoặc
-                        </button>
-                        <button className="flex items-center gap-1 px-4 py-2 text-blue-600 hover:text-blue-700 focus:outline-none cursor-pointer" onClick={() => setCreateNewSeries(true)}>
-                          <Plus className="h-4 w-4" />
-                          Tạo mới
-                        </button>
-                      </div>
-                    </> :
-                      (<div className="w-full h-full bg-white">
-                        <div className="p-b-6">
-                          <input
-                            type="text"
-                            value={newSeries}
-                            onChange={(e) => setNewSeries(e.target.value)}
-                            placeholder="Enter series name"
-                            className="w-full p-2 border border-gray-300 rounded-lg mb-4"
-                          />
-                          <button
-                            onClick={() => setCreateNewSeries(false)}
-                            className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer mr-2"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={() => createNewSeriesHandler()}
-                            className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                          >
-                            Create
-                          </button>
-                        </div>
-                      </div>)
-                    }
-
-                  </div>
-                </div>
-
-                {/* Category Selection */}
-                <div className="mb-6">
-                  <h2 className="text-sm font-medium text-gray-800 mb-3">Category *</h2>
-
-                  {/* Add Category Button */}
-                  <select defaultValue={categoryPublic} onChange={(e) => setCategoryPublic(e.target.value)} id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    <option value="">No Select</option>
-                    {category && category.map((cat: any) => (
-                      <option key={cat._id} value={cat._id}>{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className='flex justify-center'>
-                  <button
-                    onClick={() => onPublicHandle()}
-                    className="w-50 px-8 py-4 mb-2 bg-blue-600 from-blue-500 to-purple-500 text-white font-bold rounded-full transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg cursor-pointer"
-                  >
-                    Public
-                  </button>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>}
-
-      </div>
-
-      {/* Element sidebar */}
-      <FloatingToolbar />
-    </div >
+      )}
+    </div>
   );
 }
 
+// ─── Format HTML utility ───
+function formatHtml(html: string): string {
+  if (!html) return '';
+  let formatted = html.replace(/>\s*</g, '>\n<');
+  const indent = 2;
+  const lines = formatted.split('\n');
+  let indentLevel = 0;
+
+  formatted = lines
+    .map((line: string) => {
+      if (line.match(/^<\//)) {
+        indentLevel = Math.max(0, indentLevel - 1);
+      }
+      const indentation = ' '.repeat(indentLevel * indent);
+      const indentedLine = indentation + line;
+      if (line.match(/<[^/][^>]*[^/]>$/)) {
+        indentLevel++;
+      }
+      return indentedLine;
+    })
+    .join('\n');
+
+  return formatted;
+}
+
+// ─── TipTap Extensions ───
 const HardBreakExtension = Extension.create({
   name: 'customHardBreak',
 
   addKeyboardShortcuts() {
     return {
-      // Override the default Enter key behavior
       Enter: ({ editor }) => {
-
         if (editor.isActive('codeBlock')) {
           return false;
         }
         editor.commands.setHardBreak();
         return true;
       },
-      // Keep Shift+Enter as soft break if needed
       'Shift-Enter': () => {
         return this.editor.commands.setHardBreak();
       },
@@ -896,29 +691,20 @@ const HardBreakExtension = Extension.create({
 
 Color.configure({
   types: ['textStyle'],
-})
+});
 
 const SelectionExtension = Extension.create({
   name: 'selection',
 
   addKeyboardShortcuts() {
     return {
-      // Add Delete and Backspace key handling
-      'Delete': ({ editor }) => {
+      Delete: ({ editor }) => {
         if (editor.isActive('image')) {
           editor.chain().deleteSelection().run();
           return true;
         }
         return false;
       },
-      // 'Backspace': ({ editor }) => {
-      //   if (editor.isActive('image') || editor.isActive('heading') ||
-      //     editor.isActive('blockquote') || editor.isActive('codeBlock')) {
-      //     editor.chain().deleteSelection().run();
-      //     return true;
-      //   }
-      //   return false;
-      // },
     };
   },
 });

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import loadingStore from "@/store/LoadingStore";
 import { ChevronLeft, ChevronRight, Menu, CheckCircle, Lock, Play, FileText, Download, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Stream } from '@cloudflare/stream-react';
 
 type Lesson = {
     _id: string;
@@ -14,7 +15,7 @@ type Lesson = {
     type: 'video' | 'file' | 'text';
     isFreePreview: boolean;
     order: number;
-    media?: { url: string; type: string };
+    media?: { url: string; type: string; uid?: string };
 };
 
 type Chapter = {
@@ -59,7 +60,7 @@ const WatchPage = () => {
 
                 // Expand the chapter containing the current lesson
                 if (lesson && courseData.chapters) {
-                    const parentChapter = courseData.chapters.find((ch: Chapter) => 
+                    const parentChapter = courseData.chapters.find((ch: Chapter) =>
                         ch.lessons?.some((l: Lesson) => l._id === lesson._id)
                     );
                     if (parentChapter) {
@@ -82,8 +83,8 @@ const WatchPage = () => {
     }, [slug, lessonSlug]);
 
     const toggleChapter = (chapterId: string) => {
-        setExpandedChapters(prev => 
-            prev.includes(chapterId) 
+        setExpandedChapters(prev =>
+            prev.includes(chapterId)
                 ? prev.filter(id => id !== chapterId)
                 : [...prev, chapterId]
         );
@@ -106,7 +107,7 @@ const WatchPage = () => {
     // Calculate total progress
     const totalLessonsCount = allLessons.length;
     // Mocking progress for now
-    const completedLessonsCount = 0; 
+    const completedLessonsCount = 0;
 
     return (
         <div className="flex h-screen bg-white overflow-hidden">
@@ -136,16 +137,18 @@ const WatchPage = () => {
 
                 <main className="flex-1 overflow-auto bg-white flex flex-col">
                     {/* Player Container */}
-                    <div className="w-full bg-black aspect-video flex-shrink-0 flex items-center justify-center relative">
-                        {currentLesson.type === 'video' && (
-                            <video
-                                src={currentLesson.media?.url}
-                                controls
-                                autoPlay
-                                className="w-full h-full object-contain"
-                                controlsList="nodownload"
-                                onEnded={goToNext}
-                            />
+                    <div className="w-full bg-black aspect-video flex-shrink-0 relative overflow-hidden">
+                        {currentLesson.type === 'video' && currentLesson.media?.url && (
+                            <div className="absolute inset-0 [&>iframe]:!w-full [&>iframe]:!h-full">
+                                <Stream
+                                    src={currentLesson.media.url}
+                                    controls
+                                    autoplay
+                                    width="100%"
+                                    height="100%"
+                                    onEnded={goToNext}
+                                />
+                            </div>
                         )}
                         {currentLesson.type === 'text' && (
                             <div className="w-full h-full bg-white p-12 overflow-auto">
@@ -167,7 +170,7 @@ const WatchPage = () => {
                                 </a>
                             </div>
                         )}
-                        
+
                         {!sidebarOpen && (
                             <button
                                 onClick={() => setSidebarOpen(true)}
@@ -196,14 +199,14 @@ const WatchPage = () => {
 
                     {/* Fixed Footer Navigation */}
                     <footer className="bg-white border-t p-3 flex items-center justify-between shadow-sm sticky bottom-0">
-                        <button 
+                        <button
                             onClick={goToPrev}
                             disabled={!prevLesson}
                             className={`flex items-center gap-1 font-bold px-4 py-2 border border-black rounded hover:bg-gray-100 transition-colors ${!prevLesson ? 'opacity-50 cursor-not-allowed border-gray-300 text-gray-400' : 'text-black'}`}
                         >
                             <ChevronLeft size={18} /> Bài trước
                         </button>
-                        <button 
+                        <button
                             onClick={goToNext}
                             disabled={!nextLesson}
                             className={`flex items-center gap-1 font-bold px-6 py-2 rounded transition-colors ${!nextLesson ? 'opacity-50 cursor-not-allowed bg-gray-300 text-gray-500' : 'bg-[var(--color-admin-primary)] text-white hover:bg-[var(--color-admin-primary-hover)]'}`}
@@ -222,12 +225,12 @@ const WatchPage = () => {
                         <X size={20} />
                     </button>
                 </div>
-                
+
                 <div className="flex-1 overflow-y-auto">
                     {course.chapters?.map((chapter, chapterIdx) => (
                         <div key={chapter._id} className="border-b border-gray-200">
                             {/* Chapter Header */}
-                            <button 
+                            <button
                                 onClick={() => toggleChapter(chapter._id)}
                                 className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
                             >

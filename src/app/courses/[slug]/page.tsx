@@ -11,6 +11,7 @@ type Lesson = {
     _id: string;
     title: string;
     type: string;
+    url: string;
     isFreePreview: boolean;
     order: number;
 };
@@ -43,8 +44,8 @@ const CourseDetail = () => {
     const changeLoad = loadingStore(state => state.changeLoad);
 
     const toggleChapter = (chapterId: string) => {
-        setExpandedChapters(prev => 
-            prev.includes(chapterId) 
+        setExpandedChapters(prev =>
+            prev.includes(chapterId)
                 ? prev.filter(id => id !== chapterId)
                 : [...prev, chapterId]
         );
@@ -65,6 +66,7 @@ const CourseDetail = () => {
             try {
                 changeLoad();
                 const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/getBySlug?slug=${slug}`);
+                console.log("course", response.data.data);
                 setCourse(response.data.data);
             } catch (error) {
                 console.error(error);
@@ -147,7 +149,7 @@ const CourseDetail = () => {
                         <h2 className="text-2xl font-bold mb-4">Nội dung khóa học</h2>
                         <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
                             <span>{course.chapters?.length || 0} phần • {totalLessons} bài giảng • Tổng thời lượng 12h 34m</span>
-                            <button 
+                            <button
                                 onClick={toggleAllChapters}
                                 className="text-blue-600 font-bold hover:text-blue-800"
                             >
@@ -158,7 +160,7 @@ const CourseDetail = () => {
                             {course.chapters?.length > 0 ? (
                                 course.chapters.map((chapter) => (
                                     <div key={chapter._id} className="border-b border-gray-200 last:border-0">
-                                        <button 
+                                        <button
                                             onClick={() => toggleChapter(chapter._id)}
                                             className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
                                         >
@@ -168,7 +170,7 @@ const CourseDetail = () => {
                                             </div>
                                             <span className="text-sm text-gray-500">{chapter.lessons?.length || 0} bài giảng</span>
                                         </button>
-                                        
+
                                         {expandedChapters.includes(chapter._id) && (
                                             <div className="bg-white">
                                                 {chapter.lessons?.length > 0 ? (
@@ -178,6 +180,7 @@ const CourseDetail = () => {
                                                                 {lesson.type === 'video' ? <Play size={14} className="text-gray-400" /> : <Globe size={14} className="text-gray-400" />}
                                                                 <span className="text-sm text-gray-800">{lesson.title}</span>
                                                             </div>
+                                                            {lesson.url}
                                                             <div className="flex items-center gap-4">
                                                                 {lesson.isFreePreview && <span className="text-blue-600 font-bold text-xs underline cursor-pointer">Xem trước</span>}
                                                                 <span className="text-xs text-gray-400">05:20</span>
@@ -246,7 +249,7 @@ const CourseDetail = () => {
                             </div>
 
                             <div className="flex flex-col gap-3 mb-6">
-                                <button 
+                                <button
                                     onClick={() => router.push(`/courses/${course.slug}/learn`)}
                                     className="w-full bg-[var(--color-admin-primary)] text-white font-bold py-3 rounded hover:bg-[var(--color-admin-primary-hover)] transition-colors shadow-md flex items-center justify-center gap-2"
                                 >
