@@ -137,16 +137,18 @@ const WatchPage = () => {
 
                 <main className="flex-1 overflow-auto bg-white flex flex-col">
                     {/* Player Container */}
-                    <div className="w-full bg-black aspect-video flex-shrink-0 flex items-center justify-center relative">
-                        {currentLesson.type === 'video' && currentLesson.media?.uid && (
-                            <Stream
-                                src={currentLesson.media.uid}
-                                controls
-                                autoplay
-                                responsive={false}
-                                className="w-full h-full"
-                                onEnded={goToNext}
-                            />
+                    <div className="w-full bg-black aspect-video flex-shrink-0 relative overflow-hidden">
+                        {currentLesson.type === 'video' && currentLesson.media?.url && (
+                            <div className="absolute inset-0 [&>iframe]:!w-full [&>iframe]:!h-full">
+                                <Stream
+                                    src={currentLesson.media.url}
+                                    controls
+                                    autoplay
+                                    width="100%"
+                                    height="100%"
+                                    onEnded={goToNext}
+                                />
+                            </div>
                         )}
                         {currentLesson.type === 'text' && (
                             <div className="w-full h-full bg-white p-12 overflow-auto">
