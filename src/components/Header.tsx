@@ -5,12 +5,14 @@ import Profile from "@/features/users/components/Profile";
 import axios from "axios";
 import { getHeadersToken } from "@/lib/api/axios";
 import authenticationStore from "@/store/AuthenticationStore";
+import cartStore from "@/store/CartStore";
 
 import { useTranslation } from "@/app/hook/useTranslation";
 import LanguageSelector from "./LanguageSelector";
 import Link from "next/link";
 import { useLanguageStore } from "@/store/useLanguage";
 import Image from "next/image";
+import { ShoppingCart, BookOpen } from "lucide-react";
 
 export default function Header() {
   const { t } = useTranslation();
@@ -21,6 +23,8 @@ export default function Header() {
 
   const currentUser = authenticationStore((state) => state.currentUser);
   const setCurrentUser = authenticationStore((state) => state.setCurrentUser);
+
+  const { itemCount, fetchCart } = cartStore();
 
   const initializeLang = useLanguageStore((state) => state.initializeLang);
 
@@ -44,6 +48,13 @@ export default function Header() {
     };
     fetchUser();
   }, [currentUser._id]);
+
+  // Fetch cart when user is logged in
+  useEffect(() => {
+    if (currentUser?._id) {
+      fetchCart();
+    }
+  }, [currentUser?._id]);
 
 
   return <header className='flex border-b border-gray-300 py-3 px-4 sm:px-10 bg-white tracking-wide relative z-50'>
@@ -91,6 +102,35 @@ export default function Header() {
             </svg>
           </button>
         </form>
+
+        {/* My Learning Link (only when logged in) */}
+        {currentUser?._id && (
+          <Link
+            href="/my-learning"
+            className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-[var(--color-admin-primary)] transition-colors whitespace-nowrap"
+            title="Học tập của tôi"
+          >
+            <BookOpen size={18} />
+            <span className="hidden md:inline">Học tập</span>
+          </Link>
+        )}
+
+        {/* Cart Icon (only when logged in) */}
+        {currentUser?._id && (
+          <Link
+            href="/checkout"
+            className="relative p-2 text-gray-700 hover:text-[var(--color-admin-primary)] transition-colors"
+            title="Giỏ hàng"
+          >
+            <ShoppingCart size={22} />
+            {itemCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[var(--color-admin-primary)] text-white text-xs font-bold rounded-full flex items-center justify-center leading-none">
+                {itemCount > 9 ? '9+' : itemCount}
+              </span>
+            )}
+          </Link>
+        )}
+
         {currentUser?._id ? <Profile /> :
           <div className="flex flex-row">
             <button type="button" className="cursor-pointer text-white focus:outline-none text-white  bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-xl text-sm px-5 py-2.5 m-2  dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900" onClick={() => {

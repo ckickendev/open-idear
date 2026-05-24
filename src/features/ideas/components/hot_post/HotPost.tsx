@@ -57,9 +57,9 @@ const HotPost: React.FC = () => {
           {t("component.hotPost.title")}
         </h2>
         <div className="border-b-4 border-blue-500 w-12 absolute mt-10"></div>
-        <button className="text-gray-600 hover:text-gray-900 text-sm cursor-pointer hover:underline">
+        <Link href={"/top10ideas"} className="text-gray-600 hover:text-gray-900 text-sm cursor-pointer hover:underline">
           {t("component.hotPost.moreDes")}
-        </button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-4 md:grid-cols-2 lg:grid-cols-4 gap-6">

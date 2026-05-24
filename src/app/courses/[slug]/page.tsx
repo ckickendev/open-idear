@@ -3,9 +3,13 @@ import { useParams, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import loadingStore from "@/store/LoadingStore";
-import { Play, Check, ChevronDown, ChevronUp, Globe, Info, Clock, Smartphone, Infinity, Award } from 'lucide-react';
+import authenticationStore from "@/store/AuthenticationStore";
+import cartStore from "@/store/CartStore";
+import { Play, Check, ChevronDown, ChevronUp, Globe, Info, Clock, Smartphone, Infinity, Award, ShoppingCart, CheckCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { api } from '@/lib/api/axios';
+import { courseApi } from '@/features/series/api/course.api';
+import Toast, { useToast } from '@/components/common/Toast';
 
 type Lesson = {
     _id: string;
@@ -33,15 +37,23 @@ type Course = {
     thumbnail: { url: string };
     instructor: { name: string; avatar: string; bio: string };
     chapters: Chapter[];
+    studentsCount?: number;
+    averageRating?: number;
+    ratingCount?: number;
 };
 
 const CourseDetail = () => {
     const { slug } = useParams();
     const router = useRouter();
     const [course, setCourse] = useState<Course | null>(null);
-    const [isEnrolling, setIsEnrolling] = useState(false);
     const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
+    const [isEnrolled, setIsEnrolled] = useState(false);
+    const [isInCart, setIsInCart] = useState(false);
+    const [isAddingToCart, setIsAddingToCart] = useState(false);
     const changeLoad = loadingStore(state => state.changeLoad);
+    const currentUser = authenticationStore(state => state.currentUser);
+    const { items: cartItems, addToCart, fetchCart } = cartStore();
+    const { toast, showToast, hideToast } = useToast();
 
     const toggleChapter = (chapterId: string) => {
         setExpandedChapters(prev =>
@@ -77,29 +89,83 @@ const CourseDetail = () => {
         fetchCourse();
     }, [slug]);
 
-    const handleEnroll = async () => {
-        if (!course) return;
-        try {
-            setIsEnrolling(true);
-            const response = await api.post('/course/enroll', { courseId: course._id });
-            if (response.success) {
-                alert('Đăng ký khóa học thành công!');
-                router.push('/management/my-courses');
-            } else {
-                alert(response.message || 'Có lỗi xảy ra khi đăng ký!');
+    // Check enrollment status when user and course are available
+    useEffect(() => {
+        const checkEnrollmentStatus = async () => {
+            if (!currentUser?._id || !course?._id) return;
+
+            try {
+                const res = await courseApi.checkEnrollment(course._id);
+                if (res.success) {
+                    setIsEnrolled((res.data as any)?.data?.enrolled || false);
+                }
+            } catch (error) {
+                console.error('Failed to check enrollment:', error);
             }
-        } catch (error) {
-            console.error(error);
-            alert('Có lỗi xảy ra khi đăng ký!');
-        } finally {
-            setIsEnrolling(false);
+        };
+        checkEnrollmentStatus();
+    }, [currentUser?._id, course?._id]);
+
+    // Check if course is in cart
+    useEffect(() => {
+        if (course?._id && cartItems.length > 0) {
+            setIsInCart(cartItems.some(item => item._id === course._id));
+        } else {
+            setIsInCart(false);
         }
+    }, [cartItems, course?._id]);
+
+    // Fetch cart when user is logged in
+    useEffect(() => {
+        if (currentUser?._id) {
+            fetchCart();
+        }
+    }, [currentUser?._id]);
+
+    const handleAddToCart = async () => {
+        if (!currentUser?._id) {
+            showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
+            return;
+        }
+        if (!course) return;
+
+        setIsAddingToCart(true);
+        const result = await addToCart(course._id);
+        if (result.success) {
+            showToast('Đã thêm vào giỏ hàng!', 'success');
+            setIsInCart(true);
+        } else {
+            showToast(result.message || 'Không thể thêm vào giỏ hàng', 'error');
+        }
+        setIsAddingToCart(false);
+    };
+
+    const handleBuyNow = async () => {
+        if (!currentUser?._id) {
+            showToast('Vui lòng đăng nhập để mua khóa học', 'warning');
+            return;
+        }
+        if (!course) return;
+
+        // Add to cart first if not already in cart, then go to checkout
+        if (!isInCart) {
+            setIsAddingToCart(true);
+            const result = await addToCart(course._id);
+            setIsAddingToCart(false);
+            if (!result.success) {
+                showToast(result.message || 'Không thể thêm vào giỏ hàng', 'error');
+                return;
+            }
+        }
+        router.push('/checkout');
     };
 
     if (!course) return null;
 
     return (
         <div className="bg-white min-h-screen relative pb-20">
+            <Toast {...toast} onClose={hideToast} />
+
             {/* Header / Intro */}
             <div className="bg-gray-900 text-white py-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -114,11 +180,11 @@ const CourseDetail = () => {
 
                         <div className="flex flex-wrap items-center gap-6 text-sm">
                             <div className="flex items-center gap-1 text-yellow-400">
-                                <span className="font-bold underline">4.8</span>
+                                <span className="font-bold underline">{course.averageRating?.toFixed(1) || '4.8'}</span>
                                 <div className="flex">★★★★★</div>
-                                <span className="text-blue-400">(2,456 xếp hạng)</span>
+                                <span className="text-blue-400">({course.ratingCount || 0} xếp hạng)</span>
                             </div>
-                            <div>6,789 học viên</div>
+                            <div>{course.studentsCount || 0} học viên</div>
                             <div className="flex items-center gap-2">
                                 <span>Giảng viên:</span>
                                 <Link href="#" className="text-blue-400 underline">{course.instructor?.name}</Link>
@@ -180,7 +246,6 @@ const CourseDetail = () => {
                                                                 {lesson.type === 'video' ? <Play size={14} className="text-gray-400" /> : <Globe size={14} className="text-gray-400" />}
                                                                 <span className="text-sm text-gray-800">{lesson.title}</span>
                                                             </div>
-                                                            {lesson.url}
                                                             <div className="flex items-center gap-4">
                                                                 {lesson.isFreePreview && <span className="text-blue-600 font-bold text-xs underline cursor-pointer">Xem trước</span>}
                                                                 <span className="text-xs text-gray-400">05:20</span>
@@ -232,6 +297,7 @@ const CourseDetail = () => {
                         </div>
 
                         <div className="p-6">
+                            {/* Price Section */}
                             <div className="flex items-center gap-3 mb-6">
                                 {course.price === 0 ? (
                                     <span className="text-3xl font-bold">MIỄN PHÍ</span>
@@ -248,26 +314,59 @@ const CourseDetail = () => {
                                 )}
                             </div>
 
+                            {/* Action Buttons - Enrollment Aware */}
                             <div className="flex flex-col gap-3 mb-6">
-                                <button
-                                    onClick={() => router.push(`/courses/${course.slug}/learn`)}
-                                    className="w-full bg-[var(--color-admin-primary)] text-white font-bold py-3 rounded hover:bg-[var(--color-admin-primary-hover)] transition-colors shadow-md flex items-center justify-center gap-2"
-                                >
-                                    <Play size={18} /> Vào học ngay
-                                </button>
-                                <div className="flex gap-3">
-                                    <button className="flex-1 border border-gray-900 font-bold py-3 rounded hover:bg-gray-50 transition-colors">
-                                        Giỏ hàng
-                                    </button>
+                                {isEnrolled ? (
+                                    /* Enrolled: Show "Go to Learn" */
                                     <button
-                                        onClick={handleEnroll}
-                                        disabled={isEnrolling}
-                                        className="flex-1 bg-gray-900 text-white font-bold py-3 rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                        onClick={() => router.push(`/courses/${course.slug}/learn`)}
+                                        className="w-full bg-emerald-600 text-white font-bold py-3 rounded hover:bg-emerald-700 transition-colors shadow-md flex items-center justify-center gap-2"
                                     >
-                                        {isEnrolling ? 'Đang...' : 'Mua ngay'}
+                                        <Play size={18} /> Vào học ngay
                                     </button>
-                                </div>
+                                ) : (
+                                    /* Not enrolled: Show cart + buy buttons */
+                                    <>
+                                        <div className="flex gap-3">
+                                            {isInCart ? (
+                                                <button
+                                                    onClick={() => router.push('/checkout')}
+                                                    className="flex-1 bg-gray-100 text-gray-700 font-bold py-3 rounded transition-colors flex items-center justify-center gap-2 border border-gray-200"
+                                                >
+                                                    <CheckCircle size={16} className="text-emerald-500" /> Đã thêm vào giỏ
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={handleAddToCart}
+                                                    disabled={isAddingToCart}
+                                                    className="flex-1 border border-gray-900 font-bold py-3 rounded hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                                >
+                                                    {isAddingToCart ? (
+                                                        <Loader2 size={16} className="animate-spin" />
+                                                    ) : (
+                                                        <ShoppingCart size={16} />
+                                                    )}
+                                                    Giỏ hàng
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={handleBuyNow}
+                                                disabled={isAddingToCart}
+                                                className="flex-1 bg-gray-900 text-white font-bold py-3 rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                            >
+                                                Mua ngay
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
                             </div>
+
+                            {isEnrolled && (
+                                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 mb-4 flex items-center gap-2 text-sm text-emerald-700">
+                                    <CheckCircle size={16} />
+                                    <span className="font-medium">Bạn đã đăng ký khóa học này</span>
+                                </div>
+                            )}
 
                             <div className="text-center text-xs text-gray-500 mb-6">30-Day Money-Back Guarantee</div>
 

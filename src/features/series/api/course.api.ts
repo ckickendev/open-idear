@@ -51,5 +51,15 @@ export const courseApi = {
     },
     restoreCourse: async (courseId: string) => {
         return await api.patch(`/course/restore?courseId=${courseId}`);
-    }
+    },
+    // Enrollment APIs
+    getMyEnrollments: async () => {
+        return await api.get('/enrollment/my-courses');
+    },
+    checkEnrollment: async (courseId: string) => {
+        return await api.get(`/enrollment/check?courseId=${courseId}`);
+    },
+    completeLesson: async (courseId: string, lessonId: string) => {
+        return await api.post('/enrollment/lesson/complete', { courseId, lessonId });
+    },
 };

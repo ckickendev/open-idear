@@ -1,4 +1,3 @@
-import "@styles/globals.css";
 import Logo from "@/components/common/Logo";
 import { PostInterface } from "@/app/profile/[username]/page";
 import { calculateGapTime } from "@/common/datetime";
