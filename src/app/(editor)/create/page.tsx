@@ -15,7 +15,7 @@ import Color from '@tiptap/extension-color';
 import CodeBlock from '@tiptap/extension-code-block';
 import FileHandler from '@tiptap/extension-file-handler';
 
-import './create-editor.css';
+import '@/styles/editor.css';
 import Toolbar from './ToolBar';
 import HtmlEditor, { RawHtmlExtension } from './HtmlEditor';
 import BlockInsertButton from './FloatingToolbar';
@@ -27,11 +27,10 @@ import WriterMetrics from './WriterMetrics';
 import SaveStatusIndicator, { SaveStatus } from './SaveStatusIndicator';
 import Instruction from './Instruction';
 import ImageUpload from './ImageUpload';
-import Notification from '@/components/common/Notification';
+import { toast } from 'sonner';
 
 import contentStore from '@/store/ContentStore';
 import { useInstructionStore } from '@/store/useInstruction';
-import alertStore from '@/store/AlertStore';
 
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import { categoryApi } from '@/features/categories/api/category.api';
@@ -84,9 +83,7 @@ export default function CreatePost() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Alerts
-  const setType = alertStore((state) => state.setType);
-  const setMessage = alertStore((state) => state.setMessage);
+
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
@@ -277,13 +274,11 @@ export default function CreatePost() {
         if (res.success) {
           setSaveStatus('saved');
           if (!isAutoSave) {
-            setType('success');
-            setMessage('Post updated successfully!');
+            toast.success('Post updated successfully!');
           }
         } else {
           setSaveStatus('error');
-          setType('error');
-          setMessage(res.message || 'Error updating post');
+          toast.error(res.message || 'Error updating post');
         }
       } else {
         const res = await postApi.createPost({
@@ -297,13 +292,11 @@ export default function CreatePost() {
           router.push(`${pathname}?${params.toString()}`);
           setSaveStatus('saved');
           if (!isAutoSave) {
-            setType('success');
-            setMessage('Post created successfully!');
+            toast.success('Post created successfully!');
           }
         } else {
           setSaveStatus('error');
-          setType('error');
-          setMessage(res.message || 'Error creating post');
+          toast.error(res.message || 'Error creating post');
         }
       }
     } catch {
@@ -319,8 +312,7 @@ export default function CreatePost() {
   // ─── AI Generate ───
   const handleAutoGenerate = async () => {
     if (!title.toString().trim()) {
-      setType('error');
-      setMessage('Please enter a title to generate content.');
+      toast.error('Please enter a title to generate content.');
       return;
     }
 
@@ -333,11 +325,9 @@ export default function CreatePost() {
       } else {
         setContent(response.data.content);
       }
-      setType('success');
-      setMessage('Content generated successfully!');
+      toast.success('Content generated successfully!');
     } else {
-      setType('error');
-      setMessage(response.message || 'Failed to generate content');
+      toast.error(response.message || 'Failed to generate content');
     }
     setIsGenerating(false);
   };
@@ -440,11 +430,9 @@ export default function CreatePost() {
     const res = await seriesApi.createSeries({ newSeries: name });
     if (res.success) {
       setSeries((prev) => [...prev, res.data.data]);
-      setType('success');
-      setMessage('New series created successfully!');
+      toast.success('New series created successfully!');
     } else {
-      setType('error');
-      setMessage(res.message || 'Error creating series');
+      toast.error(res.message || 'Error creating series');
     }
   };
 
@@ -463,13 +451,11 @@ export default function CreatePost() {
     setIsPublishing(false);
 
     if (res.success) {
-      setType('success');
-      setMessage('Post published successfully!');
+      toast.success('Post published successfully!');
       setPublishDrawerOpen(false);
       setIsPublic(true);
     } else {
-      setType('error');
-      setMessage(res.message || 'Error publishing post');
+      toast.error(res.message || 'Error publishing post');
     }
   };
 
@@ -510,8 +496,7 @@ export default function CreatePost() {
   const editorText = editor?.getText() || '';
 
   return (
-    <div className="min-h-screen bg-[var(--color-editor-bg)] flex flex-col">
-      <Notification />
+    <div className="min-h-screen bg-editor-bg flex flex-col">
       <Instruction />
 
       {/* Sticky header */}

@@ -10,7 +10,7 @@ import {
     GripVertical, PlayCircle, BookOpen, MoreHorizontal, X
 } from 'lucide-react';
 import Link from 'next/link';
-import VideoUpload from '@/app/create/VideoUpload';
+import VideoUpload from '@/app/(editor)/create/VideoUpload';
 
 type Lesson = {
     _id: string;

@@ -4,8 +4,7 @@ import { useRouter, useParams } from 'next/navigation';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import Sidebar from '@/components/profile/Sidebar';
 import authenticationStore from '@/store/AuthenticationStore';
-import Notification from '@/components/common/Notification';
-import LoadingComponent from '@/components/common/Loading';
+import { LoadingOverlay } from '@/components/composed/loading-overlay';
 import loadingStore from '@/store/LoadingStore';
 
 export default function ProfileLayout({
@@ -32,8 +31,8 @@ export default function ProfileLayout({
 
     if (!mounted) {
         return (
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
         );
     }
@@ -41,19 +40,18 @@ export default function ProfileLayout({
     // Only block and show infinite loading if it's a private route and currentUser isn't loaded
     if (!currentUser?._id && !isPublicProfile) {
         return (
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-muted/30 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Loading your profile...</p>
+                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-sm text-muted-foreground">Loading your profile...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-            <LoadingComponent isLoading={isLoading} isFullScreen={true} />
-            <Notification />
+        <div className="min-h-screen bg-muted/30">
+            <LoadingOverlay isLoading={isLoading} mode="fullscreen" />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 {/* Profile Header (cover + avatar) */}

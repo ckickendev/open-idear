@@ -3,11 +3,11 @@ import { Bookmark, Upload } from "lucide-react";
 import authenticationStore from "@/store/AuthenticationStore";
 import { getHeadersToken } from "@/lib/api/axios";
 import axios from "axios";
-import alertStore from "@/store/AlertStore";
-import ImageUpload from '@/app/create/ImageUpload';
+import { toast } from "sonner";
+import ImageUpload from '@/app/(editor)/create/ImageUpload';
 import { SeriesLinkCustom } from "@/components/common/LinkCustom";
 import { TextAreaCustom } from "@/components/common/TextAreaCustom";
-import { ButtonCyanToBlue, ButtonGreenToBlue, ButtonPinkToOrange, ButtonPurpleToBlue, ButtonRedToYellow } from "@/components/common/ButtonCustom";
+import { Button } from "@/components/ui/button";
 
 const SeriesElement = ({ series, onDeleteSeriesing, setOnDeleteSeriesing, deleteSeries }: any) => {
     const currentUser = authenticationStore((state) => state.currentUser);
@@ -15,8 +15,7 @@ const SeriesElement = ({ series, onDeleteSeriesing, setOnDeleteSeriesing, delete
     const [isEditing, setIsEditing] = useState(false);
     const [dataSeriesEdit, setDataSeriesEdit] = useState(series);
 
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
+
 
     const onMarkedSeries = async () => {
         try {
@@ -27,17 +26,14 @@ const SeriesElement = ({ series, onDeleteSeriesing, setOnDeleteSeriesing, delete
             });
 
             if (response.status === 200) {
-                setType("success");
-                setMessage(response.data.isMarked ? "Series marked successfully." : "Series unmarked successfully.");
+                toast.success(response.data.isMarked ? "Series marked successfully." : "Series unmarked successfully.");
                 setBookmarked(!bookmarked);
             } else {
-                setType("error");
-                setMessage("Failed to mark the series.");
+                toast.error("Failed to mark the series.");
             }
         } catch (error: any) {
             console.log(error.response.data);
-            setType("error");
-            setMessage(error.response.data.message || "An error occurred while marking the series.");
+            toast.error(error.response.data.message || "An error occurred while marking the series.");
         }
     };
 
@@ -58,19 +54,16 @@ const SeriesElement = ({ series, onDeleteSeriesing, setOnDeleteSeriesing, delete
             });
 
             if (response.status === 200) {
-                setType("success");
-                setMessage("Series updated successfully.");
+                toast.success("Series updated successfully.");
                 // Update the local series data with the edited data
                 series.title = dataSeriesEdit.title;
                 series.description = dataSeriesEdit.description;
                 series.image = dataSeriesEdit.image;
             } else {
-                setType("error");
-                setMessage("Failed to update the series.");
+                toast.error("Failed to update the series.");
             }
         } catch (error: any) {
-            setType("error");
-            setMessage(error.response.data.message || "An error occurred while updating the series.");
+            toast.error(error.response.data.message || "An error occurred while updating the series.");
         }
         setIsEditing(false);
     }
@@ -139,9 +132,9 @@ const SeriesElement = ({ series, onDeleteSeriesing, setOnDeleteSeriesing, delete
                         </a>
 
                         <div className="flex items-center">
-                            <ButtonGreenToBlue title="Delete Series" classAddition="mr-4 px-4 py-2 rounded-md" onClick={() => setOnDeleteSeriesing(series._id)} />
-                            <ButtonPinkToOrange title="Edit Series" classAddition="mr-4 px-4 py-2 rounded-md" onClick={() => setIsEditing(true)} />
-                            <ButtonPurpleToBlue title="View Series" classAddition="px-4 py-2 rounded-md" onClick={() => window.location.href = `/series/${series.slug}`} />
+                            <Button variant="gradient-success" size="sm" className="mr-4" onClick={() => setOnDeleteSeriesing(series._id)}>Delete Series</Button>
+                            <Button variant="gradient-danger" size="sm" className="mr-4" onClick={() => setIsEditing(true)}>Edit Series</Button>
+                            <Button variant="gradient-primary" size="sm" onClick={() => window.location.href = `/series/${series.slug}`}>View Series</Button>
                         </div>
                     </div>
                 )}
@@ -171,8 +164,8 @@ const SeriesElement = ({ series, onDeleteSeriesing, setOnDeleteSeriesing, delete
                             />
 
                             <div className="flex justify-center gap-4">
-                                <ButtonCyanToBlue onClick={onConfirmEditing} title="Save Changes" classAddition="px-8 py-2 rounded-md" />
-                                <ButtonRedToYellow onClick={onCancelEditing} title="Cancel" classAddition="px-8 py-2 rounded-md" />
+                                <Button variant="gradient-accent" onClick={onConfirmEditing}>Save Changes</Button>
+                                <Button variant="outline" onClick={onCancelEditing}>Cancel</Button>
                             </div>
                         </div>
                     </div>
@@ -187,8 +180,8 @@ const SeriesElement = ({ series, onDeleteSeriesing, setOnDeleteSeriesing, delete
                             <p className="text-center mb-6">Are you sure you want to delete this series? This action cannot be undone.</p>
 
                             <div className="flex justify-center gap-4">
-                                <ButtonRedToYellow onClick={() => deleteSeries(onDeleteSeriesing)} title="Confirm Delete" classAddition="px-8 py-2 rounded-md" />
-                                <ButtonCyanToBlue onClick={() => setOnDeleteSeriesing('')} title="Cancel" classAddition="px-8 py-2 rounded-md" />
+                                <Button variant="destructive" onClick={() => deleteSeries(onDeleteSeriesing)}>Confirm Delete</Button>
+                                <Button variant="outline" onClick={() => setOnDeleteSeriesing('')}>Cancel</Button>
                             </div>
                         </div>
                     </div>

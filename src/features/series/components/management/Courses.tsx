@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from '@/app/hook/useTranslation';
 import HoverNote from "@/components/common/HoverNote";
 import Link from "next/link";
-import ImageUpload from "@/app/create/ImageUpload";
+import ImageUpload from "@/app/(editor)/create/ImageUpload";
 import StatusBadge from '@/components/admin/StatusBadge';
 import EmptyState from '@/components/admin/EmptyState';
 import TableSkeleton from '@/components/admin/TableSkeleton';

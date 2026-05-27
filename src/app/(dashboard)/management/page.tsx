@@ -23,9 +23,8 @@ import Topic from '@/features/topics/components/management/Topic';
 import Post from '@/features/ideas/components/management/Post';
 import Report from './Report';
 import UserList from '@/features/users/components/UserList';
-import LoadingComponent from '@/components/common/Loading';
+import { LoadingOverlay } from '@/components/composed/loading-overlay';
 import loadingStore from '@/store/LoadingStore';
-import Notification from '@/components/common/Notification';
 import Series from '@/features/series/components/management/Series';
 import Courses from '@/features/series/components/management/Courses';
 
@@ -70,14 +69,13 @@ const AdminDashboard = () => {
     };
 
     return (
-        <div className="flex h-screen bg-admin-bg">
-            <Notification />
+        <div className="flex h-screen bg-muted/30">
 
             {/* Sidebar */}
             <aside
                 className={`
                     ${sidebarOpen ? 'w-64' : 'w-[72px]'} 
-                    bg-white border-r border-gray-200 
+                    bg-card border-r border-border 
                     transition-all duration-300 ease-in-out
                     flex flex-col flex-shrink-0
                     max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-40
@@ -85,14 +83,14 @@ const AdminDashboard = () => {
                 `}
             >
                 {/* Logo */}
-                <div className="h-16 flex items-center gap-3 px-4 border-b border-gray-100 flex-shrink-0">
-                    <div className="w-9 h-9 bg-admin-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="h-16 flex items-center gap-3 px-4 border-b border-border flex-shrink-0">
+                    <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
                         <Logo size={20} className="text-white" />
                     </div>
                     {sidebarOpen && (
                         <div className="min-w-0">
-                            <h1 className="font-bold text-base text-gray-900 truncate">OpenIdear</h1>
-                            <p className="text-[11px] text-gray-400 font-medium">Admin Panel</p>
+                            <h1 className="font-bold text-base text-foreground truncate">OpenIdear</h1>
+                            <p className="text-[11px] text-muted-foreground font-medium">Admin Panel</p>
                         </div>
                     )}
                 </div>
@@ -109,15 +107,15 @@ const AdminDashboard = () => {
                                     className={`
                                         w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left
                                         transition-all duration-150 text-[13.5px] font-medium
-                                        focus:outline-none focus-visible:ring-2 focus-visible:ring-admin-primary-ring
+                                        focus:outline-none focus-visible:ring-2 focus-visible:ring-ring
                                         ${isActive
-                                            ? 'bg-indigo-100/70 text-admin-primary border-l-[3px] border-admin-primary pl-[9px]'
-                                            : 'text-gray-600 hover:bg-gray-100/60 hover:text-gray-900 border-l-[3px] border-transparent pl-[9px]'
+                                            ? 'bg-primary/10 text-primary border-l-[3px] border-primary pl-[9px]'
+                                            : 'text-muted-foreground hover:bg-muted hover:text-foreground border-l-[3px] border-transparent pl-[9px]'
                                         }
                                     `}
                                     title={!sidebarOpen ? item.label : undefined}
                                 >
-                                    <item.icon size={18} className={isActive ? 'text-admin-primary' : 'text-gray-400'} />
+                                    <item.icon size={18} className={isActive ? 'text-primary' : 'text-muted-foreground'} />
                                     {sidebarOpen && <span className="truncate">{item.label}</span>}
                                 </button>
                             );
@@ -126,10 +124,10 @@ const AdminDashboard = () => {
                 </nav>
 
                 {/* Bottom section */}
-                <div className="border-t border-gray-100 p-3 flex-shrink-0">
+                <div className="border-t border-border p-3 flex-shrink-0">
                     <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors text-[13.5px] font-medium"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors text-[13.5px] font-medium"
                         title={sidebarOpen ? 'Thu gọn sidebar' : 'Mở rộng sidebar'}
                     >
                         {sidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeft size={18} />}
@@ -149,20 +147,20 @@ const AdminDashboard = () => {
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Header */}
-                <header className="h-16 bg-white border-b border-gray-200 px-4 lg:px-8 flex items-center justify-between flex-shrink-0">
+                <header className="h-16 bg-card border-b border-border px-4 lg:px-8 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setSidebarOpen(!sidebarOpen)}
-                            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors md:hidden"
+                            className="p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors md:hidden"
                             aria-label="Toggle sidebar"
                         >
                             <Menu size={20} />
                         </button>
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900 leading-tight">
+                            <h2 className="text-lg font-semibold text-foreground leading-tight">
                                 {menuItems.find(item => item.id === activeTab)?.label}
                             </h2>
-                            <p className="text-xs text-gray-400 hidden sm:block">
+                            <p className="text-xs text-muted-foreground hidden sm:block">
                                 Quản lý và theo dõi {menuItems.find(item => item.id === activeTab)?.label.toLowerCase()}
                             </p>
                         </div>
@@ -171,7 +169,7 @@ const AdminDashboard = () => {
                     <div className="flex items-center gap-2">
                         {/* Notifications */}
                         <button
-                            className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-admin-primary-ring"
+                            className="relative p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             aria-label="Notifications"
                         >
                             <Bell size={20} />
@@ -179,13 +177,13 @@ const AdminDashboard = () => {
                         </button>
 
                         {/* User menu */}
-                        <div className="flex items-center gap-2 ml-1 pl-3 border-l border-gray-200">
-                            <div className="w-8 h-8 bg-admin-primary-light rounded-full flex items-center justify-center">
-                                <User size={16} className="text-admin-primary" />
+                        <div className="flex items-center gap-2 ml-1 pl-3 border-l border-border">
+                            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                <User size={16} className="text-primary" />
                             </div>
-                            <button className="hidden sm:flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
+                            <button className="hidden sm:flex items-center gap-1 text-sm font-medium text-foreground hover:text-foreground/80 transition-colors">
                                 <span>Admin</span>
-                                <ChevronDown size={14} className="text-gray-400" />
+                                <ChevronDown size={14} className="text-muted-foreground" />
                             </button>
                         </div>
                     </div>
@@ -193,7 +191,7 @@ const AdminDashboard = () => {
 
                 {/* Content */}
                 <main className="flex-1 p-4 lg:p-8 overflow-auto">
-                    <LoadingComponent isLoading={isLoading} />
+                    <LoadingOverlay isLoading={isLoading} />
                     {renderContent()}
                 </main>
             </div>

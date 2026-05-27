@@ -1,5 +1,5 @@
 import Logo from "@/components/common/Logo";
-import { PostInterface } from "@/app/profile/[username]/page";
+import { PostInterface } from "@/app/(marketing)/profile/[username]/page";
 import { calculateGapTime } from "@/common/datetime";
 import { CategoryLinkCustom, PostLinkCustom } from "@/components/common/LinkCustom";
 
