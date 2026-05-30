@@ -1,10 +1,10 @@
-import axios from 'axios';
+import { Suspense } from 'react';
 import RecentlyPost from './RecentlyPost';
 import HotSeries from '@/features/series/components/hot_series/HotSeries';
 
 export default async function MainPage() {
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-background">
             {/* Hero Section */}
             <div className="relative h-100 bg-cover bg-center" style={{ backgroundImage: `url(banner/recently-post-banner.jpg)` }}>
                 <div className="absolute inset-0 bg-black/30" />
@@ -16,8 +16,10 @@ export default async function MainPage() {
                 </div>
             </div>
             {/* Climate Change Section */}
-            <div className="bg-gray-50 py-12">
-                <RecentlyPost />
+            <div className="bg-muted/30 py-12">
+                <Suspense fallback={<div className="flex justify-center py-20"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+                    <RecentlyPost />
+                </Suspense>
             </div>
             <HotSeries />
         </div>

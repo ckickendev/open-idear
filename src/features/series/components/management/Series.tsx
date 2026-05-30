@@ -1,6 +1,6 @@
 'use client';
 import convertDate from '@/common/datetime';
-import alertStore from "@/store/AlertStore";
+import { toast } from 'sonner';
 import loadingStore from "@/store/LoadingStore";
 import { seriesApi } from '@/features/series/api/series.api';
 import { Trash2, Edit, X, Plus, BookOpen, BookText } from "lucide-react";
@@ -31,8 +31,6 @@ const Series = () => {
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
     const itemsPerPage = 15;
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
     const changeLoad = loadingStore((state) => state.changeLoad);
     const { t } = useTranslation();
     const [formData, setFormData] = useState({ _id: '', title: '', slug: '', description: '', price: 0 });
@@ -44,7 +42,7 @@ const Series = () => {
                 const response = await seriesApi.getAllSeries();
                 if (response.success) setSeries(response.data.series || response.data);
                 else throw new Error(response.message);
-            } catch (error: any) { setType('error'); setMessage(error?.message); }
+            } catch (error: any) {  toast.error(error?.message); }
             finally { changeLoad(); setIsDataLoading(false); }
         };
         fetchSeries();
@@ -74,30 +72,30 @@ const Series = () => {
         if (formData.title.trim()) {
             try {
                 const newSeries = await seriesApi.createSeries({ title: formData.title, slug: formData.slug || formData.title.toLowerCase().replace(/\s+/g, '-'), description: formData.description, price: formData.price });
-                if (newSeries.success) { setSeries([...series, newSeries.data.series]); setType('info'); setMessage('Thêm series thành công'); }
+                if (newSeries.success) { setSeries([...series, newSeries.data.series]);  toast.success('Thêm series thành công'); }
                 else throw new Error(newSeries.message);
-            } catch (error: any) { setType('error'); setMessage(error?.message); }
+            } catch (error: any) {  toast.error(error?.message); }
             finally { setShowModal(false); changeLoad(); }
         }
     };
 
     const handleEditSeries = () => {
         changeLoad();
-        if (!formData.title.trim()) { setType('error'); setMessage('Tiêu đề không được để trống'); changeLoad(); return; }
+        if (!formData.title.trim()) {  toast.success('Tiêu đề không được để trống'); changeLoad(); return; }
         seriesApi.updateSeries({ _id: selectedItem?._id, title: formData.title, slug: formData.title.toLowerCase().replace(/\s+/g, '-'), description: formData.description, price: formData.price })
             .then(response => {
-                if (response.success) { setSeries(series.map(i => i._id === selectedItem?._id ? response.data.series : i)); setType('info'); setMessage('Cập nhật series thành công'); }
+                if (response.success) { setSeries(series.map(i => i._id === selectedItem?._id ? response.data.series : i));  toast.success('Cập nhật series thành công'); }
                 else throw new Error(response.message);
             })
-            .catch(error => { setType('error'); setMessage(error?.message); })
+            .catch(error => {  toast.error(error?.message); })
             .finally(() => { setShowModal(false); changeLoad(); });
     };
 
     const handleDeleteSeries = (id: string) => {
         changeLoad();
         seriesApi.deleteSeries(id)
-            .then(response => { if (response.success) { setType('info'); setMessage('Xóa series thành công'); } else throw new Error(response.message); })
-            .catch(error => { setType('error'); setMessage(error?.message); })
+            .then(response => { if (response.success) {  toast.success('Xóa series thành công'); } else throw new Error(response.message); })
+            .catch(error => {  toast.error(error?.message); })
             .finally(() => changeLoad());
         setSeries(series.filter(i => i._id !== id));
     };

@@ -9,7 +9,7 @@ import {
 import cartStore, { CartItem } from '@/store/CartStore';
 import { paymentApi } from '@/features/series/api/payment.api';
 import authenticationStore from '@/store/AuthenticationStore';
-import Toast, { useToast } from '@/components/common/Toast';
+import { toast } from 'sonner';
 
 type PaymentGateway = 'demo' | 'stripe' | 'vnpay' | 'momo';
 
@@ -165,7 +165,6 @@ const CheckoutPage = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentSuccess, setPaymentSuccess] = useState(false);
     const [removingId, setRemovingId] = useState<string | null>(null);
-    const { toast, showToast, hideToast } = useToast();
 
     useEffect(() => {
         if (!currentUser?._id) {
@@ -178,9 +177,9 @@ const CheckoutPage = () => {
         setRemovingId(courseId);
         const result = await removeFromCart(courseId);
         if (result.success) {
-            showToast('Đã xóa khỏi giỏ hàng', 'info');
+            toast.info('Đã xóa khỏi giỏ hàng');
         } else {
-            showToast(result.message || 'Không thể xóa', 'error');
+            toast.error(result.message || 'Không thể xóa');
         }
         setRemovingId(null);
     };
@@ -193,14 +192,14 @@ const CheckoutPage = () => {
             // Step 1: Create checkout
             const checkoutRes = await paymentApi.createCheckout();
             if (!checkoutRes.success) {
-                showToast(checkoutRes.message || 'Không thể tạo đơn thanh toán', 'error');
+                toast.error(checkoutRes.message || 'Không thể tạo đơn thanh toán');
                 setIsProcessing(false);
                 return;
             }
 
             const paymentId = checkoutRes.data?.data?._id;
             if (!paymentId) {
-                showToast('Lỗi hệ thống: không tìm thấy mã thanh toán', 'error');
+                toast.error('Lỗi hệ thống: không tìm thấy mã thanh toán');
                 setIsProcessing(false);
                 return;
             }
@@ -211,10 +210,10 @@ const CheckoutPage = () => {
                 clearLocalCart();
                 setPaymentSuccess(true);
             } else {
-                showToast(payRes.message || 'Thanh toán thất bại', 'error');
+                toast.error(payRes.message || 'Thanh toán thất bại');
             }
         } catch (error: any) {
-            showToast(error?.message || 'Đã xảy ra lỗi trong quá trình thanh toán', 'error');
+            toast.error(error?.message || 'Đã xảy ra lỗi trong quá trình thanh toán');
         } finally {
             setIsProcessing(false);
         }
@@ -248,7 +247,6 @@ const CheckoutPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Toast {...toast} onClose={hideToast} />
 
             {/* Header */}
             <div className="bg-white border-b border-gray-200 shadow-sm">

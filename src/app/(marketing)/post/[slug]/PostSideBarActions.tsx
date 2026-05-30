@@ -5,8 +5,7 @@ import authenticationStore from "@/store/AuthenticationStore";
 import { getHeadersToken } from "@/lib/api/axios";
 import { REACT_APP_ROOT_BACKEND } from "@/features/auth/components/authentication";
 import axios from "axios";
-import alertStore from "@/store/AlertStore";
-import Notification from "@/components/common/Notification";
+import { toast } from "sonner";
 import Link from "next/link";
 
 export default function PostSidebarActions({ postData }: any) {
@@ -18,8 +17,7 @@ export default function PostSidebarActions({ postData }: any) {
   const [commentCount, setCommentCount] = useState(postData?.comments?.length);
   const [display, setDisplay] = useState(false);
 
-  const setType = alertStore((state) => state.setType);
-  const setMessage = alertStore((state) => state.setMessage);
+
 
   const handleLike = async () => {
     try {
@@ -38,8 +36,7 @@ export default function PostSidebarActions({ postData }: any) {
         setLikeCount(likeCount - 1);
       }
     } catch (error) {
-      setType('error');
-      setMessage("Error when like post");
+      toast.error("Error when like post");
     }
   };
 
@@ -54,16 +51,13 @@ export default function PostSidebarActions({ postData }: any) {
       console.log("data.post.postlike: ", res.data.isMarked);
       const { isMarked } = res.data;
       if (isMarked) {
-        setType('info');
-        setMessage("Post bookmarked successfully");
+        toast.success("Post bookmarked successfully");
       } else {
-        setType('info');
-        setMessage("Post unbookmarked successfully");
+        toast.info("Post unbookmarked successfully");
       }
       setIsBookmarked(isMarked);
     } catch (error) {
-      setType('error');
-      setMessage("Error when like post");
+      toast.error("Error when bookmarking post");
     }
   };
 
@@ -78,16 +72,13 @@ export default function PostSidebarActions({ postData }: any) {
       console.log("data.post.postlike: ", res.data.isFollowed);
       const { isFollowed } = res.data;
       if (isFollowed) {
-        setType('info');
-        setMessage("User followed successfully");
+        toast.success("User followed successfully");
       } else {
-        setType('info');
-        setMessage("User unfollowed successfully");
+        toast.info("User unfollowed successfully");
       }
       setIsFollowed(isFollowed);
     } catch (error) {
-      setType('error');
-      setMessage("Error when follow user");
+      toast.error("Error when follow user");
     }
   };
 
@@ -105,8 +96,7 @@ export default function PostSidebarActions({ postData }: any) {
         setIsBookmarked(isBookmarked);
         setIsFollowed(isFollowed);
       } catch (error) {
-        setType('error');
-        setMessage("Error when fetching post status");
+        toast.error("Error when fetching post status");
       }
     };
 
@@ -136,7 +126,6 @@ export default function PostSidebarActions({ postData }: any) {
 
   return (
     <>
-      <Notification />
       {display && (
         <div className="hidden md:block fixed left-12 top-1/2 transform -translate-y-1/2 flex flex-col items-center space-y-6 z-10">
           {/* Like Button with Heart */}

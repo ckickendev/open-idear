@@ -8,10 +8,9 @@ import Link from 'next/link';
 import { courseApi } from '@/features/series/api/course.api';
 import { categoryApi } from '@/features/categories/api/category.api';
 import { topicApi } from '@/features/topics/api/topic.api';
-import alertStore from '@/store/AlertStore';
+import { toast } from 'sonner';
 import loadingStore from '@/store/LoadingStore';
 import LoadingComponent from '@/components/common/Loading';
-import Notification from '@/components/common/Notification';
 import HoverNote from '@/components/common/HoverNote';
 
 type Course = {
@@ -71,10 +70,6 @@ const CourseModal = ({ course, onClose, onSaved }: CourseModalProps) => {
         };
         fetchCategoriesAndTopics();
     }, []);
-
-    const setType = alertStore((s) => s.setType);
-    const setMessage = alertStore((s) => s.setMessage);
-
     const handleSave = async () => {
         if (!formData.title.trim()) { setError('Vui lòng nhập tiêu đề'); return; }
         setSaving(true);
@@ -87,8 +82,8 @@ const CourseModal = ({ course, onClose, onSaved }: CourseModalProps) => {
                 res = await courseApi.createCourse({ title: formData.title, categoryIds: formData.categoryIds, topicIds: formData.topicIds });
             }
             if (!res.success) throw new Error(res.message);
-            setType('info');
-            setMessage(course ? 'Cập nhật thành công' : 'Tạo khóa học thành công');
+            
+            toast.success(course ? 'Cập nhật thành công' : 'Tạo khóa học thành công');
             onSaved(res.data.data);
         } catch (e: any) {
             setError(e.message || 'Đã xảy ra lỗi');
@@ -244,8 +239,6 @@ const MyCourses = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [modal, setModal] = useState<{ open: boolean; course: Course | null }>({ open: false, course: null });
 
-    const setType = alertStore((s) => s.setType);
-    const setMessage = alertStore((s) => s.setMessage);
     const isLoading = loadingStore((s) => s.isLoading);
     const changeLoad = loadingStore((s) => s.changeLoad);
 
@@ -258,8 +251,8 @@ const MyCourses = () => {
         if (res.success) {
             setCourses(res.data.courses ?? []);
         } else {
-            setType('error');
-            setMessage(res.message || 'Không thể tải danh sách khóa học');
+            
+            toast.success(res.message || 'Không thể tải danh sách khóa học');
         }
     };
 
@@ -283,11 +276,11 @@ const MyCourses = () => {
         changeLoad();
         if (res.success) {
             setCourses((prev) => prev.filter((c) => c._id !== courseId));
-            setType('info');
-            setMessage('Đã xóa khóa học');
+            
+            toast.success('Đã xóa khóa học');
         } else {
-            setType('error');
-            setMessage(res.message || 'Không thể xóa khóa học');
+            
+            toast.success(res.message || 'Không thể xóa khóa học');
         }
     };
 
@@ -298,11 +291,11 @@ const MyCourses = () => {
         changeLoad();
         if (res.success) {
             setCourses((prev) => prev.map(c => c._id === courseId ? { ...c, status: newStatus } : c));
-            setType('info');
-            setMessage(newStatus === 'published' ? 'Đã xuất bản khóa học' : 'Đã đưa khóa học về bản nháp');
+            
+            toast.success(newStatus === 'published' ? 'Đã xuất bản khóa học' : 'Đã đưa khóa học về bản nháp');
         } else {
-            setType('error');
-            setMessage(res.message || 'Lỗi khi cập nhật trạng thái khóa học');
+            
+            toast.success(res.message || 'Lỗi khi cập nhật trạng thái khóa học');
         }
     };
 
@@ -310,7 +303,7 @@ const MyCourses = () => {
 
     return (
         <div className="min-h-screen bg-white font-sans text-gray-900">
-            <Notification />
+            
             <LoadingComponent isLoading={isLoading} />
 
             {/* Top Navigation */}

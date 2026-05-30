@@ -6,7 +6,7 @@ import convertDate from '@/common/datetime';
 import authenticationStore from "@/store/AuthenticationStore";
 import loadingStore from '@/store/LoadingStore';
 import axios from 'axios';
-import alertStore from '@/store/AlertStore';
+import { toast } from 'sonner';
 import { UserRoundPen } from 'lucide-react';
 
 // Zod schema for validation
@@ -22,8 +22,6 @@ const ProfileInformation = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const changeLoad = loadingStore((state) => state.changeLoad);
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
     const currentUser = authenticationStore((state) => state.currentUser);
     const updateCurrentUser = authenticationStore((state) => state.updateCurrentUser);
 
@@ -68,17 +66,17 @@ const ProfileInformation = () => {
                 console.log("ressss");
 
                 if (res.status == 200) {
-                    setType('info');
-                    setMessage('Update successfully');
+                    
+                    toast.success('Update successfully');
                     updateCurrentUser({ bio: data.bio, name: data.name });
                 }
             } else {
-                setType('error');
-                setMessage("Error !");
+                
+                toast.error("Error !");
             }
         } catch (error: any) {
-            setType('error');
-            setMessage(error?.response?.data?.message || error?.message);
+            
+            toast.error(error?.response?.data?.message || error?.message);
             console.error('Error fetching categories:', error);
         } finally {
             setIsLoading(false);

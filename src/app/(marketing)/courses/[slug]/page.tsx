@@ -9,7 +9,7 @@ import { Play, Check, ChevronDown, ChevronUp, Globe, Info, Clock, Smartphone, In
 import Link from 'next/link';
 import { api } from '@/lib/api/axios';
 import { courseApi } from '@/features/series/api/course.api';
-import Toast, { useToast } from '@/components/common/Toast';
+import { toast } from 'sonner';
 
 type Lesson = {
     _id: string;
@@ -53,7 +53,6 @@ const CourseDetail = () => {
     const changeLoad = loadingStore(state => state.changeLoad);
     const currentUser = authenticationStore(state => state.currentUser);
     const { items: cartItems, addToCart, fetchCart } = cartStore();
-    const { toast, showToast, hideToast } = useToast();
 
     const toggleChapter = (chapterId: string) => {
         setExpandedChapters(prev =>
@@ -124,7 +123,7 @@ const CourseDetail = () => {
 
     const handleAddToCart = async () => {
         if (!currentUser?._id) {
-            showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
+            toast.warning('Vui lòng đăng nhập để thêm vào giỏ hàng');
             return;
         }
         if (!course) return;
@@ -132,17 +131,17 @@ const CourseDetail = () => {
         setIsAddingToCart(true);
         const result = await addToCart(course._id);
         if (result.success) {
-            showToast('Đã thêm vào giỏ hàng!', 'success');
+            toast.success('Đã thêm vào giỏ hàng!');
             setIsInCart(true);
         } else {
-            showToast(result.message || 'Không thể thêm vào giỏ hàng', 'error');
+            toast.error(result.message || 'Không thể thêm vào giỏ hàng');
         }
         setIsAddingToCart(false);
     };
 
     const handleBuyNow = async () => {
         if (!currentUser?._id) {
-            showToast('Vui lòng đăng nhập để mua khóa học', 'warning');
+            toast.warning('Vui lòng đăng nhập để mua khóa học');
             return;
         }
         if (!course) return;
@@ -153,7 +152,7 @@ const CourseDetail = () => {
             const result = await addToCart(course._id);
             setIsAddingToCart(false);
             if (!result.success) {
-                showToast(result.message || 'Không thể thêm vào giỏ hàng', 'error');
+                toast.error(result.message || 'Không thể thêm vào giỏ hàng');
                 return;
             }
         }
@@ -164,7 +163,6 @@ const CourseDetail = () => {
 
     return (
         <div className="bg-white min-h-screen relative pb-20">
-            <Toast {...toast} onClose={hideToast} />
 
             {/* Header / Intro */}
             <div className="bg-gray-900 text-white py-12">

@@ -5,10 +5,9 @@ import authenticationStore from '@/store/AuthenticationStore';
 import { CldUploadWidget } from 'next-cloudinary';
 import axios from 'axios';
 const REACT_APP_ROOT_BACKEND = process.env.NEXT_PUBLIC_ROOT_BACKEND;;
-import alertStore from '@/store/AlertStore';
+import { toast } from 'sonner';
 import loadingStore from '@/store/LoadingStore';
 import { getHeadersToken } from '@/lib/api/axios';
-import Notification from '@/components/common/Notification';
 
 const ProfileInfo = ({ userInfor }: any) => {
     console.log("render profile infor");
@@ -17,8 +16,6 @@ const ProfileInfo = ({ userInfor }: any) => {
     const [isFollowed, setIsFollowed] = useState(userInfor?.isFollowed);
     const [unfollowBtn, setUnfollowBtn] = useState(false);
 
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
     const changeLoad = loadingStore((state) => state.changeLoad);
     const updateCurrentUser = authenticationStore((state) => state.updateCurrentUser);
     const currentUser = authenticationStore((state) => state.currentUser);
@@ -62,23 +59,23 @@ const ProfileInfo = ({ userInfor }: any) => {
             }
             const { isFollowed } = res.data;
             if (isFollowed) {
-                setType('info');
-                setMessage("User followed successfully");
+                
+                toast.success("User followed successfully");
             } else {
-                setType('info');
-                setMessage("User unfollowed successfully");
+                
+                toast.success("User unfollowed successfully");
             }
             setUnfollowBtn(false);
             setIsFollowed(isFollowed);
         } catch (error) {
-            setType('error');
-            setMessage("Error when follow user");
+            
+            toast.error("Error when follow user");
         }
     }
 
     return (
         <div className="w-full bg-white rounded-lg shadow">
-            <Notification />
+            
             {/* Cover Image & Profile Section */}
             <div className="relative">
                 <div className="w-full h-100 bg-gray-100 relative">
@@ -117,19 +114,19 @@ const ProfileInfo = ({ userInfor }: any) => {
                                                 background: result?.info?.url
                                             });
                                             if (res.status == 200) {
-                                                setType('info');
-                                                setMessage('Update successfully');
+                                                
+                                                toast.success('Update successfully');
                                                 updateCurrentUser({ background: result?.info?.url })
                                                 setShowBackgroundUpload(false);
                                             }
                                         } else {
-                                            setType('error');
-                                            setMessage("Error !");
+                                            
+                                            toast.error("Error !");
                                             changeLoad();
                                         }
                                     } catch (error: any) {
-                                        setType('error');
-                                        setMessage(error?.response?.data?.message || error?.message);
+                                        
+                                        toast.error(error?.response?.data?.message || error?.message);
                                         changeLoad();
                                         console.error('Error fetching categories:', error);
                                     }
@@ -188,19 +185,19 @@ const ProfileInfo = ({ userInfor }: any) => {
                                                         avatar: result?.info?.url
                                                     });
                                                     if (res.status == 200) {
-                                                        setType('info');
-                                                        setMessage('Update successfully');
+                                                        
+                                                        toast.success('Update successfully');
                                                         updateCurrentUser({ avatar: result?.info?.url })
                                                         setShowAvatarUpload(false);
                                                     }
                                                 } else {
-                                                    setType('error');
-                                                    setMessage("Authentication error !");
+                                                    
+                                                    toast.error("Authentication error !");
                                                     changeLoad();
                                                 }
                                             } catch (error: any) {
-                                                setType('error');
-                                                setMessage(error?.response?.data?.message || error?.message)
+                                                
+                                                toast.error(error?.response?.data?.message || error?.message)
                                                 changeLoad();
                                                 console.error('Error fetching categories:', error);
                                             }

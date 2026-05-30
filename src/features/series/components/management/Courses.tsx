@@ -1,5 +1,5 @@
 'use client';
-import alertStore from "@/store/AlertStore";
+import { toast } from 'sonner';
 import loadingStore from "@/store/LoadingStore";
 import { courseApi } from '@/features/series/api/course.api';
 import { Trash2, Edit, X, Plus, BookOpen } from "lucide-react";
@@ -26,8 +26,6 @@ const Courses = () => {
     const [listStatus, setListStatus] = useState<'all' | 'trash'>('all');
     const [formData, setFormData] = useState({ _id: '', title: '', slug: '', description: '', thumbnail: '', price: 0, discountPrice: 0 });
 
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
     const changeLoad = loadingStore((state) => state.changeLoad);
     const { t } = useTranslation();
 
@@ -39,7 +37,7 @@ const Courses = () => {
             const response = await courseApi.getCoursesByUser(listStatus);
             if (response.success) setCourses(response.data.courses);
             else throw new Error(response.message);
-        } catch (error: any) { setType('error'); setMessage(error?.message); }
+        } catch (error: any) {  toast.error(error?.message); }
         finally { changeLoad(); setIsDataLoading(false); }
     };
 
@@ -60,15 +58,15 @@ const Courses = () => {
         try {
             if (selectedItem) {
                 const response = await courseApi.updateCourse({ courseId: formData._id, ...formData });
-                if (response.success) { setCourses(courses?.map(c => c._id === formData._id ? response.data.data : c)); setMessage('Cập nhật khóa học thành công'); }
+                if (response.success) { setCourses(courses?.map(c => c._id === formData._id ? response.data.data : c)); toast.success('Cập nhật khóa học thành công'); }
                 else throw new Error(response.message);
             } else {
                 const response = await courseApi.createCourse({ title: formData.title });
-                if (response.success) { setCourses(prev => prev ? [...prev, response.data.data] : [response.data.data]); setMessage('Thêm khóa học thành công'); }
+                if (response.success) { setCourses(prev => prev ? [...prev, response.data.data] : [response.data.data]); toast.success('Thêm khóa học thành công'); }
                 else throw new Error(response.message);
             }
-            setType('info'); setShowModal(false);
-        } catch (error: any) { setType('error'); setMessage(error?.message); }
+             setShowModal(false);
+        } catch (error: any) {  toast.error(error?.message); }
         finally { changeLoad(); }
     };
 
@@ -78,11 +76,11 @@ const Courses = () => {
             const response = await courseApi.deleteCourse(id);
             if (response.success) {
                 setCourses(courses.filter(c => c._id !== id));
-                setMessage('Xóa khóa học thành công');
-                setType('info');
+                toast.success('Xóa khóa học thành công');
+                
             } else throw new Error(response.message);
         } catch (error: any) {
-            setType('error'); setMessage(error?.message);
+             toast.error(error?.message);
         } finally {
             changeLoad();
         }
@@ -94,11 +92,11 @@ const Courses = () => {
             const response = await courseApi.restoreCourse(id);
             if (response.success) {
                 setCourses(courses.filter(c => c._id !== id));
-                setMessage('Khôi phục khóa học thành công');
-                setType('info');
+                toast.success('Khôi phục khóa học thành công');
+                
             } else throw new Error(response.message);
         } catch (error: any) {
-            setType('error'); setMessage(error?.message);
+             toast.error(error?.message);
         } finally {
             changeLoad();
         }

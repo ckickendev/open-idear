@@ -1,6 +1,6 @@
 'use client';
 import convertDate from '@/common/datetime';
-import alertStore from "@/store/AlertStore";
+import { toast } from 'sonner';
 import loadingStore from "@/store/LoadingStore";
 import { topicApi } from '@/features/topics/api/topic.api';
 import { Edit, Plus, Trash2, X, Hash } from "lucide-react";
@@ -26,8 +26,6 @@ const Topic = () => {
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
     const itemsPerPage = 15;
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
     const changeLoad = loadingStore((state) => state.changeLoad);
     const { t } = useTranslation();
 
@@ -41,7 +39,7 @@ const Topic = () => {
                     setTopics(topicsList);
                 } else throw new Error(response.message);
             } catch (error: any) {
-                setType('error'); setMessage(error?.response?.data?.message || error?.message);
+                 toast.error(error?.response?.data?.message || error?.message);
             } finally { changeLoad(); setIsDataLoading(false); }
         };
         fetchTopics();
@@ -65,37 +63,37 @@ const Topic = () => {
     const closeModal = () => { setShowModal(false); setSelectedItem(null); setFormData({ _id: '', name: '', description: '' }); };
 
     const handleAddTopic = async () => {
-        if (!formData.name.trim()) { setType('error'); setMessage('Tên chủ đề không được để trống'); return; }
+        if (!formData.name.trim()) {  toast.success('Tên chủ đề không được để trống'); return; }
         changeLoad();
         try {
             const newTopic = await topicApi.createTopic({ name: formData.name, description: formData.description });
             if (newTopic.success) {
                 setTopics([...topics, newTopic.data?.data || newTopic.data]);
-                setType('info'); setMessage('Thêm chủ đề thành công');
+                 toast.success('Thêm chủ đề thành công');
             } else throw new Error(newTopic.message);
-        } catch (error: any) { setType('error'); setMessage(error?.message || 'Có lỗi xảy ra'); }
+        } catch (error: any) {  toast.error(error?.message || 'Có lỗi xảy ra'); }
         finally { setShowModal(false); changeLoad(); }
     };
 
     const handleEditTopic = () => {
-        if (!formData.name.trim()) { setType('error'); setMessage('Tên chủ đề không được để trống'); return; }
+        if (!formData.name.trim()) {  toast.success('Tên chủ đề không được để trống'); return; }
         changeLoad();
         topicApi.updateTopic(selectedItem?._id as string, { name: formData.name, description: formData.description })
             .then(response => {
                 if (response.success) {
                     setTopics(topics.map(t => t._id === selectedItem?._id ? { ...t, name: formData.name, description: formData.description } : t));
-                    setType('info'); setMessage('Cập nhật chủ đề thành công');
+                     toast.success('Cập nhật chủ đề thành công');
                 } else throw new Error(response.message);
             })
-            .catch(error => { setType('error'); setMessage(error?.message || 'Có lỗi xảy ra'); })
+            .catch(error => {  toast.error(error?.message || 'Có lỗi xảy ra'); })
             .finally(() => { setShowModal(false); changeLoad(); });
     };
 
     const handleDeleteTopic = (id: string) => {
         changeLoad();
         topicApi.deleteTopic(id)
-            .then(response => { if (response.success) { setType('info'); setMessage('Xóa chủ đề thành công'); } else throw new Error(response.message); })
-            .catch(error => { setType('error'); setMessage(error?.message || 'Có lỗi xảy ra'); })
+            .then(response => { if (response.success) {  toast.success('Xóa chủ đề thành công'); } else throw new Error(response.message); })
+            .catch(error => {  toast.error(error?.message || 'Có lỗi xảy ra'); })
             .finally(() => changeLoad());
         setTopics(topics.filter(t => t._id !== id));
     };

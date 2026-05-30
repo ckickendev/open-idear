@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import { CldUploadWidget } from 'next-cloudinary';
 import axios from 'axios';
 import { getHeadersToken } from '@/lib/api/axios';
-import alertStore from '@/store/AlertStore';
+import { toast } from 'sonner';
 import loadingStore from '@/store/LoadingStore';
 
 const roleConfig: Record<number, { label: string; color: string; icon: React.ReactNode }> = {
@@ -33,8 +33,6 @@ const ProfileHeader: React.FC = () => {
 
     const currentUser = authenticationStore((state) => state.currentUser);
     const updateCurrentUser = authenticationStore((state) => state.updateCurrentUser);
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
     const changeLoad = loadingStore((state) => state.changeLoad);
 
     const params = useParams();
@@ -66,13 +64,13 @@ const ProfileHeader: React.FC = () => {
             const res = await axios.patch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/followUser?userId=${displayUser._id}`, {}, { headers: getHeadersToken() });
             if (res.status === 200) {
                 const followed = res.data.isFollowed;
-                setType('info');
-                setMessage(followed ? "User followed successfully" : "User unfollowed successfully");
+                
+                toast.success(followed ? "User followed successfully" : "User unfollowed successfully");
                 setIsFollowed(followed);
             }
         } catch (error) {
-            setType('error');
-            setMessage("Error when following user");
+            
+            toast.error("Error when following user");
         }
     };
 
@@ -86,15 +84,15 @@ const ProfileHeader: React.FC = () => {
                 [type]: url,
             });
             if (res.status === 200) {
-                setType('info');
-                setMessage('Updated successfully!');
+                
+                toast.success('Updated successfully!');
                 updateCurrentUser({ [type]: url });
                 setShowAvatarUpload(false);
                 setShowBgUpload(false);
             }
         } catch (error: any) {
-            setType('error');
-            setMessage(error?.response?.data?.message || 'Upload failed');
+            
+            toast.error(error?.response?.data?.message || 'Upload failed');
         } finally {
             changeLoad();
         }

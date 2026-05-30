@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Bookmark, FileText, Layers } from 'lucide-react';
 import axios from 'axios';
 import authenticationStore from '@/store/AuthenticationStore';
-import alertStore from '@/store/AlertStore';
+import { toast } from 'sonner';
 import PostElement from '../PostElement';
 import SeriesElement from '../SeriesElement';
 import { PostInterface } from '../[username]/page';
@@ -20,8 +20,6 @@ export default function ProfileSavedPage() {
     const [transitioning, setTransitioning] = useState(false);
 
     const currentUser = authenticationStore((state) => state.currentUser);
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
 
     useEffect(() => {
         const fetchSaved = async () => {
@@ -42,8 +40,8 @@ export default function ProfileSavedPage() {
                 if (postsRes.status === 200) setMarkedPosts(postsRes.data.markedPost || []);
                 if (seriesRes.status === 200) setMarkedSeries(seriesRes.data.markedSeries || []);
             } catch (error: any) {
-                setType('error');
-                setMessage(error?.response?.data?.message || 'Failed to load saved items');
+                
+                toast.error(error?.response?.data?.message || 'Failed to load saved items');
             } finally {
                 setLoading(false);
             }

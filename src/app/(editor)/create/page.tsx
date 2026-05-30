@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { Suspense, useState, useCallback, useRef, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -42,6 +42,23 @@ import { api } from '@/lib/api/axios';
 const AUTO_SAVE_DELAY = 3000;
 
 export default function CreatePost() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-editor-bg flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-8 h-8 border-2 border-editor-accent border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-editor-muted">Loading editor...</p>
+          </div>
+        </div>
+      }
+    >
+      <CreatePostContent />
+    </Suspense>
+  );
+}
+
+function CreatePostContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();

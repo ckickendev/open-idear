@@ -2,7 +2,7 @@
 import { useParams } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import alertStore from "@/store/AlertStore";
+import { toast } from 'sonner';
 import loadingStore from "@/store/LoadingStore";
 import {
     Plus, Video, FileText, Type, Trash2, Edit2, ArrowLeft,
@@ -39,8 +39,6 @@ type VideoUploadModalProps = {
 };
 
 const VideoUploadModal = ({ chapterId, onClose, onSuccess }: VideoUploadModalProps) => {
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
 
     const handleVideoUploaded = async (mediaId: string, title: string) => {
         try {
@@ -50,13 +48,13 @@ const VideoUploadModal = ({ chapterId, onClose, onSuccess }: VideoUploadModalPro
                 `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/lesson/add`,
                 { chapterId, title, type: 'video', media: mediaId, order: 0 },
             );
-            setType('info');
-            setMessage('Video uploaded successfully!');
+            
+            toast.success('Video uploaded successfully!');
             onSuccess(chapterId, lessonRes.data.data);
             onClose();
         } catch (err: any) {
-            setType('error');
-            setMessage(err?.response?.data?.message || 'Failed to create lesson');
+            
+            toast.success(err?.response?.data?.message || 'Failed to create lesson');
         }
     };
 
@@ -192,8 +190,6 @@ const CurriculumManager = () => {
     const [moveLessonModal, setMoveLessonModal] = useState<{ lesson: Lesson; sourceChapterId: string } | null>(null);
     const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
 
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
     const changeLoad = loadingStore((state) => state.changeLoad);
 
     useEffect(() => { fetchCourseData(); }, [courseId]);
@@ -240,9 +236,9 @@ const CurriculumManager = () => {
             const newChapter = { ...response.data.data, lessons: [] };
             setChapters((prev) => [...prev, newChapter]);
             setExpandedChapters(prev => new Set(prev).add(newChapter._id));
-            setType('info'); setMessage('Đã thêm chương mới');
+             toast.success('Đã thêm chương mới');
         } catch (error: any) {
-            setType('error'); setMessage(error?.response?.data?.message || 'Lỗi khi thêm chương');
+             toast.error(error?.response?.data?.message || 'Lỗi khi thêm chương');
         } finally { changeLoad(); }
     };
 
@@ -261,9 +257,9 @@ const CurriculumManager = () => {
             setChapters((prev) => prev.map((c, i) =>
                 i === chapterIndex ? { ...c, lessons: [...c.lessons, response.data.data] } : c
             ));
-            setType('info'); setMessage('Đã thêm bài học mới');
+             toast.success('Đã thêm bài học mới');
         } catch (error: any) {
-            setType('error'); setMessage(error?.response?.data?.message || 'Lỗi khi thêm bài học');
+             toast.error(error?.response?.data?.message || 'Lỗi khi thêm bài học');
         } finally { changeLoad(); }
     };
 
@@ -284,9 +280,9 @@ const CurriculumManager = () => {
                 chapterId, title,
             });
             setChapters((prev) => prev.map(c => c._id === chapterId ? { ...c, title } : c));
-            setType('info'); setMessage('Đã cập nhật chương');
+             toast.success('Đã cập nhật chương');
         } catch (error: any) {
-            setType('error'); setMessage(error?.response?.data?.message || 'Lỗi khi cập nhật chương');
+             toast.error(error?.response?.data?.message || 'Lỗi khi cập nhật chương');
         } finally { changeLoad(); }
     };
 
@@ -311,10 +307,10 @@ const CurriculumManager = () => {
                 return c;
             }));
 
-            setType('info'); setMessage('Đã chuyển bài học');
+             toast.success('Đã chuyển bài học');
             setMoveLessonModal(null);
         } catch (error: any) {
-            setType('error'); setMessage(error?.response?.data?.message || 'Lỗi khi chuyển bài học');
+             toast.error(error?.response?.data?.message || 'Lỗi khi chuyển bài học');
         } finally { changeLoad(); }
     };
 
@@ -334,9 +330,9 @@ const CurriculumManager = () => {
                     lessons: c.lessons.map(l => l._id === lessonId ? { ...l, title } : l)
                 } : c
             ));
-            setType('info'); setMessage('Đã cập nhật bài học');
+             toast.success('Đã cập nhật bài học');
         } catch (error: any) {
-            setType('error'); setMessage(error?.response?.data?.message || 'Lỗi khi cập nhật bài học');
+             toast.error(error?.response?.data?.message || 'Lỗi khi cập nhật bài học');
         } finally { changeLoad(); }
     };
 
@@ -355,9 +351,9 @@ const CurriculumManager = () => {
                     lessons: c.lessons.filter(l => l._id !== lessonId)
                 } : c
             ));
-            setType('info'); setMessage('Đã xóa bài học');
+             toast.success('Đã xóa bài học');
         } catch (error: any) {
-            setType('error'); setMessage(error?.response?.data?.message || 'Lỗi khi xóa bài học');
+             toast.error(error?.response?.data?.message || 'Lỗi khi xóa bài học');
         } finally { changeLoad(); }
     };
 
@@ -372,11 +368,11 @@ const CurriculumManager = () => {
                 status: newStatus
             });
             setCourseStatus(newStatus);
-            setType('info'); 
-            setMessage(newStatus === 'published' ? 'Đã xuất bản khóa học' : 'Đã đưa khóa học về bản nháp');
+             
+            toast.success(newStatus === 'published' ? 'Đã xuất bản khóa học' : 'Đã đưa khóa học về bản nháp');
         } catch (error: any) {
-            setType('error'); 
-            setMessage(error?.response?.data?.message || 'Lỗi khi cập nhật trạng thái khóa học');
+             
+            toast.error(error?.response?.data?.message || 'Lỗi khi cập nhật trạng thái khóa học');
         } finally { 
             changeLoad(); 
         }

@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Settings, User, Lock, Bell, Save, X } from 'lucide-react';
 import authenticationStore from '@/store/AuthenticationStore';
-import alertStore from '@/store/AlertStore';
+import { toast } from 'sonner';
 import loadingStore from '@/store/LoadingStore';
 import axios from 'axios';
 import convertDate from '@/common/datetime';
@@ -79,8 +79,6 @@ export default function ProfileSettingsPage() {
 
     const currentUser = authenticationStore((state) => state.currentUser);
     const updateCurrentUser = authenticationStore((state) => state.updateCurrentUser);
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
     const changeLoad = loadingStore((state) => state.changeLoad);
 
     const profileForm = useForm<ProfileForm>({
@@ -111,14 +109,14 @@ export default function ProfileSettingsPage() {
                 { data }
             );
             if (res.status === 200) {
-                setType('info');
-                setMessage('Profile updated successfully!');
+                
+                toast.success('Profile updated successfully!');
                 updateCurrentUser({ name: data.name, bio: data.bio });
                 setEditingProfile(false);
             }
         } catch (error: any) {
-            setType('error');
-            setMessage(error?.response?.data?.message || 'Failed to update profile');
+            
+            toast.error(error?.response?.data?.message || 'Failed to update profile');
         } finally {
             setSavingProfile(false);
         }
@@ -135,13 +133,13 @@ export default function ProfileSettingsPage() {
                 { currentPassword: data.currentPassword, newPassword: data.newPassword }
             );
             if (res.status === 200) {
-                setType('info');
-                setMessage('Password updated successfully!');
+                
+                toast.success('Password updated successfully!');
                 passwordForm.reset();
             }
         } catch (error: any) {
-            setType('error');
-            setMessage(error?.response?.data?.message || 'Failed to change password');
+            
+            toast.error(error?.response?.data?.message || 'Failed to change password');
         } finally {
             setSavingPassword(false);
         }

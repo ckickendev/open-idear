@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import axios from 'axios';
 import PostInCategory from './PostInCategory';
 import PostInAnotherCategory from './PostInAnotherCategory';
@@ -51,7 +52,7 @@ export default async function CategoryList({
     const allCategory = await getAllCategory();
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-background">
             {/* Hero Section */}
             <div className="relative h-96 bg-cover bg-center" style={{ backgroundImage: `url(${categoryData?.bgImg})` }}>
                 <div className="absolute inset-0 bg-black/30" />
@@ -63,8 +64,10 @@ export default async function CategoryList({
                 </div>
             </div>
             {/* Climate Change Section */}
-            <div className="bg-gray-50 py-12">
-                <PostInCategory allCategory={allCategory} slug={slug} totalPage={Math.ceil(categoryData?.category?.countData / 6)} />
+            <div className="bg-muted/30 py-12">
+                <Suspense fallback={<div className="flex justify-center py-20"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+                    <PostInCategory allCategory={allCategory} slug={slug} totalPage={Math.ceil(categoryData?.category?.countData / 6)} />
+                </Suspense>
             </div>
             <PostInAnotherCategory slug={slug} />
         </div>

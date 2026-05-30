@@ -1,6 +1,6 @@
 'use client';
 import convertDate from '@/common/datetime';
-import alertStore from "@/store/AlertStore";
+import { toast } from 'sonner';
 import loadingStore from "@/store/LoadingStore";
 import { categoryApi } from '@/features/categories/api/category.api';
 import { Edit, Plus, Trash2, Eye, X, Folder } from "lucide-react";
@@ -34,8 +34,6 @@ const Category = () => {
     const [listStatus, setListStatus] = useState<'all' | 'trash'>('all');
 
     const itemsPerPage = 15;
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
     const changeLoad = loadingStore((state) => state.changeLoad);
     const { t } = useTranslation();
 
@@ -49,8 +47,8 @@ const Category = () => {
                     setCategories(response.data.categories);
                 } else throw new Error(response.message);
             } catch (error: any) {
-                setType('error');
-                setMessage(error?.response?.data?.message || error?.message);
+                
+                toast.error(error?.response?.data?.message || error?.message);
             } finally {
                 changeLoad();
                 setIsDataLoading(false);
@@ -98,12 +96,12 @@ const Category = () => {
                 });
                 if (newCategory.success) {
                     setCategories([...categories, newCategory.data.category]);
-                    setType('info');
-                    setMessage(t('management.category.add_success'));
+                    
+                    toast.success(t('management.category.add_success'));
                 } else throw new Error(newCategory.message);
             } catch (error: any) {
-                setType('error');
-                setMessage(error?.message);
+                
+                toast.error(error?.message);
             } finally {
                 setShowModal(false);
                 changeLoad();
@@ -114,8 +112,8 @@ const Category = () => {
     const handleEditCategory = () => {
         changeLoad();
         if (!formData.name.trim()) {
-            setType('error');
-            setMessage(t('management.category.no_name_empty'));
+            
+            toast.success(t('management.category.no_name_empty'));
             changeLoad();
             return;
         }
@@ -130,11 +128,11 @@ const Category = () => {
                     setCategories(categories.map(cat =>
                         cat._id === selectedItem?._id ? response.data.category : cat
                     ));
-                    setType('info');
-                    setMessage(t('management.category.update_success'));
+                    
+                    toast.success(t('management.category.update_success'));
                 } else throw new Error(response.message);
             })
-            .catch(error => { setType('error'); setMessage(error?.message); })
+            .catch(error => {  toast.error(error?.message); })
             .finally(() => { setShowModal(false); changeLoad(); });
     };
 
@@ -142,10 +140,10 @@ const Category = () => {
         changeLoad();
         categoryApi.deleteCategory(id)
             .then(response => {
-                if (response.success) { setType('info'); setMessage('Xóa danh mục thành công'); }
+                if (response.success) {  toast.success('Xóa danh mục thành công'); }
                 else throw new Error(response.message);
             })
-            .catch(error => { setType('error'); setMessage(error?.message); })
+            .catch(error => {  toast.error(error?.message); })
             .finally(() => changeLoad());
         setCategories(categories.filter(cat => cat._id !== id));
     };
@@ -155,13 +153,13 @@ const Category = () => {
         categoryApi.restoreCategory(id)
             .then(response => {
                 if (response.success) {
-                    setType('info');
-                    setMessage('Khôi phục danh mục thành công');
+                    
+                    toast.success('Khôi phục danh mục thành công');
                     setCategories(categories.filter(cat => cat._id !== id));
                 }
                 else throw new Error(response.message);
             })
-            .catch(error => { setType('error'); setMessage(error?.message); })
+            .catch(error => {  toast.error(error?.message); })
             .finally(() => changeLoad());
     };
 

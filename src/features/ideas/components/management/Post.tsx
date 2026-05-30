@@ -1,6 +1,6 @@
 'use client';
 import convertDate from '@/common/datetime';
-import alertStore from "@/store/AlertStore";
+import { toast } from 'sonner';
 import loadingStore from "@/store/LoadingStore";
 import { postApi } from '@/features/ideas/api/post.api';
 import { categoryApi } from '@/features/categories/api/category.api';
@@ -44,8 +44,6 @@ const Post = () => {
 
     const itemsPerPage = 15;
 
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
     const changeLoad = loadingStore((state) => state.changeLoad);
     const { t } = useTranslation();
 
@@ -63,8 +61,7 @@ const Post = () => {
                     setPosts(response.data.posts);
                 } else throw new Error(response.message);
             } catch (error: any) {
-                setType('error');
-                setMessage(error?.message);
+                toast.error(error?.message);
             } finally {
                 changeLoad();
                 setIsDataLoading(false);
@@ -104,11 +101,9 @@ const Post = () => {
             const res = await postApi.changePublicManager(id, newPublished);
             if (!res.success) throw new Error(res.message);
             setPosts(posts.map(p => p._id === id ? { ...p, published: newPublished } : p));
-            setType('info');
-            setMessage(`Đã ${newPublished ? 'duyệt' : 'ẩn'} bài viết thành công`);
+            toast.success(`Đã ${newPublished ? 'duyệt' : 'ẩn'} bài viết thành công`);
         } catch (error: any) {
-            setType('error');
-            setMessage(error?.message);
+            toast.error(error?.message);
         } finally {
             changeLoad();
         }
@@ -119,15 +114,13 @@ const Post = () => {
         postApi.deletePost(id)
             .then(response => {
                 if (response.success) {
-                    setType('info');
-                    setMessage('Xóa bài viết thành công');
+                    toast.success('Xóa bài viết thành công');
                     const newPosts = posts.filter(post => post._id !== id);
                     setPosts(newPosts);
                 } else throw new Error(response.message);
             })
             .catch(error => {
-                setType('error');
-                setMessage(error?.message);
+                toast.error(error?.message);
             })
             .finally(() => changeLoad());
     };
@@ -137,15 +130,13 @@ const Post = () => {
         postApi.restorePost(id)
             .then(response => {
                 if (response.success) {
-                    setType('info');
-                    setMessage('Khôi phục bài viết thành công');
+                    toast.success('Khôi phục bài viết thành công');
                     const newPosts = posts.filter(post => post._id !== id);
                     setPosts(newPosts);
                 } else throw new Error(response.message);
             })
             .catch(error => {
-                setType('error');
-                setMessage(error?.message);
+                toast.error(error?.message);
             })
             .finally(() => changeLoad());
     };

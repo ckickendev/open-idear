@@ -4,7 +4,7 @@ import { SquarePen, FileText, Layers } from 'lucide-react';
 import axios from 'axios';
 import authenticationStore from '@/store/AuthenticationStore';
 import { getHeadersToken } from '@/lib/api/axios';
-import alertStore from '@/store/AlertStore';
+import { toast } from 'sonner';
 import PostElement from '../PostElement';
 import SeriesElement from '../SeriesElement';
 import { PostInterface } from '../[username]/page';
@@ -22,8 +22,6 @@ export default function ProfilePostsPage() {
     const [onDeleteSeriesing, setOnDeleteSeriesing] = useState(false);
 
     const currentUser = authenticationStore((state) => state.currentUser);
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -44,8 +42,8 @@ export default function ProfilePostsPage() {
                 if (postsRes.status === 200) setPosts(postsRes.data.posts || []);
                 if (seriesRes.status === 200) setSeries(seriesRes.data.series || []);
             } catch (error: any) {
-                setType('error');
-                setMessage(error?.response?.data?.message || 'Failed to load posts');
+                
+                toast.error(error?.response?.data?.message || 'Failed to load posts');
             } finally {
                 setLoading(false);
             }
@@ -72,16 +70,16 @@ export default function ProfilePostsPage() {
 
             if (response.status === 200) {
                 setSeries(prev => prev.filter(s => s._id !== id));
-                setType('success');
-                setMessage('Series deleted successfully.');
+                
+                toast.success('Series deleted successfully.');
                 setOnDeleteSeriesing(false);
             } else {
-                setType('error');
-                setMessage('Failed to delete the series.');
+                
+                toast.error('Failed to delete the series.');
             }
         } catch (error: any) {
-            setType('error');
-            setMessage(error?.response?.data?.message || 'An error occurred while deleting the series.');
+            
+            toast.error(error?.response?.data?.message || 'An error occurred while deleting the series.');
         }
     };
 

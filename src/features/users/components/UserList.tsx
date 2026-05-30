@@ -1,6 +1,6 @@
 'use client';
 import convertDate from '@/common/datetime';
-import alertStore from "@/store/AlertStore";
+import { toast } from 'sonner';
 import loadingStore from "@/store/LoadingStore";
 import { userApi } from '@/features/users/api/user.api';
 import { Edit, Plus, Trash2, X, User, Shield, UserCheck, UserX, Users } from "lucide-react";
@@ -34,8 +34,6 @@ const UserList = () => {
     const [listStatus, setListStatus] = useState<'all' | 'trash'>('all');
 
     const itemsPerPage = 10;
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
     const changeLoad = loadingStore((state) => state.changeLoad);
 
     useEffect(() => {
@@ -44,8 +42,8 @@ const UserList = () => {
                 changeLoad(); setIsDataLoading(true);
                 const response = await userApi.getUsersList({ status: listStatus });
                 if (response.success) { setUsers(response.data.users); }
-                else { setType('error'); setMessage(response.message || "Authentication error!"); }
-            } catch (error: any) { setType('error'); setMessage(error?.message); }
+                else {  toast.success(response.message || "Authentication error!"); }
+            } catch (error: any) {  toast.error(error?.message); }
             finally { changeLoad(); setIsDataLoading(false); }
         };
         fetchUsers();
@@ -85,30 +83,30 @@ const UserList = () => {
         if (formData.name.trim() && formData.username.trim() && formData.email.trim()) {
             try {
                 const newUser = await userApi.createUser({ name: formData.name, username: formData.username, email: formData.email, role: formData.role, activate: formData.activate, phone: formData.phone });
-                if (newUser.success) { setUsers([...users, newUser.data.user]); setShowModal(false); setType('info'); setMessage('Thêm người dùng thành công'); }
+                if (newUser.success) { setUsers([...users, newUser.data.user]); setShowModal(false);  toast.success('Thêm người dùng thành công'); }
                 else throw new Error(newUser.message);
-            } catch (error: any) { setShowModal(false); setType('error'); setMessage(error?.message); }
+            } catch (error: any) { setShowModal(false);  toast.error(error?.message); }
             finally { changeLoad(); }
         }
     };
 
     const handleEditUser = () => {
         changeLoad();
-        if (!formData.name.trim() || !formData.username.trim() || !formData.email.trim()) { setType('error'); setMessage('Vui lòng điền đầy đủ thông tin bắt buộc'); changeLoad(); return; }
+        if (!formData.name.trim() || !formData.username.trim() || !formData.email.trim()) {  toast.success('Vui lòng điền đầy đủ thông tin bắt buộc'); changeLoad(); return; }
         userApi.updateUser(selectedItem?._id as string, { _id: selectedItem?._id, name: formData.name, username: formData.username, email: formData.email, role: formData.role, activate: formData.activate, phone: formData.phone })
             .then(response => {
-                if (response.success) { setUsers(users.map(u => u._id === selectedItem?._id ? response.data.user : u)); setShowModal(false); setType('info'); setMessage('Cập nhật người dùng thành công'); }
+                if (response.success) { setUsers(users.map(u => u._id === selectedItem?._id ? response.data.user : u)); setShowModal(false);  toast.success('Cập nhật người dùng thành công'); }
                 else throw new Error(response.message);
                 changeLoad();
             })
-            .catch(error => { setType('error'); setMessage(error?.message); changeLoad(); });
+            .catch(error => {  toast.error(error?.message); changeLoad(); });
     };
 
     const handleDeleteUser = (id: string) => {
         changeLoad();
         userApi.deleteUser(id)
-            .then(response => { if (response.success) { setType('info'); setMessage('Xóa người dùng thành công'); } else throw new Error(response.message); changeLoad(); })
-            .catch(error => { setType('error'); setMessage(error?.message); changeLoad(); });
+            .then(response => { if (response.success) {  toast.success('Xóa người dùng thành công'); } else throw new Error(response.message); changeLoad(); })
+            .catch(error => {  toast.error(error?.message); changeLoad(); });
         setUsers(users.filter(u => u._id !== id));
     };
 
@@ -117,13 +115,13 @@ const UserList = () => {
         userApi.restoreUser(id)
             .then(response => {
                 if (response.success) {
-                    setType('info');
-                    setMessage('Khôi phục người dùng thành công');
+                    
+                    toast.success('Khôi phục người dùng thành công');
                     setUsers(users.filter(u => u._id !== id));
                 } else throw new Error(response.message);
                 changeLoad();
             })
-            .catch(error => { setType('error'); setMessage(error?.message); changeLoad(); });
+            .catch(error => {  toast.error(error?.message); changeLoad(); });
     };
 
     const toggleUserStatus = async (userId: string, currentActivate: string) => {
@@ -133,8 +131,8 @@ const UserList = () => {
             const res = await userApi.toggleUserStatus(userId, { activate: newActivate });
             if (!res.success) throw new Error(res.message);
             setUsers(users.map(u => u._id === userId ? { ...u, activate: newActivate } : u));
-            setType('info'); setMessage(`${newActivate === "true" ? 'Kích hoạt' : 'Vô hiệu hóa'} người dùng thành công`);
-        } catch (error: any) { setType('error'); setMessage(error?.message); }
+             toast.success(`${newActivate === "true" ? 'Kích hoạt' : 'Vô hiệu hóa'} người dùng thành công`);
+        } catch (error: any) {  toast.error(error?.message); }
         finally { changeLoad(); }
     };
 

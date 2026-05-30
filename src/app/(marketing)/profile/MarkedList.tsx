@@ -5,7 +5,7 @@ import loadingStore from "@/store/LoadingStore";
 import authenticationStore from "@/store/AuthenticationStore";
 import PostElement from "./PostElement";
 import { PostInterface } from "./[username]/page";
-import alertStore from "@/store/AlertStore";
+import { toast } from 'sonner';
 import SeriesElement from "./SeriesElement";
 import { Bookmark, FileText, Layers } from "lucide-react";
 import EmptyState from "./EmptyState";
@@ -18,10 +18,6 @@ const MarkedList = () => {
 
     const currentUser = authenticationStore((state) => state.currentUser);
     const changeLoad = loadingStore((state) => state.changeLoad);
-
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
-
     useEffect(() => {
         // Fetch all posts from the server
         const fetchPosts = async () => {
@@ -40,8 +36,8 @@ const MarkedList = () => {
                     }
                 }
             } catch (error: any) {
-                setType('error');
-                setMessage(error.response?.data?.message || 'Failed to fetch marked posts');
+                
+                toast.error(error.response?.data?.message || 'Failed to fetch marked posts');
             } finally {
                 changeLoad();
             }

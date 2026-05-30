@@ -3,15 +3,13 @@ import { Bookmark } from "lucide-react";
 import { PostInterface } from "./[username]/page";
 import authenticationStore from "@/store/AuthenticationStore";
 import axios from "axios";
-import alertStore from "@/store/AlertStore";
+import { toast } from 'sonner';
 import { getHeadersToken } from "@/lib/api/axios";
 import { CategoryLinkCustom } from "@/components/common/LinkCustom";
 
 const PostElement = ({ post }: { post: PostInterface }) => {
     const currentUser = authenticationStore((state) => state.currentUser);
     const [bookmarked, setBookmarked] = useState(post.marked?.includes(currentUser?._id));
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
 
     const onMarkedPost = async () => {
         try {
@@ -22,16 +20,16 @@ const PostElement = ({ post }: { post: PostInterface }) => {
             });
 
             if (response.status === 200) {
-                setType("success");
-                setMessage(response.data.isMarked ? "Post marked successfully." : "Post unmarked successfully.");
+                
+                toast.success(response.data.isMarked ? "Post marked successfully." : "Post unmarked successfully.");
                 setBookmarked(!bookmarked);
             } else {
-                setType("error");
-                setMessage("Failed to mark the post.");
+                
+                toast.error("Failed to mark the post.");
             }
         } catch (error: any) {
-            setType("error");
-            setMessage(error.response.data.message || "An error occurred while marking the post.");
+            
+            toast.error(error.response.data.message || "An error occurred while marking the post.");
 
         }
     };

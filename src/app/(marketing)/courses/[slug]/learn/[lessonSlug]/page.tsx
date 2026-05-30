@@ -7,7 +7,7 @@ import authenticationStore from "@/store/AuthenticationStore";
 import { courseApi } from '@/features/series/api/course.api';
 import { ChevronLeft, ChevronRight, Menu, CheckCircle, Lock, Play, FileText, Download, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Stream } from '@cloudflare/stream-react';
-import Toast, { useToast } from '@/components/common/Toast';
+import { toast } from 'sonner';
 
 type Lesson = {
     _id: string;
@@ -48,7 +48,6 @@ const WatchPage = () => {
     const [isEnrolled, setIsEnrolled] = useState<boolean | null>(null); // null = loading
     const changeLoad = loadingStore(state => state.changeLoad);
     const currentUser = authenticationStore(state => state.currentUser);
-    const { toast, showToast, hideToast } = useToast();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -128,7 +127,7 @@ const WatchPage = () => {
                 const data = (res.data as any)?.data;
                 setCompletedLessons(data?.completedLessons || []);
                 setProgress(data?.progress || 0);
-                showToast('Đã hoàn thành bài học!', 'success');
+                toast.success('Đã hoàn thành bài học!');
             }
         } catch (error) {
             // Revert optimistic update
@@ -187,7 +186,6 @@ const WatchPage = () => {
 
     return (
         <div className="flex h-screen bg-white overflow-hidden">
-            <Toast {...toast} onClose={hideToast} />
 
             {/* Main Player Area */}
             <div className="flex-1 flex flex-col min-w-0">

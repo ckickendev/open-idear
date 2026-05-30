@@ -8,7 +8,7 @@ import SeriesElement from "./SeriesElement";
 import { Bookmark, FileText, Layers, Pen } from "lucide-react";
 import EmptyState from "./EmptyState";
 import { getHeadersToken } from "@/lib/api/axios";
-import alertStore from "@/store/AlertStore";
+import { toast } from 'sonner';
 
 const AllPost = ({ profileId }: any) => {
   const [displayPosts, setDisplayPosts] = React.useState<PostInterface[]>([]);
@@ -19,8 +19,6 @@ const AllPost = ({ profileId }: any) => {
   const [activeTab, setActiveTab] = React.useState("posts");
 
   const changeLoad = loadingStore((state) => state.changeLoad);
-  const setType = alertStore((state) => state.setType);
-  const setMessage = alertStore((state) => state.setMessage);
 
   const deleteSeries = async (id: string) => {
     try {
@@ -34,19 +32,17 @@ const AllPost = ({ profileId }: any) => {
         if (resSeries.status === 200) {
           setDisplaySeries(resSeries.data.series);
         }
-
-
-        setType("success");
-        setMessage("Series deleted successfully.");
+        
+        toast.success("Series deleted successfully.");
         setOnDeleteSeriesing(false);
       } else {
-        setType("error");
-        setMessage("Failed to delete the series.");
+        
+        toast.error("Failed to delete the series.");
       }
     } catch (error: any) {
-      setType('error');
-      setMessage(error?.response?.data?.message || error?.message);
-      setMessage(error?.response?.data?.message || "An error occurred while deleting the series.");
+      
+      toast.error(error?.response?.data?.message || error?.message);
+      toast.error(error?.response?.data?.message || "An error occurred while deleting the series.");
     }
   }
 

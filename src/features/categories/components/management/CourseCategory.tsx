@@ -1,6 +1,6 @@
 'use client';
 import convertDate from '@/common/datetime';
-import alertStore from "@/store/AlertStore";
+import { toast } from 'sonner';
 import loadingStore from "@/store/LoadingStore";
 import { courseCategoryApi } from '@/features/categories/api/courseCategory.api';
 import { Edit, Plus, Trash2, Eye, X, Folder, BookOpen } from "lucide-react";
@@ -32,8 +32,6 @@ const CourseCategory = () => {
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
     const itemsPerPage = 15;
-    const setType = alertStore((state) => state.setType);
-    const setMessage = alertStore((state) => state.setMessage);
     const changeLoad = loadingStore((state) => state.changeLoad);
 
     useEffect(() => {
@@ -46,8 +44,8 @@ const CourseCategory = () => {
                     setCategories(response.data.categories || (response.data as any));
                 } else throw new Error(response.message);
             } catch (error: any) {
-                setType('error');
-                setMessage(error?.response?.data?.message || error?.message);
+                
+                toast.error(error?.response?.data?.message || error?.message);
             } finally {
                 changeLoad();
                 setIsDataLoading(false);
@@ -96,12 +94,12 @@ const CourseCategory = () => {
                 if (newCategory.success || newCategory.data?.category) {
                     // Adjust depending on axios interceptor wrapping structure
                     setCategories([...categories, newCategory.data?.category || (newCategory.data as any)]);
-                    setType('info');
-                    setMessage('Thêm danh mục khoá học thành công');
+                    
+                    toast.success('Thêm danh mục khoá học thành công');
                 } else throw new Error(newCategory.message);
             } catch (error: any) {
-                setType('error');
-                setMessage(error?.message);
+                
+                toast.error(error?.message);
             } finally {
                 setShowModal(false);
                 changeLoad();
@@ -112,8 +110,8 @@ const CourseCategory = () => {
     const handleEditCategory = () => {
         changeLoad();
         if (!formData.name.trim()) {
-            setType('error');
-            setMessage('Tên danh mục không được để trống');
+            
+            toast.success('Tên danh mục không được để trống');
             changeLoad();
             return;
         }
@@ -128,11 +126,11 @@ const CourseCategory = () => {
                     setCategories(categories.map(cat =>
                         cat._id === selectedItem?._id ? updatedCategory : cat
                     ));
-                    setType('info');
-                    setMessage('Cập nhật danh mục khoá học thành công');
+                    
+                    toast.success('Cập nhật danh mục khoá học thành công');
                 } else throw new Error(response.message);
             })
-            .catch(error => { setType('error'); setMessage(error?.message); })
+            .catch(error => {  toast.error(error?.message); })
             .finally(() => { setShowModal(false); changeLoad(); });
     };
 
@@ -141,12 +139,12 @@ const CourseCategory = () => {
         courseCategoryApi.deleteCourseCategory(id)
             .then(response => {
                 if (response.success || response.message) {
-                    setType('info');
-                    setMessage('Xóa danh mục khoá học thành công');
+                    
+                    toast.success('Xóa danh mục khoá học thành công');
                 }
                 else throw new Error(response.message || "Lỗi xóa danh mục");
             })
-            .catch(error => { setType('error'); setMessage(error?.message); })
+            .catch(error => {  toast.error(error?.message); })
             .finally(() => changeLoad());
         setCategories(categories.filter(cat => cat._id !== id));
     };
