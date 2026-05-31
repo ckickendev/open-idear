@@ -33,7 +33,7 @@ const PaginationArrow: FC<PaginationArrowProps> = ({
 
   // Make next button (right arrow) more visible with pink styling
   const buttonClassName = isLeft
-    ? `bg-gray-100 text-gray-500 hover:bg-gray-200 ${disabledClassName}`
+    ? `bg-muted text-muted-foreground hover:bg-muted ${disabledClassName}`
     : `bg-pink-500 text-white hover:bg-pink-600 ${disabledClassName}`;
 
   return (

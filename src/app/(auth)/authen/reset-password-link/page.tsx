@@ -1,0 +1,275 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import LoadingComponent from "@/components/common/Loading";
+import Dialog from "@/components/common/Dialog";
+import { redirect } from "next/navigation";
+import { resetPassSchema } from "@/features/auth/components/authentication";
+import { authApi } from "@/features/auth/api/auth.api";
+import { api } from "@/lib/api/axios";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
+import Banner from "@/components/Banner";
+
+type ResetPassForm = {
+  password: string;
+  repassword: string;
+};
+
+const ConfirmResetPassword = () => {
+  const [isModalConfirmDisp, setIsModalConfirmDisp] = useState(false);
+  const [formResetDisp, setFormResetDisp] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorSv, setErrorSv] = useState("");
+  const [title, setTittle] = useState("");
+  const [content, setContent] = useState("");
+  const [confirmTitle, setConfirmTitle] = useState("");
+  const [emailSent, setEmailSent] = useState<String | null>("");
+  const [user, setUser] = useState("");
+  const [isConfirmSucces, setIsConfirmSuccess] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ResetPassForm>({
+    resolver: zodResolver(resetPassSchema),
+  });
+
+  useEffect(() => {
+    async function handleConfirm() {
+      setIsLoading(true);
+      const queryParameters = new URLSearchParams(window.location.search);
+      const access_token = queryParameters.get("token_access");
+      const email = queryParameters.get("email");
+      setEmailSent(email);
+
+      const loginInfo = {
+        access_token,
+        email,
+      };
+
+      try {
+        if (access_token && email) {
+          // Assuming this is custom endpoint not explicitly in authApi
+          const res = await api.post("/auth/confirm-token-access", loginInfo);
+          if (res.success) {
+            setUser(res.data.user);
+
+            setIsLoading(false);
+            setFormResetDisp(true);
+          } else {
+            throw new Error(res.message);
+          }
+        }
+      } catch (err: any) {
+        setContent("Please check again");
+        setConfirmTitle("I agree");
+        setIsModalConfirmDisp(true);
+        setIsLoading(false);
+        setTittle(err?.response?.data?.error || err.message);
+      }
+    }
+    handleConfirm();
+  }, []);
+
+  const onSubmit = async (data: ResetPassForm, event: any) => {
+    setIsLoading(true);
+    event.preventDefault();
+    try {
+      const res = await authApi.resetPasswordConfirm({
+        password: data.password,
+        emailSent,
+      });
+      if (res.success) {
+        setIsConfirmSuccess(true);
+        setIsLoading(false);
+        return;
+      } else {
+        throw new Error(res.message);
+      }
+    } catch (err: any) {
+      setErrorSv(err?.response?.data?.error || err?.message);
+      setIsLoading(false);
+    }
+  };
+
+  const confirmToHomePage = () => {
+    redirect("/");
+  };
+
+  return (
+    <>
+      <LoadingComponent isLoading={isLoading} />
+      {formResetDisp && (
+        <>
+          <div className="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full flex justify-center items-center bg-muted/30/70">
+            <div className="bg-background py-8 px-4 shadow sm:rounded-lg sm:px-10 text-center">
+              <div className="flex flex-end">
+                <button
+                  type="button"
+                  className="text-muted-foreground bg-transparent hover:bg-muted hover:text-foreground rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center cursor-pointer dark:hover:bg-accent dark:hover:text-white"
+                  data-modal-hide="static-modal"
+                  onClick={() => setFormResetDisp(false)}
+                >
+                  <svg
+                    className="w-3 h-3"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 14 14"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
+                    />
+                  </svg>
+                  <span className="sr-only">Close modal</span>
+                </button>
+              </div>
+
+              <div className="sm:mx-auto sm:w-full sm:max-w-md">
+                <div className="text-center">
+                  <div className="flex items-center justify-center">
+                    <Image
+                      src="/logo.png"
+                      alt="open-idear-logo"
+                      width={152}
+                      height={100}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {isConfirmSucces ? (
+                <>
+                  <div className="flex bg-background dark:bg-background items-center px-6 py-4 text-sm">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-8 h-8 text-green-500 stroke-current"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 13l4 4L19 7"
+                      ></path>
+                    </svg>
+                    <div className="ml-3">
+                      <div className="font-bold text-left text-muted-foreground dark:text-muted-foreground">
+                        Your password has been reset
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={confirmToHomePage}
+                    className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
+                  >
+                    Login now
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-muted-foreground text-xl mt-1">
+                    Welcome back
+                  </p>
+                  <p className="text-muted-foreground text-xl mt-1">{user}</p>
+                  <h4 className="mt-6 text-center text-3xl font-extrabold text-foreground">
+                    Enter your new password
+                  </h4>
+                  <form
+                    onSubmit={handleSubmit(onSubmit)}
+                    className="space-y-6 mt-6"
+                    action="#"
+                    method="POST"
+                  >
+                    <div className="bg-background rounded-lg max-w-md mx-auto py-2">
+                      <div className="relative bg-inherit">
+                        <input
+                          type="password"
+                          id="password"
+                          className="peer bg-transparent h-12 w-full rounded-lg text-foreground placeholder-transparent ring-2 ring-ring px-4 focus:ring-sky-500 focus:outline-none focus:border-sky-600 transition-all"
+                          placeholder="Enter your password"
+                          required
+                          {...register("password")}
+                        />
+                        {errors.password && (
+                          <p className="text-red-500 text-xs">
+                            {errors.password.message}
+                          </p>
+                        )}
+                        <label
+                          htmlFor="password"
+                          className="absolute cursor-text left-4 -top-3 text-sm text-muted-foreground bg-background px-1 peer-placeholder-shown:text-base peer-placeholder-shown:text-muted-foreground peer-placeholder-shown:top-3 peer-focus:-top-3 peer-focus:text-sky-600 peer-focus:text-sm transition-all"
+                        >
+                          Enter your new password
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="bg-background rounded-lg max-w-md mx-auto py-2">
+                      <div className="relative bg-inherit">
+                        <input
+                          type="password"
+                          id="repassword"
+                          className="peer bg-transparent h-12 w-full rounded-lg text-foreground placeholder-transparent ring-2 ring-ring px-4 focus:ring-sky-500 focus:outline-none focus:border-sky-600 transition-all"
+                          placeholder="Confirm your new password"
+                          required
+                          {...register("repassword")}
+                        />
+                        {errors.repassword && (
+                          <p className="text-red-500 text-xs">
+                            {errors.repassword.message}
+                          </p>
+                        )}
+                        <label
+                          htmlFor="repassword"
+                          className="absolute cursor-text left-4 -top-3 text-sm text-muted-foreground bg-background px-1 peer-placeholder-shown:text-base peer-placeholder-shown:text-muted-foreground peer-placeholder-shown:top-3 peer-focus:-top-3 peer-focus:text-sky-600 peer-focus:text-sm transition-all"
+                        >
+                          Confirm your new password
+                        </label>
+                      </div>
+                    </div>
+
+                    {errorSv && (
+                      <p className="text-red-500 text-xs">{errorSv}</p>
+                    )}
+                    <div>
+                      <button
+                        type="submit"
+                        className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
+                      >
+                        Confirm
+                      </button>
+                    </div>
+                  </form>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+      {isModalConfirmDisp && (
+        <Dialog
+          onClose={() => {
+            setIsModalConfirmDisp(false);
+          }}
+          isOpen={isModalConfirmDisp}
+          title={title}
+          message={content}
+          confirmTitle={confirmTitle}
+          confirmAction={confirmToHomePage}
+        />
+      )}
+      <Banner />
+    </>
+  );
+};
+
+export default ConfirmResetPassword;

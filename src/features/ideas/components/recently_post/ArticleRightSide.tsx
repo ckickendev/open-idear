@@ -1,8 +1,10 @@
-import "@styles/globals.css";
 import Logo from "@/components/common/Logo";
-import { PostInterface } from "@/app/profile/[username]/page";
+import { PostInterface } from "@/app/(marketing)/profile/[username]/page";
 import { calculateGapTime } from "@/common/datetime";
-import { CategoryLinkCustom, PostLinkCustom } from "@/components/common/LinkCustom";
+import {
+  CategoryLinkCustom,
+  PostLinkCustom,
+} from "@/components/common/LinkCustom";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -10,8 +12,8 @@ import Link from "next/link";
 const ArticleRightSide = ({ postData }: { postData: PostInterface }) => {
   return (
     <>
-      <div className="col-span-1 h-full border-b-1 border-gray-300 pt-4 pb-4">
-        <div className="h-32 bg-gray-200 rounded overflow-hidden relative group">
+      <div className="col-span-1 h-full border-b-1 border-border pt-4 pb-4">
+        <div className="h-32 bg-muted rounded overflow-hidden relative group">
           <div className="absolute top-2 right-2 p-1 rounded z-10">
             <Logo />
           </div>
@@ -26,23 +28,35 @@ const ArticleRightSide = ({ postData }: { postData: PostInterface }) => {
 
         <div className="mt-2 flex flex-col justify-between h-20">
           <div className="flex flex-col">
-            <CategoryLinkCustom className={'text-green-600 font-semibold text-sm cursor-pointer hover:underline'}
+            <CategoryLinkCustom
+              className={
+                "text-green-600 font-semibold text-sm cursor-pointer hover:underline"
+              }
               slug={postData?.category?.slug}
-              name={postData?.category?.name || " "}
+              name={postData?.category?.name || ""}
             />
             <PostLinkCustom
-              className={'font-bold text-sm/5 cursor-pointer hover:underline line-height: 2 line-clamp-2'}
+              className={
+                "font-bold text-sm/5 cursor-pointer hover:underline line-height: 2 line-clamp-2"
+              }
               slug={postData?.slug}
-              name={postData?.title || 'title'}
+              name={postData?.title || "title"}
             />
           </div>
-          <div className="flex items-center text-xs text-gray-600 dark:text-white mt-1 float-bottom">
-            <Link href={`/profile/${postData?.author?.username}`} className="font-medium cursor-pointer hover:underline">{postData?.author?.username || 'Unknown Author'}</Link>
+          <div className="flex items-center text-xs text-muted-foreground dark:text-white mt-1 float-bottom">
+            <Link
+              href={`/profile/${postData?.author?.username}`}
+              className="font-medium cursor-pointer hover:underline"
+            >
+              {postData?.author?.username || "Unknown Author"}
+            </Link>
             <span className="mx-1">•</span>
-            <span>{calculateGapTime(postData?.createdAt) || 'Unknown Date'}</span>
+            <span>
+              {calculateGapTime(postData?.createdAt) || "Unknown Date"}
+            </span>
           </div>
         </div>
-      </div >
+      </div>
     </>
   );
 };

@@ -1,15 +1,10 @@
-'use client';
+"use client";
 
 import React, { use, useEffect } from "react";
-import {
-  Clock,
-  Bookmark,
-  User,
-  CheckCircle,
-} from "lucide-react";
+import { Clock, Bookmark, User, CheckCircle } from "lucide-react";
 import { useTranslation } from "@/app/hook/useTranslation";
 import axios from "axios";
-import convertDate from '@/common/datetime';
+import convertDate from "@/common/datetime";
 import Image from "next/image";
 import Link from "next/link";
 import { UserLinkCustom } from "@/components/common/LinkCustom";
@@ -25,7 +20,6 @@ interface Post {
   createdAt: string;
 }
 
-
 const HotPost: React.FC = () => {
   const { t } = useTranslation();
   const [articles, setArticles] = React.useState<Post[]>([]);
@@ -36,14 +30,16 @@ const HotPost: React.FC = () => {
       try {
         const token = localStorage.getItem("access_token");
         if (token) {
-          const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getHotPostsWeek?limit=10&page=1`);
+          const res = await axios.get(
+            `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getHotPostsWeek?limit=10&page=1`,
+          );
           if (res.status === 200) {
-            console.log('res.data.hotpost: ', res.data.posts);
+            console.log("res.data.hotpost: ", res.data.posts);
             setArticles(res.data.posts);
           }
         }
       } catch (error) {
-        console.error('Error fetching posts:', error);
+        console.error("Error fetching posts:", error);
       }
     };
 
@@ -53,42 +49,56 @@ const HotPost: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="font-bold text-xl text-gray-800 mr-6">
+        <h2 className="font-bold text-xl text-foreground mr-6">
           {t("component.hotPost.title")}
         </h2>
         <div className="border-b-4 border-blue-500 w-12 absolute mt-10"></div>
-        <button className="text-gray-600 hover:text-gray-900 text-sm cursor-pointer hover:underline">
+        <Link
+          href={"/top10ideas"}
+          className="text-muted-foreground hover:text-foreground text-sm cursor-pointer hover:underline"
+        >
           {t("component.hotPost.moreDes")}
-        </button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-4 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {articles.slice(0, 4).map((article) => (
           <div
             key={article._id}
-            className="flex flex-col bg-white rounded-lg overflow-hidden h-full"
+            className="flex flex-col bg-background rounded-lg overflow-hidden h-full"
           >
             <div className="relative h-40 w-full">
               {/* Next.js Image component would be used here with actual images */}
               <Link href={`/post/${article.slug}`} className="block h-full">
-                <div className="absolute inset-0 bg-gray-200 ">
-                  <Image src={article.image?.url} alt={article.title} fill sizes="23vw" style={{ objectFit: "cover" }} />
+                <div className="absolute inset-0 bg-muted">
+                  <Image
+                    src={article.image?.url}
+                    alt={article.title}
+                    fill
+                    sizes="23vw"
+                    style={{ objectFit: "cover" }}
+                  />
                 </div>
               </Link>
             </div>
 
             <div className="flex flex-1 flex-col p-3">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-gray-500 flex items-center">
+                <span className="text-xs text-muted-foreground flex items-center">
                   <Clock size={14} className="mr-1" />
-                  {article.readtime ? article.readtime + " min read" : "5 min read"}
+                  {article.readtime
+                    ? article.readtime + "min read"
+                    : "5 min read"}
                 </span>
-                <button className="text-gray-400 hover:text-gray-700 transition-colors focus:outline-none cursor-pointer">
+                <button className="text-muted-foreground hover:text-foreground/80 transition-colors focus:outline-none cursor-pointer">
                   <Bookmark size={18} />
                 </button>
               </div>
 
-              <a className="font-medium text-base mb-4 line-clamp-2 cursor-pointer hover:underline" href={`/post/${article.slug}`}>
+              <a
+                className="font-medium text-base mb-4 line-clamp-2 cursor-pointer hover:underline"
+                href={`/post/${article.slug}`}
+              >
                 {article.title}
               </a>
 
@@ -104,12 +114,16 @@ const HotPost: React.FC = () => {
                 </div>
                 <div className="flex-1 justify-between">
                   <div className="flex items-center">
-                    <UserLinkCustom className="text-sm font-medium cursor-pointer hover:underline" username={article.author.username} name={article.author.name} />
+                    <UserLinkCustom
+                      className="text-sm font-medium cursor-pointer hover:underline"
+                      username={article.author.username}
+                      name={article.author.name}
+                    />
                     {article.author.verified && (
                       <CheckCircle size={14} className="ml-1 text-blue-500" />
                     )}
                   </div>
-                  <div className="flex items-center text-xs text-gray-500">
+                  <div className="flex items-center text-xs text-muted-foreground">
                     <span>{article.author.postedTime}</span>
                     <span className="flex items-center">
                       {convertDate(article.createdAt)}

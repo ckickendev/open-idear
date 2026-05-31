@@ -1,0 +1,60 @@
+import HotSeries from "@/features/series/components/hot_series/HotSeries";
+import PostDisplayPageElement from "@/components/PostDisplayPageElement";
+import axios from "axios";
+import AnotherSeries from "./AnotherSeries";
+
+export default async function MainPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const getSeriesData = async () => {
+    try {
+      // Using native fetch with Next.js optimizations
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getSeriesBySlug?slug=${slug}`,
+      );
+      console.log("series data to display", res.data);
+
+      return res.data.data;
+    } catch (error) {
+      console.error("Error fetching post:", error);
+      throw new Error(`Failed to fetch post with slug: ${slug}`);
+    }
+  };
+
+  const seriesData = await getSeriesData();
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <div
+        className="relative h-100 bg-cover bg-center"
+        style={{
+          backgroundImage: `url(${seriesData?.image?.url || `default-series-image.png`})`,
+        }}
+      >
+        <div className="absolute inset-0 bg-background/30" />
+        <div className="relative max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
+            {seriesData.title}
+          </h1>
+          <p className="text-white text-lg max-w-2xl">
+            {seriesData.description || "No description available"}
+          </p>
+        </div>
+      </div>
+      <div className="bg-muted/30 py-12">
+        <p className="text-center text-foreground/80 text-4xl mb-4">
+          Series included {seriesData?.posts?.length ?? 0} posts
+        </p>
+        <PostDisplayPageElement
+          data={seriesData?.posts}
+          totalPage={seriesData?.posts?.length ?? 0}
+        />
+      </div>
+      <AnotherSeries slug={slug} />
+    </div>
+  );
+}

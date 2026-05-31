@@ -20,5 +20,4 @@ export function useTranslation() {
     return value ?? key; // fallback nếu không có key
   };
   return { t, lang };
-
 }
