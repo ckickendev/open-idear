@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 import {
   Plus,
   Pilcrow,
@@ -11,26 +11,61 @@ import {
   Link,
   Quote,
   Code,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface BlockInsertButtonProps {
   onInsert: (type: string) => void;
 }
 
 const blockItems = [
-  { type: 'paragraph', label: 'Paragraph', icon: Pilcrow, description: 'Plain text block' },
-  { type: 'heading1', label: 'Heading 1', icon: Heading1, description: 'Large section title' },
-  { type: 'heading2', label: 'Heading 2', icon: Heading2, description: 'Medium section title' },
-  { type: 'heading3', label: 'Heading 3', icon: Heading3, description: 'Small section title' },
-  { type: 'image', label: 'Image', icon: Image, description: 'Upload or embed an image' },
-  { type: 'link', label: 'Link', icon: Link, description: 'Add a hyperlink' },
-  { type: 'blockquote', label: 'Blockquote', icon: Quote, description: 'Highlight a quote' },
-  { type: 'codeBlock', label: 'Code Block', icon: Code, description: 'Add a code snippet' },
+  {
+    type: "paragraph",
+    label: "Paragraph",
+    icon: Pilcrow,
+    description: "Plain text block",
+  },
+  {
+    type: "heading1",
+    label: "Heading 1",
+    icon: Heading1,
+    description: "Large section title",
+  },
+  {
+    type: "heading2",
+    label: "Heading 2",
+    icon: Heading2,
+    description: "Medium section title",
+  },
+  {
+    type: "heading3",
+    label: "Heading 3",
+    icon: Heading3,
+    description: "Small section title",
+  },
+  {
+    type: "image",
+    label: "Image",
+    icon: Image,
+    description: "Upload or embed an image",
+  },
+  { type: "link", label: "Link", icon: Link, description: "Add a hyperlink" },
+  {
+    type: "blockquote",
+    label: "Blockquote",
+    icon: Quote,
+    description: "Highlight a quote",
+  },
+  {
+    type: "codeBlock",
+    label: "Code Block",
+    icon: Code,
+    description: "Add a code snippet",
+  },
 ];
 
 const BlockInsertButton: React.FC<BlockInsertButtonProps> = ({ onInsert }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [filter, setFilter] = useState('');
+  const [filter, setFilter] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
   const filterRef = useRef<HTMLInputElement>(null);
 
@@ -39,13 +74,13 @@ const BlockInsertButton: React.FC<BlockInsertButtonProps> = ({ onInsert }) => {
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setIsOpen(false);
-        setFilter('');
+        setFilter("");
       }
     };
     if (isOpen) {
-      document.addEventListener('mousedown', handler);
+      document.addEventListener("mousedown", handler);
     }
-    return () => document.removeEventListener('mousedown', handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, [isOpen]);
 
   // Focus filter input when opened
@@ -58,34 +93,37 @@ const BlockInsertButton: React.FC<BlockInsertButtonProps> = ({ onInsert }) => {
   const filteredItems = blockItems.filter(
     (item) =>
       item.label.toLowerCase().includes(filter.toLowerCase()) ||
-      item.description.toLowerCase().includes(filter.toLowerCase())
+      item.description.toLowerCase().includes(filter.toLowerCase()),
   );
 
   const handleSelect = (type: string) => {
     onInsert(type);
     setIsOpen(false);
-    setFilter('');
+    setFilter("");
   };
 
   return (
     <div className="relative flex flex-col items-end" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-3 rounded-full transition-all duration-200 cursor-pointer shadow-lg shadow-gray-300/40 border border-[var(--color-editor-border)] ${
+        className={`flex items-center gap-2 px-4 py-3 rounded-full transition-all duration-200 cursor-pointer shadow-lg shadow-border/40 border border-[var(--color-editor-border)] ${
           isOpen
-            ? 'bg-[var(--color-editor-accent)] text-white'
-            : 'bg-[var(--color-editor-surface)] text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]'
+            ? "bg-[var(--color-editor-accent)] text-white"
+            : "bg-[var(--color-editor-surface)] text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]"
         }`}
         aria-label="Insert block"
         aria-expanded={isOpen}
       >
-        <Plus size={20} className={`transition-transform duration-200 ${isOpen ? 'rotate-45' : ''}`} />
+        <Plus
+          size={20}
+          className={`transition-transform duration-200 ${isOpen ? "rotate-45" : ""}`}
+        />
         <span className="text-sm font-semibold pr-1">Add block</span>
       </button>
 
       {isOpen && (
         <div
-          className="absolute right-0 bottom-full mb-2 w-64 bg-[var(--color-editor-surface)] border border-[var(--color-editor-border)] rounded-xl shadow-xl shadow-gray-300/40 overflow-hidden animate-[slide-up_0.15s_ease-out] z-50"
+          className="absolute right-0 bottom-full mb-2 w-64 bg-[var(--color-editor-surface)] border border-[var(--color-editor-border)] rounded-xl shadow-xl shadow-border/40 overflow-hidden animate-[slide-up_0.15s_ease-out] z-50"
           role="menu"
         >
           {/* Filter */}

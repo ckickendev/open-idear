@@ -12,20 +12,19 @@ const statusBadgeVariants = cva(
           "border-warning/20 bg-warning/10 text-warning dark:border-warning/30 dark:bg-warning/15",
         danger:
           "border-destructive/20 bg-destructive/10 text-destructive dark:border-destructive/30 dark:bg-destructive/15",
-        info:
-          "border-info/20 bg-info/10 text-info dark:border-info/30 dark:bg-info/15",
-        neutral:
-          "border-border bg-muted text-muted-foreground",
+        info: "border-info/20 bg-info/10 text-info dark:border-info/30 dark:bg-info/15",
+        neutral: "border-border bg-muted text-muted-foreground",
       },
     },
     defaultVariants: {
       variant: "neutral",
     },
-  }
+  },
 );
 
 interface StatusBadgeProps
-  extends React.HTMLAttributes<HTMLSpanElement>,
+  extends
+    React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof statusBadgeVariants> {
   /** Show a colored dot indicator before the text */
   dot?: boolean;
@@ -37,7 +36,7 @@ interface StatusBadgeProps
  *
  * @example
  * ```tsx
- * <StatusBadge variant="success" dot>Active</StatusBadge>
+ * <StatusBadge variant="success"dot>Active</StatusBadge>
  * <StatusBadge variant="danger">Blocked</StatusBadge>
  * <StatusBadge variant="warning">Pending</StatusBadge>
  * ```

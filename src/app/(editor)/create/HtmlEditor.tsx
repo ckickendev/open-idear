@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Extension } from '@tiptap/core';
-import contentStore from '@/store/ContentStore';
+import React from "react";
+import { Extension } from "@tiptap/core";
+import contentStore from "@/store/ContentStore";
 
 const RawHtmlExtension = Extension.create({
-  name: 'rawHtml',
+  name: "rawHtml",
 
   addCommands() {
     return {
       setRawHtml:
         (html: string) =>
-          ({ commands }: { commands: any }) => {
-            commands.setContent(html);
-            return true;
-          },
+        ({ commands }: { commands: any }) => {
+          commands.setContent(html);
+          return true;
+        },
     } as Partial<Record<string, any>>;
   },
 });
@@ -36,18 +36,22 @@ const HtmlEditor = ({ editor, setRawHtml, rawHtml }: any) => {
             value={rawHtml}
             onChange={handleRawHtmlChange}
             className="
-              w-full min-h-[60vh] font-mono text-sm leading-relaxed
-              px-6 py-5 rounded-xl
-              bg-[var(--color-editor-elevated)]
-              border border-[var(--color-editor-border)]
-              text-[var(--color-editor-text)]
-              placeholder:text-[var(--color-editor-muted)]
-              focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50
-              resize-y transition-all duration-150
-              whitespace-pre
-            "
+ w-full min-h-[60vh] font-mono text-sm leading-relaxed
+ px-6 py-5 rounded-xl
+ bg-[var(--color-editor-elevated)]
+ border border-[var(--color-editor-border)]
+ text-[var(--color-editor-text)]
+ placeholder:text-[var(--color-editor-muted)]
+ focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50
+ resize-y transition-all duration-150
+ whitespace-pre
+"
             placeholder="Enter raw HTML..."
-            style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', tabSize: 2 }}
+            style={{
+              fontFamily:
+                "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+              tabSize: 2,
+            }}
             spellCheck={false}
             aria-label="HTML source editor"
           />

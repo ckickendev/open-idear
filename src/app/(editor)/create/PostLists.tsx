@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { BadgePlus, FileText, Clock, X } from 'lucide-react';
-import { getHeadersToken } from '@/lib/api/axios';
-import axios from 'axios';
-import Logo from '@/components/common/Logo';
+import React, { useEffect, useState } from "react";
+import { BadgePlus, FileText, Clock, X } from "lucide-react";
+import { getHeadersToken } from "@/lib/api/axios";
+import axios from "axios";
+import Logo from "@/components/common/Logo";
 
 interface PostListInterface {
   _id: string;
@@ -22,19 +22,19 @@ export default function PostListPanel({ isOpen, onClose }: PostListPanelProps) {
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem("access_token");
       if (token) {
         const headers = getHeadersToken();
         try {
           const res = await axios.get(
             `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor`,
-            { headers }
+            { headers },
           );
           if (res.status === 200) {
             setAllPosts(res.data.posts);
           }
         } catch (err) {
-          console.error('Error fetching posts:', err);
+          console.error("Error fetching posts:", err);
         }
       }
     };
@@ -46,10 +46,10 @@ export default function PostListPanel({ isOpen, onClose }: PostListPanelProps) {
   // Escape key to close
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) onClose();
+      if (e.key === "Escape" && isOpen) onClose();
     };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -58,7 +58,7 @@ export default function PostListPanel({ isOpen, onClose }: PostListPanelProps) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-gray-900/20 backdrop-blur-sm animate-[fade-in_0.15s_ease-out] lg:bg-gray-900/10"
+        className="fixed inset-0 z-40 bg-background/20 backdrop-blur-sm animate-[fade-in_0.15s_ease-out] lg:bg-background/10"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -73,12 +73,18 @@ export default function PostListPanel({ isOpen, onClose }: PostListPanelProps) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-editor-border)]">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[var(--color-editor-accent)]/15 flex items-center justify-center">
-              <FileText size={16} className="text-[var(--color-editor-accent)]" />
+              <FileText
+                size={16}
+                className="text-[var(--color-editor-accent)]"
+              />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-[var(--color-editor-text)]">My Posts</h2>
+              <h2 className="text-sm font-bold text-[var(--color-editor-text)]">
+                My Posts
+              </h2>
               <p className="text-[11px] text-[var(--color-editor-muted)]">
-                {allPosts.length} {allPosts.length === 1 ? 'document' : 'documents'}
+                {allPosts.length}{" "}
+                {allPosts.length === 1 ? "document" : "documents"}
               </p>
             </div>
           </div>
@@ -114,7 +120,10 @@ export default function PostListPanel({ isOpen, onClose }: PostListPanelProps) {
           <div className="space-y-0.5">
             {allPosts.length === 0 ? (
               <div className="text-center py-8">
-                <FileText size={24} className="mx-auto text-[var(--color-editor-muted)] mb-2" />
+                <FileText
+                  size={24}
+                  className="mx-auto text-[var(--color-editor-muted)] mb-2"
+                />
                 <p className="text-xs text-[var(--color-editor-muted)]">
                   No posts yet. Start writing!
                 </p>
@@ -127,13 +136,13 @@ export default function PostListPanel({ isOpen, onClose }: PostListPanelProps) {
                   className="block p-3 rounded-xl text-left hover:bg-[var(--color-editor-elevated)] transition-all duration-150 group"
                 >
                   <h4 className="text-sm font-medium text-[var(--color-editor-text)] truncate group-hover:text-[var(--color-editor-accent)] transition-colors">
-                    {item.title || 'Untitled'}
+                    {item.title || "Untitled"}
                   </h4>
                   <p className="text-[11px] text-[var(--color-editor-muted)] mt-0.5">
-                    {new Date(item.createdAt).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
+                    {new Date(item.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
                     })}
                   </p>
                 </a>

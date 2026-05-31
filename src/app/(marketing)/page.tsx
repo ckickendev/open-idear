@@ -1,8 +1,8 @@
 import Banner from "@/components/Banner";
-import HotSeries from '@/features/series/components/hot_series/HotSeries';
-import HotPost from '@/features/ideas/components/hot_post/HotPost';
-import LastestFeature from '@/features/ideas/components/recently_post/LastestFeature';
-import RecentCourses from '@/features/series/components/recent_courses/RecentCourses';
+import HotSeries from "@/features/series/components/hot_series/HotSeries";
+import HotPost from "@/features/ideas/components/hot_post/HotPost";
+import LastestFeature from "@/features/ideas/components/recently_post/LastestFeature";
+import RecentCourses from "@/features/series/components/recent_courses/RecentCourses";
 import { Metadata } from "next";
 import HomePageClient from "./HomePageClient";
 

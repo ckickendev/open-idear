@@ -1,11 +1,11 @@
-'use client'
+"use client";
 import React, { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import Article from "./Article";
 import { useTranslation } from "@/app/hook/useTranslation";
 import axios from "axios";
 import loadingStore from "@/store/LoadingStore";
-import LoadingComponent from '@/components/common/Loading';
+import LoadingComponent from "@/components/common/Loading";
 import MainFeature from "./MainFeature";
 import { PostInterface } from "@/app/(marketing)/profile/[username]/page";
 import ArticleRightSide from "./ArticleRightSide";
@@ -14,10 +14,12 @@ import Link from "next/link";
 const LastestFeature = () => {
   const { t } = useTranslation();
   const [selectFeature, setSelectFeature] = useState(0);
-  const [allCategory, setAllCategory] = useState<any[]>([{ name: "Tất cả", slug: 'all' }]);
+  const [allCategory, setAllCategory] = useState<any[]>([
+    { name: "Tất cả", slug: "all" },
+  ]);
   const [allPosts, setAllPosts] = useState<PostInterface[]>([]);
 
-  const isLoading = loadingStore(state => state.isLoading);
+  const isLoading = loadingStore((state) => state.isLoading);
   const changeLoad = loadingStore((state) => state.changeLoad);
 
   useEffect(() => {
@@ -26,11 +28,16 @@ const LastestFeature = () => {
         changeLoad();
         const token = localStorage.getItem("access_token");
         if (token) {
-          const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getRecentlyData`);
+          const response = await axios.get(
+            `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getRecentlyData`,
+          );
           console.log("recently data:", response.data);
 
           if (response.status === 200) {
-            setAllCategory((old) => [...old, ...response.data.recentlyData.categories]);
+            setAllCategory((old) => [
+              ...old,
+              ...response.data.recentlyData.categories,
+            ]);
             setAllPosts(response.data.recentlyData.posts);
           }
         }
@@ -40,7 +47,7 @@ const LastestFeature = () => {
       } finally {
         changeLoad();
       }
-    }
+    };
     // Fetch data if needed
     fetchRecentlyData();
   }, []);
@@ -52,9 +59,15 @@ const LastestFeature = () => {
       changeLoad();
       const token = localStorage.getItem("access_token");
       if (token) {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getRecentlyDataByFeatures?feature=${allCategory[index].slug}`);
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getRecentlyDataByFeatures?feature=${allCategory[index].slug}`,
+        );
         if (response.status === 200) {
-          console.log("recently data onSelectFeature: ", response.data.recentlyData.posts, response.data.recentlyData.categories);
+          console.log(
+            "recently data onSelectFeature:",
+            response.data.recentlyData.posts,
+            response.data.recentlyData.categories,
+          );
           setAllPosts(response.data.recentlyData.posts);
         }
       }
@@ -64,17 +77,18 @@ const LastestFeature = () => {
     } finally {
       changeLoad();
     }
-  }
+  };
 
   const renderFeature = () => {
     return allCategory.slice(0, 6).map((category, index) => {
       return (
         <button
           key={index}
-          className={`${index === selectFeature
-            ? "bg-blue-100 text-blue-500 px-4 py-2 rounded mr-2 cursor-pointer"
-            : "text-gray-600 px-4 py-2 rounded mr-2 cursor-pointer"
-            }`}
+          className={`${
+            index === selectFeature
+              ? "bg-blue-100 text-blue-500 px-4 py-2 rounded mr-2 cursor-pointer"
+              : "text-muted-foreground px-4 py-2 rounded mr-2 cursor-pointer"
+          }`}
           onClick={() => onSelectFeature(index)}
         >
           {category.name}
@@ -83,29 +97,36 @@ const LastestFeature = () => {
     });
   };
 
-    return (
+  return (
     <>
-      <div className="max-w-6xl mx-auto p-4 border-1 border-gray-300 rounded">
+      <div className="max-w-6xl mx-auto p-4 border-1 border-border rounded">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <h2 className="font-bold text-xl text-gray-800 mr-6">
-              {t('component.lastest_feature.last')}
+            <h2 className="font-bold text-xl text-foreground mr-6">
+              {t("component.lastest_feature.last")}
             </h2>
-            <div className={`border-b-4 border-blue-500 w-12 absolute mt-10`}></div>
+            <div
+              className={`border-b-4 border-blue-500 w-12 absolute mt-10`}
+            ></div>
 
             <div className="flex ml-4">{renderFeature()}</div>
           </div>
 
           <div className="flex items-center">
-            <Link href="/recently-post" className="flex items-center text-gray-600 hover:text-gray-900 text-sm cursor-pointer hover:underline">
-              <span className="font-semibold">{t('component.lastest_feature.more')}</span>
+            <Link
+              href="/recently-post"
+              className="flex items-center text-muted-foreground hover:text-foreground text-sm cursor-pointer hover:underline"
+            >
+              <span className="font-semibold">
+                {t("component.lastest_feature.more")}
+              </span>
               <ChevronRight className="ml-1" size={20} />
             </Link>
           </div>
         </div>
 
         {/* Main Featured Content */}
-        <div className="flex gap-4 mb-8 ">
+        <div className="flex gap-4 mb-8">
           {allPosts.length > 1 && <MainFeature postData={allPosts[0]} />}
 
           <div className="w-1/5">
@@ -114,17 +135,12 @@ const LastestFeature = () => {
         </div>
 
         <div className="grid grid-cols-5 gap-4">
-          {allPosts.length > 0 && allPosts.slice(2, 7).map((data: PostInterface, index: number) => {
-            return (
-              <Article
-                key={index}
-                postData={data}
-              />
-            );
-          })}
+          {allPosts.length > 0 &&
+            allPosts.slice(2, 7).map((data: PostInterface, index: number) => {
+              return <Article key={index} postData={data} />;
+            })}
         </div>
       </div>
-
     </>
   );
 };

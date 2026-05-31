@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Editor } from '@tiptap/react';
+import React from "react";
+import { Editor } from "@tiptap/react";
 import {
   Bold,
   Italic,
@@ -14,7 +14,7 @@ import {
   Quote,
   Code,
   Minus,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface ToolbarProps {
   editor: Editor | null;
@@ -27,13 +27,18 @@ interface ToolbarButtonProps {
   children: React.ReactNode;
 }
 
-const ToolbarButton: React.FC<ToolbarButtonProps> = ({ onClick, isActive, title, children }) => (
+const ToolbarButton: React.FC<ToolbarButtonProps> = ({
+  onClick,
+  isActive,
+  title,
+  children,
+}) => (
   <button
     onClick={onClick}
     className={`p-2 rounded-lg transition-all duration-150 cursor-pointer ${
       isActive
-        ? 'bg-[var(--color-editor-accent)]/15 text-[var(--color-editor-accent)]'
-        : 'text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]'
+        ? "bg-[var(--color-editor-accent)]/15 text-[var(--color-editor-accent)]"
+        : "text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]"
     }`}
     title={title}
     aria-label={title}
@@ -61,21 +66,21 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
       {/* Text formatting */}
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBold().run()}
-        isActive={editor.isActive('bold')}
+        isActive={editor.isActive("bold")}
         title="Bold (⌘B)"
       >
         <Bold size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        isActive={editor.isActive('italic')}
+        isActive={editor.isActive("italic")}
         title="Italic (⌘I)"
       >
         <Italic size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleUnderline().run()}
-        isActive={editor.isActive('underline')}
+        isActive={editor.isActive("underline")}
         title="Underline (⌘U)"
       >
         <Underline size={iconSize} />
@@ -85,22 +90,22 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
 
       {/* Alignment */}
       <ToolbarButton
-        onClick={() => editor.chain().focus().setTextAlign('left').run()}
-        isActive={editor.isActive({ textAlign: 'left' })}
+        onClick={() => editor.chain().focus().setTextAlign("left").run()}
+        isActive={editor.isActive({ textAlign: "left" })}
         title="Align left"
       >
         <AlignLeft size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
-        onClick={() => editor.chain().focus().setTextAlign('center').run()}
-        isActive={editor.isActive({ textAlign: 'center' })}
+        onClick={() => editor.chain().focus().setTextAlign("center").run()}
+        isActive={editor.isActive({ textAlign: "center" })}
         title="Align center"
       >
         <AlignCenter size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
-        onClick={() => editor.chain().focus().setTextAlign('right').run()}
-        isActive={editor.isActive({ textAlign: 'right' })}
+        onClick={() => editor.chain().focus().setTextAlign("right").run()}
+        isActive={editor.isActive({ textAlign: "right" })}
         title="Align right"
       >
         <AlignRight size={iconSize} />
@@ -111,14 +116,14 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
       {/* Lists */}
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-        isActive={editor.isActive('bulletList')}
+        isActive={editor.isActive("bulletList")}
         title="Bullet list"
       >
         <List size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        isActive={editor.isActive('orderedList')}
+        isActive={editor.isActive("orderedList")}
         title="Numbered list"
       >
         <ListOrdered size={iconSize} />
@@ -129,14 +134,14 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
       {/* Block elements */}
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        isActive={editor.isActive('blockquote')}
+        isActive={editor.isActive("blockquote")}
         title="Blockquote"
       >
         <Quote size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-        isActive={editor.isActive('codeBlock')}
+        isActive={editor.isActive("codeBlock")}
         title="Code block"
       >
         <Code size={iconSize} />
@@ -153,21 +158,21 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
       {/* Heading shortcuts */}
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        isActive={editor.isActive('heading', { level: 1 })}
+        isActive={editor.isActive("heading", { level: 1 })}
         title="Heading 1"
       >
         <span className="text-xs font-bold">H1</span>
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        isActive={editor.isActive('heading', { level: 2 })}
+        isActive={editor.isActive("heading", { level: 2 })}
         title="Heading 2"
       >
         <span className="text-xs font-bold">H2</span>
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        isActive={editor.isActive('heading', { level: 3 })}
+        isActive={editor.isActive("heading", { level: 3 })}
         title="Heading 3"
       >
         <span className="text-xs font-bold">H3</span>

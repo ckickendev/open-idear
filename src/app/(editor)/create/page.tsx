@@ -1,42 +1,48 @@
-'use client';
+"use client";
 
-import React, { Suspense, useState, useCallback, useRef, useEffect } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Image from '@tiptap/extension-image';
-import Placeholder from '@tiptap/extension-placeholder';
-import Link from '@tiptap/extension-link';
-import TextAlign from '@tiptap/extension-text-align';
-import Underline from '@tiptap/extension-underline';
-import { TextStyleKit } from '@tiptap/extension-text-style';
-import { Extension } from '@tiptap/core';
-import Paragraph from '@tiptap/extension-paragraph';
-import Color from '@tiptap/extension-color';
-import CodeBlock from '@tiptap/extension-code-block';
-import FileHandler from '@tiptap/extension-file-handler';
+import React, {
+  Suspense,
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+} from "react";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import Placeholder from "@tiptap/extension-placeholder";
+import Link from "@tiptap/extension-link";
+import TextAlign from "@tiptap/extension-text-align";
+import Underline from "@tiptap/extension-underline";
+import { TextStyleKit } from "@tiptap/extension-text-style";
+import { Extension } from "@tiptap/core";
+import Paragraph from "@tiptap/extension-paragraph";
+import Color from "@tiptap/extension-color";
+import CodeBlock from "@tiptap/extension-code-block";
+import FileHandler from "@tiptap/extension-file-handler";
 
-import '@/styles/editor.css';
-import Toolbar from './ToolBar';
-import HtmlEditor, { RawHtmlExtension } from './HtmlEditor';
-import BlockInsertButton from './FloatingToolbar';
-import PostListPanel from './PostLists';
-import EditorHeader from './EditorHeader';
-import EditorTitle from './EditorTitle';
-import PublishDrawer from './PublishDrawer';
-import WriterMetrics from './WriterMetrics';
-import SaveStatusIndicator, { SaveStatus } from './SaveStatusIndicator';
-import Instruction from './Instruction';
-import ImageUpload from './ImageUpload';
-import { toast } from 'sonner';
+import "@/styles/editor.css";
+import Toolbar from "./ToolBar";
+import HtmlEditor, { RawHtmlExtension } from "./HtmlEditor";
+import BlockInsertButton from "./FloatingToolbar";
+import PostListPanel from "./PostLists";
+import EditorHeader from "./EditorHeader";
+import EditorTitle from "./EditorTitle";
+import PublishDrawer from "./PublishDrawer";
+import WriterMetrics from "./WriterMetrics";
+import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
+import Instruction from "./Instruction";
+import ImageUpload from "./ImageUpload";
+import { toast } from "sonner";
 
-import contentStore from '@/store/ContentStore';
-import { useInstructionStore } from '@/store/useInstruction';
+import contentStore from "@/store/ContentStore";
+import { useInstructionStore } from "@/store/useInstruction";
 
-import { useSearchParams, usePathname, useRouter } from 'next/navigation';
-import { categoryApi } from '@/features/categories/api/category.api';
-import { seriesApi } from '@/features/series/api/series.api';
-import { postApi } from '@/features/ideas/api/post.api';
-import { api } from '@/lib/api/axios';
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
+import { categoryApi } from "@/features/categories/api/category.api";
+import { seriesApi } from "@/features/series/api/series.api";
+import { postApi } from "@/features/ideas/api/post.api";
+import { api } from "@/lib/api/axios";
 
 // ─── Auto-save debounce delay (ms) ───
 const AUTO_SAVE_DELAY = 3000;
@@ -78,29 +84,29 @@ function CreatePostContent() {
   const [isPublic, setIsPublic] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [rawHtml, setRawHtml] = useState('');
+  const [rawHtml, setRawHtml] = useState("");
   const [pageLoading, setPageLoading] = useState(true);
 
   // Panel states
   const [postListOpen, setPostListOpen] = useState(false);
   const [publishDrawerOpen, setPublishDrawerOpen] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
-  const [imageInsertPosition, setImageInsertPosition] = useState<number | null>(null);
+  const [imageInsertPosition, setImageInsertPosition] = useState<number | null>(
+    null,
+  );
 
   // Publish form
   const [category, setCategory] = useState<any[]>([]);
   const [series, setSeries] = useState<any[]>([]);
-  const [descriptionPublic, setDescriptionPublic] = useState('');
-  const [seriesPublic, setSeriesPublic] = useState('');
-  const [categoryPublic, setCategoryPublic] = useState('');
+  const [descriptionPublic, setDescriptionPublic] = useState("");
+  const [seriesPublic, setSeriesPublic] = useState("");
+  const [categoryPublic, setCategoryPublic] = useState("");
   const [imagePublic, setImagePublic] = useState<{ _id: string } | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
 
   // Save status
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
-
-
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
@@ -108,14 +114,14 @@ function CreatePostContent() {
   useEffect(() => {
     const fetchPreData = async () => {
       setPageLoading(true);
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem("access_token");
       if (!token) {
         setPageLoading(false);
         return;
       }
 
       try {
-        const postId = searchParams.get('id');
+        const postId = searchParams.get("id");
 
         // Fetch categories + series in parallel
         const [resCategory, resSeries] = await Promise.all([
@@ -128,8 +134,8 @@ function CreatePostContent() {
 
         setIdPost(postId);
         if (!postId) {
-          setTitle('');
-          setContent('');
+          setTitle("");
+          setContent("");
           setPageLoading(false);
           return;
         }
@@ -141,7 +147,7 @@ function CreatePostContent() {
           setIsPublic(resPost.data.post.published);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       } finally {
         setPageLoading(false);
       }
@@ -157,15 +163,15 @@ function CreatePostContent() {
       CodeBlock.configure({
         exitOnArrowDown: true,
         exitOnTripleEnter: true,
-        defaultLanguage: 'plaintext',
+        defaultLanguage: "plaintext",
         HTMLAttributes: {
-          class: 'my-code-block',
+          class: "my-code-block",
         },
       }),
       Color,
       Paragraph.configure({
         HTMLAttributes: {
-          class: '',
+          class: "",
         },
       }),
       HardBreakExtension,
@@ -174,29 +180,34 @@ function CreatePostContent() {
         inline: false,
         allowBase64: true,
         HTMLAttributes: {
-          class: 'max-w-full rounded-xl',
+          class: "max-w-full rounded-xl",
         },
       }),
       Placeholder.configure({
-        placeholder: 'Start writing your ideas...',
+        placeholder: "Start writing your ideas...",
       }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'editor-link',
+          class: "editor-link",
         },
       }),
       TextAlign.configure({
-        types: ['heading', 'paragraph'],
+        types: ["heading", "paragraph"],
       }),
       Underline.configure({
         HTMLAttributes: {
-          class: 'underline',
+          class: "underline",
         },
       }),
       RawHtmlExtension,
       FileHandler.configure({
-        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+        allowedMimeTypes: [
+          "image/png",
+          "image/jpeg",
+          "image/gif",
+          "image/webp",
+        ],
         onDrop: (currentEditor, files, pos) => {
           files.forEach((file) => {
             const fileReader = new FileReader();
@@ -205,7 +216,7 @@ function CreatePostContent() {
               currentEditor
                 .chain()
                 .insertContentAt(pos, {
-                  type: 'image',
+                  type: "image",
                   attrs: { src: fileReader.result },
                 })
                 .focus()
@@ -222,7 +233,7 @@ function CreatePostContent() {
               currentEditor
                 .chain()
                 .insertContentAt(currentEditor.state.selection.anchor, {
-                  type: 'image',
+                  type: "image",
                   attrs: { src: fileReader.result },
                 })
                 .focus()
@@ -235,14 +246,14 @@ function CreatePostContent() {
     content: content,
     editorProps: {
       attributes: {
-        class: 'editor-canvas prose prose-lg focus:outline-none max-w-none',
+        class: "editor-canvas prose prose-lg focus:outline-none max-w-none",
       },
     },
     immediatelyRender: false,
     onUpdate: () => {
       // Trigger auto-save on content change
       if (idPost) {
-        setSaveStatus('unsaved');
+        setSaveStatus("unsaved");
         triggerAutoSave();
       }
     },
@@ -275,10 +286,10 @@ function CreatePostContent() {
     if (!editor) return;
     if (!title.toString().trim()) return;
 
-    const text = editor.getText().replace(/\n/g, '');
+    const text = editor.getText().replace(/\n/g, "");
     const editorContent = editor.getHTML();
 
-    setSaveStatus('saving');
+    setSaveStatus("saving");
 
     try {
       if (idPost) {
@@ -289,13 +300,13 @@ function CreatePostContent() {
           content: editorContent,
         });
         if (res.success) {
-          setSaveStatus('saved');
+          setSaveStatus("saved");
           if (!isAutoSave) {
-            toast.success('Post updated successfully!');
+            toast.success("Post updated successfully!");
           }
         } else {
-          setSaveStatus('error');
-          toast.error(res.message || 'Error updating post');
+          setSaveStatus("error");
+          toast.error(res.message || "Error updating post");
         }
       } else {
         const res = await postApi.createPost({
@@ -305,36 +316,38 @@ function CreatePostContent() {
         });
         if (res.success) {
           const params = new URLSearchParams();
-          params.set('id', res.data.post._id);
+          params.set("id", res.data.post._id);
           router.push(`${pathname}?${params.toString()}`);
-          setSaveStatus('saved');
+          setSaveStatus("saved");
           if (!isAutoSave) {
-            toast.success('Post created successfully!');
+            toast.success("Post created successfully!");
           }
         } else {
-          setSaveStatus('error');
-          toast.error(res.message || 'Error creating post');
+          setSaveStatus("error");
+          toast.error(res.message || "Error creating post");
         }
       }
     } catch {
-      setSaveStatus('error');
+      setSaveStatus("error");
     }
 
     // Fade status after 4s
     setTimeout(() => {
-      setSaveStatus((prev) => (prev === 'saved' ? 'idle' : prev));
+      setSaveStatus((prev) => (prev === "saved" ? "idle" : prev));
     }, 4000);
   };
 
   // ─── AI Generate ───
   const handleAutoGenerate = async () => {
     if (!title.toString().trim()) {
-      toast.error('Please enter a title to generate content.');
+      toast.error("Please enter a title to generate content.");
       return;
     }
 
     setIsGenerating(true);
-    const response = await api.post('/api/generate', { title: title.toString() });
+    const response = await api.post("/api/generate", {
+      title: title.toString(),
+    });
 
     if (response.success && response.data?.content) {
       if (editor) {
@@ -342,9 +355,9 @@ function CreatePostContent() {
       } else {
         setContent(response.data.content);
       }
-      toast.success('Content generated successfully!');
+      toast.success("Content generated successfully!");
     } else {
-      toast.error(response.message || 'Failed to generate content');
+      toast.error(response.message || "Failed to generate content");
     }
     setIsGenerating(false);
   };
@@ -381,25 +394,41 @@ function CreatePostContent() {
     const position = editor.state.doc.content.size;
 
     switch (type) {
-      case 'paragraph':
-        editor.chain().focus().insertContentAt(position, '<p>Type your paragraph here</p>').run();
+      case "paragraph":
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(position, "<p>Type your paragraph here</p>")
+          .run();
         break;
-      case 'heading1':
-        editor.chain().focus().insertContentAt(position, '<h1>Heading 1</h1>').run();
+      case "heading1":
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(position, "<h1>Heading 1</h1>")
+          .run();
         break;
-      case 'heading2':
-        editor.chain().focus().insertContentAt(position, '<h2>Heading 2</h2>').run();
+      case "heading2":
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(position, "<h2>Heading 2</h2>")
+          .run();
         break;
-      case 'heading3':
-        editor.chain().focus().insertContentAt(position, '<h3>Heading 3</h3>').run();
+      case "heading3":
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(position, "<h3>Heading 3</h3>")
+          .run();
         break;
-      case 'image':
+      case "image":
         setImageInsertPosition(position);
         setShowImageUpload(true);
         break;
-      case 'link':
-        const url = prompt('Enter URL:', 'https://example.com');
-        const text = prompt('Enter link text:', 'Link text');
+      case "link":
+        const url = prompt("Enter URL:", "https://example.com");
+        const text = prompt("Enter link text:", "Link text");
         if (url && text) {
           editor
             .chain()
@@ -411,11 +440,25 @@ function CreatePostContent() {
             .run();
         }
         break;
-      case 'blockquote':
-        editor.chain().focus().insertContentAt(position, '<blockquote>Add a quote here</blockquote>').run();
+      case "blockquote":
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(
+            position,
+            "<blockquote>Add a quote here</blockquote>",
+          )
+          .run();
         break;
-      case 'codeBlock':
-        editor.chain().focus().insertContentAt(position, '<pre><code>// insert code here</code></pre>').run();
+      case "codeBlock":
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(
+            position,
+            "<pre><code>// insert code here</code></pre>",
+          )
+          .run();
         break;
     }
   };
@@ -427,7 +470,7 @@ function CreatePostContent() {
         .chain()
         .focus()
         .insertContentAt(imageInsertPosition, {
-          type: 'image',
+          type: "image",
           attrs: { src: image.url, alt: image.description },
         })
         .run();
@@ -447,9 +490,9 @@ function CreatePostContent() {
     const res = await seriesApi.createSeries({ newSeries: name });
     if (res.success) {
       setSeries((prev) => [...prev, res.data.data]);
-      toast.success('New series created successfully!');
+      toast.success("New series created successfully!");
     } else {
-      toast.error(res.message || 'Error creating series');
+      toast.error(res.message || "Error creating series");
     }
   };
 
@@ -468,25 +511,25 @@ function CreatePostContent() {
     setIsPublishing(false);
 
     if (res.success) {
-      toast.success('Post published successfully!');
+      toast.success("Post published successfully!");
       setPublishDrawerOpen(false);
       setIsPublic(true);
     } else {
-      toast.error(res.message || 'Error publishing post');
+      toast.error(res.message || "Error publishing post");
     }
   };
 
   // ─── Drag & drop ───
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = "move";
   };
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       if (!editor) return;
       e.preventDefault();
-      const elementType = e.dataTransfer.getData('application/reactflow');
+      const elementType = e.dataTransfer.getData("application/reactflow");
       if (editorContainerRef.current) {
         const view = editor.view;
         const pos = view.posAtCoords({ left: e.clientX, top: e.clientY })?.pos;
@@ -495,7 +538,7 @@ function CreatePostContent() {
         }
       }
     },
-    [editor]
+    [editor],
   );
 
   // ─── Loading state ───
@@ -504,13 +547,15 @@ function CreatePostContent() {
       <div className="min-h-screen bg-[var(--color-editor-bg)] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 animate-[fade-in_0.3s_ease-out]">
           <div className="w-8 h-8 border-2 border-[var(--color-editor-accent)] border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-[var(--color-editor-muted)]">Loading editor...</p>
+          <p className="text-sm text-[var(--color-editor-muted)]">
+            Loading editor...
+          </p>
         </div>
       </div>
     );
   }
 
-  const editorText = editor?.getText() || '';
+  const editorText = editor?.getText() || "";
 
   return (
     <div className="min-h-screen bg-editor-bg flex flex-col">
@@ -548,7 +593,7 @@ function CreatePostContent() {
           onChange={(val) => {
             setTitle(val);
             if (idPost) {
-              setSaveStatus('unsaved');
+              setSaveStatus("unsaved");
               triggerAutoSave();
             }
           }}
@@ -562,7 +607,11 @@ function CreatePostContent() {
         {modeHTML ? (
           /* HTML mode */
           <div className="animate-[fade-in_0.15s_ease-out]">
-            <HtmlEditor editor={editor} setRawHtml={setRawHtml} rawHtml={rawHtml} />
+            <HtmlEditor
+              editor={editor}
+              setRawHtml={setRawHtml}
+              rawHtml={rawHtml}
+            />
             <div className="flex justify-end mt-4">
               <button
                 onClick={applyHtml}
@@ -576,7 +625,7 @@ function CreatePostContent() {
           /* Preview mode */
           <div className="preview-pane animate-[fade-in_0.15s_ease-out]">
             <h1 className="text-[2.5rem] leading-[1.2] font-bold tracking-[-0.02em] text-[var(--color-editor-text)] mb-8">
-              {title || 'Untitled Post'}
+              {title || "Untitled Post"}
             </h1>
             {editor && (
               <div dangerouslySetInnerHTML={{ __html: editor.getHTML() }} />
@@ -629,7 +678,7 @@ function CreatePostContent() {
 
       {/* Image upload modal */}
       {showImageUpload && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/30 backdrop-blur-sm animate-[fade-in_0.15s_ease-out]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/30 backdrop-blur-sm animate-[fade-in_0.15s_ease-out]">
           <div className="bg-[var(--color-editor-surface)] rounded-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-[var(--color-editor-border)] shadow-2xl">
             <ImageUpload
               onImageUploaded={handleImageUploaded}
@@ -648,10 +697,10 @@ function CreatePostContent() {
 
 // ─── Format HTML utility ───
 function formatHtml(html: string): string {
-  if (!html) return '';
-  let formatted = html.replace(/>\s*</g, '>\n<');
+  if (!html) return "";
+  let formatted = html.replace(/>\s*</g, ">\n<");
   const indent = 2;
-  const lines = formatted.split('\n');
+  const lines = formatted.split("\n");
   let indentLevel = 0;
 
   formatted = lines
@@ -659,32 +708,32 @@ function formatHtml(html: string): string {
       if (line.match(/^<\//)) {
         indentLevel = Math.max(0, indentLevel - 1);
       }
-      const indentation = ' '.repeat(indentLevel * indent);
+      const indentation = " ".repeat(indentLevel * indent);
       const indentedLine = indentation + line;
       if (line.match(/<[^/][^>]*[^/]>$/)) {
         indentLevel++;
       }
       return indentedLine;
     })
-    .join('\n');
+    .join("\n");
 
   return formatted;
 }
 
 // ─── TipTap Extensions ───
 const HardBreakExtension = Extension.create({
-  name: 'customHardBreak',
+  name: "customHardBreak",
 
   addKeyboardShortcuts() {
     return {
       Enter: ({ editor }) => {
-        if (editor.isActive('codeBlock')) {
+        if (editor.isActive("codeBlock")) {
           return false;
         }
         editor.commands.setHardBreak();
         return true;
       },
-      'Shift-Enter': () => {
+      "Shift-Enter": () => {
         return this.editor.commands.setHardBreak();
       },
     };
@@ -692,16 +741,16 @@ const HardBreakExtension = Extension.create({
 });
 
 Color.configure({
-  types: ['textStyle'],
+  types: ["textStyle"],
 });
 
 const SelectionExtension = Extension.create({
-  name: 'selection',
+  name: "selection",
 
   addKeyboardShortcuts() {
     return {
       Delete: ({ editor }) => {
-        if (editor.isActive('image')) {
+        if (editor.isActive("image")) {
           editor.chain().deleteSelection().run();
           return true;
         }

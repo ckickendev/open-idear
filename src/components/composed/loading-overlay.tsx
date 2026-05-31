@@ -15,11 +15,12 @@ const loadingOverlayVariants = cva(
     defaultVariants: {
       mode: "inline",
     },
-  }
+  },
 );
 
-interface LoadingOverlayProps
-  extends VariantProps<typeof loadingOverlayVariants> {
+interface LoadingOverlayProps extends VariantProps<
+  typeof loadingOverlayVariants
+> {
   /** Whether the loading overlay is visible */
   isLoading: boolean;
   /** Optional message to display below the spinner */
@@ -36,12 +37,12 @@ interface LoadingOverlayProps
  * @example
  * ```tsx
  * // Fullscreen overlay
- * <LoadingOverlay isLoading={isLoading} mode="fullscreen" />
+ * <LoadingOverlay isLoading={isLoading} mode="fullscreen"/>
  *
  * // Inline overlay (within a relative container)
  * <div className="relative">
- *   <LoadingOverlay isLoading={isLoading} />
- *   <TableContent />
+ * <LoadingOverlay isLoading={isLoading} />
+ * <TableContent />
  * </div>
  * ```
  */

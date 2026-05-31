@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
  * @example
  * ```tsx
  * const mounted = useMounted();
- * if (!mounted) return <Skeleton className="size-9" />;
+ * if (!mounted) return <Skeleton className="size-9"/>;
  * return <ThemeToggle />;
  * ```
  */

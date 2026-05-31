@@ -1,8 +1,8 @@
-import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority"
+import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive cursor-pointer",
@@ -32,7 +32,7 @@ const buttonVariants = cva(
         "gradient-cta":
           "text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:bg-gradient-to-l focus-visible:ring-purple-200 dark:focus-visible:ring-purple-800 shadow-xs",
         "gradient-subtle":
-          "text-foreground bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 hover:bg-gradient-to-bl focus-visible:ring-gray-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 dark:text-foreground shadow-xs",
+          "text-foreground bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 hover:bg-gradient-to-bl focus-visible:ring-ring dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 dark:text-foreground shadow-xs",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -48,8 +48,8 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  }
-)
+  },
+);
 
 function Button({
   className,
@@ -59,9 +59,9 @@ function Button({
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
+    asChild?: boolean;
   }) {
-  const Comp = asChild ? Slot : "button"
+  const Comp = asChild ? Slot : "button";
 
   return (
     <Comp
@@ -69,7 +69,7 @@ function Button({
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />
-  )
+  );
 }
 
-export { Button, buttonVariants }
+export { Button, buttonVariants };

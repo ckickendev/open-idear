@@ -1,3 +1,3 @@
 export default function PostLists() {
-    return <>Post List</>
+  return <>Post List</>;
 }

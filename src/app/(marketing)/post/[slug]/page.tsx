@@ -1,8 +1,11 @@
-import HotPost from '@/features/ideas/components/hot_post/HotPost';
+import HotPost from "@/features/ideas/components/hot_post/HotPost";
 import { Mail, Link } from "lucide-react";
 import CommentSection from "./CommentSection";
 import PostSidebarActions from "./PostSideBarActions";
-import { CategoryLinkCustom, UserLinkCustom } from "@/components/common/LinkCustom";
+import {
+  CategoryLinkCustom,
+  UserLinkCustom,
+} from "@/components/common/LinkCustom";
 
 export default async function PostLists({
   params,
@@ -21,7 +24,7 @@ export default async function PostLists({
           // Next.js 13+ fetch options
           next: { revalidate: 3600 }, // Cache for 1 hour
           // or use: cache: 'no-store' for always fresh data
-        }
+        },
       );
 
       if (!res.ok) {
@@ -29,7 +32,7 @@ export default async function PostLists({
       }
 
       const data = await res.json();
-      //console.log("data.post: ", data.post);
+      //console.log("data.post:", data.post);
 
       return data.post;
     } catch (error) {
@@ -44,7 +47,7 @@ export default async function PostLists({
         `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category/getRandomTopic?limit=5&page=1`,
         {
           next: { revalidate: 3600 }, // Cache for 1 hour
-        }
+        },
       );
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -68,13 +71,13 @@ export default async function PostLists({
     <>
       <div className="relative mb-6">
         {/* <Image
-          src={postData?.image?.url || "/banner/openidear3.webp"} // adjust field name
-          alt={postData?.title || "Post banner"}
-          fill
-          priority
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1200px"
-          className="w-full h-80 object-cover rounded-lg"
-        /> */}
+ src={postData?.image?.url ||"/banner/openidear3.webp"} // adjust field name
+ alt={postData?.title ||"Post banner"}
+ fill
+ priority
+ sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1200px"
+ className="w-full h-80 object-cover rounded-lg"
+ /> */}
         <img
           src={postData.image?.url || "/banner/openidear3.webp"}
           alt={postData.title}
@@ -82,46 +85,60 @@ export default async function PostLists({
         />
 
         {/* Image Caption */}
-        <div className="max-w-4xl mx-auto px-4 py-2 bg-white text-sm text-gray-600 leading-relaxed">
-          <span className="text-yellow-600 font-medium">|</span> {postData.image?.description || "No description available"}
+        <div className="max-w-4xl mx-auto px-4 py-2 bg-background text-sm text-muted-foreground leading-relaxed">
+          <span className="text-yellow-600 font-medium">|</span>{" "}
+          {postData.image?.description || "No description available"}
         </div>
       </div>
-      <div className="max-w-4xl mx-auto px-4 py-8 bg-white">
+      <div className="max-w-4xl mx-auto px-4 py-8 bg-background">
         <PostSidebarActions postData={postData} />
 
         {/* Article Content */}
         <article className="max-w-4xl">
           {/* Category Tag */}
           <div className="mb-4">
-            <CategoryLinkCustom className="inline-block px-3 py-1 text-xs font-semibold text-gray-800 bg-gray-200 rounded uppercase tracking-wide"
-              slug={postData.category ? postData.category.slug : "uncategorized"}
-              name={postData.category ? postData.category.name : "Uncategorized"}
+            <CategoryLinkCustom
+              className="inline-block px-3 py-1 text-xs font-semibold text-foreground bg-muted rounded uppercase tracking-wide"
+              slug={
+                postData.category ? postData.category.slug : "uncategorized"
+              }
+              name={
+                postData.category ? postData.category.name : "Uncategorized"
+              }
             />
           </div>
           {/* Headline */}
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground leading-tight mb-6">
             {postData.title}
           </h1>
           {/* Subheadline */}
-          <p className="text-xl text-gray-700 leading-relaxed mb-6">
+          <p className="text-xl text-foreground/80 leading-relaxed mb-6">
             {postData.description}
           </p>
 
           {/* Author and Date Info */}
-          <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-8 pb-6 border-b border-border">
             <div>
-              <p className="text-sm font-medium text-gray-900">By {" "}
-                <UserLinkCustom className="text-sm font-medium cursor-pointer hover:underline" username={postData?.author?.username} name={postData?.author?.username} />
+              <p className="text-sm font-medium text-foreground">
+                By {""}
+                <UserLinkCustom
+                  className="text-sm font-medium cursor-pointer hover:underline"
+                  username={postData?.author?.username}
+                  name={postData?.author?.username}
+                />
               </p>
-              <p className="text-sm text-gray-600">Created date: {new Date(postData.createdAt).toLocaleDateString()}</p>
+              <p className="text-sm text-muted-foreground">
+                Created date:{" "}
+                {new Date(postData.createdAt).toLocaleDateString()}
+              </p>
             </div>
 
             {/* Social Share Icons */}
             <div className="flex items-center space-x-3">
-              <button className="p-2 rounded-full bg-gray-600 text-white hover:bg-gray-700 transition-colors">
+              <button className="p-2 rounded-full bg-accent text-white hover:bg-accent transition-colors">
                 <Mail size={16} />
               </button>
-              <button className="p-2 rounded-full bg-gray-600 text-white hover:bg-gray-700 transition-colors">
+              <button className="p-2 rounded-full bg-accent text-white hover:bg-accent transition-colors">
                 <Link size={16} />
               </button>
             </div>
@@ -133,7 +150,9 @@ export default async function PostLists({
           </div>
 
           <div className="mb-4">
-            <p className="text-2xl mb-6 font-bold text-red-700">Related Topics</p>
+            <p className="text-2xl mb-6 font-bold text-red-700">
+              Related Topics
+            </p>
 
             {randomTopic && randomTopic.length > 0 ? (
               <div className="flex flex-wrap gap-4">
@@ -141,26 +160,27 @@ export default async function PostLists({
                   <a
                     key={topic._id}
                     href={`/category/${topic.slug}`}
-                    className="inline-block px-3 py-1 text-xs font-semibold text-gray-800 bg-gray-200 rounded uppercase tracking-wide hover:bg-gray-300 transition-colors"
+                    className="inline-block px-3 py-1 text-xs font-semibold text-foreground bg-muted rounded uppercase tracking-wide hover:bg-muted transition-colors"
                   >
                     {topic.name}
                   </a>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-600">No related topics available.</p>
+              <p className="text-muted-foreground">
+                No related topics available.
+              </p>
             )}
           </div>
         </article>
       </div>
-      <div className="max-w-full mx-auto px-4 py-8 bg-white">
+      <div className="max-w-full mx-auto px-4 py-8 bg-background">
         <HotPost />
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8 bg-white">
+      <div className="max-w-4xl mx-auto px-4 py-8 bg-background">
         <CommentSection postId={postData._id} />
       </div>
     </>
-
   );
 }

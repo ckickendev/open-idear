@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
 import {
   ArrowLeft,
   Eye,
@@ -10,9 +10,9 @@ import {
   Send,
   PanelLeftOpen,
   Sparkles,
-} from 'lucide-react';
-import SaveStatusIndicator, { SaveStatus } from './SaveStatusIndicator';
-import Link from 'next/link';
+} from "lucide-react";
+import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
+import Link from "next/link";
 
 interface EditorHeaderProps {
   /** Whether we're editing an existing post */
@@ -93,13 +93,17 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         <SaveStatusIndicator status={saveStatus} onRetry={onRetrySave} />
 
         {/* Draft / Published badge */}
-        <div className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider ${
-          isPublished
-            ? 'bg-[var(--color-editor-success)]/15 text-[var(--color-editor-success)]'
-            : 'bg-[var(--color-editor-warning)]/15 text-[var(--color-editor-warning)]'
-        }`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${isPublished ? 'bg-[var(--color-editor-success)]' : 'bg-[var(--color-editor-warning)]'}`} />
-          {isPublished ? 'Published' : 'Draft'}
+        <div
+          className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider ${
+            isPublished
+              ? "bg-[var(--color-editor-success)]/15 text-[var(--color-editor-success)]"
+              : "bg-[var(--color-editor-warning)]/15 text-[var(--color-editor-warning)]"
+          }`}
+        >
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${isPublished ? "bg-[var(--color-editor-success)]" : "bg-[var(--color-editor-warning)]"}`}
+          />
+          {isPublished ? "Published" : "Draft"}
         </div>
       </div>
 
@@ -111,13 +115,13 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
           disabled={isGenerating || !hasTitle}
           className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer ${
             isGenerating || !hasTitle
-              ? 'text-[var(--color-editor-muted)] cursor-not-allowed'
-              : 'text-[var(--color-editor-accent)] hover:bg-[var(--color-editor-accent)]/10'
+              ? "text-[var(--color-editor-muted)] cursor-not-allowed"
+              : "text-[var(--color-editor-accent)] hover:bg-[var(--color-editor-accent)]/10"
           }`}
           aria-label="Generate content with AI"
         >
-          <Sparkles size={14} className={isGenerating ? 'animate-spin' : ''} />
-          <span>{isGenerating ? 'Generating...' : 'AI Generate'}</span>
+          <Sparkles size={14} className={isGenerating ? "animate-spin" : ""} />
+          <span>{isGenerating ? "Generating..." : "AI Generate"}</span>
         </button>
 
         {/* Separator */}
@@ -128,11 +132,13 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
           onClick={onToggleHtmlMode}
           className={`p-2 rounded-lg transition-all duration-150 cursor-pointer ${
             htmlMode
-              ? 'bg-[var(--color-editor-accent)]/15 text-[var(--color-editor-accent)]'
-              : 'text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]'
+              ? "bg-[var(--color-editor-accent)]/15 text-[var(--color-editor-accent)]"
+              : "text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]"
           }`}
-          aria-label={htmlMode ? 'Switch to visual editor' : 'Switch to HTML mode'}
-          title={htmlMode ? 'Visual mode' : 'HTML mode'}
+          aria-label={
+            htmlMode ? "Switch to visual editor" : "Switch to HTML mode"
+          }
+          title={htmlMode ? "Visual mode" : "HTML mode"}
         >
           <Code size={16} />
         </button>
@@ -143,11 +149,11 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             onClick={onTogglePreview}
             className={`p-2 rounded-lg transition-all duration-150 cursor-pointer ${
               previewMode
-                ? 'bg-[var(--color-editor-accent)]/15 text-[var(--color-editor-accent)]'
-                : 'text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]'
+                ? "bg-[var(--color-editor-accent)]/15 text-[var(--color-editor-accent)]"
+                : "text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]"
             }`}
-            aria-label={previewMode ? 'Exit preview' : 'Preview post'}
-            title={previewMode ? 'Exit preview' : 'Preview'}
+            aria-label={previewMode ? "Exit preview" : "Preview post"}
+            title={previewMode ? "Exit preview" : "Preview"}
           >
             {previewMode ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
@@ -159,8 +165,8 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
           disabled={!canSave}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer ${
             canSave
-              ? 'text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] hover:border-[var(--color-editor-secondary)]'
-              : 'text-[var(--color-editor-muted)] cursor-not-allowed border border-transparent'
+              ? "text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] hover:border-[var(--color-editor-secondary)]"
+              : "text-[var(--color-editor-muted)] cursor-not-allowed border border-transparent"
           }`}
           aria-label="Save draft"
         >
@@ -174,13 +180,13 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
           disabled={!canPublish}
           className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
             canPublish
-              ? 'bg-[var(--color-editor-accent)] hover:bg-[var(--color-editor-accent-hover)] text-white shadow-lg shadow-[var(--color-editor-accent)]/25 hover:shadow-[var(--color-editor-accent-hover)]/30 active:scale-[0.97]'
-              : 'bg-[var(--color-editor-elevated)] text-[var(--color-editor-muted)] cursor-not-allowed'
+              ? "bg-[var(--color-editor-accent)] hover:bg-[var(--color-editor-accent-hover)] text-white shadow-lg shadow-[var(--color-editor-accent)]/25 hover:shadow-[var(--color-editor-accent-hover)]/30 active:scale-[0.97]"
+              : "bg-[var(--color-editor-elevated)] text-[var(--color-editor-muted)] cursor-not-allowed"
           }`}
-          aria-label={isPublished ? 'Already published' : 'Publish post'}
+          aria-label={isPublished ? "Already published" : "Publish post"}
         >
           <Send size={14} />
-          <span>{isPublished ? 'Published' : 'Publish'}</span>
+          <span>{isPublished ? "Published" : "Publish"}</span>
         </button>
       </div>
     </header>

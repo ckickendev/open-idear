@@ -8,9 +8,5 @@ export default function EditorLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="min-h-dvh bg-editor-bg">
-      {children}
-    </div>
-  );
+  return <div className="min-h-dvh bg-editor-bg">{children}</div>;
 }

@@ -24,9 +24,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${fontSans.variable} ${fontMono.variable} font-sans`}
-      >
+      <body className={`${fontSans.variable} ${fontMono.variable} font-sans`}>
         <Providers>{children}</Providers>
       </body>
     </html>

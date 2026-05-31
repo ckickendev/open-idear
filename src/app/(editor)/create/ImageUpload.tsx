@@ -1,9 +1,16 @@
-'use client';
+"use client";
 
-import React, { useState, useRef } from 'react';
-import { Upload, X, FileImage, Loader2, CheckCircle, Image as ImageIcon } from 'lucide-react';
-import { getHeadersToken } from '@/lib/api/axios';
-import MediaBrowser from './MediaBrowser';
+import React, { useState, useRef } from "react";
+import {
+  Upload,
+  X,
+  FileImage,
+  Loader2,
+  CheckCircle,
+  Image as ImageIcon,
+} from "lucide-react";
+import { getHeadersToken } from "@/lib/api/axios";
+import MediaBrowser from "./MediaBrowser";
 
 interface ImageUploadProps {
   onImageUploaded: (image: any) => void;
@@ -12,51 +19,72 @@ interface ImageUploadProps {
   darkMode?: boolean;
 }
 
-const ImageUpload = ({ onImageUploaded, onClose = () => {}, isTitleDisplay = false, darkMode = false }: ImageUploadProps) => {
+const ImageUpload = ({
+  onImageUploaded,
+  onClose = () => {},
+  isTitleDisplay = false,
+  darkMode = false,
+}: ImageUploadProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [isUploadDone, setIsUploadDone] = useState(false);
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showBrowser, setShowBrowser] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Dark mode class helpers
-  const bg = darkMode ? 'bg-[var(--color-editor-surface)]' : 'bg-white';
-  const bgElevated = darkMode ? 'bg-[var(--color-editor-elevated)]' : 'bg-gray-50';
-  const text = darkMode ? 'text-[var(--color-editor-text)]' : 'text-gray-800';
-  const textSec = darkMode ? 'text-[var(--color-editor-secondary)]' : 'text-gray-500';
-  const textMuted = darkMode ? 'text-[var(--color-editor-muted)]' : 'text-gray-400';
-  const border = darkMode ? 'border-[var(--color-editor-border)]' : 'border-gray-300';
-  const borderHover = darkMode ? 'hover:border-[var(--color-editor-accent)]' : 'hover:border-blue-400';
-  const accent = darkMode ? 'bg-[var(--color-editor-accent)]' : 'bg-blue-500';
-  const accentHover = darkMode ? 'hover:bg-[var(--color-editor-accent-hover)]' : 'hover:bg-blue-600';
-  const accentText = darkMode ? 'text-[var(--color-editor-accent)]' : 'text-blue-600';
-  const ring = darkMode ? 'focus:ring-[var(--color-editor-accent)]/40' : 'focus:ring-blue-500';
+  const bg = darkMode ? "bg-[var(--color-editor-surface)]" : "bg-background";
+  const bgElevated = darkMode
+    ? "bg-[var(--color-editor-elevated)]"
+    : "bg-muted/30";
+  const text = darkMode ? "text-[var(--color-editor-text)]" : "text-foreground";
+  const textSec = darkMode
+    ? "text-[var(--color-editor-secondary)]"
+    : "text-muted-foreground";
+  const textMuted = darkMode
+    ? "text-[var(--color-editor-muted)]"
+    : "text-muted-foreground";
+  const border = darkMode
+    ? "border-[var(--color-editor-border)]"
+    : "border-border";
+  const borderHover = darkMode
+    ? "hover:border-[var(--color-editor-accent)]"
+    : "hover:border-blue-400";
+  const accent = darkMode ? "bg-[var(--color-editor-accent)]" : "bg-blue-500";
+  const accentHover = darkMode
+    ? "hover:bg-[var(--color-editor-accent-hover)]"
+    : "hover:bg-blue-600";
+  const accentText = darkMode
+    ? "text-[var(--color-editor-accent)]"
+    : "text-blue-600";
+  const ring = darkMode
+    ? "focus:ring-[var(--color-editor-accent)]/40"
+    : "focus:ring-blue-500";
 
   const handleFileSelect = (event: any) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      setError('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
+      setError("Please select a valid image file (JPEG, PNG, GIF, or WebP)");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setError('File size must be less than 5MB');
+      setError("File size must be less than 5MB");
       return;
     }
 
     setSelectedFile(file);
     setError(null);
     setIsUploadDone(false);
-    setDescription('');
+    setDescription("");
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      if (e.target && typeof e.target.result === 'string') {
+      if (e.target && typeof e.target.result === "string") {
         setPreview(e.target.result);
       }
     };
@@ -70,28 +98,31 @@ const ImageUpload = ({ onImageUploaded, onClose = () => {}, isTitleDisplay = fal
     setError(null);
 
     const formData = new FormData();
-    formData.append('image', selectedFile);
-    formData.append('description', description);
+    formData.append("image", selectedFile);
+    formData.append("description", description);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/media/uploadImage`, {
-        method: 'POST',
-        body: formData,
-        headers: getHeadersToken(),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/media/uploadImage`,
+        {
+          method: "POST",
+          body: formData,
+          headers: getHeadersToken(),
+        },
+      );
 
-      if (!response.ok) throw new Error('Upload failed');
+      if (!response.ok) throw new Error("Upload failed");
 
       const data = await response.json();
-      if (data.status === 'success') {
+      if (data.status === "success") {
         onImageUploaded(data.image);
         setIsUploadDone(true);
         onClose();
       } else {
-        throw new Error(data.error || 'Upload failed');
+        throw new Error(data.error || "Upload failed");
       }
     } catch (err: any) {
-      setError(err?.message || 'Upload failed. Please try again.');
+      setError(err?.message || "Upload failed. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -102,9 +133,9 @@ const ImageUpload = ({ onImageUploaded, onClose = () => {}, isTitleDisplay = fal
     setPreview(null);
     setError(null);
     setIsUploadDone(false);
-    setDescription('');
+    setDescription("");
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -197,7 +228,10 @@ const ImageUpload = ({ onImageUploaded, onClose = () => {}, isTitleDisplay = fal
       {/* Description Input */}
       {selectedFile && (
         <div className="mt-5 space-y-2 animate-[fade-in_0.15s_ease-out]">
-          <label htmlFor="img-description" className={`block text-sm font-medium ${text}`}>
+          <label
+            htmlFor="img-description"
+            className={`block text-sm font-medium ${text}`}
+          >
             Image Description
           </label>
           <textarea
@@ -230,9 +264,13 @@ const ImageUpload = ({ onImageUploaded, onClose = () => {}, isTitleDisplay = fal
             className={`flex-1 ${accent} text-white py-3 px-6 rounded-xl font-medium ${accentHover} disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer`}
           >
             {uploading ? (
-              <><Loader2 size={18} className="animate-spin" /> Uploading...</>
+              <>
+                <Loader2 size={18} className="animate-spin" /> Uploading...
+              </>
             ) : (
-              <><Upload size={18} /> Upload Image</>
+              <>
+                <Upload size={18} /> Upload Image
+              </>
             )}
           </button>
           <button
@@ -248,8 +286,13 @@ const ImageUpload = ({ onImageUploaded, onClose = () => {}, isTitleDisplay = fal
       {/* Upload success */}
       {isUploadDone && (
         <div className="mt-4 p-3 bg-[var(--color-editor-success)]/10 border border-[var(--color-editor-success)]/30 rounded-xl flex items-center justify-center gap-2 animate-[fade-in_0.15s_ease-out]">
-          <CheckCircle size={18} className="text-[var(--color-editor-success)]" />
-          <span className="text-sm text-[var(--color-editor-success)] font-medium">Image uploaded successfully!</span>
+          <CheckCircle
+            size={18}
+            className="text-[var(--color-editor-success)]"
+          />
+          <span className="text-sm text-[var(--color-editor-success)] font-medium">
+            Image uploaded successfully!
+          </span>
         </div>
       )}
 

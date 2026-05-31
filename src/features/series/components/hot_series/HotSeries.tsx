@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import React from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -13,12 +13,14 @@ const HotSeries: React.FC = () => {
   React.useEffect(() => {
     const fetchSeriesData = async () => {
       try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getHotSeries`);
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getHotSeries`,
+        );
         if (res.status === 200) {
           setSeries(res.data.series || []);
         }
       } catch (error) {
-        console.error('Error fetching series:', error);
+        console.error("Error fetching series:", error);
       }
     };
     fetchSeriesData();
@@ -40,18 +42,18 @@ const HotSeries: React.FC = () => {
     <section className="max-w-full py-8">
       {/* Header with divider lines */}
       <div className="flex items-center justify-center mb-4">
-        <div className="flex-1 h-px bg-gray-300"></div>
-        <h2 className="text-2xl font-bold text-gray-800 px-6 uppercase">
+        <div className="flex-1 h-px bg-muted"></div>
+        <h2 className="text-2xl font-bold text-foreground px-6 uppercase">
           Hot Series
         </h2>
-        <div className="flex-1 h-px bg-gray-300"></div>
+        <div className="flex-1 h-px bg-muted"></div>
       </div>
 
       {/* See all link */}
       <div className="flex justify-center mb-8">
         <Link
           href="/series"
-          className="text-sm text-gray-700 hover:underline"
+          className="text-sm text-foreground/80 hover:underline"
         >
           Hot series updates every day. See all
         </Link>
@@ -62,7 +64,7 @@ const HotSeries: React.FC = () => {
         {/* Left scroll button */}
         <button
           onClick={scrollLeft}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full shadow-md p-3 hover:bg-gray-100"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background rounded-full shadow-md p-3 hover:bg-muted"
           aria-label="Scroll left"
         >
           <ChevronLeft size={20} />
@@ -78,15 +80,23 @@ const HotSeries: React.FC = () => {
             <div key={serie._id} className="flex-shrink-0 w-64">
               <Link href={`/series/${serie.slug}`}>
                 <div className="group">
-                  <div className="bg-gray-200 h-40 w-full mb-3 overflow-hidden">
-                    <Image src={serie?.image?.url || '/default-series-image.jpg'} alt={serie.title} width={256} height={160} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <div className="bg-muted h-40 w-full mb-3 overflow-hidden">
+                    <Image
+                      src={serie?.image?.url || "/default-series-image.jpg"}
+                      alt={serie.title}
+                      width={256}
+                      height={160}
+                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
                     {/* Placeholder for image - in production, use Next.js Image component */}
-                    <div className="h-full w-full bg-gray-300"></div>
+                    <div className="h-full w-full bg-muted"></div>
                   </div>
                   <h3 className="font-bold text-base mb-2 group-hover:text-blue-600">
                     {serie.title}
                   </h3>
-                  <p className="text-xs text-gray-600">BY {serie.user.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    BY {serie.user.name}
+                  </p>
                 </div>
               </Link>
             </div>
@@ -96,7 +106,7 @@ const HotSeries: React.FC = () => {
         {/* Right scroll button */}
         <button
           onClick={scrollRight}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full shadow-md p-3 hover:bg-gray-100"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background rounded-full shadow-md p-3 hover:bg-muted"
           aria-label="Scroll right"
         >
           <ChevronRight size={20} />
@@ -104,7 +114,7 @@ const HotSeries: React.FC = () => {
       </div>
 
       {/* Bottom border */}
-      <div className="mt-8 h-px bg-gray-300"></div>
+      <div className="mt-8 h-px bg-muted"></div>
     </section>
   );
 };

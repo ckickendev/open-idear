@@ -1,132 +1,325 @@
-import { useState } from 'react';
-import { User, Settings, HelpCircle, Moon, MessageSquare, LogOut } from 'lucide-react';
-import authenticationStore from '@/store/AuthenticationStore';
-import Link from 'next/link';
-import Image from 'next/image';
+"use client";
+
+import { useState } from "react";
+import {
+  User,
+  Settings,
+  HelpCircle,
+  Moon,
+  MessageSquare,
+  LogOut,
+  ArrowLeft,
+  Sun,
+  Monitor,
+  Check,
+} from "lucide-react";
+import authenticationStore from "@/store/AuthenticationStore";
+import { useTheme } from "next-themes";
+import Link from "next/link";
+import Image from "next/image";
+
+type Panel = "main" | "display";
 
 export default function Profile() {
-    const [isOpen, setIsOpen] = useState(false);
-    const userInfo = authenticationStore((state) => state.currentUser);
+  const [isOpen, setIsOpen] = useState(false);
+  const [panel, setPanel] = useState<Panel>("main");
+  const { theme, setTheme } = useTheme();
+  const userInfo = authenticationStore((state) => state.currentUser);
 
-    const logout = () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        authenticationStore.setState({
-            currentUser: {
-                _id: "",
-                username: "",
-                name: "",
-                email: "",
-                role: 0,
-                activate: false,
-                createdAt: new Date(),
-                bio: "",
-                background: "",
-                avatar: "",
-            }
-        });
-        setIsOpen(false);
-        window.location.href = '/';
-    }
+  const logout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    authenticationStore.setState({
+      currentUser: {
+        _id: "",
+        username: "",
+        name: "",
+        email: "",
+        role: 0,
+        activate: false,
+        createdAt: new Date(),
+        bio: "",
+        background: "",
+        avatar: "",
+      },
+    });
+    setIsOpen(false);
+    window.location.href = "/";
+  };
 
-    return (
-        <div className="text-white p-6 flex flex-col items-center relative">
-            {/* Profile Circle Icon */}
-            <div className="relative cursor-pointer">
-                <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="w-10 h-10 relative rounded-full bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-green-400 hover:opacity-90"
-                >
-                    <Image src={userInfo.avatar} alt="Profile avatar image" fill sizes='40px' className="cursor-pointer w-full h-full object-cover" />
-                </button>
+  const closeDropdown = () => {
+    setIsOpen(false);
+    setPanel("main");
+  };
 
-                {/* Badge - can be used for notifications */}
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs">
-                    1
+  const themeOptions = [
+    {
+      value: "light",
+      label: "Tắt",
+      icon: Sun,
+      description: undefined,
+    },
+    {
+      value: "dark",
+      label: "Bật",
+      icon: Moon,
+      description: undefined,
+    },
+    {
+      value: "system",
+      label: "Tự động",
+      icon: Monitor,
+      description:
+        "Chúng tôi sẽ tự động điều chỉnh màn hình theo cài đặt hệ thống trên thiết bị của bạn.",
+    },
+  ] as const;
+
+  // ── Chevron SVG ──────────────────────────────────────────────────
+  const ChevronRight = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  );
+
+  return (
+    <div className="text-white p-6 flex flex-col items-center relative">
+      {/* Avatar trigger */}
+      <div className="relative cursor-pointer">
+        <button
+          onClick={() => {
+            setIsOpen(!isOpen);
+            setPanel("main");
+          }}
+          className="w-10 h-10 relative rounded-full bg-accent flex items-center justify-center overflow-hidden border-2 border-green-400 hover:opacity-90"
+        >
+          <Image
+            src={userInfo.avatar}
+            alt="Profile avatar image"
+            fill
+            sizes="40px"
+            className="cursor-pointer w-full h-full object-cover"
+          />
+        </button>
+        <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs">
+          1
+        </div>
+      </div>
+
+      {/* Dropdown */}
+      {isOpen && (
+        <div className="mt-2 min-w-72 max-w-80 bg-card rounded-lg shadow-lg absolute top-16 right-6 overflow-hidden z-50">
+          {/* ── MAIN PANEL ────────────────────────────────── */}
+          <div
+            className="transition-all duration-200"
+            style={{ display: panel === "main" ? "block" : "none" }}
+          >
+            {/* User info */}
+            <div className="p-4 border-b border-border">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-accent overflow-hidden flex-shrink-0">
+                  <Image
+                    src={userInfo.avatar}
+                    alt="Profile avatar image"
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
+                <div>
+                  <p className="text-base font-semibold leading-tight">
+                    {userInfo.username}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {userInfo.email}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {/* Dropdown Menu */}
-            {isOpen && (
-                <div className="mt-2 min-w-72 max-w-80 bg-gray-800 rounded-lg shadow-lg absolute top-16 right-6 overflow-hidden" onClick={() => setIsOpen(false)}>
-                    {/* User Info Section */}
-                    <div className="p-4 border-b border-gray-700">
-                        <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
-                                <Image src={userInfo.avatar} alt="Profile avatar image" width={10} height={10} className="w-full h-full object-cover" />
-                            </div>
-                            <div>
-                                <p className="text-xl font-medium">{userInfo.username}</p>
-                                <p className="text-sm text-gray-300">{userInfo.email}</p>
+            {/* Menu items */}
+            <div className="py-1">
+              <Link
+                href={`/profile/${userInfo.username}`}
+                onClick={closeDropdown}
+              >
+                <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent transition-colors cursor-pointer">
+                  <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                    <User size={18} className="text-muted-foreground/50" />
+                  </span>
+                  <span className="text-sm font-medium">Trang cá nhân</span>
+                </button>
+              </Link>
 
-                            </div>
-                        </div>
+              <Link href="/profile/settings" onClick={closeDropdown}>
+                <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent transition-colors cursor-pointer">
+                  <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                    <Settings size={18} className="text-muted-foreground/50" />
+                  </span>
+                  <span className="text-sm font-medium flex-1 text-left">
+                    Cài đặt và quyền riêng tư
+                  </span>
+                  <ChevronRight />
+                </button>
+              </Link>
 
-                    </div>
+              <Link href="/help" onClick={closeDropdown}>
+                <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent transition-colors cursor-pointer">
+                  <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                    <HelpCircle
+                      size={18}
+                      className="text-muted-foreground/50"
+                    />
+                  </span>
+                  <span className="text-sm font-medium flex-1 text-left">
+                    Trợ giúp và hỗ trợ
+                  </span>
+                  <ChevronRight />
+                </button>
+              </Link>
 
-                    {/* Menu Items */}
-                    <div className="py-1">
-                        <Link href={`/profile/${userInfo.username}`}>
-                            <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
-                                <User size={20} className="text-gray-400" />
-                                <span>Trang cá nhân</span>
-                            </button>
-                        </Link>
+              {/* 🌙 Display & Accessibility — opens sub-panel */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPanel("display");
+                }}
+                className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent transition-colors cursor-pointer"
+              >
+                <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                  <Moon size={18} className="text-muted-foreground/50" />
+                </span>
+                <span className="text-sm font-medium flex-1 text-left">
+                  Màn hình &amp; trợ năng
+                </span>
+                <ChevronRight />
+              </button>
 
-                        <Link href="/settings">
-                            <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
-                                <Settings size={20} className="text-gray-400" />
-                                <span>Cài đặt và quyền riêng tư</span>
-                                <span className="ml-auto text-gray-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="9 18 15 12 9 6" />
-                                    </svg>
-                                </span>
-                            </button>
-                        </Link>
+              <Link href="/contribute" onClick={closeDropdown}>
+                <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent transition-colors cursor-pointer">
+                  <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                    <MessageSquare
+                      size={18}
+                      className="text-muted-foreground/50"
+                    />
+                  </span>
+                  <span className="text-sm font-medium">Đóng góp ý kiến</span>
+                </button>
+              </Link>
 
-                        <Link href="/help">
-                            <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
-                                <HelpCircle size={20} className="text-gray-400" />
-                                <span>Trợ giúp và hỗ trợ</span>
-                                <span className="ml-auto text-gray-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="9 18 15 12 9 6" />
-                                    </svg>
-                                </span>
-                            </button>
-                        </Link >
-                        <Link href="/support">
-                            <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
-                                <Moon size={20} className="text-gray-400" />
-                                <span>Màn hình & trợ năng</span>
-                                <span className="ml-auto text-gray-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="9 18 15 12 9 6" />
-                                    </svg>
-                                </span>
-                            </button>
-                        </Link>
-                        <Link href="/contribute">
-                            <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer">
-                                <MessageSquare size={20} className="text-gray-400" />
-                                <div>
-                                    <span>Đóng góp ý kiến</span>
-                                </div>
-                            </button>
-                        </Link>
-                        <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 cursor-pointer" onClick={logout}>
-                            <LogOut size={20} className="text-gray-400" />
-                            <span>Đăng xuất</span>
-                        </button>
-                    </div>
+              <button
+                className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent transition-colors cursor-pointer"
+                onClick={logout}
+              >
+                <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                  <LogOut size={18} className="text-muted-foreground/50" />
+                </span>
+                <span className="text-sm font-medium">Đăng xuất</span>
+              </button>
+            </div>
 
-                    {/* Footer */}
-                    <div className="px-4 py-3 text-xs text-gray-400 border-t border-gray-700">
-                        <p>Quyền riêng tư · Điều khoản · Quảng cáo · Lựa chọn quảng cáo · Cookie · Đăng bài </p>
-                    </div>
+            {/* Footer */}
+            <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border">
+              <p>Quyền riêng tư · Điều khoản · Quảng cáo · Cookie</p>
+            </div>
+          </div>
+
+          {/* ── DISPLAY & ACCESSIBILITY SUB-PANEL ─────────── */}
+          <div
+            className="transition-all duration-200"
+            style={{ display: panel === "display" ? "block" : "none" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-2 py-3 border-b border-border flex items-center gap-2">
+              <button
+                onClick={() => setPanel("main")}
+                className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-accent transition-colors flex-shrink-0"
+                aria-label="Quay lại"
+              >
+                <ArrowLeft size={18} className="text-muted-foreground/50" />
+              </button>
+              <h3 className="text-base font-bold">Màn hình &amp; trợ năng</h3>
+            </div>
+
+            {/* Dark mode section */}
+            <div className="px-4 pt-4 pb-2">
+              {/* Section heading */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-11 h-11 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                  <Moon size={22} className="text-muted-foreground/50" />
                 </div>
-            )}
+                <div>
+                  <p className="text-sm font-semibold leading-tight">
+                    Chế độ tối
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-snug mt-0.5">
+                    Điều chỉnh giao diện của OpenIdear để giảm độ chói và cho
+                    đôi mắt được nghỉ ngơi.
+                  </p>
+                </div>
+              </div>
+
+              {/* Radio options */}
+              <div className="space-y-0.5 mb-4">
+                {themeOptions.map((opt) => {
+                  const isSelected = theme === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => setTheme(opt.value)}
+                      className="w-full flex items-start gap-3 px-3 py-3 rounded-xl hover:bg-accent transition-colors cursor-pointer group"
+                    >
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-medium text-foreground/10">
+                          {opt.label}
+                        </p>
+                        {opt.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
+                            {opt.description}
+                          </p>
+                        )}
+                      </div>
+                      {/* Custom radio circle */}
+                      <div
+                        className={`
+ mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors
+ ${
+   isSelected
+     ? "border-white bg-background"
+     : "border-border bg-transparent group-hover:border-border"
+ }
+ `}
+                      >
+                        {isSelected && (
+                          <div className="w-2.5 h-2.5 rounded-full bg-background" />
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border">
+              <p>Quyền riêng tư · Điều khoản · Quảng cáo · Cookie</p>
+            </div>
+          </div>
         </div>
-    );
+      )}
+
+      {/* Click-outside overlay */}
+      {isOpen && <div className="fixed inset-0 z-40" onClick={closeDropdown} />}
+    </div>
+  );
 }

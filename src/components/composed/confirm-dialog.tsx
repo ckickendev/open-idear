@@ -16,9 +16,9 @@ interface ConfirmDialogProps {
   title: string;
   /** Dialog message/description */
   message: string;
-  /** Text for the confirm button — defaults to "Confirm" */
+  /** Text for the confirm button — defaults to"Confirm"*/
   confirmLabel?: string;
-  /** Text for the cancel button — defaults to "Cancel" */
+  /** Text for the cancel button — defaults to"Cancel"*/
   cancelLabel?: string;
   /** Visual variant — affects the confirm button and icon color */
   variant?: "danger" | "warning" | "info";
@@ -34,13 +34,13 @@ interface ConfirmDialogProps {
  * @example
  * ```tsx
  * <ConfirmDialog
- *   open={isDeleteOpen}
- *   onClose={() => setIsDeleteOpen(false)}
- *   onConfirm={handleDelete}
- *   title="Delete post?"
- *   message="This action cannot be undone."
- *   variant="danger"
- *   confirmLabel="Delete"
+ * open={isDeleteOpen}
+ * onClose={() => setIsDeleteOpen(false)}
+ * onConfirm={handleDelete}
+ * title="Delete post?"
+ * message="This action cannot be undone."
+ * variant="danger"
+ * confirmLabel="Delete"
  * />
  * ```
  */
@@ -62,7 +62,7 @@ export function ConfirmDialog({
     (e: KeyboardEvent) => {
       if (e.key === "Escape" && !isLoading) onClose();
     },
-    [onClose, isLoading]
+    [onClose, isLoading],
   );
 
   useEffect(() => {
@@ -99,7 +99,7 @@ export function ConfirmDialog({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in-0 duration-200"
+        className="absolute inset-0 bg-background/50 backdrop-blur-sm animate-in fade-in-0 duration-200"
         onClick={() => !isLoading && onClose()}
       />
 
@@ -108,7 +108,7 @@ export function ConfirmDialog({
         ref={dialogRef}
         className={cn(
           "relative z-10 w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl",
-          "animate-in fade-in-0 zoom-in-95 duration-200"
+          "animate-in fade-in-0 zoom-in-95 duration-200",
         )}
       >
         {/* Close button */}
@@ -126,7 +126,7 @@ export function ConfirmDialog({
           <div
             className={cn(
               "flex size-10 shrink-0 items-center justify-center rounded-full",
-              iconColorMap[variant]
+              iconColorMap[variant],
             )}
           >
             <AlertTriangle className="size-5" />
@@ -146,11 +146,7 @@ export function ConfirmDialog({
 
         {/* Actions */}
         <div className="mt-6 flex justify-end gap-3">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isLoading}
-          >
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
             {cancelLabel}
           </Button>
           <Button

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
-import { Clock } from 'lucide-react';
+import React, { useMemo } from "react";
+import { Clock } from "lucide-react";
 
 interface WriterMetricsProps {
   /** Raw text content from the editor (editor.getText()) */
@@ -23,7 +23,7 @@ const WriterMetrics: React.FC<WriterMetricsProps> = ({ text }) => {
     <div className="flex items-center justify-center gap-4 py-4 animate-[fade-in_0.2s_ease-out]">
       <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-[var(--color-editor-surface)] border border-[var(--color-editor-border)] shadow-sm">
         <span className="text-[11px] text-[var(--color-editor-muted)] tabular-nums">
-          {wordCount.toLocaleString()} {wordCount === 1 ? 'word' : 'words'}
+          {wordCount.toLocaleString()} {wordCount === 1 ? "word" : "words"}
         </span>
         <span className="w-px h-3 bg-[var(--color-editor-border)]" />
         <span className="text-[11px] text-[var(--color-editor-muted)] tabular-nums">

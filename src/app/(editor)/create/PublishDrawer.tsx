@@ -1,8 +1,15 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { X, ChevronDown, ChevronUp, Plus, Send, Image as ImageIcon } from 'lucide-react';
-import ImageUpload from './ImageUpload';
+import React, { useState, useEffect } from "react";
+import {
+  X,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  Send,
+  Image as ImageIcon,
+} from "lucide-react";
+import ImageUpload from "./ImageUpload";
 
 interface PublishDrawerProps {
   isOpen: boolean;
@@ -43,7 +50,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
   isPublishing = false,
 }) => {
   const [showCreateSeries, setShowCreateSeries] = useState(false);
-  const [newSeriesName, setNewSeriesName] = useState('');
+  const [newSeriesName, setNewSeriesName] = useState("");
   const [expandedSections, setExpandedSections] = useState({
     description: true,
     coverImage: true,
@@ -55,12 +62,12 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
   // Escape key handler
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === "Escape" && isOpen) {
         handleClose();
       }
     };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
   }, [isOpen]);
 
   const handleClose = () => {
@@ -78,7 +85,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
   const handleCreateSeries = () => {
     if (newSeriesName.trim()) {
       onCreateSeries(newSeriesName.trim());
-      setNewSeriesName('');
+      setNewSeriesName("");
       setShowCreateSeries(false);
     }
   };
@@ -89,7 +96,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-gray-900/30 backdrop-blur-sm animate-[fade-in_0.15s_ease-out]"
+        className="absolute inset-0 bg-background/30 backdrop-blur-sm animate-[fade-in_0.15s_ease-out]"
         onClick={handleClose}
         aria-hidden="true"
       />
@@ -97,7 +104,9 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
       {/* Drawer panel */}
       <div
         className={`relative w-full max-w-md h-full bg-[var(--color-editor-surface)] border-l border-[var(--color-editor-border)] flex flex-col shadow-2xl ${
-          isClosing ? 'animate-[slide-out-right_0.25s_ease-in_forwards]' : 'animate-[slide-in-right_0.3s_ease-out]'
+          isClosing
+            ? "animate-[slide-out-right_0.25s_ease-in_forwards]"
+            : "animate-[slide-in-right_0.3s_ease-out]"
         }`}
         role="dialog"
         aria-modal="true"
@@ -106,7 +115,9 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-editor-border)]">
           <div>
-            <h2 className="text-lg font-bold text-[var(--color-editor-text)]">Publish</h2>
+            <h2 className="text-lg font-bold text-[var(--color-editor-text)]">
+              Publish
+            </h2>
             <p className="text-xs text-[var(--color-editor-muted)] mt-0.5">
               Configure your post before publishing
             </p>
@@ -122,13 +133,12 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
 
         {/* Content — scrollable */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-1">
-
           {/* Description Section */}
           <CollapsibleSection
             title="Description"
             subtitle="Recommended for SEO"
             expanded={expandedSections.description}
-            onToggle={() => toggleSection('description')}
+            onToggle={() => toggleSection("description")}
           >
             <textarea
               value={description}
@@ -145,14 +155,13 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
             title="Cover Image"
             subtitle="Recommended for SEO"
             expanded={expandedSections.coverImage}
-            onToggle={() => toggleSection('coverImage')}
+            onToggle={() => toggleSection("coverImage")}
           >
             <div className="rounded-xl overflow-hidden">
               <ImageUpload
                 onImageUploaded={onCoverImageUploaded}
                 onClose={() => {}}
                 isTitleDisplay={false}
-
               />
             </div>
           </CollapsibleSection>
@@ -162,7 +171,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
             title="Category"
             subtitle="Required"
             expanded={expandedSections.category}
-            onToggle={() => toggleSection('category')}
+            onToggle={() => toggleSection("category")}
             required
           >
             <select
@@ -173,7 +182,9 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
             >
               <option value="">Select a category</option>
               {categories.map((cat: any) => (
-                <option key={cat._id} value={cat._id}>{cat.name}</option>
+                <option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </option>
               ))}
             </select>
           </CollapsibleSection>
@@ -183,7 +194,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
             title="Series"
             subtitle="Optional"
             expanded={expandedSections.series}
-            onToggle={() => toggleSection('series')}
+            onToggle={() => toggleSection("series")}
           >
             {!showCreateSeries ? (
               <div className="space-y-3">
@@ -195,7 +206,9 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                 >
                   <option value="">No series</option>
                   {seriesList.map((ser: any) => (
-                    <option key={ser._id} value={ser._id}>{ser.title}</option>
+                    <option key={ser._id} value={ser._id}>
+                      {ser.title}
+                    </option>
                   ))}
                 </select>
                 <button
@@ -218,7 +231,10 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                 />
                 <div className="flex gap-2">
                   <button
-                    onClick={() => { setShowCreateSeries(false); setNewSeriesName(''); }}
+                    onClick={() => {
+                      setShowCreateSeries(false);
+                      setNewSeriesName("");
+                    }}
                     className="flex-1 px-3 py-2 text-xs font-medium text-[var(--color-editor-secondary)] border border-[var(--color-editor-border)] rounded-lg hover:bg-[var(--color-editor-elevated)] transition-all duration-150 cursor-pointer"
                   >
                     Cancel
@@ -252,9 +268,25 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
             >
               {isPublishing ? (
                 <>
-                  <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <svg
+                    className="animate-spin w-4 h-4"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   Publishing...
                 </>
@@ -299,7 +331,9 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
       <div className="flex items-center gap-2">
         <h3 className="text-sm font-semibold text-[var(--color-editor-text)]">
           {title}
-          {required && <span className="text-[var(--color-editor-danger)] ml-0.5">*</span>}
+          {required && (
+            <span className="text-[var(--color-editor-danger)] ml-0.5">*</span>
+          )}
         </h3>
         {subtitle && (
           <span className="text-[10px] text-[var(--color-editor-muted)] font-medium uppercase tracking-wider">
@@ -308,15 +342,19 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
         )}
       </div>
       {expanded ? (
-        <ChevronUp size={16} className="text-[var(--color-editor-muted)] group-hover:text-[var(--color-editor-secondary)] transition-colors" />
+        <ChevronUp
+          size={16}
+          className="text-[var(--color-editor-muted)] group-hover:text-[var(--color-editor-secondary)] transition-colors"
+        />
       ) : (
-        <ChevronDown size={16} className="text-[var(--color-editor-muted)] group-hover:text-[var(--color-editor-secondary)] transition-colors" />
+        <ChevronDown
+          size={16}
+          className="text-[var(--color-editor-muted)] group-hover:text-[var(--color-editor-secondary)] transition-colors"
+        />
       )}
     </button>
     {expanded && (
-      <div className="pb-4 animate-[fade-in_0.15s_ease-out]">
-        {children}
-      </div>
+      <div className="pb-4 animate-[fade-in_0.15s_ease-out]">{children}</div>
     )}
   </div>
 );
