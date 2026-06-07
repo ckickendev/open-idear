@@ -1,4 +1,5 @@
 "use client";
+import { ENV } from "@/api/const";
 import React, { useEffect, useState } from "react";
 import { SquarePen, FileText, Layers } from "lucide-react";
 import axios from "axios";
@@ -31,11 +32,11 @@ export default function ProfilePostsPage() {
 
         const [postsRes, seriesRes] = await Promise.all([
           axios.get(
-            `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor?profileId=${currentUser._id}`,
+            `${ENV.ROOT_API}/post/getPostByAuthor?profileId=${currentUser._id}`,
             { headers },
           ),
           axios.get(
-            `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getSeriesByAuthorId?profileId=${currentUser._id}`,
+            `${ENV.ROOT_API}/series/getSeriesByAuthorId?profileId=${currentUser._id}`,
           ),
         ]);
 
@@ -63,7 +64,7 @@ export default function ProfilePostsPage() {
   const deleteSeries = async (id: string) => {
     try {
       const response = await axios.delete(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/delete`,
+        `${ENV.ROOT_API}/series/delete`,
         {
           data: { seriesId: id },
           headers: getHeadersToken(),
@@ -81,7 +82,7 @@ export default function ProfilePostsPage() {
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
-          "An error occurred while deleting the series.",
+        "An error occurred while deleting the series.",
       );
     }
   };
@@ -92,19 +93,19 @@ export default function ProfilePostsPage() {
     count: number;
     icon: React.ReactNode;
   }[] = [
-    {
-      key: "posts",
-      label: "Posts",
-      count: posts.length,
-      icon: <FileText size={16} />,
-    },
-    {
-      key: "series",
-      label: "Series",
-      count: series.length,
-      icon: <Layers size={16} />,
-    },
-  ];
+      {
+        key: "posts",
+        label: "Posts",
+        count: posts.length,
+        icon: <FileText size={16} />,
+      },
+      {
+        key: "series",
+        label: "Series",
+        count: series.length,
+        icon: <Layers size={16} />,
+      },
+    ];
 
   return (
     <div className="space-y-6">
@@ -128,20 +129,18 @@ export default function ProfilePostsPage() {
           <button
             key={tab.key}
             onClick={() => handleTabChange(tab.key)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
-              activeTab === tab.key
-                ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200 dark:shadow-indigo-900/30"
-                : "text-muted-foreground dark:text-muted-foreground hover:bg-muted/30 dark:hover:bg-accent/50 hover:text-foreground/80 dark:hover:text-muted-foreground/70"
-            }`}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${activeTab === tab.key
+              ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200 dark:shadow-indigo-900/30"
+              : "text-muted-foreground dark:text-muted-foreground hover:bg-muted/30 dark:hover:bg-accent/50 hover:text-foreground/80 dark:hover:text-muted-foreground/70"
+              }`}
           >
             {tab.icon}
             {tab.label}
             <span
-              className={`px-2 py-0.5 rounded-full text-xs ${
-                activeTab === tab.key
-                  ? "bg-indigo-500 text-white"
-                  : "bg-muted dark:bg-accent text-muted-foreground dark:text-muted-foreground"
-              }`}
+              className={`px-2 py-0.5 rounded-full text-xs ${activeTab === tab.key
+                ? "bg-indigo-500 text-white"
+                : "bg-muted dark:bg-accent text-muted-foreground dark:text-muted-foreground"
+                }`}
             >
               {tab.count}
             </span>

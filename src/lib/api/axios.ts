@@ -1,3 +1,4 @@
+import { ENV } from "@/api/const";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 
 // Get token securely without exposing localStorage in components
@@ -21,7 +22,7 @@ export const removeToken = () => {
 };
 
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_ROOT_BACKEND || "http://localhost:5000",
+  baseURL: ENV.ROOT_API || "http://localhost:5000",
 });
 
 export const getHeadersToken = () => {

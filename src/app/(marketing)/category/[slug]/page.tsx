@@ -1,3 +1,4 @@
+import { ENV } from "@/api/const";
 import { Suspense } from "react";
 import axios from "axios";
 import PostInCategory from "./PostInCategory";
@@ -10,16 +11,16 @@ export default async function CategoryList({
 }) {
   const { slug } = await params;
   console.log(
-    `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category/getCategoryBySlug/${slug}`,
+    `${ENV.ROOT_API}/category/getCategoryBySlug/${slug}`,
   );
 
   const getCategory = async (slug: string) => {
     try {
       // Using native fetch with Next.js optimizations
       const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category/getCategoryBySlug/${slug}`,
+        `${ENV.ROOT_API}/category/getCategoryBySlug/${slug}`,
       );
-      const bgImg = `${process.env.NEXT_PUBLIC_ROOT_FRONTEND}/background/category/${res.data.category._id}.png`;
+      const bgImg = `${process.env.NEXT_PUBLIC_APP_URL}/background/category/${res.data.category._id}.png`;
       return { ...res.data, bgImg };
     } catch (error) {
       console.error("Error fetching category:", error);
@@ -30,7 +31,7 @@ export default async function CategoryList({
   const getAllCategory = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category`,
+        `${ENV.ROOT_API}/category`,
         {
           next: { revalidate: 3600 },
         },

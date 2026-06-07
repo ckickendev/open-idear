@@ -1,6 +1,9 @@
-const CONSTVALUE = {
-  ROOT_BACKEND: process.env.NEXT_PUBLIC_ROOT_BACKEND,
-  ROOT_FRONTEND: process.env.NEXT_PUBLIC_ROOT_FRONTEND,
+export const ENV = {
+  ROOT_API: process.env.NEXT_PUBLIC_API_URL,
+  ROOT_FRONTEND: process.env.NEXT_PUBLIC_APP_URL,
 };
 
-module.exports = CONSTVALUE;
+export const CONST = ENV;
+
+export default ENV;
+

@@ -1,4 +1,5 @@
 "use client";
+import { ENV } from "@/api/const";
 import { useEffect, useState } from "react";
 import { AuthenPage } from "./authen/AuthenPage";
 import Profile from "@/features/users/components/Profile";
@@ -44,7 +45,7 @@ export default function Header() {
         const headers = getHeadersToken();
 
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/auth/getProfile`,
+          `${ENV.ROOT_API}/auth/getProfile`,
           { headers },
         );
         if (res.status === 200) {

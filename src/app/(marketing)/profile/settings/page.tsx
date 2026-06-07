@@ -1,4 +1,5 @@
 "use client";
+import { ENV } from "@/api/const";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -115,7 +116,7 @@ export default function ProfileSettingsPage() {
       if (!token) return;
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       const res = await axios.patch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/updateProfile`,
+        `${ENV.ROOT_API}/user/updateProfile`,
         { data },
       );
       if (res.status === 200) {
@@ -137,7 +138,7 @@ export default function ProfileSettingsPage() {
       if (!token) return;
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       const res = await axios.patch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/changePassword`,
+        `${ENV.ROOT_API}/user/changePassword`,
         {
           currentPassword: data.currentPassword,
           newPassword: data.newPassword,
@@ -255,11 +256,10 @@ export default function ProfileSettingsPage() {
 
           <FieldRow label="Account Status">
             <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold ${
-                currentUser.activate
-                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-                  : "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-              }`}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold ${currentUser.activate
+                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                : "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                }`}
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${currentUser.activate ? "bg-emerald-500" : "bg-amber-500"}`}
@@ -413,16 +413,14 @@ export default function ProfileSettingsPage() {
                     [item.key]: !prev[item.key],
                   }))
                 }
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 cursor-pointer ${
-                  notifications[item.key]
-                    ? "bg-indigo-600"
-                    : "bg-muted dark:bg-accent"
-                }`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 cursor-pointer ${notifications[item.key]
+                  ? "bg-indigo-600"
+                  : "bg-muted dark:bg-accent"
+                  }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-background shadow-sm transition-transform duration-200 ${
-                    notifications[item.key] ? "translate-x-6" : "translate-x-1"
-                  }`}
+                  className={`inline-block h-4 w-4 transform rounded-full bg-background shadow-sm transition-transform duration-200 ${notifications[item.key] ? "translate-x-6" : "translate-x-1"
+                    }`}
                 />
               </button>
             </div>

@@ -1,4 +1,5 @@
 "use client";
+import { ENV } from "@/api/const";
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { SquarePen, BookOpen, Clock } from "lucide-react";
@@ -45,7 +46,7 @@ export default function PublicProfileOverview({
 
         // Fetch user profile by username
         const profileRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/auth/getProfileByUsername?username=${username}`,
+          `${ENV.ROOT_API}/auth/getProfileByUsername?username=${username}`,
           { headers },
         );
 
@@ -55,7 +56,7 @@ export default function PublicProfileOverview({
 
           // Fetch published posts by this author using the _id
           const postsRes = await axios.get(
-            `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor?profileId=${user._id}`,
+            `${ENV.ROOT_API}/post/getPostByAuthor?profileId=${user._id}`,
             { headers },
           );
 

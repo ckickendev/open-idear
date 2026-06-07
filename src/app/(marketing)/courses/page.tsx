@@ -1,4 +1,5 @@
 "use client";
+import { ENV } from "@/api/const";
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -299,7 +300,7 @@ const CourseListing = () => {
       try {
         changeLoad();
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course`,
+          `${ENV.ROOT_API}/course`,
         );
         setCourses(response.data.data);
       } catch (error) {
@@ -462,11 +463,10 @@ const CourseListing = () => {
             <button
               key={topic.label}
               onClick={() => setActiveTab(topic.label)}
-              className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 shadow-sm ${
-                activeTab === topic.label
-                  ? "bg-[var(--color-admin-primary)] text-white shadow-indigo-500/30 -translate-y-0.5"
-                  : "bg-background border border-border text-muted-foreground hover:bg-muted/30 hover:text-foreground hover:shadow-md"
-              }`}
+              className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 shadow-sm ${activeTab === topic.label
+                ? "bg-[var(--color-admin-primary)] text-white shadow-indigo-500/30 -translate-y-0.5"
+                : "bg-background border border-border text-muted-foreground hover:bg-muted/30 hover:text-foreground hover:shadow-md"
+                }`}
             >
               {topic.label}
             </button>

@@ -1,3 +1,4 @@
+import { ENV } from "@/api/const";
 import HotSeries from "@/features/series/components/hot_series/HotSeries";
 import PostDisplayPageElement from "@/components/PostDisplayPageElement";
 import axios from "axios";
@@ -13,7 +14,7 @@ export default async function MainPage({
     try {
       // Using native fetch with Next.js optimizations
       const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getSeriesBySlug?slug=${slug}`,
+        `${ENV.ROOT_API}/series/getSeriesBySlug?slug=${slug}`,
       );
       console.log("series data to display", res.data);
 

@@ -1,8 +1,9 @@
+import { ENV } from "@/api/const";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { getHeadersToken } from "@/lib/api/axios";
 
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_ROOT_BACKEND,
+  baseURL: ENV.ROOT_API,
 });
 
 // Request interceptor to attach token automatically

@@ -1,5 +1,6 @@
 "use client";
 
+import { ENV } from "@/api/const";
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import axios from "axios";
@@ -8,10 +9,8 @@ import loadingStore from "@/store/LoadingStore";
 import {
   Search,
   Filter,
-  PlayCircle,
   Star,
   ArrowRight,
-  ChevronDown,
   Grid,
   List,
   X,
@@ -75,7 +74,7 @@ const SearchResultsContent = () => {
       try {
         changeLoad();
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course`,
+          `${ENV.ROOT_API}/course`,
         );
         setCourses(response.data.data);
       } catch (error) {

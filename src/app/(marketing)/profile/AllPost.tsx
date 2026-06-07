@@ -1,3 +1,4 @@
+import { ENV } from "@/api/const";
 import React, { useEffect } from "react";
 
 import axios from "axios";
@@ -23,7 +24,7 @@ const AllPost = ({ profileId }: any) => {
   const deleteSeries = async (id: string) => {
     try {
       const response = await axios.delete(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/delete`,
+        `${ENV.ROOT_API}/series/delete`,
         {
           data: { seriesId: id },
           headers: getHeadersToken(),
@@ -32,7 +33,7 @@ const AllPost = ({ profileId }: any) => {
 
       if (response.status === 200) {
         const resSeries = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getSeriesByAuthorId?profileId=${profileId}`,
+          `${ENV.ROOT_API}/series/getSeriesByAuthorId?profileId=${profileId}`,
         );
         if (resSeries.status === 200) {
           setDisplaySeries(resSeries.data.series);
@@ -47,7 +48,7 @@ const AllPost = ({ profileId }: any) => {
       toast.error(error?.response?.data?.message || error?.message);
       toast.error(
         error?.response?.data?.message ||
-          "An error occurred while deleting the series.",
+        "An error occurred while deleting the series.",
       );
     }
   };
@@ -58,7 +59,7 @@ const AllPost = ({ profileId }: any) => {
     const fetchPosts = async () => {
       try {
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthorId?profileId=${profileId}`,
+          `${ENV.ROOT_API}/post/getPostByAuthorId?profileId=${profileId}`,
         );
         if (res.status === 200) {
           console.log("posts info:", res.data);
@@ -66,7 +67,7 @@ const AllPost = ({ profileId }: any) => {
         }
 
         const resSeries = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getSeriesByAuthorId?profileId=${profileId}`,
+          `${ENV.ROOT_API}/series/getSeriesByAuthorId?profileId=${profileId}`,
         );
         if (resSeries.status === 200) {
           console.log("series info:", resSeries.data);
@@ -108,40 +109,36 @@ const AllPost = ({ profileId }: any) => {
         <div className="bg-background rounded-xl shadow-sm p-2 mb-8 inline-flex gap-2">
           <button
             onClick={() => handleTabChange("posts")}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 cursor-pointer ${
-              activeTab === "posts"
-                ? "bg-blue-600 text-white shadow-md"
-                : "text-muted-foreground hover:bg-muted/30"
-            }`}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 cursor-pointer ${activeTab === "posts"
+              ? "bg-blue-600 text-white shadow-md"
+              : "text-muted-foreground hover:bg-muted/30"
+              }`}
           >
             <FileText size={18} />
             Posts
             <span
-              className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
-                activeTab === "posts"
-                  ? "bg-blue-500 text-white"
-                  : "bg-muted text-muted-foreground"
-              }`}
+              className={`ml-1 px-2 py-0.5 rounded-full text-xs ${activeTab === "posts"
+                ? "bg-blue-500 text-white"
+                : "bg-muted text-muted-foreground"
+                }`}
             >
               {displayPosts.length}
             </span>
           </button>
           <button
             onClick={() => handleTabChange("series")}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 cursor-pointer ${
-              activeTab === "series"
-                ? "bg-purple-600 text-white shadow-md"
-                : "text-muted-foreground hover:bg-muted/30"
-            }`}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 cursor-pointer ${activeTab === "series"
+              ? "bg-purple-600 text-white shadow-md"
+              : "text-muted-foreground hover:bg-muted/30"
+              }`}
           >
             <Layers size={18} />
             Series
             <span
-              className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
-                activeTab === "series"
-                  ? "bg-purple-500 text-white"
-                  : "bg-muted text-muted-foreground"
-              }`}
+              className={`ml-1 px-2 py-0.5 rounded-full text-xs ${activeTab === "series"
+                ? "bg-purple-500 text-white"
+                : "bg-muted text-muted-foreground"
+                }`}
             >
               {displaySeries.length}
             </span>

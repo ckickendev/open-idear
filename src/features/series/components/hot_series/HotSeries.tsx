@@ -1,4 +1,5 @@
 "use client";
+import { ENV } from "@/api/const";
 import React from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -14,7 +15,7 @@ const HotSeries: React.FC = () => {
     const fetchSeriesData = async () => {
       try {
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getHotSeries`,
+          `${ENV.ROOT_API}/series/getHotSeries`,
         );
         if (res.status === 200) {
           setSeries(res.data.series || []);

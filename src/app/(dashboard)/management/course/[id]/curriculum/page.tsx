@@ -1,4 +1,5 @@
 "use client";
+import { ENV } from "@/api/const";
 import { useParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
@@ -61,7 +62,7 @@ const VideoUploadModal = ({
       const token = localStorage.getItem("access_token");
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       const lessonRes = await axios.post(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/lesson/add`,
+        `${ENV.ROOT_API}/course/lesson/add`,
         { chapterId, title, type: "video", media: mediaId, order: 0 },
       );
 
@@ -276,7 +277,7 @@ const CurriculumManager = () => {
     try {
       changeLoad();
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/getById?id=${courseId}`,
+        `${ENV.ROOT_API}/course/getById?id=${courseId}`,
       );
       setCourseTitle(response.data.data.title);
       setCourseStatus(response.data.data.status || "draft");
@@ -296,7 +297,7 @@ const CurriculumManager = () => {
       const token = localStorage.getItem("access_token");
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/chapter/add`,
+        `${ENV.ROOT_API}/course/chapter/add`,
         {
           courseId,
           title,
@@ -324,7 +325,7 @@ const CurriculumManager = () => {
       const token = localStorage.getItem("access_token");
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/lesson/add`,
+        `${ENV.ROOT_API}/course/lesson/add`,
         {
           chapterId,
           title,
@@ -363,7 +364,7 @@ const CurriculumManager = () => {
       const token = localStorage.getItem("access_token");
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       await axios.patch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/chapter/update`,
+        `${ENV.ROOT_API}/course/chapter/update`,
         {
           chapterId,
           title,
@@ -390,7 +391,7 @@ const CurriculumManager = () => {
       const token = localStorage.getItem("access_token");
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       await axios.patch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/lesson/move`,
+        `${ENV.ROOT_API}/course/lesson/move`,
         {
           lessonId: lesson._id,
           sourceChapterId,
@@ -434,7 +435,7 @@ const CurriculumManager = () => {
       const token = localStorage.getItem("access_token");
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       await axios.patch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/lesson/update`,
+        `${ENV.ROOT_API}/course/lesson/update`,
         {
           lessonId,
           title,
@@ -444,11 +445,11 @@ const CurriculumManager = () => {
         prev.map((c) =>
           c._id === chapterId
             ? {
-                ...c,
-                lessons: c.lessons.map((l) =>
-                  l._id === lessonId ? { ...l, title } : l,
-                ),
-              }
+              ...c,
+              lessons: c.lessons.map((l) =>
+                l._id === lessonId ? { ...l, title } : l,
+              ),
+            }
             : c,
         ),
       );
@@ -467,7 +468,7 @@ const CurriculumManager = () => {
       const token = localStorage.getItem("access_token");
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/lesson/delete`,
+        `${ENV.ROOT_API}/course/lesson/delete`,
         {
           data: { lessonId },
         },
@@ -476,9 +477,9 @@ const CurriculumManager = () => {
         prev.map((c) =>
           c._id === chapterId
             ? {
-                ...c,
-                lessons: c.lessons.filter((l) => l._id !== lessonId),
-              }
+              ...c,
+              lessons: c.lessons.filter((l) => l._id !== lessonId),
+            }
             : c,
         ),
       );
@@ -497,7 +498,7 @@ const CurriculumManager = () => {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       const newStatus = courseStatus === "published" ? "draft" : "published";
       await axios.patch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/update`,
+        `${ENV.ROOT_API}/course/update`,
         {
           courseId,
           status: newStatus,
@@ -513,7 +514,7 @@ const CurriculumManager = () => {
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
-          "Lỗi khi cập nhật trạng thái khóa học",
+        "Lỗi khi cập nhật trạng thái khóa học",
       );
     } finally {
       changeLoad();

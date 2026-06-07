@@ -1,4 +1,5 @@
 "use client";
+import { ENV } from "@/api/const";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -47,7 +48,7 @@ const RecentCourses: React.FC = () => {
     const fetchCourses = async () => {
       try {
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course?limit=10&sort=-createdAt`,
+          `${ENV.ROOT_API}/course?limit=10&sort=-createdAt`,
         );
         if (res.status === 200 && res.data?.data) {
           setCourses(res.data.data);
@@ -320,11 +321,10 @@ const RecentCourses: React.FC = () => {
             <button
               key={i}
               onClick={() => scrollToIndex(i)}
-              className={`rounded-full transition-all duration-300 cursor-pointer ${
-                i === activeIndex
-                  ? "w-8 h-2 bg-gradient-to-r from-violet-500 to-indigo-600"
-                  : "w-2 h-2 bg-muted hover:bg-muted"
-              }`}
+              className={`rounded-full transition-all duration-300 cursor-pointer ${i === activeIndex
+                ? "w-8 h-2 bg-gradient-to-r from-violet-500 to-indigo-600"
+                : "w-2 h-2 bg-muted hover:bg-muted"
+                }`}
               aria-label={`Go to slide ${i + 1}`}
             />
           ))}

@@ -92,7 +92,7 @@ export default function Profile() {
   );
 
   return (
-    <div className="text-white p-6 flex flex-col items-center relative">
+    <div className="relative">
       {/* Avatar trigger */}
       <div className="relative cursor-pointer">
         <button
@@ -110,14 +110,14 @@ export default function Profile() {
             className="cursor-pointer w-full h-full object-cover"
           />
         </button>
-        <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs">
+        <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white font-bold rounded-full flex items-center justify-center text-[10px] leading-none z-10">
           1
         </div>
       </div>
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="mt-2 min-w-72 max-w-80 bg-card rounded-lg shadow-lg absolute top-16 right-6 overflow-hidden z-50">
+        <div className="mt-2 min-w-72 max-w-80 bg-card text-card-foreground border border-border/50 rounded-lg shadow-lg absolute top-16 right-6 overflow-hidden z-50">
           {/* ── MAIN PANEL ────────────────────────────────── */}
           <div
             className="transition-all duration-200"
@@ -136,7 +136,7 @@ export default function Profile() {
                   />
                 </div>
                 <div>
-                  <p className="text-base font-semibold leading-tight">
+                  <p className="text-base font-semibold leading-tight text-foreground">
                     {userInfo.username}
                   </p>
                   <p className="text-sm text-muted-foreground">
@@ -152,7 +152,7 @@ export default function Profile() {
                 href={`/profile/${userInfo.username}`}
                 onClick={closeDropdown}
               >
-                <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent transition-colors cursor-pointer">
+                <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent text-foreground transition-colors cursor-pointer">
                   <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                     <User size={18} className="text-muted-foreground/50" />
                   </span>
@@ -161,7 +161,7 @@ export default function Profile() {
               </Link>
 
               <Link href="/profile/settings" onClick={closeDropdown}>
-                <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent transition-colors cursor-pointer">
+                <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent text-foreground transition-colors cursor-pointer">
                   <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                     <Settings size={18} className="text-muted-foreground/50" />
                   </span>
@@ -173,7 +173,7 @@ export default function Profile() {
               </Link>
 
               <Link href="/help" onClick={closeDropdown}>
-                <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent transition-colors cursor-pointer">
+                <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent text-foreground transition-colors cursor-pointer">
                   <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                     <HelpCircle
                       size={18}
@@ -193,7 +193,7 @@ export default function Profile() {
                   e.stopPropagation();
                   setPanel("display");
                 }}
-                className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent transition-colors cursor-pointer"
+                className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent text-foreground transition-colors cursor-pointer"
               >
                 <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                   <Moon size={18} className="text-muted-foreground/50" />
@@ -205,7 +205,7 @@ export default function Profile() {
               </button>
 
               <Link href="/contribute" onClick={closeDropdown}>
-                <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent transition-colors cursor-pointer">
+                <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent text-foreground transition-colors cursor-pointer">
                   <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                     <MessageSquare
                       size={18}
@@ -217,7 +217,7 @@ export default function Profile() {
               </Link>
 
               <button
-                className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent transition-colors cursor-pointer"
+                className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent text-foreground transition-colors cursor-pointer"
                 onClick={logout}
               >
                 <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
@@ -243,12 +243,12 @@ export default function Profile() {
             <div className="px-2 py-3 border-b border-border flex items-center gap-2">
               <button
                 onClick={() => setPanel("main")}
-                className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-accent transition-colors flex-shrink-0"
+                className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-accent text-foreground transition-colors flex-shrink-0"
                 aria-label="Quay lại"
               >
                 <ArrowLeft size={18} className="text-muted-foreground/50" />
               </button>
-              <h3 className="text-base font-bold">Màn hình &amp; trợ năng</h3>
+              <h3 className="text-base font-bold text-foreground">Màn hình &amp; trợ năng</h3>
             </div>
 
             {/* Dark mode section */}
@@ -259,7 +259,7 @@ export default function Profile() {
                   <Moon size={22} className="text-muted-foreground/50" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold leading-tight">
+                  <p className="text-sm font-semibold leading-tight text-foreground">
                     Chế độ tối
                   </p>
                   <p className="text-xs text-muted-foreground leading-snug mt-0.5">
@@ -277,10 +277,10 @@ export default function Profile() {
                     <button
                       key={opt.value}
                       onClick={() => setTheme(opt.value)}
-                      className="w-full flex items-start gap-3 px-3 py-3 rounded-xl hover:bg-accent transition-colors cursor-pointer group"
+                      className="w-full flex items-start gap-3 px-3 py-3 rounded-xl hover:bg-accent text-foreground transition-colors cursor-pointer group"
                     >
                       <div className="flex-1 text-left">
-                        <p className="text-sm font-medium text-foreground/10">
+                        <p className="text-sm font-medium text-foreground">
                           {opt.label}
                         </p>
                         {opt.description && (
@@ -292,16 +292,16 @@ export default function Profile() {
                       {/* Custom radio circle */}
                       <div
                         className={`
- mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors
- ${
-   isSelected
-     ? "border-white bg-background"
-     : "border-border bg-transparent group-hover:border-border"
- }
- `}
+  mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors
+  ${
+    isSelected
+      ? "border-primary bg-primary"
+      : "border-border bg-transparent group-hover:border-border"
+  }
+  `}
                       >
                         {isSelected && (
-                          <div className="w-2.5 h-2.5 rounded-full bg-background" />
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
                         )}
                       </div>
                     </button>

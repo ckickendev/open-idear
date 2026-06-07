@@ -1,10 +1,11 @@
+import { ENV } from "@/api/const";
 // ProfilePage.tsx
 import React, { useEffect, useState } from "react";
 import { Edit, Upload, X } from "lucide-react";
 import authenticationStore from "@/store/AuthenticationStore";
 import { CldUploadWidget } from "next-cloudinary";
 import axios from "axios";
-const REACT_APP_ROOT_BACKEND = process.env.NEXT_PUBLIC_ROOT_BACKEND;
+const REACT_APP_ROOT_BACKEND = ENV.ROOT_API;
 import { toast } from "sonner";
 import loadingStore from "@/store/LoadingStore";
 import { getHeadersToken } from "@/lib/api/axios";
@@ -16,7 +17,7 @@ const ProfileInfo = ({ userInfor }: any) => {
   const [isFollowed, setIsFollowed] = useState(userInfor?.isFollowed);
   const [unfollowBtn, setUnfollowBtn] = useState(false);
 
-  const changeLoad = loadingStore((state) => state.changeLoad);
+  const setIsLoading = loadingStore((state) => state.setIsLoading);
   const updateCurrentUser = authenticationStore(
     (state) => state.updateCurrentUser,
   );
@@ -105,36 +106,40 @@ const ProfileInfo = ({ userInfor }: any) => {
           <div className="absolute -bottom-16 right-0 flex items-center p-2 justify-between bg-background border border-border rounded-xl shadow-lg z-10 min-w-max">
             <CldUploadWidget
               signatureEndpoint="/api/image_upload"
+              onQueuesStart={() => setIsLoading(true)}
+              onAbort={() => setIsLoading(false)}
+              onError={() => setIsLoading(false)}
+              onClose={() => setIsLoading(false)}
               onSuccess={async (result, { widget }) => {
                 console.log(result);
-                if (typeof result?.info !== "string") {
+                if (typeof result?.info !== "string" && result?.info?.url) {
                   try {
-                    changeLoad();
+                    setIsLoading(true);
                     const token = localStorage.getItem("access_token");
                     if (token) {
                       axios.defaults.headers.common["Authorization"] =
                         `Bearer ${token}`;
                       const res = await axios.patch(
-                        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/updateImage`,
+                        `${ENV.ROOT_API}/user/updateImage`,
                         {
-                          background: result?.info?.url,
+                          background: result.info.url,
                         },
                       );
                       if (res.status == 200) {
                         toast.success("Update successfully");
-                        updateCurrentUser({ background: result?.info?.url });
+                        updateCurrentUser({ background: result.info.url });
                         setShowBackgroundUpload(false);
                       }
                     } else {
                       toast.error("Error !");
-                      changeLoad();
                     }
                   } catch (error: any) {
                     toast.error(
                       error?.response?.data?.message || error?.message,
                     );
-                    changeLoad();
                     console.error("Error fetching categories:", error);
+                  } finally {
+                    setIsLoading(false);
                   }
                 }
                 widget.close();
@@ -198,36 +203,40 @@ const ProfileInfo = ({ userInfor }: any) => {
               <div className="absolute w-full -bottom-16 left-0 flex items-center p-2 justify-between bg-background border border-border rounded-xl shadow-lg z-10 min-w-max">
                 <CldUploadWidget
                   signatureEndpoint="/api/image_upload"
+                  onQueuesStart={() => setIsLoading(true)}
+                  onAbort={() => setIsLoading(false)}
+                  onError={() => setIsLoading(false)}
+                  onClose={() => setIsLoading(false)}
                   onSuccess={async (result, { widget }) => {
                     console.log(result);
-                    if (typeof result?.info !== "string") {
+                    if (typeof result?.info !== "string" && result?.info?.url) {
                       try {
-                        changeLoad();
+                        setIsLoading(true);
                         const token = localStorage.getItem("access_token");
                         if (token) {
                           axios.defaults.headers.common["Authorization"] =
                             `Bearer ${token}`;
                           const res = await axios.patch(
-                            `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/updateImage`,
+                            `${ENV.ROOT_API}/user/updateImage`,
                             {
-                              avatar: result?.info?.url,
+                              avatar: result.info.url,
                             },
                           );
                           if (res.status == 200) {
                             toast.success("Update successfully");
-                            updateCurrentUser({ avatar: result?.info?.url });
+                            updateCurrentUser({ avatar: result.info.url });
                             setShowAvatarUpload(false);
                           }
                         } else {
                           toast.error("Authentication error !");
-                          changeLoad();
                         }
                       } catch (error: any) {
                         toast.error(
                           error?.response?.data?.message || error?.message,
                         );
-                        changeLoad();
                         console.error("Error fetching categories:", error);
+                      } finally {
+                        setIsLoading(false);
                       }
                     }
                     widget.close();

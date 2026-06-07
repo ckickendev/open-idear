@@ -1,5 +1,6 @@
 "use client";
 
+import { ENV } from "@/api/const";
 import React, { use, useEffect } from "react";
 import { Clock, Bookmark, User, CheckCircle } from "lucide-react";
 import { useTranslation } from "@/app/hook/useTranslation";
@@ -31,7 +32,7 @@ const HotPost: React.FC = () => {
         const token = localStorage.getItem("access_token");
         if (token) {
           const res = await axios.get(
-            `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getHotPostsWeek?limit=10&page=1`,
+            `${ENV.ROOT_API}/post/getHotPostsWeek?limit=10&page=1`,
           );
           if (res.status === 200) {
             console.log("res.data.hotpost: ", res.data.posts);

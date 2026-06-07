@@ -1,5 +1,6 @@
 "use client";
 
+import { ENV } from "@/api/const";
 import PostDisplayPageElement from "@/components/PostDisplayPageElement";
 import axios from "axios";
 import { useSearchParams } from "next/navigation";
@@ -15,7 +16,7 @@ const RecentlyPost = () => {
     const fetchData = async () => {
       try {
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getAllPosts?limit=6&page=${currentPage}`,
+          `${ENV.ROOT_API}/post/getAllPosts?limit=6&page=${currentPage}`,
         );
         console.log("res data fetch data page", res.data);
 

@@ -1,3 +1,4 @@
+import { ENV } from "@/api/const";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -26,7 +27,6 @@ export const ForgotPassword = ({
   setIsAuthenFromDisplay,
 }: ModalAuthen) => {
   const { t } = useTranslation();
-  const ROOT_BACKEND = REACT_APP_ROOT_BACKEND;
   const [errorSv, setErrorSv] = useState("");
   const [emailSent, setEmailSent] = useState("");
   const {
@@ -42,7 +42,7 @@ export const ForgotPassword = ({
     event.preventDefault();
     try {
       const res = await axios.post(
-        `${ROOT_BACKEND}/auth/sendEmailResetPassword`,
+        `${ENV.ROOT_API}/auth/sendEmailResetPassword`,
         data,
       );
       setEmailSent(res.data.email);

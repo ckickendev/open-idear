@@ -1,3 +1,4 @@
+import { ENV } from "@/api/const";
 import { useState } from "react";
 import { Bookmark, Upload } from "lucide-react";
 import authenticationStore from "@/store/AuthenticationStore";
@@ -25,7 +26,7 @@ const SeriesElement = ({
   const onMarkedSeries = async () => {
     try {
       const response = await axios.patch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/markSeries`,
+        `${ENV.ROOT_API}/series/markSeries`,
         {
           seriesId: series._id,
         },
@@ -48,7 +49,7 @@ const SeriesElement = ({
       console.log(error.response.data);
       toast.error(
         error.response.data.message ||
-          "An error occurred while marking the series.",
+        "An error occurred while marking the series.",
       );
     }
   };
@@ -61,7 +62,7 @@ const SeriesElement = ({
   const onConfirmEditing = async () => {
     try {
       const response = await axios.patch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/edit`,
+        `${ENV.ROOT_API}/series/edit`,
         {
           seriesId: series._id,
           title: dataSeriesEdit.title,
@@ -85,7 +86,7 @@ const SeriesElement = ({
     } catch (error: any) {
       toast.error(
         error.response.data.message ||
-          "An error occurred while updating the series.",
+        "An error occurred while updating the series.",
       );
     }
     setIsEditing(false);
@@ -202,7 +203,7 @@ const SeriesElement = ({
                 </h2>
                 <ImageUpload
                   onImageUploaded={handleImageUploadedPublic}
-                  onClose={() => {}}
+                  onClose={() => { }}
                   isTitleDisplay={true}
                 />
                 <p className="mt-6 mb-2 text-sm text-foreground/80">Title</p>

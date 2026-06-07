@@ -1,5 +1,6 @@
 "use client";
 
+import { ENV } from "@/api/const";
 import axios from "axios";
 import { useEffect, useState } from "react";
 
@@ -38,7 +39,7 @@ const PostInAnotherCategory = ({ slug }: { slug: string }) => {
     const fetchData = async () => {
       try {
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category/getPostsInAnotherCategorySlug/${slug}/4`,
+          `${ENV.ROOT_API}/category/getPostsInAnotherCategorySlug/${slug}/4`,
         );
         console.log("Fetched posts another data:", res.data);
         setData(res.data.posts);

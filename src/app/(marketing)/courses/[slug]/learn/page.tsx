@@ -1,4 +1,5 @@
 "use client";
+import { ENV } from "@/api/const";
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axios from "axios";
@@ -14,7 +15,7 @@ export default function LearnIndexPage() {
       try {
         changeLoad();
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/getBySlug?slug=${slug}`,
+          `${ENV.ROOT_API}/course/getBySlug?slug=${slug}`,
         );
         const courseData = response.data.data;
 
