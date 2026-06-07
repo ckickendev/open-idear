@@ -1,4 +1,5 @@
 "use client";
+import { ENV } from "@/api/const";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
@@ -74,14 +75,14 @@ export default function ProfileOverviewPage() {
 
         // Fetch posts count
         const postsRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor?profileId=${currentUser._id}`,
+          `${ENV.ROOT_API}/post/getPostByAuthor?profileId=${currentUser._id}`,
           { headers },
         );
         const totalPosts = postsRes.data?.posts?.length || 0;
 
         // Fetch bookmarks count
         const bookmarksRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getMarkedByUser?profileId=${currentUser._id}`,
+          `${ENV.ROOT_API}/post/getMarkedByUser?profileId=${currentUser._id}`,
           { headers },
         );
         const bookmarks = bookmarksRes.data?.markedPost?.length || 0;

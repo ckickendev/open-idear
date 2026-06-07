@@ -1,4 +1,5 @@
 "use client";
+import { ENV } from "@/api/const";
 import React, { useState } from "react";
 import {
   Edit,
@@ -47,7 +48,7 @@ const ProfileHeader: React.FC = () => {
   const updateCurrentUser = authenticationStore(
     (state) => state.updateCurrentUser,
   );
-  const changeLoad = loadingStore((state) => state.changeLoad);
+  const setIsLoading = loadingStore((state) => state.setIsLoading);
 
   const params = useParams();
   const usernameParam = params?.username as string | undefined;
@@ -58,11 +59,11 @@ const ProfileHeader: React.FC = () => {
     if (
       usernameParam &&
       usernameParam.toLowerCase() !==
-        String(currentUser?.username).toLowerCase()
+      String(currentUser?.username).toLowerCase()
     ) {
       axios
         .get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/auth/getProfileByUsername?username=${usernameParam}`,
+          `${ENV.ROOT_API}/auth/getProfileByUsername?username=${usernameParam}`,
           { headers: getHeadersToken() },
         )
         .then((res) => {
@@ -86,7 +87,7 @@ const ProfileHeader: React.FC = () => {
     if (!displayUser?._id) return;
     try {
       const res = await axios.patch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/followUser?userId=${displayUser._id}`,
+        `${ENV.ROOT_API}/post/followUser?userId=${displayUser._id}`,
         {},
         { headers: getHeadersToken() },
       );
@@ -110,12 +111,15 @@ const ProfileHeader: React.FC = () => {
     url: string,
   ) => {
     try {
-      changeLoad();
+      setIsLoading(true);
       const token = localStorage.getItem("access_token");
-      if (!token) return;
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       const res = await axios.patch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/updateImage`,
+        `${ENV.ROOT_API}/user/updateImage`,
         {
           [type]: url,
         },
@@ -129,7 +133,7 @@ const ProfileHeader: React.FC = () => {
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Upload failed");
     } finally {
-      changeLoad();
+      setIsLoading(false);
     }
   };
 
@@ -160,6 +164,10 @@ const ProfileHeader: React.FC = () => {
               <div className="flex items-center gap-2 bg-background/95 dark:bg-card/95 backdrop-blur-sm rounded-xl p-2 shadow-lg">
                 <CldUploadWidget
                   signatureEndpoint="/api/image_upload"
+                  onQueuesStart={() => setIsLoading(true)}
+                  onAbort={() => setIsLoading(false)}
+                  onError={() => setIsLoading(false)}
+                  onClose={() => setIsLoading(false)}
                   onSuccess={(result, { widget }) => {
                     if (typeof result?.info !== "string" && result?.info?.url) {
                       handleImageUpload("background", result.info.url);
@@ -218,6 +226,10 @@ const ProfileHeader: React.FC = () => {
                     <div className="absolute bottom-full right-0 mb-2 flex items-center gap-2 bg-background dark:bg-card rounded-xl p-2 shadow-lg border border-border dark:border-border min-w-max">
                       <CldUploadWidget
                         signatureEndpoint="/api/image_upload"
+                        onQueuesStart={() => setIsLoading(true)}
+                        onAbort={() => setIsLoading(false)}
+                        onError={() => setIsLoading(false)}
+                        onClose={() => setIsLoading(false)}
                         onSuccess={(result, { widget }) => {
                           if (
                             typeof result?.info !== "string" &&

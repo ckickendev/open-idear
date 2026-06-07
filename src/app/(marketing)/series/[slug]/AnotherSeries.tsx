@@ -1,5 +1,6 @@
 "use client";
 
+import { ENV } from "@/api/const";
 import { SeriesInterface } from "@/interfaces/Interface";
 import axios from "axios";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -17,7 +18,7 @@ const AnotherSeries = ({ slug }: { slug: string }) => {
       try {
         // Fetch another series data based on the slug
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getAnotherSeriesBySlug?slug=${slug}`,
+          `${ENV.ROOT_API}/series/getAnotherSeriesBySlug?slug=${slug}`,
         );
 
         console.log(res.data.anotherSeries);

@@ -1,5 +1,6 @@
 "use client";
 
+import { ENV } from "@/api/const";
 import React, { useState, useRef } from "react";
 import {
   Upload,
@@ -21,7 +22,7 @@ interface ImageUploadProps {
 
 const ImageUpload = ({
   onImageUploaded,
-  onClose = () => {},
+  onClose = () => { },
   isTitleDisplay = false,
   darkMode = false,
 }: ImageUploadProps) => {
@@ -103,7 +104,7 @@ const ImageUpload = ({
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/media/uploadImage`,
+        `${ENV.ROOT_API}/media/uploadImage`,
         {
           method: "POST",
           body: formData,

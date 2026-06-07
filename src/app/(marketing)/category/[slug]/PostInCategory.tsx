@@ -1,5 +1,6 @@
 "use client";
 
+import { ENV } from "@/api/const";
 import Category from "@/features/categories/components/management/Category";
 import {
   CategoryLinkCustom,
@@ -33,9 +34,8 @@ const PostInCategory = ({
   }) => {
     return (
       <div
-        className={`relative overflow-hidden rounded-lg group cursor-pointer ${
-          size === "large" ? "col-span-2 row-span-2" : ""
-        }`}
+        className={`relative overflow-hidden rounded-lg group cursor-pointer ${size === "large" ? "col-span-2 row-span-2" : ""
+          }`}
       >
         <img
           src={image}
@@ -48,9 +48,8 @@ const PostInCategory = ({
               {category}
             </p>
             <h2
-              className={`font-bold leading-tight mb-4 ${
-                size === "large" ? "text-4xl" : "text-2xl"
-              }`}
+              className={`font-bold leading-tight mb-4 ${size === "large" ? "text-4xl" : "text-2xl"
+                }`}
             >
               {title}
             </h2>
@@ -72,7 +71,7 @@ const PostInCategory = ({
     const fetchData = async () => {
       try {
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category/getPostsByCategorySlug/${slug}/${currentPage}`,
+          `${ENV.ROOT_API}/category/getPostsByCategorySlug/${slug}/${currentPage}`,
         );
         setData(res.data.posts);
       } catch (error) {

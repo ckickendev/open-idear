@@ -1,4 +1,5 @@
 "use client";
+import { ENV } from "@/api/const";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -95,7 +96,7 @@ const CourseDetail = () => {
       try {
         changeLoad();
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/getBySlug?slug=${slug}`,
+          `${ENV.ROOT_API}/course/getBySlug?slug=${slug}`,
         );
         console.log("course", response.data.data);
         setCourse(response.data.data);
@@ -259,7 +260,7 @@ const CourseDetail = () => {
                 className="text-blue-600 font-bold hover:text-blue-800"
               >
                 {expandedChapters.length === (course.chapters?.length || 0) &&
-                course.chapters?.length > 0
+                  course.chapters?.length > 0
                   ? "Thu gọn tất cả"
                   : "Mở rộng tất cả"}
               </button>
@@ -410,7 +411,7 @@ const CourseDetail = () => {
                     <span className="text-red-500 text-xs font-bold text-sm">
                       {Math.round(
                         ((course.price - course.discountPrice) / course.price) *
-                          100,
+                        100,
                       )}
                       % Giảm
                     </span>

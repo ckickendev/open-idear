@@ -39,13 +39,15 @@ export default function Banner() {
             className="object-cover"
             sizes="100vw"
           />
+          {/* Dark Overlay for readability in dark mode */}
+          <div className="absolute inset-0 bg-black/10 dark:bg-black/60 transition-colors duration-300 z-0" />
         </div>
-        <div className="absolute top-1 flex flex-col flex-nowrap justify-center items-center gap-4 max-w-screen-xl mx-auto w-full h-full">
-          <h1 className="text-4xl font-semibold text-foreground flex items-center justify-center">
+        <div className="absolute inset-0 flex flex-col flex-nowrap justify-center items-center gap-4 max-w-screen-xl mx-auto w-full h-full z-10">
+          <h1 className="text-4xl font-semibold text-slate-900 dark:text-white flex items-center justify-center drop-shadow-sm">
             <span className="text-7xl text-blue-600 font-bold">Open</span>
             IdeaR
           </h1>
-          <div className="text-4xl font-semibold text-foreground flex items-center justify-center">
+          <div className="text-4xl font-semibold text-slate-800 dark:text-slate-100 flex items-center justify-center text-center px-4">
             {t("component.banner.title")}
           </div>
           <a

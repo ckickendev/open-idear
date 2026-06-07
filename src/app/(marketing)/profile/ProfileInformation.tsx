@@ -1,3 +1,4 @@
+import { ENV } from "@/api/const";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -66,7 +67,7 @@ const ProfileInformation = () => {
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
         const res = await axios.patch(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/user/updateProfile`,
+          `${ENV.ROOT_API}/user/updateProfile`,
           {
             data,
           },

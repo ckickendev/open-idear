@@ -1,3 +1,4 @@
+import { ENV } from "@/api/const";
 import { ForgotPassword } from "./ForgotPassword";
 import { boolean, z } from "zod";
 
@@ -5,7 +6,7 @@ const password = new RegExp(
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,25}$/,
 );
 
-export const REACT_APP_ROOT_BACKEND = process.env.NEXT_PUBLIC_ROOT_BACKEND;
+export const REACT_APP_ROOT_BACKEND = ENV.ROOT_API;
 
 export const loginSchema = z.object({
   account: z.string().min(6, "Email or username must be at least 6 characters"),

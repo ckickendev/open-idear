@@ -1,4 +1,5 @@
 "use client";
+import { ENV } from "@/api/const";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
@@ -66,7 +67,7 @@ const WatchPage = () => {
       try {
         changeLoad();
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/course/getBySlug?slug=${slug}`,
+          `${ENV.ROOT_API}/course/getBySlug?slug=${slug}`,
         );
         const courseData = response.data.data;
         setCourse(courseData);

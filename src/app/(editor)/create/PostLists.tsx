@@ -1,5 +1,6 @@
 "use client";
 
+import { ENV } from "@/api/const";
 import React, { useEffect, useState } from "react";
 import { BadgePlus, FileText, Clock, X } from "lucide-react";
 import { getHeadersToken } from "@/lib/api/axios";
@@ -27,7 +28,7 @@ export default function PostListPanel({ isOpen, onClose }: PostListPanelProps) {
         const headers = getHeadersToken();
         try {
           const res = await axios.get(
-            `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostByAuthor`,
+            `${ENV.ROOT_API}/post/getPostByAuthor`,
             { headers },
           );
           if (res.status === 200) {

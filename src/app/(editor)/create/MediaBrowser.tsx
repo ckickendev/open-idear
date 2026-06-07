@@ -1,7 +1,8 @@
 "use client";
 
+import { ENV } from "@/api/const";
 import React, { useEffect, useState } from "react";
-import { X, Loader2, Image as ImageIcon } from "lucide-react";
+import { X, Image as ImageIcon } from "lucide-react";
 import { getHeadersToken } from "@/lib/api/axios";
 
 interface MediaBrowserProps {
@@ -30,7 +31,7 @@ const MediaBrowser: React.FC<MediaBrowserProps> = ({ onSelect, onClose }) => {
   const fetchMedia = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/media/user`,
+        `${ENV.ROOT_API}/media/user`,
         {
           headers: getHeadersToken(),
         },

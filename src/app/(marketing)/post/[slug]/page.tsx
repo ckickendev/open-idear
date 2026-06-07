@@ -1,3 +1,4 @@
+import { ENV } from "@/api/const";
 import HotPost from "@/features/ideas/components/hot_post/HotPost";
 import { Mail, Link } from "lucide-react";
 import CommentSection from "./CommentSection";
@@ -19,7 +20,7 @@ export default async function PostLists({
     try {
       // Using native fetch with Next.js optimizations
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getPostBySlug/${slug}`,
+        `${ENV.ROOT_API}/post/getPostBySlug/${slug}`,
         {
           // Next.js 13+ fetch options
           next: { revalidate: 3600 }, // Cache for 1 hour
@@ -44,7 +45,7 @@ export default async function PostLists({
   const getRandomTopic = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/category/getRandomTopic?limit=5&page=1`,
+        `${ENV.ROOT_API}/category/getRandomTopic?limit=5&page=1`,
         {
           next: { revalidate: 3600 }, // Cache for 1 hour
         },

@@ -1,4 +1,5 @@
 "use client";
+import { ENV } from "@/api/const";
 // React component example using parsed comment data
 import React, { useState, useEffect } from "react";
 import axios from "axios";
@@ -44,7 +45,7 @@ function CommentSection({ postId }: { postId: string }) {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/comments/getPostComments?postId=${postId}`,
+        `${ENV.ROOT_API}/comments/getPostComments?postId=${postId}`,
         {
           params: {
             method: "paginated", // Use paginated method for performance
@@ -81,7 +82,7 @@ function CommentSection({ postId }: { postId: string }) {
   ) => {
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/comments/${commentId}/replies`,
+        `${ENV.ROOT_API}/comments/${commentId}/replies`,
         {
           params: {
             skip: currentRepliesCount,
@@ -117,7 +118,7 @@ function CommentSection({ postId }: { postId: string }) {
   ) => {
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/comments/createComment/`,
+        `${ENV.ROOT_API}/comments/createComment/`,
         {
           content,
           postId,
@@ -157,7 +158,7 @@ function CommentSection({ postId }: { postId: string }) {
     try {
       // Remove vote
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/comments/vote/${commentId}`,
+        `${ENV.ROOT_API}/comments/vote/${commentId}`,
         {
           headers: getHeadersToken(),
         },

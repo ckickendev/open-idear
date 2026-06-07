@@ -1,3 +1,4 @@
+import { ENV } from "@/api/const";
 import { useState } from "react";
 import { Bookmark } from "lucide-react";
 import { PostInterface } from "./[username]/page";
@@ -16,7 +17,7 @@ const PostElement = ({ post }: { post: PostInterface }) => {
   const onMarkedPost = async () => {
     try {
       const response = await axios.patch(
-        `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/markPost`,
+        `${ENV.ROOT_API}/post/markPost`,
         {
           postId: post._id,
         },
@@ -38,7 +39,7 @@ const PostElement = ({ post }: { post: PostInterface }) => {
     } catch (error: any) {
       toast.error(
         error.response.data.message ||
-          "An error occurred while marking the post.",
+        "An error occurred while marking the post.",
       );
     }
   };

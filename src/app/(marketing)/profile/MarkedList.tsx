@@ -1,3 +1,4 @@
+import { ENV } from "@/api/const";
 import React, { useEffect, useState } from "react";
 import { getHeadersToken } from "@/lib/api/axios";
 import axios from "axios";
@@ -26,14 +27,14 @@ const MarkedList = () => {
         const token = localStorage.getItem("access_token");
         if (token) {
           const resPostMarked = await axios.get(
-            `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getMarkedByUser?profileId=${currentUser._id}`,
+            `${ENV.ROOT_API}/post/getMarkedByUser?profileId=${currentUser._id}`,
           );
           if (resPostMarked.status === 200) {
             setMarkedPosts(resPostMarked.data.markedPost);
           }
 
           const resSeriesMarked = await axios.get(
-            `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/series/getMarkedByUser?profileId=${currentUser._id}`,
+            `${ENV.ROOT_API}/series/getMarkedByUser?profileId=${currentUser._id}`,
           );
           if (resSeriesMarked.status === 200) {
             setMarkedSeries(resSeriesMarked.data.markedSeries);
@@ -77,40 +78,36 @@ const MarkedList = () => {
         <div className="bg-background rounded-xl shadow-sm p-2 mb-8 inline-flex gap-2">
           <button
             onClick={() => handleTabChange("posts")}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 cursor-pointer ${
-              activeTab === "posts"
-                ? "bg-blue-600 text-white shadow-md"
-                : "text-muted-foreground hover:bg-muted/30"
-            }`}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 cursor-pointer ${activeTab === "posts"
+              ? "bg-blue-600 text-white shadow-md"
+              : "text-muted-foreground hover:bg-muted/30"
+              }`}
           >
             <FileText size={18} />
             Posts
             <span
-              className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
-                activeTab === "posts"
-                  ? "bg-blue-500 text-white"
-                  : "bg-muted text-muted-foreground"
-              }`}
+              className={`ml-1 px-2 py-0.5 rounded-full text-xs ${activeTab === "posts"
+                ? "bg-blue-500 text-white"
+                : "bg-muted text-muted-foreground"
+                }`}
             >
               {markedPosts.length}
             </span>
           </button>
           <button
             onClick={() => handleTabChange("series")}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 cursor-pointer ${
-              activeTab === "series"
-                ? "bg-purple-600 text-white shadow-md"
-                : "text-muted-foreground hover:bg-muted/30"
-            }`}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 cursor-pointer ${activeTab === "series"
+              ? "bg-purple-600 text-white shadow-md"
+              : "text-muted-foreground hover:bg-muted/30"
+              }`}
           >
             <Layers size={18} />
             Series
             <span
-              className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
-                activeTab === "series"
-                  ? "bg-purple-500 text-white"
-                  : "bg-muted text-muted-foreground"
-              }`}
+              className={`ml-1 px-2 py-0.5 rounded-full text-xs ${activeTab === "series"
+                ? "bg-purple-500 text-white"
+                : "bg-muted text-muted-foreground"
+                }`}
             >
               {markedSeries.length}
             </span>

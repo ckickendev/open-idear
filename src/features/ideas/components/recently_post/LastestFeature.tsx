@@ -1,4 +1,5 @@
 "use client";
+import { ENV } from "@/api/const";
 import React, { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import Article from "./Article";
@@ -29,7 +30,7 @@ const LastestFeature = () => {
         const token = localStorage.getItem("access_token");
         if (token) {
           const response = await axios.get(
-            `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getRecentlyData`,
+            `${ENV.ROOT_API}/post/getRecentlyData`,
           );
           console.log("recently data:", response.data);
 
@@ -60,7 +61,7 @@ const LastestFeature = () => {
       const token = localStorage.getItem("access_token");
       if (token) {
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_ROOT_BACKEND}/post/getRecentlyDataByFeatures?feature=${allCategory[index].slug}`,
+          `${ENV.ROOT_API}/post/getRecentlyDataByFeatures?feature=${allCategory[index].slug}`,
         );
         if (response.status === 200) {
           console.log(
@@ -84,11 +85,10 @@ const LastestFeature = () => {
       return (
         <button
           key={index}
-          className={`${
-            index === selectFeature
-              ? "bg-blue-100 text-blue-500 px-4 py-2 rounded mr-2 cursor-pointer"
-              : "text-muted-foreground px-4 py-2 rounded mr-2 cursor-pointer"
-          }`}
+          className={`${index === selectFeature
+            ? "bg-blue-100 text-blue-500 px-4 py-2 rounded mr-2 cursor-pointer"
+            : "text-muted-foreground px-4 py-2 rounded mr-2 cursor-pointer"
+            }`}
           onClick={() => onSelectFeature(index)}
         >
           {category.name}

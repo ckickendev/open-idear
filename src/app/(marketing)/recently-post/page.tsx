@@ -10,7 +10,7 @@ export default async function MainPage() {
         className="relative h-100 bg-cover bg-center"
         style={{ backgroundImage: `url(banner/recently-post-banner.jpg)` }}
       >
-        <div className="absolute inset-0 bg-background/30" />
+        <div className="absolute inset-0 bg-black/30 dark:bg-black/60 transition-colors duration-300" />
         <div className="relative max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
             Recently Posted
