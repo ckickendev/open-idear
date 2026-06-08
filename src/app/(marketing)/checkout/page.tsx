@@ -130,7 +130,7 @@ const PaymentSuccess = () => {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white dark:from-emerald-950/20 dark:to-background flex items-center justify-center p-4">
       <div className="text-center max-w-md">
         <div className="relative mb-8">
           <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto relative">

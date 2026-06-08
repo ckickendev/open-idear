@@ -113,7 +113,7 @@ const RecentCourses: React.FC = () => {
   const maxDots = Math.max(1, courses.length - 2);
 
   return (
-    <section className="py-14 bg-gradient-to-b from-[#f8f7ff] via-white to-white">
+    <section className="py-14 bg-gradient-to-b from-[#f8f7ff] to-white dark:from-slate-900/30 dark:to-background border-y border-border">
       <div className="max-w-7xl mx-auto px-6">
         {/* Section Header */}
         <div className="flex items-end justify-between mb-10">
