@@ -15,6 +15,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   Lightbulb,
+  Mail,
 } from "lucide-react";
 import Logo from "@/components/common/Logo";
 import Category from "@/features/categories/components/management/Category";
@@ -27,6 +28,8 @@ import { LoadingOverlay } from "@/components/composed/loading-overlay";
 import loadingStore from "@/store/LoadingStore";
 import Series from "@/features/series/components/management/Series";
 import Courses from "@/features/series/components/management/Courses";
+import SupportTicketAdmin from "@/features/users/components/SupportTicketAdmin";
+
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -42,7 +45,9 @@ const AdminDashboard = () => {
     { id: "courses", label: "Khóa học", icon: BookOpen },
     { id: "course-categories", label: "Danh mục khoá học", icon: Folder },
     { id: "reports", label: "Báo cáo vi phạm", icon: AlertTriangle },
+    { id: "support", label: "Hộp thư hỗ trợ", icon: Mail },
     { id: "settings", label: "Cài đặt", icon: Settings },
+
   ];
 
   const renderContent = () => {
@@ -63,7 +68,10 @@ const AdminDashboard = () => {
         return <Courses />;
       case "course-categories":
         return <CourseCategory />;
+      case "support":
+        return <SupportTicketAdmin />;
       default:
+
         return (
           <div className="text-muted-foreground text-sm">
             Chọn một mục từ menu
