@@ -27,20 +27,17 @@ const LastestFeature = () => {
     const fetchRecentlyData = async () => {
       try {
         changeLoad();
-        const token = localStorage.getItem("access_token");
-        if (token) {
-          const response = await axios.get(
-            `${ENV.ROOT_API}/post/getRecentlyData`,
-          );
-          console.log("recently data:", response.data);
+        const response = await axios.get(
+          `${ENV.ROOT_API}/post/getRecentlyData`,
+        );
+        console.log("recently data:", response.data);
 
-          if (response.status === 200) {
-            setAllCategory((old) => [
-              ...old,
-              ...response.data.recentlyData.categories,
-            ]);
-            setAllPosts(response.data.recentlyData.posts);
-          }
+        if (response.status === 200) {
+          setAllCategory((old) => [
+            ...old,
+            ...response.data.recentlyData.categories,
+          ]);
+          setAllPosts(response.data.recentlyData.posts);
         }
       } catch (error: any) {
         // setType('error');

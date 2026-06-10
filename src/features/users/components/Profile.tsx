@@ -12,13 +12,18 @@ import {
   Sun,
   Monitor,
   Check,
+  ShieldAlert,
+  BadgeCheck,
+  Mail,
+  AlertTriangle,
 } from "lucide-react";
 import authenticationStore from "@/store/AuthenticationStore";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import Image from "next/image";
 
-type Panel = "main" | "display";
+type Panel = "main" | "display" | "help";
+
 
 export default function Profile() {
   const [isOpen, setIsOpen] = useState(false);
@@ -172,20 +177,24 @@ export default function Profile() {
                 </button>
               </Link>
 
-              <Link href="/help" onClick={closeDropdown}>
-                <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent text-foreground transition-colors cursor-pointer">
-                  <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                    <HelpCircle
-                      size={18}
-                      className="text-muted-foreground/50"
-                    />
-                  </span>
-                  <span className="text-sm font-medium flex-1 text-left">
-                    Trợ giúp và hỗ trợ
-                  </span>
-                  <ChevronRight />
-                </button>
-              </Link>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPanel("help");
+                }}
+                className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent text-foreground transition-colors cursor-pointer"
+              >
+                <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                  <HelpCircle
+                    size={18}
+                    className="text-muted-foreground/50"
+                  />
+                </span>
+                <span className="text-sm font-medium flex-1 text-left">
+                  Trợ giúp và hỗ trợ
+                </span>
+                <ChevronRight />
+              </button>
 
               {/* 🌙 Display & Accessibility — opens sub-panel */}
               <button
@@ -308,6 +317,76 @@ export default function Profile() {
                   );
                 })}
               </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border">
+              <p>Quyền riêng tư · Điều khoản · Quảng cáo · Cookie</p>
+            </div>
+          </div>
+
+          {/* ── HELP & SUPPORT SUB-PANEL ─────────────────── */}
+          <div
+            className="transition-all duration-200"
+            style={{ display: panel === "help" ? "block" : "none" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-2 py-3 border-b border-border flex items-center gap-2">
+              <button
+                onClick={() => setPanel("main")}
+                className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-accent text-foreground transition-colors flex-shrink-0"
+                aria-label="Quay lại"
+              >
+                <ArrowLeft size={18} className="text-muted-foreground/50" />
+              </button>
+              <h3 className="text-base font-bold text-foreground">Trợ giúp và hỗ trợ</h3>
+            </div>
+
+            {/* Help menu items */}
+            <div className="py-1">
+              {[
+                {
+                  href: "/help/trung-tam-tro-giup",
+                  icon: HelpCircle,
+                  label: "Trung tâm trợ giúp",
+                },
+                {
+                  href: "/help/ngan-chan-lua-dao",
+                  icon: ShieldAlert,
+                  label: "Trung tâm ngăn chặn hành vi lừa đảo",
+                },
+                {
+                  href: "/help/trang-thai-tai-khoan",
+                  icon: BadgeCheck,
+                  label: "Trạng thái tài khoản",
+                },
+                {
+                  href: "/help/hop-thu-ho-tro",
+                  icon: Mail,
+                  label: "Hộp thư hỗ trợ",
+                },
+                {
+                  href: "/help/bao-cao-su-co",
+                  icon: AlertTriangle,
+                  label: "Báo cáo sự cố",
+                },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={closeDropdown}
+                >
+                  <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent text-foreground transition-colors cursor-pointer">
+                    <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                      <item.icon size={18} className="text-muted-foreground/50" />
+                    </span>
+                    <span className="text-sm font-medium flex-1 text-left">
+                      {item.label}
+                    </span>
+                  </button>
+                </Link>
+              ))}
             </div>
 
             {/* Footer */}
