@@ -14,11 +14,12 @@ interface Post {
   _id: number;
   title: string;
   image: any;
-  readtime: string;
+  readtime: string | number;
   author: any;
   likes?: [any];
   slug: string;
   createdAt: string;
+  text?: string;
 }
 
 const HotPost: React.FC = () => {
@@ -63,78 +64,55 @@ const HotPost: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-4 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {articles.slice(0, 4).map((article) => (
-          <div
-            key={article._id}
-            className="flex flex-col bg-background rounded-lg overflow-hidden h-full"
-          >
-            <div className="relative h-40 w-full">
-              {/* Next.js Image component would be used here with actual images */}
-              <Link href={`/post/${article.slug}`} className="block h-full">
-                <div className="absolute inset-0 bg-muted">
-                  <Image
-                    src={article.image?.url}
-                    alt={article.title}
-                    fill
-                    sizes="23vw"
-                    style={{ objectFit: "cover" }}
-                  />
-                </div>
-              </Link>
-            </div>
+        {articles.slice(0, 4).map((article) => {
+          const minutesRead = article.readtime
+            ? (typeof article.readtime === "string" ? parseInt(article.readtime, 10) : article.readtime)
+            : Math.max(1, Math.ceil((article.text || "").split(/\s+/).length / 200)) || 5;
 
-            <div className="flex flex-1 flex-col p-3">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-muted-foreground flex items-center">
-                  <Clock size={14} className="mr-1" />
-                  {article.readtime
-                    ? article.readtime + "min read"
-                    : "5 min read"}
-                </span>
-                <button className="text-muted-foreground hover:text-foreground/80 transition-colors focus:outline-none cursor-pointer">
-                  <Bookmark size={18} />
-                </button>
-              </div>
-
-              <a
-                className="font-medium text-base mb-4 line-clamp-2 cursor-pointer hover:underline"
+          return (
+            <div
+              key={article._id}
+              className="flex flex-col bg-background rounded-xl overflow-hidden h-full group border border-border/50 pb-4 hover:shadow-md transition-all duration-300"
+            >
+              <Link
                 href={`/post/${article.slug}`}
+                className="block relative aspect-[16/10] w-full bg-muted rounded-t-xl overflow-hidden mb-3"
               >
-                {article.title}
-              </a>
+                <Image
+                  src={article.image?.url || "/banner/banner_standard.png"}
+                  alt={article.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 25vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </Link>
 
-              <div className="flex items-center mt-auto">
-                <div className="relative h-8 w-8 rounded-full overflow-hidden mr-2">
-                  <Image
-                    src={article.author.avatar || "/banner/banner_standard.png"}
-                    alt={article.author.name}
-                    fill
-                    className="object-cover"
-                    sizes="32px"
+              <div className="flex flex-1 flex-col px-3">
+                <Link href={`/post/${article.slug}`} className="block">
+                  <h3 className="font-bold text-sm leading-snug text-foreground hover:text-blue-600 transition-colors line-clamp-2 mb-1 hover:underline">
+                    {article.title}
+                  </h3>
+                </Link>
+
+                {article.text && (
+                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">
+                    {article.text}
+                  </p>
+                )}
+
+                <div className="flex items-center text-[11px] text-muted-foreground/80 mt-auto font-medium">
+                  <UserLinkCustom
+                    className="hover:underline text-muted-foreground hover:text-foreground cursor-pointer"
+                    username={article.author?.username}
+                    name={article.author?.username || article.author?.name || "Unknown"}
                   />
-                </div>
-                <div className="flex-1 justify-between">
-                  <div className="flex items-center">
-                    <UserLinkCustom
-                      className="text-sm font-medium cursor-pointer hover:underline"
-                      username={article.author.username}
-                      name={article.author.name}
-                    />
-                    {article.author.verified && (
-                      <CheckCircle size={14} className="ml-1 text-blue-500" />
-                    )}
-                  </div>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <span>{article.author.postedTime}</span>
-                    <span className="flex items-center">
-                      {convertDate(article.createdAt)}
-                    </span>
-                  </div>
+                  <span className="mx-1.5 text-muted-foreground/50">•</span>
+                  <span>{minutesRead} phút đọc</span>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
