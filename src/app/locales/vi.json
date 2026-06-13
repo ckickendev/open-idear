@@ -61,27 +61,81 @@
       "login": "Đăng nhập",
       "search": "Tìm kiếm",
       "home": "Trang chủ",
-      "course": "Khóa học online"
+      "course": "Khóa học online",
+      "myLearning": "Học tập",
+      "myLearningTooltip": "Học tập của tôi",
+      "cartTooltip": "Giỏ hàng"
     },
     "footer": {
-      "description": "OpenTrashTech là nền tảng mở dành cho mọi người chia sẻ ý tưởng, kiến thức, dịch vụ và công nghệ. Chúng tôi giúp kết nối cộng đồng đam mê sáng tạo và hỗ trợ kiếm tiền qua các liên kết affiliate. Cùng nhau chia sẻ và lan tỏa giá trị \nTham gia cộng đồng chia sẻ – Đăng bài viết của bạn ngay hôm nay!",
+      "description": "OpenIdear là nền tảng mở dành cho mọi người chia sẻ ý tưởng, kiến thức, dịch vụ và công nghệ. Chúng tôi giúp kết nối cộng đồng đam mê sáng tạo. Cùng nhau chia sẻ và lan tỏa giá trị \nTham gia cộng đồng chia sẻ – Đăng bài viết của bạn ngay hôm nay!",
       "contact": "Liên hệ",
-      "ava": "CHUNG TÔI CŨNG CÓ MẶT TRÊN",
+      "ava": "CHÚNG TÔI CŨNG CÓ MẶT TRÊN",
       "hotcourse": "Khóa học nổi bật",
       "hottoppic": "Chủ đề nổi bật"
     },
     "lastest_feature": {
       "last": "Post gần đây",
       "newest": "Bài viết mới nhất",
-      "more": "Xem thêm"
+      "more": "Xem thêm",
+      "all": "Tất cả",
+      "noPosts": "Không có bài viết nào.",
+      "minRead": "phút đọc"
     },
     "banner": {
+      "badge": "🚀 Cộng đồng Mở cho Lập trình viên",
+      "headline": "Học nhanh hơn. Chia sẻ kiến thức. Xây dựng ý tưởng.",
+      "description": "OpenIdear giúp các nhà phát triển, học sinh, nhà sáng tạo và những người đam mê công nghệ học hỏi các kỹ năng mới, chia sẻ kiến thức và khám phá các ý tưởng sáng tạo thông qua nội dung chất lượng cao và thảo luận cộng đồng.",
+      "ctaPrimary": "Bắt đầu học ngay",
+      "ctaSecondary": "Khám phá bài viết",
+      "statArticles": "Bài viết",
+      "statMembers": "Thành viên",
+      "statSeries": "Chuỗi chuyên đề",
       "title": "Chia sẻ và nói lên tiếng nói của bạn",
-      "create": "Tạo bài viết"
+      "create": "Tạo bài viết",
+      "previewCourseTitle": "Lộ trình Docker & Kubernetes",
+      "previewCourseBadge": "Miễn phí",
+      "previewCourseJoined": "1.2k học viên",
+      "previewTopicTitle": "Lập trình Web",
+      "previewTopicCount": "342 bài viết đã đăng",
+      "previewPostRead": "3 phút đọc",
+      "previewPostTitle": "Tại sao AI không thay thế lập trình viên, mà là người biết dùng AI.",
+      "previewPostAction": "Đọc tiếp"
     },
     "hotPost": {
       "title": "Nổi bật trong tháng",
-      "moreDes": "Xem TOP 10 bài viết"
+      "moreDes": "Xem TOP 10 bài viết",
+      "noPosts": "Không có bài viết nổi bật nào trong tuần."
+    },
+    "courses": {
+      "newlyUpdated": "Mới cập nhật",
+      "title": "Khóa học mới nhất",
+      "subtitle": "Những khóa học vừa được thêm vào — bắt đầu học ngay hôm nay",
+      "viewAll": "Xem tất cả",
+      "viewAllCourses": "Xem tất cả khóa học",
+      "new": "Mới",
+      "hours": "giờ",
+      "students": "học viên",
+      "free": "Miễn phí"
+    },
+    "hotSeries": {
+      "title": "Series Nổi bật",
+      "subtitle": "Chuỗi chuyên đề nổi bật cập nhật mỗi ngày. Xem tất cả"
+    },
+    "sidebar": {
+      "trending": "Xu hướng",
+      "latestPosts": "Bài viết mới nhất",
+      "popularSeries": "Chuyên đề phổ biến",
+      "courses": "Khóa học",
+      "noTrending": "Chưa có bài viết xu hướng.",
+      "noPosts": "Chưa có bài viết nào.",
+      "noSeries": "Chưa có chuyên đề nào.",
+      "noCourses": "Chưa có khóa học nào.",
+      "seeAllPosts": "Xem tất cả bài viết",
+      "browseAllCourses": "Xem tất cả khóa học",
+      "affiliateTitle": " Chức năng Cộng tác viên",
+      "affiliateSubtitle": "Nhận tới 30% hoa hồng khi chia sẻ ý tưởng!",
+      "affiliateDescription": "Chia sẻ OpenIdear với khán giả của bạn và kiếm thu nhập thụ động trên mỗi lượt giới thiệu.",
+      "affiliateJoin": "Tham gia ngay"
     }
   },
   "management": {

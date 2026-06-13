@@ -7,6 +7,8 @@ import authenticationStore from "@/store/AuthenticationStore";
 import { LoadingOverlay } from "@/components/composed/loading-overlay";
 import loadingStore from "@/store/LoadingStore";
 
+import { ProfileSkeleton, SidebarSkeleton } from "@/components/ui/Skeletons";
+
 export default function ProfileLayout({
   children,
 }: {
@@ -31,8 +33,23 @@ export default function ProfileLayout({
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-muted/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <ProfileSkeleton />
+          <div className="flex gap-6 mt-2">
+            <div className="w-64 flex-shrink-0">
+              <SidebarSkeleton />
+            </div>
+            <div className="flex-1 space-y-6">
+              <div className="h-10 bg-muted/40 rounded w-1/4 animate-pulse" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-28 bg-card border border-border/40 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -40,12 +57,22 @@ export default function ProfileLayout({
   // Only block and show infinite loading if it's a private route and currentUser isn't loaded
   if (!currentUser?._id && !isPublicProfile) {
     return (
-      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-sm text-muted-foreground">
-            Loading your profile...
-          </p>
+      <div className="min-h-screen bg-muted/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <ProfileSkeleton />
+          <div className="flex gap-6 mt-2">
+            <div className="w-64 flex-shrink-0">
+              <SidebarSkeleton />
+            </div>
+            <div className="flex-1 space-y-6">
+              <div className="h-10 bg-muted/40 rounded w-1/4 animate-pulse" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-28 bg-card border border-border/40 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

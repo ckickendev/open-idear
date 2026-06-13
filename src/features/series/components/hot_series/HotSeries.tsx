@@ -6,14 +6,17 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import axios from "axios";
 import { SeriesInterface } from "@/interfaces/Interface";
+import { SeriesCardSkeleton } from "@/components/ui/Skeletons";
 
 const HotSeries: React.FC = () => {
   const [series, setSeries] = React.useState<SeriesInterface[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     const fetchSeriesData = async () => {
       try {
+        setIsLoading(true);
         const res = await axios.get(
           `${ENV.ROOT_API}/series/getHotSeries`,
         );
@@ -22,6 +25,8 @@ const HotSeries: React.FC = () => {
         }
       } catch (error) {
         console.error("Error fetching series:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchSeriesData();
@@ -72,37 +77,43 @@ const HotSeries: React.FC = () => {
         </button>
 
         {/* Scrollable container */}
-        <div
-          ref={scrollRef}
-          className="flex overflow-x-auto gap-5 px-12 pb-4 scrollbar-hide"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {series.map((serie: SeriesInterface) => (
-            <div key={serie._id} className="flex-shrink-0 w-64">
-              <Link href={`/series/${serie.slug}`}>
-                <div className="group">
-                  <div className="bg-muted h-40 w-full mb-3 overflow-hidden">
-                    <Image
-                      src={serie?.image?.url || "/default-series-image.jpg"}
-                      alt={serie.title}
-                      width={256}
-                      height={160}
-                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    {/* Placeholder for image - in production, use Next.js Image component */}
-                    <div className="h-full w-full bg-muted"></div>
+        {isLoading ? (
+          <div className="flex overflow-x-auto gap-5 px-12 pb-4 scrollbar-hide">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <SeriesCardSkeleton key={idx} />
+            ))}
+          </div>
+        ) : (
+          <div
+            ref={scrollRef}
+            className="flex overflow-x-auto gap-5 px-12 pb-4 scrollbar-hide"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {series.map((serie: SeriesInterface) => (
+              <div key={serie._id} className="flex-shrink-0 w-64">
+                <Link href={`/series/${serie.slug}`}>
+                  <div className="group">
+                    <div className="bg-muted h-40 w-full mb-3 overflow-hidden rounded-lg">
+                      <Image
+                        src={serie?.image?.url || "/default-series-image.jpg"}
+                        alt={serie.title}
+                        width={256}
+                        height={160}
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <h3 className="font-bold text-base mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                      {serie.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      BY {serie.user?.name || serie.user?.username || "Unknown"}
+                    </p>
                   </div>
-                  <h3 className="font-bold text-base mb-2 group-hover:text-blue-600">
-                    {serie.title}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    BY {serie.user.name}
-                  </p>
-                </div>
-              </Link>
-            </div>
-          ))}
-        </div>
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Right scroll button */}
         <button
@@ -121,3 +132,4 @@ const HotSeries: React.FC = () => {
 };
 
 export default HotSeries;
+
