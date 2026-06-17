@@ -66,27 +66,81 @@
       "login": "Login",
       "search": "Search",
       "home": "Home",
-      "course": "Online Courses"
+      "course": "Online Courses",
+      "myLearning": "Learning",
+      "myLearningTooltip": "My Learning",
+      "cartTooltip": "Cart"
     },
     "footer": {
-      "description": "OpenTrashTech is an open platform where everyone can share ideas, knowledge, services, and technology. We connect a creative community and support earning through affiliate links. Let’s share and spread value together! Join the sharing community – Post your content today!",
+      "description": "OpenIdear is an open platform where everyone can share ideas, knowledge, services, and technology. We connect a creative community and support learning. Let’s share and spread value together! Join the sharing community – Post your content today!",
       "contact": "Contact",
-      "ava": "WE IS ALSO AVAILABLE ON",
+      "ava": "WE ARE ALSO AVAILABLE ON",
       "hotcourse": "Featured Courses",
       "hottoppic": "Featured Topics"
     },
     "lastest_feature": {
       "last": "Recent Posts",
       "newest": "Latest Articles",
-      "more": "View More"
+      "more": "View More",
+      "all": "All",
+      "noPosts": "No posts found.",
+      "minRead": "min read"
     },
     "banner": {
+      "badge": "🚀 Open Community for Developers",
+      "headline": "Learn Faster. Share Knowledge. Build Better Ideas.",
+      "description": "OpenIdear helps developers, students, creators, and technology enthusiasts learn new skills, share knowledge, and discover innovative ideas through high-quality content and community discussions.",
+      "ctaPrimary": "Start Learning",
+      "ctaSecondary": "Explore Posts",
+      "statArticles": "Articles",
+      "statMembers": "Community Members",
+      "statSeries": "Learning Series",
       "title": "Speak out and share your idea",
-      "create": "Create post"
+      "create": "Create post",
+      "previewCourseTitle": "Docker & Kubernetes Path",
+      "previewCourseBadge": "Free",
+      "previewCourseJoined": "1.2k joined",
+      "previewTopicTitle": "Web Development",
+      "previewTopicCount": "342 articles published",
+      "previewPostRead": "3m read",
+      "previewPostTitle": "Why AI won't replace developers, but developers using AI will.",
+      "previewPostAction": "Read"
     },
     "hotPost": {
       "title": "Hot This Week",
-      "moreDes": "View TOP 10 Posts"
+      "moreDes": "View TOP 10 Posts",
+      "noPosts": "No featured posts this week."
+    },
+    "courses": {
+      "newlyUpdated": "Newly Updated",
+      "title": "Latest Courses",
+      "subtitle": "Courses just added — start learning today",
+      "viewAll": "View All",
+      "viewAllCourses": "View all courses",
+      "new": "New",
+      "hours": "hours",
+      "students": "students",
+      "free": "Free"
+    },
+    "hotSeries": {
+      "title": "Hot Series",
+      "subtitle": "Hot series updates every day. See all"
+    },
+    "sidebar": {
+      "trending": "Trending",
+      "latestPosts": "Latest Posts",
+      "popularSeries": "Popular Series",
+      "courses": "Courses",
+      "noTrending": "No trending posts yet.",
+      "noPosts": "No posts yet.",
+      "noSeries": "No series yet.",
+      "noCourses": "No courses available yet.",
+      "seeAllPosts": "See all posts",
+      "browseAllCourses": "Browse all courses",
+      "affiliateTitle": "💰 Affiliate Program",
+      "affiliateSubtitle": "Earn up to 30% commission sharing ideas!",
+      "affiliateDescription": "Share OpenIdear with your audience and earn passive income on every referral.",
+      "affiliateJoin": "Join now"
     }
   },
   "management": {

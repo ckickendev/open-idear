@@ -4,12 +4,11 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import loadingStore from "@/store/LoadingStore";
 import RecentCourses from "@/features/series/components/recent_courses/RecentCourses";
+import { CourseCardSkeleton } from "@/components/ui/Skeletons";
 import {
   Search,
   Star,
-  ArrowRight,
   ChevronLeft,
   ChevronRight,
   Users,
@@ -18,9 +17,6 @@ import {
   LayoutDashboard,
   Clock,
   PlayCircle,
-  TrendingUp,
-  Zap,
-  Globe,
   Code,
   Brain,
   Database,
@@ -293,12 +289,12 @@ const CourseListing = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("Python");
   const router = useRouter();
-  const changeLoad = loadingStore((state) => state.changeLoad);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        changeLoad();
+        setIsLoading(true);
         const response = await axios.get(
           `${ENV.ROOT_API}/course`,
         );
@@ -306,7 +302,7 @@ const CourseListing = () => {
       } catch (error) {
         console.error(error);
       } finally {
-        changeLoad();
+        setIsLoading(false);
       }
     };
     fetchCourses();
@@ -482,7 +478,15 @@ const CourseListing = () => {
           </p>
         </div>
 
-        <CourseRow courses={displayCourses} />
+        {isLoading ? (
+          <div className="flex gap-6 overflow-x-auto pb-8 pt-4 px-2">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <CourseCardSkeleton key={idx} />
+            ))}
+          </div>
+        ) : (
+          <CourseRow courses={displayCourses} />
+        )}
       </section>
 
       {/* ═══════ Featured Topics ═══════ */}

@@ -5,7 +5,7 @@ import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import axios from "axios";
 import Link from "next/link";
-import loadingStore from "@/store/LoadingStore";
+import { CourseCardSkeleton, SearchResultSkeleton } from "@/components/ui/Skeletons";
 import {
   Search,
   Filter,
@@ -66,13 +66,12 @@ const SearchResultsContent = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedPrices, setSelectedPrices] = useState<string[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const changeLoad = loadingStore((state) => state.changeLoad);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        changeLoad();
+        setIsLoading(true);
         const response = await axios.get(
           `${ENV.ROOT_API}/course`,
         );
@@ -80,7 +79,7 @@ const SearchResultsContent = () => {
       } catch (error) {
         console.error(error);
       } finally {
-        changeLoad();
+        setIsLoading(false);
       }
     };
     fetchCourses();
@@ -169,7 +168,7 @@ const SearchResultsContent = () => {
                 <span className="text-foreground font-bold">
                   {filteredCourses?.length}
                 </span>{" "}
-                kết quả cho"{query}"
+                kết quả cho &quot;{query}&quot;
               </span>
             </div>
           </div>
@@ -311,7 +310,23 @@ const SearchResultsContent = () => {
               </div>
             </div>
 
-            {filteredCourses?.length > 0 ? (
+            {isLoading ? (
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8"
+                    : "space-y-6"
+                }
+              >
+                {Array.from({ length: 6 }).map((_, idx) =>
+                  viewMode === "grid" ? (
+                    <CourseCardSkeleton key={idx} className="w-full" />
+                  ) : (
+                    <SearchResultSkeleton key={idx} className="h-48" />
+                  )
+                )}
+              </div>
+            ) : filteredCourses?.length > 0 ? (
               <div
                 className={
                   viewMode === "grid"
@@ -430,8 +445,29 @@ const SearchResultsPage = () => {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen pt-40 text-center font-bold text-muted-foreground">
-          Đang tải...
+        <div className="bg-background min-h-screen pt-20 animate-pulse">
+          <div className="bg-muted/30 border-b">
+            <div className="max-w-7xl mx-auto px-4 py-8">
+              <div className="h-12 bg-muted/50 rounded-2xl max-w-2xl animate-pulse" />
+            </div>
+          </div>
+          <div className="max-w-7xl mx-auto px-4 py-12">
+            <div className="flex gap-12">
+              <div className="hidden lg:block w-72 space-y-6">
+                <div className="h-6 bg-muted/50 rounded w-1/3 animate-pulse" />
+                <div className="h-32 bg-muted/40 rounded-xl animate-pulse" />
+                <div className="h-32 bg-muted/40 rounded-xl animate-pulse" />
+              </div>
+              <div className="flex-1 space-y-6">
+                <div className="h-8 bg-muted/50 rounded w-1/4 animate-pulse" />
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                  {Array.from({ length: 6 }).map((_, idx) => (
+                    <div key={idx} className="bg-card border border-border/50 rounded-xl p-3 h-80 animate-pulse bg-muted/20" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       }
     >

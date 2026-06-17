@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import RecentlyPost from "./RecentlyPost";
 import HotSeries from "@/features/series/components/hot_series/HotSeries";
+import DiscoverySidebar from "@/components/DiscoverySidebar";
+import { SearchResultSkeleton } from "@/components/ui/Skeletons";
 
 export default async function MainPage() {
   return (
@@ -21,19 +23,35 @@ export default async function MainPage() {
           </p>
         </div>
       </div>
-      {/* Climate Change Section */}
-      <div className="bg-muted/30 py-12">
-        <Suspense
-          fallback={
-            <div className="flex justify-center py-20">
-              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+
+      {/* Main Content + Sidebar */}
+      <div className="max-w-screen-xl mx-auto px-4 py-8">
+        <div className="flex gap-8 items-start">
+          {/* ── Main Content ─────────────────────────── */}
+          <div className="flex-1 min-w-0">
+            <div className="bg-muted/30 py-8 rounded-2xl">
+              <Suspense
+                fallback={
+                  <div className="max-w-7xl mx-auto px-4">
+                    <div className="w-full md:w-4/5 space-y-4">
+                      {Array.from({ length: 6 }).map((_, idx) => (
+                        <SearchResultSkeleton key={idx} />
+                      ))}
+                    </div>
+                  </div>
+                }
+              >
+                <RecentlyPost />
+              </Suspense>
             </div>
-          }
-        >
-          <RecentlyPost />
-        </Suspense>
+            <HotSeries />
+          </div>
+
+          {/* ── Discovery Sidebar ─────────────────────── */}
+          <DiscoverySidebar />
+        </div>
       </div>
-      <HotSeries />
     </div>
   );
 }
+

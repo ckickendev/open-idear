@@ -21,6 +21,7 @@ import authenticationStore from "@/store/AuthenticationStore";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import Image from "next/image";
+import ContributeModal from "./ContributeModal";
 
 type Panel = "main" | "display" | "help";
 
@@ -28,6 +29,7 @@ type Panel = "main" | "display" | "help";
 export default function Profile() {
   const [isOpen, setIsOpen] = useState(false);
   const [panel, setPanel] = useState<Panel>("main");
+  const [contributeOpen, setContributeOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const userInfo = authenticationStore((state) => state.currentUser);
 
@@ -213,8 +215,13 @@ export default function Profile() {
                 <ChevronRight />
               </button>
 
-              <Link href="/contribute" onClick={closeDropdown}>
-                <button className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent text-foreground transition-colors cursor-pointer">
+              <button
+                onClick={() => {
+                  closeDropdown();
+                  setContributeOpen(true);
+                }}
+                className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent text-foreground transition-colors cursor-pointer"
+              >
                   <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                     <MessageSquare
                       size={18}
@@ -222,8 +229,7 @@ export default function Profile() {
                     />
                   </span>
                   <span className="text-sm font-medium">Đóng góp ý kiến</span>
-                </button>
-              </Link>
+              </button>
 
               <button
                 className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-accent text-foreground transition-colors cursor-pointer"
@@ -399,6 +405,12 @@ export default function Profile() {
 
       {/* Click-outside overlay */}
       {isOpen && <div className="fixed inset-0 z-40" onClick={closeDropdown} />}
+
+      {/* Contribute Modal */}
+      <ContributeModal
+        isOpen={contributeOpen}
+        onClose={() => setContributeOpen(false)}
+      />
     </div>
   );
 }

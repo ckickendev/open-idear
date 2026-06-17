@@ -16,6 +16,7 @@ import {
   PanelLeft,
   Lightbulb,
   Mail,
+  MessageSquare,
 } from "lucide-react";
 import Logo from "@/components/common/Logo";
 import Category from "@/features/categories/components/management/Category";
@@ -29,6 +30,7 @@ import loadingStore from "@/store/LoadingStore";
 import Series from "@/features/series/components/management/Series";
 import Courses from "@/features/series/components/management/Courses";
 import SupportTicketAdmin from "@/features/users/components/SupportTicketAdmin";
+import ContributionAdmin from "@/features/users/components/ContributionAdmin";
 
 
 const AdminDashboard = () => {
@@ -46,8 +48,8 @@ const AdminDashboard = () => {
     { id: "course-categories", label: "Danh mục khoá học", icon: Folder },
     { id: "reports", label: "Báo cáo vi phạm", icon: AlertTriangle },
     { id: "support", label: "Hộp thư hỗ trợ", icon: Mail },
+    { id: "contributions", label: "Đóng góp ý kiến", icon: MessageSquare },
     { id: "settings", label: "Cài đặt", icon: Settings },
-
   ];
 
   const renderContent = () => {
@@ -70,6 +72,8 @@ const AdminDashboard = () => {
         return <CourseCategory />;
       case "support":
         return <SupportTicketAdmin />;
+      case "contributions":
+        return <ContributionAdmin />;
       default:
 
         return (

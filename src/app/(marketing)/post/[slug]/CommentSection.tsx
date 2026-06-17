@@ -9,6 +9,7 @@ import authenticationStore from "@/store/AuthenticationStore";
 import Link from "next/link";
 import Image from "next/image";
 import { TextAreaCustom } from "@/components/common/TextAreaCustom";
+import { CommentSkeleton } from "@/components/ui/Skeletons";
 
 type Comment = {
   _id: string;
@@ -21,11 +22,12 @@ type Comment = {
   timeAgo: string;
   isEdited?: boolean;
   voteCount: number;
-  upvotes: String[];
+  upvotes: string[];
   replies: Comment[];
   hasMoreReplies?: boolean;
   totalReplies: number;
   level: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any; // for any extra fields
 };
 
@@ -226,15 +228,23 @@ function CommentSection({ postId }: { postId: string }) {
 
       {/* Comments list */}
       <div className="comments-list">
-        {comments.map((comment) => (
-          <CommentItem
-            key={comment._id}
-            comment={comment}
-            onReply={addComment}
-            onVote={voteComment}
-            onLoadMoreReplies={loadMoreReplies}
-          />
-        ))}
+        {loading && comments.length === 0 ? (
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <CommentSkeleton key={idx} />
+            ))}
+          </div>
+        ) : (
+          comments.map((comment) => (
+            <CommentItem
+              key={comment._id}
+              comment={comment}
+              onReply={addComment}
+              onVote={voteComment}
+              onLoadMoreReplies={loadMoreReplies}
+            />
+          ))
+        )}
       </div>
 
       {/* Load more button */}
@@ -312,7 +322,7 @@ function CommentItem({
           <Heart
             className="cursor-pointer"
             fill={
-              comment.upvotes.includes(currentUser?._id) ? "red" : "transparent"
+              currentUser?._id && comment.upvotes.includes(currentUser._id as string) ? "red" : "transparent"
             }
             size={20}
             color="red"
@@ -343,6 +353,7 @@ function CommentItem({
           <TextAreaCustom
             id="replyContent"
             value={replyContent}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onChange={(e: any) => setReplyContent(e.target.value)}
             rows={3}
             placeholder="Viết phản hồi của bạn..."

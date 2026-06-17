@@ -105,7 +105,7 @@ export default function Header() {
             <li className="max-lg:border-b max-lg:py-3 px-3">
               <Link
                 href="/courses"
-                className="text-white bg-gradient-to-br from-pink-500 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800 font-medium rounded-md text-sm px-4 py-2.5 text-center leading-5 border-"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 px-3.5 py-2 rounded-lg hover:bg-accent/60 border border-transparent hover:border-border"
               >
                 {t("component.header.course")}
               </Link>
@@ -113,13 +113,13 @@ export default function Header() {
           </ul>
         </div>
 
-        <div className="flex flex-1 items-center justify-center gap-4 ml-auto">
+        <div className="flex flex-1 items-center justify-end gap-4 ml-auto">
           <form
             action="https://tailwindflex.com/search"
-            className="flex flex-1 relative w-[300px]"
+            className="flex flex-row relative w-[240px] sm:w-[300px]"
           >
             <input
-              className="pr-10 input w-full rounded-lg pt-2 pb-2 pl-2 border border-border bg-background text-foreground focus:outline-none focus:border-primary"
+              className="pr-10 input w-full rounded-lg py-1.5 pl-3 border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all text-xs"
               type="search"
               name="q"
               placeholder={t("component.header.search")}
@@ -127,18 +127,13 @@ export default function Header() {
 
             <button
               type="submit"
-              className="absolute top-0 right-0 mt-3 mr-4 text-muted-foreground"
+              className="absolute top-0 right-0 h-full flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               <span className="sr-only">{t("component.header.search")}</span>
               <svg
-                className="w-4 h-4 fill-current"
+                className="w-3.5 h-3.5 fill-current"
                 xmlns="http://www.w3.org/2000/svg"
-                xmlnsXlink="http://www.w3.org/1999/xlink"
-                version="1.1"
-                x="0px"
-                y="0px"
                 viewBox="0 0 56.966 56.966"
-                xmlSpace="preserve"
               >
                 <path d="M55.146,51.887L41.588,37.786c3.486-4.144,5.396-9.358,5.396-14.786c0-12.682-10.318-23-23-23s-23,10.318-23,23 s10.318,23,23,23c4.761,0,9.298-1.436,13.177-4.162l13.661,14.208c0.571,0.593,1.339,0.92,2.162,0.92 c0.779,0,1.518-0.297,2.079-0.837C56.255,54.982,56.293,53.08,55.146,51.887z M23.984,6c9.374,0,17,7.626,17,17s-7.626,17-17,17 s-17-7.626-17-17S14.61,6,23.984,6z"></path>
               </svg>
@@ -149,11 +144,11 @@ export default function Header() {
           {currentUser?._id && (
             <Link
               href="/my-learning"
-              className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors whitespace-nowrap"
-              title="Học tập của tôi"
+              className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap px-2.5 py-1.5 rounded-lg hover:bg-accent/50"
+              title={t("component.header.myLearningTooltip")}
             >
-              <BookOpen size={18} />
-              <span className="hidden md:inline">Học tập</span>
+              <BookOpen size={16} />
+              <span className="hidden md:inline">{t("component.header.myLearning")}</span>
             </Link>
           )}
 
@@ -161,12 +156,12 @@ export default function Header() {
           {currentUser?._id && (
             <Link
               href="/checkout"
-              className="relative p-2 text-foreground hover:text-primary transition-colors"
-              title="Giỏ hàng"
+              className="relative p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent/50"
+              title={t("component.header.cartTooltip")}
             >
-              <ShoppingCart size={22} />
+              <ShoppingCart size={20} />
               {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-primary text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center leading-none">
+                <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
                   {itemCount > 9 ? "9+" : itemCount}
                 </span>
               )}
@@ -176,26 +171,26 @@ export default function Header() {
           {currentUser?._id ? (
             <Profile />
           ) : (
-            <div className="flex flex-row">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="cursor-pointer text-white focus:outline-none bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:ring-purple-300 font-medium rounded-xl text-sm px-5 py-2.5 m-2 dark:focus:ring-purple-900"
-                onClick={() => {
-                  setIsAuthenFromDisplay(true);
-                  setStateAuthen(2);
-                }}
-              >
-                {t("component.header.getstarted")}
-              </button>
-              <button
-                type="button"
-                className="cursor-pointer focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-xl text-sm px-5 py-2.5 me-2 m-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900"
+                className="cursor-pointer text-foreground bg-accent hover:bg-accent/80 border border-border font-medium rounded-lg text-xs px-4 py-2 transition-all"
                 onClick={() => {
                   setIsAuthenFromDisplay(true);
                   setStateAuthen(1);
                 }}
               >
                 {t("component.header.login")}
+              </button>
+              <button
+                type="button"
+                className="cursor-pointer text-primary-foreground bg-primary hover:bg-primary/95 font-medium rounded-lg text-xs px-4 py-2 transition-all"
+                onClick={() => {
+                  setIsAuthenFromDisplay(true);
+                  setStateAuthen(2);
+                }}
+              >
+                {t("component.header.getstarted")}
               </button>
             </div>
           )}
