@@ -14,6 +14,7 @@ import {
   Flame,
   Terminal,
   Heart,
+  PenSquare,
 } from "lucide-react";
 
 export default function Banner() {
@@ -54,6 +55,7 @@ export default function Banner() {
   const descriptionText = t("component.banner.description") !== "component.banner.description" ? t("component.banner.description") : "OpenIdear helps developers, students, creators, and technology enthusiasts learn new skills, share knowledge, and discover innovative ideas through high-quality content and community discussions.";
   const ctaPrimaryText = t("component.banner.ctaPrimary") !== "component.banner.ctaPrimary" ? t("component.banner.ctaPrimary") : "Start Learning";
   const ctaSecondaryText = t("component.banner.ctaSecondary") !== "component.banner.ctaSecondary" ? t("component.banner.ctaSecondary") : "Explore Posts";
+  const ctaCreatePostText = t("component.banner.create") !== "component.banner.create" ? t("component.banner.create") : "Create Post";
   const statArticlesText = t("component.banner.statArticles") !== "component.banner.statArticles" ? t("component.banner.statArticles") : "Articles";
   const statMembersText = t("component.banner.statMembers") !== "component.banner.statMembers" ? t("component.banner.statMembers") : "Community Members";
   const statSeriesText = t("component.banner.statSeries") !== "component.banner.statSeries" ? t("component.banner.statSeries") : "Learning Series";
@@ -144,6 +146,13 @@ export default function Banner() {
                   className="inline-flex items-center justify-center gap-2 py-3 px-7 bg-card border border-border hover:border-border-hover hover:bg-accent text-foreground font-semibold rounded-xl hover:-translate-y-0.5 transition-all duration-300 text-sm cursor-pointer"
                 >
                   {ctaSecondaryText}
+                </Link>
+                <Link
+                  href="/create"
+                  className="inline-flex items-center justify-center gap-2 py-3 px-7 bg-card border border-border hover:border-border-hover hover:bg-accent text-foreground font-semibold rounded-xl hover:-translate-y-0.5 transition-all duration-300 text-sm cursor-pointer"
+                >
+                  <PenSquare size={16} className="text-primary" />
+                  {ctaCreatePostText}
                 </Link>
               </div>
 
