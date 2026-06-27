@@ -1,41 +1,40 @@
 "use client";
 
 import React from "react";
-import { Extension } from "@tiptap/core";
-import contentStore from "@/store/ContentStore";
+import type { Editor } from "@tiptap/react";
 
-const RawHtmlExtension = Extension.create({
-  name: "rawHtml",
+// Re-export RawHtmlExtension from the new canonical location
+// so existing imports `from "./HtmlEditor"` continue to work.
+export { RawHtmlExtension } from "@/features/editor/extensions/rawHtml";
 
-  addCommands() {
-    return {
-      setRawHtml:
-        (html: string) =>
-        ({ commands }: { commands: any }) => {
-          commands.setContent(html);
-          return true;
-        },
-    } as Partial<Record<string, any>>;
-  },
-});
+interface HtmlEditorProps {
+  editor: Editor | null;
+  setRawHtml: (html: string) => void;
+  rawHtml: string;
+}
 
-const HtmlEditor = ({ editor, setRawHtml, rawHtml }: any) => {
-  const showHtmlEditor = contentStore((state) => state.showHtmlEditor);
-
-  interface RawHtmlChangeEvent extends React.ChangeEvent<HTMLTextAreaElement> {}
-
-  const handleRawHtmlChange = (e: RawHtmlChangeEvent) => {
+/**
+ * HTML source editor.
+ *
+ * Simplified: no longer depends on ContentStore for visibility
+ * (the parent EditorShell controls mode). Always renders when mounted.
+ */
+const HtmlEditor: React.FC<HtmlEditorProps> = ({
+  editor,
+  setRawHtml,
+  rawHtml,
+}) => {
+  const handleRawHtmlChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setRawHtml(e.target.value);
   };
 
   return (
     <div className="html-editor-container w-full">
-      {showHtmlEditor && (
-        <div className="w-full flex flex-col items-center">
-          <textarea
-            value={rawHtml}
-            onChange={handleRawHtmlChange}
-            className="
+      <div className="w-full flex flex-col items-center">
+        <textarea
+          value={rawHtml}
+          onChange={handleRawHtmlChange}
+          className="
  w-full min-h-[60vh] font-mono text-sm leading-relaxed
  px-6 py-5 rounded-xl
  bg-[var(--color-editor-elevated)]
@@ -46,20 +45,18 @@ const HtmlEditor = ({ editor, setRawHtml, rawHtml }: any) => {
  resize-y transition-all duration-150
  whitespace-pre
 "
-            placeholder="Enter raw HTML..."
-            style={{
-              fontFamily:
-                "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-              tabSize: 2,
-            }}
-            spellCheck={false}
-            aria-label="HTML source editor"
-          />
-        </div>
-      )}
+          placeholder="Enter raw HTML..."
+          style={{
+            fontFamily:
+              "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+            tabSize: 2,
+          }}
+          spellCheck={false}
+          aria-label="HTML source editor"
+        />
+      </div>
     </div>
   );
 };
 
 export default HtmlEditor;
-export { RawHtmlExtension };

@@ -63,9 +63,23 @@ export function createEditorExtensions(
     }),
     HardBreakExtension,
     SelectionExtension,
-    ImageExtension.configure({
+    ImageExtension.extend({
+      addAttributes() {
+        return {
+          ...this.parent?.(),
+          "data-media-id": {
+            default: null,
+            parseHTML: (element) => element.getAttribute("data-media-id"),
+            renderHTML: (attributes) => {
+              if (!attributes["data-media-id"]) return {};
+              return { "data-media-id": attributes["data-media-id"] };
+            },
+          },
+        };
+      },
+    }).configure({
       inline: false,
-      allowBase64: false, // ← CHANGED: No more base64 in editor state
+      allowBase64: false, // ← Never store base64 in editor state
       HTMLAttributes: {
         class: "max-w-full rounded-xl",
       },
