@@ -11,6 +11,7 @@ import { usePostEditor } from "../hooks/usePostEditor";
 import { useAutoSave } from "@/features/autosave/hooks/useAutoSave";
 import { usePublishPost } from "@/features/publish/hooks/usePublishPost";
 import { useImageUpload } from "@/features/media/hooks/useImageUpload";
+import { mediaLibraryApi } from "@/features/media-library/api/mediaLibrary.api";
 import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useContentMetrics } from "@/features/seo/hooks/useContentMetrics";
 
@@ -28,6 +29,7 @@ import EditorTitle from "@/app/(editor)/create/EditorTitle";
 import PublishDrawer from "@/app/(editor)/create/PublishDrawer";
 import Instruction from "@/app/(editor)/create/Instruction";
 import ImageUpload from "@/app/(editor)/create/ImageUpload";
+import { MediaLibraryModal } from "@/features/media-library";
 import EditorCanvas from "./EditorCanvas";
 
 // ─── APIs ───────────────────────────────────────────────────────────────────
@@ -360,16 +362,27 @@ export default function EditorShell() {
 
   // ─── Image Upload Handlers ───────────────────────────────────────────
 
-  const handleImageUploaded = (image: MediaAsset) => {
+  const handleMediaSelected = (media: any) => {
     if (editor && imageInsertPosition !== null) {
+      const imgUrl = media.urls?.webp || media.urls?.original || media.url;
+      const imgAlt = media.altText || media.description || "";
       editor
         .chain()
         .focus()
         .insertContentAt(imageInsertPosition, {
           type: "image",
-          attrs: { src: image.url, alt: image.description || "" },
+          attrs: {
+            src: imgUrl,
+            alt: imgAlt,
+            "data-media-id": media._id,
+          },
         })
         .run();
+
+      // Track usage
+      if (postId && media._id) {
+        mediaLibraryApi.addUsage(media._id, "post", postId, "content");
+      }
     }
     setShowImageUpload(false);
     setImageInsertPosition(null);
@@ -553,21 +566,17 @@ export default function EditorShell() {
           isPublishing={publishHook.isPublishing}
         />
 
-        {/* Image upload modal */}
-        {showImageUpload && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/30 backdrop-blur-sm animate-[fade-in_0.15s_ease-out]">
-            <div className="bg-[var(--color-editor-surface)] rounded-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-[var(--color-editor-border)] shadow-2xl">
-              <ImageUpload
-                onImageUploaded={handleImageUploaded}
-                onClose={() => {
-                  setShowImageUpload(false);
-                  setImageInsertPosition(null);
-                }}
-                isTitleDisplay={true}
-              />
-            </div>
-          </div>
-        )}
+        {/* Media Library modal — replaces old ImageUpload */}
+        <MediaLibraryModal
+          isOpen={showImageUpload}
+          onClose={() => {
+            setShowImageUpload(false);
+            setImageInsertPosition(null);
+          }}
+          onSelect={handleMediaSelected}
+          allowDrag={true}
+          typeFilter="image"
+        />
       </div>
     </EditorProvider>
   );
