@@ -10,6 +10,7 @@ import type {
   BulkTagPayload,
   BulkFavoritePayload,
   CreateFolderPayload,
+  MediaUsageEntry,
 } from "../types/mediaLibrary.types";
 
 // ═══════════════════════════════════════════════════════════════════
@@ -108,12 +109,7 @@ export const mediaLibraryApi = {
   getUsage: (id: string) => {
     return api.get<{
       usageCount: number;
-      usedIn: Array<{
-        entityType: string;
-        entityId: string;
-        field: string;
-        entity?: { _id: string; title: string; slug: string; published: boolean } | null;
-      }>;
+      usedIn: MediaUsageEntry[];
     }>(`${BASE}/${id}/usage`);
   },
 
