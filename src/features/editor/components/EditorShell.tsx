@@ -14,6 +14,8 @@ import { useImageUpload } from "@/features/media/hooks/useImageUpload";
 import { mediaLibraryApi } from "@/features/media-library/api/mediaLibrary.api";
 import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useContentMetrics } from "@/features/seo/hooks/useContentMetrics";
+import { useAIPlanner, AIPlannerView } from "@/features/ai";
+import { parseMarkdownToHtml } from "@/features/ai/utils/markdownParser";
 
 // ─── Context ────────────────────────────────────────────────────────────────
 import { EditorProvider } from "../context/EditorContext";
@@ -139,6 +141,8 @@ export default function EditorShell() {
 
   // AI state
   const [isGenerating, setIsGenerating] = useState(false);
+  const [aiPlannerOpen, setAiPlannerOpen] = useState(false);
+  const aiPlanner = useAIPlanner();
 
   // ─── Editor Hook ──────────────────────────────────────────────────────
 
@@ -431,6 +435,43 @@ export default function EditorShell() {
     }
   };
 
+  // ─── AI Writer Stream Integration ────────────────────────────────────
+
+  const handleStartWriting = async (instructions: string) => {
+    if (!aiPlanner.outline) return;
+
+    // 1. Update Title automatically based on plan
+    const generatedTitle = aiPlanner.outline.title;
+    handleTitleChange(generatedTitle);
+
+    // 2. Clear editor content
+    setContent("");
+    if (editor) {
+      editor.commands.setContent("");
+    }
+
+    let accumulatedMarkdown = "";
+
+    // 3. Trigger writing stream call
+    await aiPlanner.writeStream(
+      {
+        additionalInstructions: instructions,
+        language: "en",
+        userPreference: "",
+      },
+      (chunk) => {
+        accumulatedMarkdown += chunk;
+        if (editor) {
+          const html = parseMarkdownToHtml(accumulatedMarkdown);
+          editor.commands.setContent(html);
+        }
+      },
+      () => {
+        toast.success("Article compiled successfully!");
+      }
+    );
+  };
+
   // ─── Loading State ───────────────────────────────────────────────────
 
   if (pageLoading) {
@@ -450,7 +491,7 @@ export default function EditorShell() {
 
   return (
     <EditorProvider editor={editor}>
-      <div className="min-h-screen bg-editor-bg flex flex-col">
+      <div className="min-h-screen bg-editor-bg flex flex-col h-screen overflow-hidden">
         <Instruction />
 
         {/* Sticky header */}
@@ -469,8 +510,8 @@ export default function EditorShell() {
           saveStatus={autoSave.status === "conflict" ? "error" : autoSave.status}
           onRetrySave={() => autoSave.retry()}
           hasTitle={!!title.trim()}
-          onAIGenerate={handleAutoGenerate}
-          isGenerating={isGenerating}
+          onToggleAIPlanner={() => setAiPlannerOpen(!aiPlannerOpen)}
+          aiPlannerOpen={aiPlannerOpen}
         />
 
         {/* Post list panel (left drawer) */}
@@ -479,74 +520,96 @@ export default function EditorShell() {
           onClose={() => setPostListOpen(false)}
         />
 
-        {/* Main editor area */}
-        <main className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 animate-[slide-up_0.3s_ease-out]">
-          {/* Title */}
-          <EditorTitle
-            value={title}
-            onChange={handleTitleChange}
-            placeholder="Untitled"
-          />
+        {/* Main Editor Wrapper with side-by-side AI planning */}
+        <div className="flex-1 flex relative w-full overflow-hidden">
+          {/* Main editor area */}
+          <main className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 overflow-y-auto">
+            {/* Title */}
+            <EditorTitle
+              value={title}
+              onChange={handleTitleChange}
+              placeholder="Untitled"
+            />
 
-          {/* Spacer */}
-          <div className="h-8" />
+            {/* Spacer */}
+            <div className="h-8" />
 
-          {/* Editor content area */}
-          <EditorErrorBoundary>
-            {mode === "html" ? (
-              /* HTML mode */
-              <div className="animate-[fade-in_0.15s_ease-out]">
-                <HtmlEditor
-                  editor={editor}
-                  setRawHtml={setRawHtml}
-                  rawHtml={rawHtml}
-                />
-                <div className="flex justify-end mt-4">
-                  <button
-                    onClick={applyHtml}
-                    className="px-4 py-2 text-sm font-medium bg-[var(--color-editor-accent)] text-white rounded-lg hover:bg-[var(--color-editor-accent-hover)] transition-all duration-150 cursor-pointer"
-                  >
-                    Apply HTML
-                  </button>
-                </div>
-              </div>
-            ) : mode === "preview" ? (
-              /* Preview mode — uses read-only EditorContent instead of dangerouslySetInnerHTML */
-              <div className="preview-pane animate-[fade-in_0.15s_ease-out]">
-                <h1 className="text-[2.5rem] leading-[1.2] font-bold tracking-[-0.02em] text-[var(--color-editor-text)] mb-8">
-                  {title || "Untitled Post"}
-                </h1>
-                {editor && (
-                  <div
-                    className="prose prose-lg max-w-none"
-                    dangerouslySetInnerHTML={{ __html: getHTML() }}
+            {/* Editor content area */}
+            <EditorErrorBoundary>
+              {mode === "html" ? (
+                /* HTML mode */
+                <div className="animate-[fade-in_0.15s_ease-out]">
+                  <HtmlEditor
+                    editor={editor}
+                    setRawHtml={setRawHtml}
+                    rawHtml={rawHtml}
                   />
-                )}
-              </div>
-            ) : (
-              /* Visual editor */
-              <div className="animate-[fade-in_0.15s_ease-out]">
-                {/* Toolbar */}
-                {editor && <Toolbar editor={editor} />}
-
-                {/* Editor canvas */}
-                <EditorCanvas editor={editor} />
-
-                {/* Floating Block insert button */}
-                <div className="fixed bottom-8 right-8 z-40 animate-[slide-up_0.3s_ease-out]">
-                  <BlockInsertButton onInsert={insertElementAtPosition} />
+                  <div className="flex justify-end mt-4">
+                    <button
+                      onClick={applyHtml}
+                      className="px-4 py-2 text-sm font-medium bg-[var(--color-editor-accent)] text-white rounded-lg hover:bg-[var(--color-editor-accent-hover)] transition-all duration-150 cursor-pointer"
+                    >
+                      Apply HTML
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </EditorErrorBoundary>
+              ) : mode === "preview" ? (
+                /* Preview mode — uses read-only EditorContent instead of dangerouslySetInnerHTML */
+                <div className="preview-pane animate-[fade-in_0.15s_ease-out]">
+                  <h1 className="text-[2.5rem] leading-[1.2] font-bold tracking-[-0.02em] text-[var(--color-editor-text)] mb-8">
+                    {title || "Untitled Post"}
+                  </h1>
+                  {editor && (
+                    <div
+                      className="prose prose-lg max-w-none"
+                      dangerouslySetInnerHTML={{ __html: getHTML() }}
+                    />
+                  )}
+                </div>
+              ) : (
+                /* Visual editor */
+                <div className="animate-[fade-in_0.15s_ease-out]">
+                  {/* Toolbar */}
+                  {editor && <Toolbar editor={editor} />}
 
-          {/* Writer metrics */}
-          <WriterMetricsBar
-            wordCount={metrics.wordCount}
-            charCount={metrics.characterCount}
-            readingTime={metrics.readingTime}
-          />
-        </main>
+                  {/* Editor canvas */}
+                  <EditorCanvas editor={editor} />
+
+                  {/* Floating Block insert button */}
+                  <div className="fixed bottom-8 right-8 z-40 animate-[slide-up_0.3s_ease-out]">
+                    <BlockInsertButton onInsert={insertElementAtPosition} />
+                  </div>
+                </div>
+              )}
+            </EditorErrorBoundary>
+
+            {/* Writer metrics */}
+            <WriterMetricsBar
+              wordCount={metrics.wordCount}
+              charCount={metrics.characterCount}
+              readingTime={metrics.readingTime}
+            />
+          </main>
+
+          {/* AI Article Planner side drawer (right) */}
+          {aiPlannerOpen && (
+            <aside className="w-80 border-l border-[var(--color-editor-border)] bg-[var(--color-editor-bg)] h-full overflow-y-auto p-5 shrink-0 animate-[slide-left_0.2s_ease-out] z-30">
+              <AIPlannerView
+                plan={aiPlanner.plan}
+                writeStream={aiPlanner.writeStream}
+                cancelWriting={aiPlanner.cancelWriting}
+                isRunning={aiPlanner.isRunning}
+                isWriting={aiPlanner.isWriting}
+                outline={aiPlanner.outline}
+                error={aiPlanner.error}
+                clear={aiPlanner.clear}
+                onApplyTitle={(t) => handleTitleChange(t)}
+                onStartWriting={handleStartWriting}
+                initialTopic={title}
+              />
+            </aside>
+          )}
+        </div>
 
         {/* Publish drawer */}
         <PublishDrawer

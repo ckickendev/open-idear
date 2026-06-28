@@ -36,9 +36,10 @@ interface EditorHeaderProps {
   onRetrySave?: () => void;
   /** Has title — needed to enable save */
   hasTitle: boolean;
-  /** AI Generate handler */
-  onAIGenerate: () => void;
-  isGenerating: boolean;
+  /** Toggle AI Planner panel */
+  onToggleAIPlanner: () => void;
+  /** AI Planner open status */
+  aiPlannerOpen: boolean;
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -54,8 +55,8 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   saveStatus,
   onRetrySave,
   hasTitle,
-  onAIGenerate,
-  isGenerating,
+  onToggleAIPlanner,
+  aiPlannerOpen,
 }) => {
   const canSave = hasTitle;
   const canPublish = isEditMode && !isPublished;
@@ -109,19 +110,18 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
 
       {/* Right section */}
       <div className="flex items-center gap-1.5">
-        {/* AI Generate */}
+        {/* AI Planner */}
         <button
-          onClick={onAIGenerate}
-          disabled={isGenerating || !hasTitle}
-          className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer ${
-            isGenerating || !hasTitle
-              ? "text-[var(--color-editor-muted)] cursor-not-allowed"
-              : "text-[var(--color-editor-accent)] hover:bg-[var(--color-editor-accent)]/10"
+          onClick={onToggleAIPlanner}
+          className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+            aiPlannerOpen
+              ? "bg-[var(--color-editor-accent)]/15 text-[var(--color-editor-accent)]"
+              : "text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]"
           }`}
-          aria-label="Generate content with AI"
+          aria-label="Toggle AI Planner"
         >
-          <Sparkles size={14} className={isGenerating ? "animate-spin" : ""} />
-          <span>{isGenerating ? "Generating..." : "AI Generate"}</span>
+          <Sparkles size={14} className="text-[var(--color-editor-accent)]" />
+          <span>AI Planner</span>
         </button>
 
         {/* Separator */}

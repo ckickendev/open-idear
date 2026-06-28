@@ -1,52 +1,19 @@
-// ─── AI Actions ─────────────────────────────────────────────────────────────
-
-export type AIAction =
-  | "generate_outline"
-  | "generate_article"
-  | "improve_writing"
-  | "expand_section"
-  | "generate_tags"
-  | "generate_seo_title"
-  | "generate_meta_description"
-  | "summarize"
-  | "rewrite_paragraph";
-
-export type AIState =
-  | "idle"
-  | "generating"
-  | "streaming"
-  | "complete"
-  | "error";
-
-// ─── Hook Return ────────────────────────────────────────────────────────────
-
-export interface UseAIWriterReturn {
-  /** Execute an AI action with optional context (selected text, etc). */
-  execute: (action: AIAction, context?: string) => Promise<void>;
-  /** Whether AI is currently generating. */
-  isGenerating: boolean;
-  /** The streamed/completed content from AI. */
-  result: string;
-  /** Current AI state. */
-  state: AIState;
-  /** Error message if generation failed. */
-  error: string | null;
-  /** Cancel an in-flight generation. */
-  cancel: () => void;
-  /** Clear the result. */
-  clear: () => void;
-}
-
-// ─── AI Request/Response ────────────────────────────────────────────────────
-
-export interface AIGenerateRequest {
-  action: AIAction;
-  title: string;
-  context?: string;
-  currentContent?: string;
-}
-
-export interface AIGenerateResponse {
-  content: string;
-  action: AIAction;
-}
+/**
+ * src/features/ai/types/ai.types.ts
+ *
+ * Responsibility:
+ *   All shared TypeScript types for the frontend AI feature.
+ *
+ *   AgentRequest    — generic input shape for starting any agent
+ *   AgentChunk      — mirrors the backend AgentChunk — wire format from SSE:
+ *                     { type, step, data?, text?, usage?, error? }
+ *   PipelineEvent   — wraps AgentChunk with stage metadata (from SSE stream)
+ *   AgentRunStatus  — "idle" | "running" | "done" | "error"
+ *   ChatMessage     — { role, content, timestamp }
+ *   AIFeature       — union of all feature names: "improve" | "plan" | "write" | ...
+ *
+ * Why it exists:
+ *   Hooks, components, and the store all reference these types.
+ *   Centralizing them prevents type drift between the SSE parser in the
+ *   hook and the state shape in the store.
+ */
