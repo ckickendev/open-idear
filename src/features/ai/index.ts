@@ -10,3 +10,5 @@
  *   from internal paths. This keeps the module's internal structure free
  *   to change without breaking consumers.
  */
+export { AIPlannerView } from "./components/AIPlannerView";
+export { useAIPlanner } from "./hooks/useAIPlanner";
