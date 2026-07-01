@@ -131,6 +131,13 @@ export const aiApi = {
   editImage: (payload: ImageEditRequest) => {
     return api.post<ImageEditResponse>("/ai/v1/image/edit", payload);
   },
+
+  /**
+   * Generates a Mermaid diagram from article content.
+   */
+  generateDiagram: (payload: DiagramRequest) => {
+    return api.post<DiagramResponse>("/ai/v1/diagram/generate", payload);
+  },
 };
 
 // ─── Image Editing Types ──────────────────────────────────────────────────────
@@ -169,4 +176,22 @@ export interface ImageEditResponse {
   readonly summary: string;
   readonly sourceMediaId: string;
 }
+
+// ─── Diagram Generation Types ──────────────────────────────────────────────────
+
+export type DiagramType = "flowchart" | "sequence" | "er" | "class" | "architecture" | "auto";
+
+export interface DiagramRequest {
+  editorContent: string;
+  diagramType: DiagramType;
+  additionalInstructions?: string;
+}
+
+export interface DiagramResponse {
+  mermaidCode: string;
+  diagramType: string;
+  title: string;
+  description: string;
+}
+
 

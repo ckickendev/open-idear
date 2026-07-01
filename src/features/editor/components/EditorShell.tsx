@@ -14,9 +14,7 @@ import { useImageUpload } from "@/features/media/hooks/useImageUpload";
 import { mediaLibraryApi } from "@/features/media-library/api/mediaLibrary.api";
 import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useContentMetrics } from "@/features/seo/hooks/useContentMetrics";
-import { useAIPlanner, AIPlannerView } from "@/features/ai";
-import { AIImageGeneratorView } from "@/features/ai/components/AIImageGeneratorView";
-import { AIImageEditorView } from "@/features/ai/components/AIImageEditorView";
+import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView } from "@/features/ai";
 import { parseMarkdownToHtml } from "@/features/ai/utils/markdownParser";
 
 // ─── Context ────────────────────────────────────────────────────────────────
@@ -146,6 +144,7 @@ export default function EditorShell() {
   const [aiPlannerOpen, setAiPlannerOpen] = useState(false);
   const [aiImageGenOpen, setAiImageGenOpen] = useState(false);
   const [aiImageEditOpen, setAiImageEditOpen] = useState(false);
+  const [aiDiagramOpen, setAiDiagramOpen] = useState(false);
   const [sourceAssetToEdit, setSourceAssetToEdit] = useState<import("@/features/media-library/types/mediaLibrary.types").MediaAsset | null>(null);
   const [selectingSourceForEdit, setSelectingSourceForEdit] = useState(false);
   const aiPlanner = useAIPlanner();
@@ -294,6 +293,17 @@ export default function EditorShell() {
     }
     setAiImageEditOpen(false);
     setSourceAssetToEdit(null);
+  };
+
+  const handleInsertDiagram = (mermaidCode: string, title: string) => {
+    if (!editor) return;
+    const position = editor.state.doc.content.size;
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(position, `<pre><code class="language-mermaid">${mermaidCode}</code></pre>`)
+      .run();
+    setAiDiagramOpen(false);
   };
 
   // ─── AI Generate ──────────────────────────────────────────────────────
@@ -571,6 +581,7 @@ export default function EditorShell() {
             if (!aiPlannerOpen) {
               setAiImageGenOpen(false);
               setAiImageEditOpen(false);
+              setAiDiagramOpen(false);
             }
           }}
           aiPlannerOpen={aiPlannerOpen}
@@ -579,6 +590,7 @@ export default function EditorShell() {
             if (!aiImageGenOpen) {
               setAiPlannerOpen(false);
               setAiImageEditOpen(false);
+              setAiDiagramOpen(false);
             }
           }}
           aiImageGenOpen={aiImageGenOpen}
@@ -587,9 +599,19 @@ export default function EditorShell() {
             if (!aiImageEditOpen) {
               setAiPlannerOpen(false);
               setAiImageGenOpen(false);
+              setAiDiagramOpen(false);
             }
           }}
           aiImageEditOpen={aiImageEditOpen}
+          onToggleAIDiagram={() => {
+            setAiDiagramOpen(!aiDiagramOpen);
+            if (!aiDiagramOpen) {
+              setAiPlannerOpen(false);
+              setAiImageGenOpen(false);
+              setAiImageEditOpen(false);
+            }
+          }}
+          aiDiagramOpen={aiDiagramOpen}
         />
 
         {/* Post list panel (left drawer) */}
@@ -709,6 +731,16 @@ export default function EditorShell() {
                   setSourceAssetToEdit(null);
                   setSelectingSourceForEdit(false);
                 }}
+              />
+            </aside>
+          )}
+
+          {/* AI Diagram Generator side drawer (right) */}
+          {aiDiagramOpen && (
+            <aside className="w-80 border-l border-[var(--color-editor-border)] bg-[var(--color-editor-bg)] h-full overflow-y-auto p-5 shrink-0 animate-[slide-left_0.2s_ease-out] z-30">
+              <AIDiagramView
+                editorContent={editor ? editor.getText() : ""}
+                onInsertDiagram={handleInsertDiagram}
               />
             </aside>
           )}

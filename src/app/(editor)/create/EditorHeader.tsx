@@ -12,6 +12,7 @@ import {
   Sparkles,
   Wand2,
   Paintbrush,
+  Network,
 } from "lucide-react";
 import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
 import Link from "next/link";
@@ -50,6 +51,10 @@ interface EditorHeaderProps {
   onToggleAIImageEdit: () => void;
   /** AI Image Editor open status */
   aiImageEditOpen: boolean;
+  /** Toggle AI Diagram Generator panel */
+  onToggleAIDiagram: () => void;
+  /** AI Diagram Generator open status */
+  aiDiagramOpen: boolean;
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -71,6 +76,8 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   aiImageGenOpen,
   onToggleAIImageEdit,
   aiImageEditOpen,
+  onToggleAIDiagram,
+  aiDiagramOpen,
 }) => {
   const canSave = hasTitle;
   const canPublish = isEditMode && !isPublished;
@@ -164,6 +171,20 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         >
           <Paintbrush size={14} className="text-indigo-400" />
           <span>AI Edit</span>
+        </button>
+
+        {/* AI Diagram Generator */}
+        <button
+          onClick={onToggleAIDiagram}
+          className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+            aiDiagramOpen
+              ? "bg-fuchsia-500/15 text-fuchsia-400"
+              : "text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]"
+          }`}
+          aria-label="Toggle AI Diagram Generator"
+        >
+          <Network size={14} className="text-fuchsia-400" />
+          <span>AI Diagram</span>
         </button>
 
         {/* Separator */}
