@@ -13,7 +13,7 @@ import type {
 //  useMediaLibrary — orchestrates data fetching for the library
 // ═══════════════════════════════════════════════════════════════════
 
-export function useMediaLibrary() {
+export function useMediaLibrary(editorContent?: string) {
   const store = useMediaLibraryStore();
   const abortRef = useRef<AbortController | null>(null);
 
@@ -30,13 +30,52 @@ export function useMediaLibrary() {
       try {
         let result;
 
-        if (store.searchQuery.trim()) {
+        if (store.activeFilter === "online") {
+          const query = store.searchQuery.trim() || "workspace";
+          result = await mediaLibraryApi.semanticSearch(query, page, 30, store.sortBy);
+          if (result.success) {
+            if (append) {
+              store.appendMedia(result.data);
+            } else {
+              store.setMedia(result.data);
+            }
+            store.setPagination({
+              page,
+              limit: 30,
+              total: result.data.length + page * 30,
+              totalPages: page + 1,
+              hasMore: result.data.length === 30,
+            });
+          }
+          store.setIsLoading(false);
+          return;
+        } else if (store.searchQuery.trim()) {
           // Search mode
           result = await mediaLibraryApi.search({
             q: store.searchQuery,
             page,
             limit: 30,
+            sort: store.sortBy,
           });
+        } else if (store.activeFilter === "suggested") {
+          // Suggested mode
+          result = await mediaLibraryApi.suggestImages(editorContent || "");
+          if (result.success) {
+            if (append) {
+              store.appendMedia(result.data);
+            } else {
+              store.setMedia(result.data);
+            }
+            store.setPagination({
+              page: 1,
+              limit: 100,
+              total: result.data.length,
+              totalPages: 1,
+              hasMore: false,
+            });
+          }
+          store.setIsLoading(false);
+          return;
         } else {
           // Browse mode
           const params: BrowseMediaParams = {
@@ -70,7 +109,7 @@ export function useMediaLibrary() {
         store.setIsLoading(false);
       }
     },
-    [store.searchQuery, store.sortBy, store.currentFolder, store.activeFilter]
+    [store.searchQuery, store.sortBy, store.currentFolder, store.activeFilter, editorContent]
   );
 
   // ─── Fetch folders ────────────────────────────────────────────
@@ -102,6 +141,7 @@ export function useMediaLibrary() {
     store.sortBy,
     store.currentFolder,
     store.activeFilter,
+    editorContent,
   ]);
 
   // ─── Load folders when modal opens ────────────────────────────

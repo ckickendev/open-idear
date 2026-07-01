@@ -10,6 +10,8 @@ import {
   Send,
   PanelLeftOpen,
   Sparkles,
+  Wand2,
+  Paintbrush,
 } from "lucide-react";
 import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
 import Link from "next/link";
@@ -40,6 +42,14 @@ interface EditorHeaderProps {
   onToggleAIPlanner: () => void;
   /** AI Planner open status */
   aiPlannerOpen: boolean;
+  /** Toggle AI Image Generator panel */
+  onToggleAIImageGen: () => void;
+  /** AI Image Generator open status */
+  aiImageGenOpen: boolean;
+  /** Toggle AI Image Editor panel */
+  onToggleAIImageEdit: () => void;
+  /** AI Image Editor open status */
+  aiImageEditOpen: boolean;
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -57,6 +67,10 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   hasTitle,
   onToggleAIPlanner,
   aiPlannerOpen,
+  onToggleAIImageGen,
+  aiImageGenOpen,
+  onToggleAIImageEdit,
+  aiImageEditOpen,
 }) => {
   const canSave = hasTitle;
   const canPublish = isEditMode && !isPublished;
@@ -122,6 +136,34 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         >
           <Sparkles size={14} className="text-[var(--color-editor-accent)]" />
           <span>AI Planner</span>
+        </button>
+
+        {/* AI Image Generator */}
+        <button
+          onClick={onToggleAIImageGen}
+          className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+            aiImageGenOpen
+              ? "bg-violet-500/15 text-violet-400"
+              : "text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]"
+          }`}
+          aria-label="Toggle AI Image Generator"
+        >
+          <Wand2 size={14} className="text-violet-400" />
+          <span>AI Image</span>
+        </button>
+
+        {/* AI Image Editor */}
+        <button
+          onClick={onToggleAIImageEdit}
+          className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+            aiImageEditOpen
+              ? "bg-indigo-500/15 text-indigo-400"
+              : "text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]"
+          }`}
+          aria-label="Toggle AI Image Editor"
+        >
+          <Paintbrush size={14} className="text-indigo-400" />
+          <span>AI Edit</span>
         </button>
 
         {/* Separator */}

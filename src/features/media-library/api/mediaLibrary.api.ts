@@ -11,6 +11,7 @@ import type {
   BulkFavoritePayload,
   CreateFolderPayload,
   MediaUsageEntry,
+  SortOption,
 } from "../types/mediaLibrary.types";
 
 // ═══════════════════════════════════════════════════════════════════
@@ -46,6 +47,7 @@ export const mediaLibraryApi = {
     const query = new URLSearchParams({ q: params.q });
     if (params.page) query.set("page", String(params.page));
     if (params.limit) query.set("limit", String(params.limit));
+    if (params.sort) query.set("sort", String(params.sort));
 
     return api.get<{ media: MediaAsset[]; pagination: MediaPagination }>(
       `${BASE}/search?${query.toString()}`
@@ -101,6 +103,38 @@ export const mediaLibraryApi = {
     }
   ) => {
     return api.post<MediaAsset>(`${BASE}/${id}/ai-metadata`, payload);
+  },
+
+  /** Retry background AI generation */
+  retryAI: (id: string) => {
+    return api.post<{ mediaId: string; aiStatus: "pending" }>(
+      `${BASE}/${id}/analyze/retry`
+    );
+  },
+
+  /** Get AI suggested images based on editor content */
+  suggestImages: (content: string) => {
+    return api.post<MediaAsset[]>(`${BASE}/suggest-images`, { content });
+  },
+
+  /** Run semantic search over local and external sources */
+  semanticSearch: (query: string, page = 1, limit = 20, sort?: SortOption) => {
+    return api.get<MediaAsset[]>(`${BASE}/search/semantic`, {
+      params: { q: query, page, limit, sort }
+    });
+  },
+
+  /** Regenerate AI metadata with optional overwrite flag */
+  regenerateAI: (id: string, forceOverwrite = false) => {
+    return api.post<{ mediaId: string; aiStatus: "pending" }>(
+      `${BASE}/${id}/analyze/regenerate`,
+      { forceOverwrite }
+    );
+  },
+
+  /** Import external asset to local library */
+  importAsset: (unifiedId: string) => {
+    return api.post<MediaAsset>(`${BASE}/import`, { unifiedId });
   },
 
   // ─── Usage Tracking ─────────────────────────────────────────────
@@ -193,5 +227,15 @@ export const mediaLibraryApi = {
 
   deleteFolder: (id: string) => {
     return api.delete(`${BASE}/folders/${id}`);
+  },
+
+  /** Get exact/near duplicate matches for an asset */
+  getDuplicates: (id: string) => {
+    return api.get<{ fileHash: string; pHash: string; matches: any[] }>(`${BASE}/${id}/duplicates`);
+  },
+
+  /** Get similar images based on overlapping tags */
+  getSimilar: (id: string) => {
+    return api.get<MediaAsset[]>(`${BASE}/${id}/similar`);
   },
 };

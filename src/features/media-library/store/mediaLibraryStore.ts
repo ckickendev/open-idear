@@ -69,7 +69,13 @@ export const useMediaLibraryStore = create<MediaLibraryState>((set) => ({
       activeFilter: "all",
       selectedIds: new Set(),
     }),
-  setSearchQuery: (query) => set({ searchQuery: query }),
+  setSearchQuery: (query) =>
+    set((state) => {
+      const nextSort = query.trim()
+        ? (state.sortBy === "-createdAt" ? "-relevance" : state.sortBy)
+        : (state.sortBy === "-relevance" ? "-createdAt" : state.sortBy);
+      return { searchQuery: query, sortBy: nextSort };
+    }),
 
   toggleSelect: (mediaId) =>
     set((state) => {

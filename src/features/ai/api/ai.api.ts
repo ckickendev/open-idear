@@ -33,6 +33,44 @@ export interface WriterResponse {
   readonly estimatedReadingTime: number;
 }
 
+// ─── Image Generation Types ───────────────────────────────────────────────────
+
+export type AspectRatio = "1:1" | "16:9" | "9:16" | "4:3" | "3:4";
+
+export type ImageStyle =
+  | "photorealistic"
+  | "digital-art"
+  | "illustration"
+  | "sketch"
+  | "cinematic"
+  | "minimalist";
+
+export interface ImageGenerationRequest {
+  readonly prompt: string;
+  readonly negativePrompt?: string;
+  readonly aspectRatio?: AspectRatio;
+  readonly style?: ImageStyle;
+  readonly count?: number;
+  readonly providerId?: string;
+  readonly folderId?: string;
+}
+
+export interface ImageProviderMeta {
+  readonly id: string;
+  readonly displayName: string;
+  readonly available: boolean;
+  readonly active: boolean;
+}
+
+export interface ImageGenerationResponse {
+  readonly assets: any[]; // MediaAsset documents
+  readonly providerId: string;
+  readonly revisedPrompts: (string | undefined)[];
+  readonly count: number;
+}
+
+// ─── API Client ───────────────────────────────────────────────────────────────
+
 export const aiApi = {
   /**
    * Triggers the article outline planning workflow.
@@ -71,4 +109,64 @@ export const aiApi = {
 
     return response.body;
   },
+
+  /**
+   * Generate 1–4 AI images and save them directly to the Media Library.
+   */
+  generateImage: (payload: ImageGenerationRequest) => {
+    return api.post<ImageGenerationResponse>("/ai/v1/image/generate", payload);
+  },
+
+  /**
+   * Returns all registered image generation providers with availability status.
+   */
+  getImageProviders: () => {
+    return api.get<{ providers: ImageProviderMeta[] }>("/ai/v1/image/providers");
+  },
+
+  /**
+   * Edit an existing Media Library image and save as a NEW asset.
+   * Never overwrites the original.
+   */
+  editImage: (payload: ImageEditRequest) => {
+    return api.post<ImageEditResponse>("/ai/v1/image/edit", payload);
+  },
 };
+
+// ─── Image Editing Types ──────────────────────────────────────────────────────
+
+export type EditOperation =
+  | "remove-background"
+  | "upscale"
+  | "crop"
+  | "expand"
+  | "replace-object"
+  | "change-style";
+
+export type UpscaleFactor = 2 | 4;
+export type ExpandDirection = "top" | "right" | "bottom" | "left" | "all";
+export type ChangeStylePreset =
+  | "oil-painting"
+  | "watercolor"
+  | "anime"
+  | "sketch"
+  | "pixel-art"
+  | "3d-render"
+  | "vintage-photo"
+  | "neon-cyberpunk";
+
+export type ImageEditRequest =
+  | { sourceMediaId: string; operation: "remove-background" }
+  | { sourceMediaId: string; operation: "upscale"; factor: UpscaleFactor }
+  | { sourceMediaId: string; operation: "crop"; left: number; top: number; width: number; height: number }
+  | { sourceMediaId: string; operation: "expand"; direction: ExpandDirection; fillPrompt?: string; pixels?: number }
+  | { sourceMediaId: string; operation: "replace-object"; targetDescription: string; replacementDescription: string }
+  | { sourceMediaId: string; operation: "change-style"; preset: ChangeStylePreset; customPrompt?: string };
+
+export interface ImageEditResponse {
+  readonly asset: any; // MediaAsset document
+  readonly operation: EditOperation;
+  readonly summary: string;
+  readonly sourceMediaId: string;
+}
+

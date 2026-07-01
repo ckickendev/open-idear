@@ -11,6 +11,7 @@ export interface MediaAsset {
   originalFilename: string;
   mimeType: string;
   fileHash: string;
+  pHash?: string;
   type: "image" | "video" | "audio" | "document";
   urls: {
     original: string;
@@ -31,9 +32,16 @@ export interface MediaAsset {
   isFavorite: boolean;
   usedIn: MediaUsageEntry[];
   usageCount: number;
+  aiStatus: "pending" | "processing" | "completed" | "failed";
+  aiError?: string | null;
+  aiRetryCount?: number;
+  userEditedFields?: string[];
   aiMetadata?: AIMetadata;
   createdAt: string;
   updatedAt: string;
+  ocrText?: string;
+  ocrLanguage?: string;
+  ocrConfidence?: number;
 }
 
 export interface MediaUsageEntry {
@@ -55,6 +63,11 @@ export interface AIMetadata {
   generatedAt?: string;
   model?: string;
   confidence?: number;
+  prompt?: string;
+  negativePrompt?: string;
+  editedFrom?: string;
+  editOperation?: string;
+  editSummary?: string;
 }
 
 export interface MediaFolder {
@@ -93,6 +106,7 @@ export interface SearchMediaParams {
   q: string;
   page?: number;
   limit?: number;
+  sort?: SortOption;
 }
 
 export interface UpdateMetadataPayload {
@@ -133,9 +147,12 @@ export type SortOption =
   | "createdAt"
   | "originalFilename"
   | "-fileSize"
-  | "fileSize";
+  | "fileSize"
+  | "-relevance"
+  | "-recentlyUsed"
+  | "-usageCount";
 
-export type QuickFilter = "all" | "favorites" | "recent";
+export type QuickFilter = "all" | "suggested" | "online" | "favorites" | "recent";
 
 export interface MediaLibraryModalProps {
   isOpen: boolean;
@@ -147,6 +164,8 @@ export interface MediaLibraryModalProps {
   typeFilter?: MediaAsset["type"];
   /** Allow multiple selection */
   multiSelect?: boolean;
+  /** Pass editor content for AI suggestions */
+  editorContent?: string;
 }
 
 export interface MediaGridItemProps {

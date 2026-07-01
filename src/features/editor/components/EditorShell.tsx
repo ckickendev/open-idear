@@ -15,6 +15,8 @@ import { mediaLibraryApi } from "@/features/media-library/api/mediaLibrary.api";
 import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useContentMetrics } from "@/features/seo/hooks/useContentMetrics";
 import { useAIPlanner, AIPlannerView } from "@/features/ai";
+import { AIImageGeneratorView } from "@/features/ai/components/AIImageGeneratorView";
+import { AIImageEditorView } from "@/features/ai/components/AIImageEditorView";
 import { parseMarkdownToHtml } from "@/features/ai/utils/markdownParser";
 
 // ─── Context ────────────────────────────────────────────────────────────────
@@ -142,6 +144,10 @@ export default function EditorShell() {
   // AI state
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiPlannerOpen, setAiPlannerOpen] = useState(false);
+  const [aiImageGenOpen, setAiImageGenOpen] = useState(false);
+  const [aiImageEditOpen, setAiImageEditOpen] = useState(false);
+  const [sourceAssetToEdit, setSourceAssetToEdit] = useState<import("@/features/media-library/types/mediaLibrary.types").MediaAsset | null>(null);
+  const [selectingSourceForEdit, setSelectingSourceForEdit] = useState(false);
   const aiPlanner = useAIPlanner();
 
   // ─── Editor Hook ──────────────────────────────────────────────────────
@@ -246,6 +252,49 @@ export default function EditorShell() {
     fetchPreData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, pathname]);
+
+  // ─── AI Image Gen Integration ─────────────────────────────────────────
+
+  const handleImageGenerated = (media: any) => {
+    if (!editor) return;
+    const position = editor.state.doc.content.size;
+    const imgUrl = media.urls?.webp || media.urls?.original;
+    const imgAlt = media.altText || media.description || "AI generated image";
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(position, {
+        type: "image",
+        attrs: { src: imgUrl, alt: imgAlt, "data-media-id": media._id },
+      })
+      .run();
+
+    if (postId && media._id) {
+      mediaLibraryApi.addUsage(media._id, "post", postId, "content");
+    }
+    setAiImageGenOpen(false);
+  };
+
+  const handleImageEdited = (media: any) => {
+    if (!editor) return;
+    const position = editor.state.doc.content.size;
+    const imgUrl = media.urls?.webp || media.urls?.original;
+    const imgAlt = media.altText || media.description || "AI edited image";
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(position, {
+        type: "image",
+        attrs: { src: imgUrl, alt: imgAlt, "data-media-id": media._id },
+      })
+      .run();
+
+    if (postId && media._id) {
+      mediaLibraryApi.addUsage(media._id, "post", postId, "content");
+    }
+    setAiImageEditOpen(false);
+    setSourceAssetToEdit(null);
+  };
 
   // ─── AI Generate ──────────────────────────────────────────────────────
 
@@ -367,6 +416,13 @@ export default function EditorShell() {
   // ─── Image Upload Handlers ───────────────────────────────────────────
 
   const handleMediaSelected = (media: any) => {
+    if (selectingSourceForEdit) {
+      setSourceAssetToEdit(media);
+      setSelectingSourceForEdit(false);
+      setShowImageUpload(false);
+      return;
+    }
+
     if (editor && imageInsertPosition !== null) {
       const imgUrl = media.urls?.webp || media.urls?.original || media.url;
       const imgAlt = media.altText || media.description || "";
@@ -510,8 +566,30 @@ export default function EditorShell() {
           saveStatus={autoSave.status === "conflict" ? "error" : autoSave.status}
           onRetrySave={() => autoSave.retry()}
           hasTitle={!!title.trim()}
-          onToggleAIPlanner={() => setAiPlannerOpen(!aiPlannerOpen)}
+          onToggleAIPlanner={() => {
+            setAiPlannerOpen(!aiPlannerOpen);
+            if (!aiPlannerOpen) {
+              setAiImageGenOpen(false);
+              setAiImageEditOpen(false);
+            }
+          }}
           aiPlannerOpen={aiPlannerOpen}
+          onToggleAIImageGen={() => {
+            setAiImageGenOpen(!aiImageGenOpen);
+            if (!aiImageGenOpen) {
+              setAiPlannerOpen(false);
+              setAiImageEditOpen(false);
+            }
+          }}
+          aiImageGenOpen={aiImageGenOpen}
+          onToggleAIImageEdit={() => {
+            setAiImageEditOpen(!aiImageEditOpen);
+            if (!aiImageEditOpen) {
+              setAiPlannerOpen(false);
+              setAiImageGenOpen(false);
+            }
+          }}
+          aiImageEditOpen={aiImageEditOpen}
         />
 
         {/* Post list panel (left drawer) */}
@@ -609,6 +687,31 @@ export default function EditorShell() {
               />
             </aside>
           )}
+
+          {/* AI Image Generator side drawer (right) */}
+          {aiImageGenOpen && (
+            <aside className="w-80 border-l border-[var(--color-editor-border)] bg-[var(--color-editor-bg)] h-full overflow-y-auto p-5 shrink-0 animate-[slide-left_0.2s_ease-out] z-30">
+              <AIImageGeneratorView onInsertImage={handleImageGenerated} />
+            </aside>
+          )}
+
+          {/* AI Image Editor side drawer (right) */}
+          {aiImageEditOpen && (
+            <aside className="w-80 border-l border-[var(--color-editor-border)] bg-[var(--color-editor-bg)] h-full overflow-y-auto p-5 shrink-0 animate-[slide-left_0.2s_ease-out] z-30">
+              <AIImageEditorView
+                sourceAsset={sourceAssetToEdit}
+                onSelectSourceTrigger={() => {
+                  setSelectingSourceForEdit(true);
+                  setShowImageUpload(true);
+                }}
+                onInsertEditedImage={handleImageEdited}
+                onCancel={() => {
+                  setSourceAssetToEdit(null);
+                  setSelectingSourceForEdit(false);
+                }}
+              />
+            </aside>
+          )}
         </div>
 
         {/* Publish drawer */}
@@ -639,6 +742,7 @@ export default function EditorShell() {
           onSelect={handleMediaSelected}
           allowDrag={true}
           typeFilter="image"
+          editorContent={editor ? editor.getText() : ""}
         />
       </div>
     </EditorProvider>
