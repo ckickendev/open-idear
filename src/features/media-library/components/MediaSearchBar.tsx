@@ -34,6 +34,9 @@ interface MediaSearchBarProps {
 }
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "-relevance", label: "Most relevant" },
+  { value: "-recentlyUsed", label: "Recently used" },
+  { value: "-usageCount", label: "Frequently used" },
   { value: "-createdAt", label: "Newest first" },
   { value: "createdAt", label: "Oldest first" },
   { value: "originalFilename", label: "Name A–Z" },
@@ -49,6 +52,23 @@ export function MediaSearchBar({
   sortBy,
   onSortChange,
 }: MediaSearchBarProps) {
+  const [localQuery, setLocalQuery] = useState(searchQuery);
+
+  // Sync local query when parent search query changes (e.g. when cleared)
+  React.useEffect(() => {
+    setLocalQuery(searchQuery);
+  }, [searchQuery]);
+
+  // Debounce calling the parent search action handler
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localQuery !== searchQuery) {
+        onSearchChange(localQuery);
+      }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [localQuery, searchQuery, onSearchChange]);
+
   return (
     <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
       {/* Search input */}
@@ -58,15 +78,18 @@ export function MediaSearchBar({
           className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
         />
         <Input
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
+          value={localQuery}
+          onChange={(e) => setLocalQuery(e.target.value)}
           placeholder="Search images…"
           className="pl-9 pr-8 h-9 text-sm"
         />
-        {searchQuery && (
+        {localQuery && (
           <button
             type="button"
-            onClick={() => onSearchChange("")}
+            onClick={() => {
+              setLocalQuery("");
+              onSearchChange("");
+            }}
             className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground cursor-pointer"
           >
             <X size={12} />

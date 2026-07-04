@@ -19,6 +19,7 @@ import { MediaDetailPanel } from "./MediaDetailPanel";
 import { MediaUploadZone } from "./MediaUploadZone";
 import { MediaToolbar } from "./MediaToolbar";
 import { useMediaLibrary } from "../hooks/useMediaLibrary";
+import { useAssetAiStatus } from "../hooks/useAssetAiStatus";
 import { mediaLibraryApi } from "../api/mediaLibrary.api";
 import type {
   MediaAsset,
@@ -46,7 +47,11 @@ export function MediaLibraryModal({
   allowDrag = false,
   typeFilter,
   multiSelect = false,
+  editorContent,
 }: MediaLibraryModalProps) {
+  // Start polling background AI metadata generations when modal is active
+  useAssetAiStatus();
+
   const {
     media,
     folders,
@@ -76,7 +81,7 @@ export function MediaLibraryModal({
     bulkDelete,
     bulkFavorite,
     fetchFolders,
-  } = useMediaLibrary();
+  } = useMediaLibrary(editorContent);
 
   const [showUploadZone, setShowUploadZone] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
@@ -98,12 +103,37 @@ export function MediaLibraryModal({
 
   // ─── Handle double-click → insert immediately ────────────────
 
+  const ensureLocalMedia = useCallback(async (item: MediaAsset): Promise<MediaAsset | null> => {
+    const isExternal = item._id.startsWith("unsplash_") ||
+                      item._id.startsWith("pexels_") ||
+                      item._id.startsWith("pixabay_");
+    if (!isExternal) return item;
+
+    const loadingToast = toast.loading("Importing image to local library...");
+    try {
+      const response = await mediaLibraryApi.importAsset(item._id);
+      if (response.success && response.data) {
+        toast.success("Image imported successfully!", { id: loadingToast });
+        return response.data;
+      } else {
+        toast.error(response.message || "Failed to import image.", { id: loadingToast });
+        return null;
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to import image.", { id: loadingToast });
+      return null;
+    }
+  }, []);
+
   const handleDoubleClick = useCallback(
-    (item: MediaAsset) => {
-      onSelect(item);
-      onClose();
+    async (item: MediaAsset) => {
+      const localItem = await ensureLocalMedia(item);
+      if (localItem) {
+        onSelect(localItem);
+        onClose();
+      }
     },
-    [onSelect, onClose]
+    [onSelect, onClose, ensureLocalMedia]
   );
 
   // ─── Handle context menu ──────────────────────────────────────
@@ -119,11 +149,14 @@ export function MediaLibraryModal({
   // ─── Handle insert from detail panel ──────────────────────────
 
   const handleInsert = useCallback(
-    (item: MediaAsset) => {
-      onSelect(item);
-      onClose();
+    async (item: MediaAsset) => {
+      const localItem = await ensureLocalMedia(item);
+      if (localItem) {
+        onSelect(localItem);
+        onClose();
+      }
     },
-    [onSelect, onClose]
+    [onSelect, onClose, ensureLocalMedia]
   );
 
   // ─── Handle delete ────────────────────────────────────────────

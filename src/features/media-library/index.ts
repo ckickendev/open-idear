@@ -16,6 +16,8 @@ export { useMediaUpload } from "./hooks/useMediaUpload";
 export { useMediaSearch } from "./hooks/useMediaSearch";
 export { useMediaDragDrop, MEDIA_LIBRARY_MIME } from "./hooks/useMediaDragDrop";
 export { useMediaAI } from "./hooks/useMediaAI";
+export { useAssetAiStatus } from "./hooks/useAssetAiStatus";
+export { useSuggestedImages } from "./hooks/useSuggestedImages";
 
 // Store
 export { useMediaLibraryStore } from "./store/mediaLibraryStore";

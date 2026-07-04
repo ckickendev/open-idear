@@ -8,6 +8,8 @@ import {
   FolderPlus,
   Folder as FolderIcon,
   ChevronRight,
+  Sparkles,
+  Globe,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type {
@@ -29,9 +31,11 @@ interface MediaSidebarProps {
 }
 
 const QUICK_FILTERS: { key: QuickFilter; label: string; icon: React.ReactNode }[] = [
-  { key: "all", label: "All images", icon: <Images size={15} /> },
-  { key: "favorites", label: "Favorites", icon: <Heart size={15} /> },
+  { key: "all", label: "My Library", icon: <Images size={15} /> },
+  { key: "suggested", label: "Suggested", icon: <Sparkles size={15} className="text-violet-500" /> },
+  { key: "online", label: "Search Online", icon: <Globe size={15} /> },
   { key: "recent", label: "Recent", icon: <Clock size={15} /> },
+  { key: "favorites", label: "Favorites", icon: <Heart size={15} /> },
 ];
 
 export function MediaSidebar({

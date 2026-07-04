@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo } from "react";
-import { Heart, MoreVertical, Check } from "lucide-react";
+import { Heart, MoreVertical, Check, Loader2, AlertCircle } from "lucide-react";
 import type { MediaGridItemProps } from "../types/mediaLibrary.types";
 
 // ═══════════════════════════════════════════════════════════════════
@@ -71,11 +71,23 @@ function MediaGridItemComponent({
           <p className="text-sm font-medium text-foreground truncate">
             {media.originalFilename}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
             {media.dimensions
               ? `${media.dimensions.width}×${media.dimensions.height}`
               : ""}{" "}
             · {fileSizeLabel}
+            {(media.aiStatus === "pending" || media.aiStatus === "processing") && (
+              <span className="inline-flex items-center gap-1 ml-1 text-primary animate-pulse font-medium">
+                <Loader2 size={10} className="animate-spin" />
+                AI Analyzing...
+              </span>
+            )}
+            {media.aiStatus === "failed" && (
+              <span className="inline-flex items-center gap-1 ml-1 text-rose-500 font-medium" title={media.aiError || "Generation failed"}>
+                <AlertCircle size={10} />
+                AI Failed
+              </span>
+            )}
           </p>
         </div>
 
@@ -112,6 +124,23 @@ function MediaGridItemComponent({
         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         loading="lazy"
       />
+
+      {/* AI Processing Overlay */}
+      {(media.aiStatus === "pending" || media.aiStatus === "processing") && (
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex flex-col items-center justify-center text-white z-10">
+          <Loader2 size={24} className="animate-spin text-white mb-1.5" />
+          <span className="text-[10px] font-medium tracking-wide">AI Generating...</span>
+        </div>
+      )}
+
+      {/* AI Failed Overlay */}
+      {media.aiStatus === "failed" && (
+        <div className="absolute inset-0 bg-rose-950/70 backdrop-blur-[1px] flex flex-col items-center justify-center text-rose-100 z-10 p-2 text-center" title={media.aiError || "Generation failed"}>
+          <AlertCircle size={20} className="text-rose-400 mb-1" />
+          <span className="text-[10px] font-semibold uppercase tracking-wider mb-0.5">AI Failed</span>
+          <span className="text-[9px] line-clamp-2 opacity-80 leading-snug">{media.aiError || "Unknown error"}</span>
+        </div>
+      )}
 
       {/* Selection overlay */}
       <div

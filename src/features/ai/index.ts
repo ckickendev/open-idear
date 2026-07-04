@@ -11,4 +11,13 @@
  *   to change without breaking consumers.
  */
 export { AIPlannerView } from "./components/AIPlannerView";
+export { AIImageGeneratorView } from "./components/AIImageGeneratorView";
+export { AIImageEditorView } from "./components/AIImageEditorView";
+export { AIDiagramView } from "./components/AIDiagramView";
 export { useAIPlanner } from "./hooks/useAIPlanner";
+export { useAIImageGenerator } from "./hooks/useAIImageGenerator";
+export { useAIImageEditor } from "./hooks/useAIImageEditor";
+export { useAIDiagram } from "./hooks/useAIDiagram";
+export type { AspectRatio, ImageStyle, ImageGenerationRequest, ImageProviderMeta, EditOperation, ChangeStylePreset, ExpandDirection, UpscaleFactor, ImageEditRequest, ImageEditResponse, DiagramType, DiagramRequest, DiagramResponse } from "./api/ai.api";
+
+
