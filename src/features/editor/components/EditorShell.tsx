@@ -49,7 +49,17 @@ import type {
 } from "../types/editor.types";
 
 // ─── Writer Metrics (inline — simple enough to keep here) ───────────────────
-import { Clock } from "lucide-react";
+import {
+  Clock,
+  Sparkles,
+  Wand2,
+  BookOpen,
+  FileText,
+  AlertCircle,
+  X,
+  Loader2,
+} from "lucide-react";
+import { BubbleMenu } from "@tiptap/react/menus";
 
 function WriterMetricsBar({
   wordCount,
@@ -148,6 +158,15 @@ export default function EditorShell() {
   const [sourceAssetToEdit, setSourceAssetToEdit] = useState<import("@/features/media-library/types/mediaLibrary.types").MediaAsset | null>(null);
   const [selectingSourceForEdit, setSelectingSourceForEdit] = useState(false);
   const aiPlanner = useAIPlanner();
+
+  // Bubble Menu AI Assist States
+  const [bubbleView, setBubbleView] = useState<"icon" | "menu" | "input-improve" | "preview-improve" | "input-example" | "review-report" | "loading">("icon");
+  const [improvePrompt, setImprovePrompt] = useState("");
+  const [examplePrompt, setExamplePrompt] = useState("");
+  const [loadingText, setLoadingText] = useState("");
+  const [improvedResult, setImprovedResult] = useState<any>(null);
+  const [reviewResult, setReviewResult] = useState<any>(null);
+  const [lastSelectedText, setLastSelectedText] = useState("");
 
   // ─── Editor Hook ──────────────────────────────────────────────────────
 
@@ -304,6 +323,144 @@ export default function EditorShell() {
       .insertContentAt(position, `<pre><code class="language-mermaid">${mermaidCode}</code></pre>`)
       .run();
     setAiDiagramOpen(false);
+  };
+
+  // ─── AI Assist Bubble Menu Handlers ─────────────────────────────────────
+
+  useEffect(() => {
+    if (!editor) return;
+    const handleSelectionChange = () => {
+      setBubbleView("icon");
+    };
+    editor.on("selectionUpdate", handleSelectionChange);
+    return () => {
+      editor.off("selectionUpdate", handleSelectionChange);
+    };
+  }, [editor]);
+
+  const handleContinueWriting = async () => {
+    if (!editor) return;
+    setBubbleView("loading");
+    setLoadingText("Continuing writing...");
+    try {
+      const textBefore = editor.getText().slice(-2000);
+      const res = await api.post("/api/editor/action", {
+        action: "continue",
+        context: {
+          surroundingContext: textBefore,
+          articleTitle: title,
+          audience: categoryPublic || "Developers",
+          tone: "informative",
+        },
+      });
+
+      if (res.data && res.data.status === "success" && res.data.data?.text) {
+        editor.chain().focus().insertContent(res.data.data.text).run();
+        toast.success("Text generated successfully!");
+      } else {
+        toast.error("Failed to generate continuation.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to continue writing.");
+    } finally {
+      setBubbleView("icon");
+    }
+  };
+
+  const handleImproveText = async () => {
+    if (!editor) return;
+    const selected = editor.state.doc.textBetween(
+      editor.state.selection.from,
+      editor.state.selection.to
+    );
+    if (!selected) {
+      toast.error("Please select some text first.");
+      return;
+    }
+    setLastSelectedText(selected);
+    setBubbleView("loading");
+    setLoadingText("Analyzing & rewriting...");
+    try {
+      const res = await api.post("/api/editor/action", {
+        action: "improve",
+        context: {
+          selectedText: selected,
+          instruction: improvePrompt,
+          audience: categoryPublic || "Developers",
+          tone: "professional",
+        },
+      });
+
+      if (res.data && res.data.status === "success" && res.data.data) {
+        setImprovedResult(res.data.data);
+        setBubbleView("preview-improve");
+      } else {
+        toast.error("Failed to improve text.");
+        setBubbleView("menu");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to improve text.");
+      setBubbleView("menu");
+    }
+  };
+
+  const handleGenerateExample = async () => {
+    if (!editor) return;
+    const selected = editor.state.doc.textBetween(
+      editor.state.selection.from,
+      editor.state.selection.to
+    );
+    setBubbleView("loading");
+    setLoadingText("Generating example...");
+    try {
+      const res = await api.post("/api/editor/action", {
+        action: "example",
+        context: {
+          selectedText: selected || "",
+          additionalInstructions: examplePrompt,
+          language: "typescript",
+        },
+      });
+
+      if (res.data && res.data.status === "success" && res.data.data?.markdown) {
+        editor.chain().focus().insertContent(res.data.data.markdown).run();
+        toast.success("Example inserted!");
+      } else {
+        toast.error("Failed to generate example.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to generate example.");
+    } finally {
+      setBubbleView("icon");
+    }
+  };
+
+  const handleReviewArticle = async () => {
+    if (!editor) return;
+    setBubbleView("loading");
+    setLoadingText("Reviewing article draft...");
+    try {
+      const res = await api.post("/api/editor/action", {
+        action: "review",
+        context: {
+          currentArticle: editor.getText(),
+          articleTitle: title || "Untitled",
+          audience: categoryPublic || "Developers",
+          tone: "professional",
+        },
+      });
+
+      if (res.data && res.data.status === "success" && res.data.data) {
+        setReviewResult(res.data.data);
+        setBubbleView("review-report");
+      } else {
+        toast.error("Failed to review article.");
+        setBubbleView("menu");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to review article.");
+      setBubbleView("menu");
+    }
   };
 
   // ─── AI Generate ──────────────────────────────────────────────────────
@@ -668,12 +825,278 @@ export default function EditorShell() {
                 </div>
               ) : (
                 /* Visual editor */
-                <div className="animate-[fade-in_0.15s_ease-out]">
+                <div className="animate-[fade-in_0.15s_ease-out] relative">
                   {/* Toolbar */}
                   {editor && <Toolbar editor={editor} />}
 
                   {/* Editor canvas */}
                   <EditorCanvas editor={editor} />
+
+                  {/* Contextual AI Assist Bubble Menu */}
+                  {editor && (
+                    <BubbleMenu
+                      editor={editor}
+                      options={{
+                        placement: "top-start",
+                      }}
+                      shouldShow={({ editor }) => {
+                        // Show menu if editor is active, and either a selection exists or cursor is placed
+                        return editor.isFocused && mode === "visual";
+                      }}
+                    >
+                      <div className="bg-[var(--color-editor-surface)] border border-[var(--color-editor-border)] rounded-xl shadow-xl p-2.5 flex flex-col gap-2 max-w-xs text-xs z-50">
+                        {/* 1. Closed Entry View */}
+                        {bubbleView === "icon" && (
+                          <button
+                            type="button"
+                            onClick={() => setBubbleView("menu")}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white rounded-lg font-semibold shadow-md active:scale-95 transition-all cursor-pointer"
+                          >
+                            <Sparkles size={12} className="text-amber-300 animate-pulse" />
+                            <span>AI Assist</span>
+                          </button>
+                        )}
+
+                        {/* 2. Selection Menu list */}
+                        {bubbleView === "menu" && (
+                          <div className="flex flex-col gap-1 w-48 text-[var(--color-editor-text)] animate-[fade-in_0.1s_ease-out]">
+                            <div className="flex items-center justify-between border-b border-[var(--color-editor-border)] pb-1.5 mb-1 text-[10px] uppercase font-bold text-[var(--color-editor-secondary)]">
+                              <span>✨ AI Copilot</span>
+                              <button
+                                type="button"
+                                onClick={() => setBubbleView("icon")}
+                                className="hover:text-[var(--color-editor-text)] cursor-pointer text-[var(--color-editor-secondary)]"
+                              >
+                                <X size={10} />
+                              </button>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleContinueWriting}
+                              className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-lg hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer"
+                            >
+                              <Sparkles size={12} className="text-violet-500" />
+                              <span>Continue Writing</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setImprovePrompt("");
+                                setBubbleView("input-improve");
+                              }}
+                              className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-lg hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer"
+                            >
+                              <Wand2 size={12} className="text-indigo-500" />
+                              <span>Improve Text</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setExamplePrompt("");
+                                setBubbleView("input-example");
+                              }}
+                              className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-lg hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer"
+                            >
+                              <BookOpen size={12} className="text-emerald-500" />
+                              <span>Generate Example</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleReviewArticle}
+                              className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-lg hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer"
+                            >
+                              <FileText size={12} className="text-amber-500" />
+                              <span>Review Article</span>
+                            </button>
+                          </div>
+                        )}
+
+                        {/* 3. Loading animation indicator */}
+                        {bubbleView === "loading" && (
+                          <div className="flex items-center gap-2.5 px-3 py-2 w-48 text-[var(--color-editor-secondary)]">
+                            <Loader2 size={14} className="animate-spin text-[var(--color-editor-accent)] shrink-0" />
+                            <span className="text-[11px] truncate font-medium animate-pulse">{loadingText}</span>
+                          </div>
+                        )}
+
+                        {/* 4. Text Improvement Input parameters */}
+                        {bubbleView === "input-improve" && (
+                          <div className="flex flex-col gap-2 w-56 text-[var(--color-editor-text)] animate-[fade-in_0.1s_ease-out]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] uppercase font-bold text-[var(--color-editor-secondary)]">🪄 Improve Selection</span>
+                              <button
+                                type="button"
+                                onClick={() => setBubbleView("menu")}
+                                className="text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] cursor-pointer"
+                              >
+                                <X size={10} />
+                              </button>
+                            </div>
+                            <input
+                              type="text"
+                              value={improvePrompt}
+                              onChange={(e) => setImprovePrompt(e.target.value)}
+                              placeholder="e.g. make it simple, professional..."
+                              className="px-2.5 py-1.5 text-xs rounded border border-[var(--color-editor-border)] bg-[var(--color-editor-elevated)] outline-none focus:border-[var(--color-editor-accent)] w-full text-[var(--color-editor-text)]"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  handleImproveText();
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={handleImproveText}
+                              className="py-1 px-3 bg-[var(--color-editor-accent)] hover:opacity-90 text-white rounded font-bold text-[10px] tracking-wide self-end cursor-pointer"
+                            >
+                              Rewrite
+                            </button>
+                          </div>
+                        )}
+
+                        {/* 5. Rewrite previews */}
+                        {bubbleView === "preview-improve" && improvedResult && (
+                          <div className="flex flex-col gap-2 w-64 text-[var(--color-editor-text)] animate-[fade-in_0.15s_ease-out]">
+                            <div className="flex items-center justify-between border-b border-[var(--color-editor-border)] pb-1">
+                              <span className="text-[10px] uppercase font-bold text-[var(--color-editor-secondary)] flex items-center gap-1">
+                                🪄 Preview (readability: {improvedResult.readabilityDelta > 0 ? `+${improvedResult.readabilityDelta}` : improvedResult.readabilityDelta})
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setBubbleView("menu")}
+                                className="text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] cursor-pointer"
+                              >
+                                <X size={10} />
+                              </button>
+                            </div>
+                            <p className="text-[10px] font-mono leading-relaxed bg-[var(--color-editor-elevated)] p-2 rounded max-h-28 overflow-y-auto whitespace-pre-wrap border border-[var(--color-editor-border)] text-[var(--color-editor-text)]">
+                              {improvedResult.improvedText}
+                            </p>
+                            <div className="flex gap-2 justify-end">
+                              <button
+                                type="button"
+                                onClick={() => setBubbleView("menu")}
+                                className="px-2.5 py-1 border border-[var(--color-editor-border)] hover:bg-[var(--color-editor-elevated)] rounded text-[9px] font-bold cursor-pointer text-[var(--color-editor-text)]"
+                              >
+                                Discard
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (editor) {
+                                    // replace selection
+                                    editor.chain().focus().insertContent(improvedResult.improvedText).run();
+                                    toast.success("Selection replaced!");
+                                  }
+                                  setBubbleView("icon");
+                                }}
+                                className="px-2.5 py-1 bg-[var(--color-editor-accent)] hover:opacity-90 text-white rounded text-[9px] font-bold cursor-pointer"
+                              >
+                                Replace
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 6. Example generator prompts */}
+                        {bubbleView === "input-example" && (
+                          <div className="flex flex-col gap-2 w-56 text-[var(--color-editor-text)] animate-[fade-in_0.1s_ease-out]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] uppercase font-bold text-[var(--color-editor-secondary)]">📝 Generate Example</span>
+                              <button
+                                type="button"
+                                onClick={() => setBubbleView("menu")}
+                                className="text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] cursor-pointer"
+                              >
+                                <X size={10} />
+                              </button>
+                            </div>
+                            <input
+                              type="text"
+                              value={examplePrompt}
+                              onChange={(e) => setExamplePrompt(e.target.value)}
+                              placeholder="e.g. Dockerfile, typescript type..."
+                              className="px-2.5 py-1.5 text-xs rounded border border-[var(--color-editor-border)] bg-[var(--color-editor-elevated)] outline-none focus:border-[var(--color-editor-accent)] w-full text-[var(--color-editor-text)]"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  handleGenerateExample();
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={handleGenerateExample}
+                              className="py-1 px-3 bg-[var(--color-editor-accent)] hover:opacity-90 text-white rounded font-bold text-[10px] tracking-wide self-end cursor-pointer"
+                            >
+                              Create
+                            </button>
+                          </div>
+                        )}
+
+                        {/* 7. Peer review card */}
+                        {bubbleView === "review-report" && reviewResult && (
+                          <div className="flex flex-col gap-2 w-64 text-[var(--color-editor-text)] animate-[fade-in_0.15s_ease-out]">
+                            <div className="flex items-center justify-between border-b border-[var(--color-editor-border)] pb-1.5">
+                              <span className="text-[10px] uppercase font-bold text-[var(--color-editor-secondary)] flex items-center gap-1">
+                                🔍 Peer Review Report
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setBubbleView("icon")}
+                                className="text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] cursor-pointer"
+                              >
+                                <X size={10} />
+                              </button>
+                            </div>
+                            <div className="space-y-1.5 max-h-44 overflow-y-auto text-[10px] text-[var(--color-editor-text)]">
+                              <div className="grid grid-cols-2 gap-1.5 border-b border-[var(--color-editor-border)] pb-1.5 mb-1.5">
+                                <div>
+                                  <span className="text-[9px] text-[var(--color-editor-secondary)] block">Grammar</span>
+                                  <span className="font-bold text-violet-500">{reviewResult.grammarScore}/100</span>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-[var(--color-editor-secondary)] block">Readability</span>
+                                  <span className="font-bold text-indigo-500">{reviewResult.readabilityScore}/100</span>
+                                </div>
+                              </div>
+                              <div className="space-y-1 border-b border-[var(--color-editor-border)] pb-1.5 mb-1.5 text-[9px] text-[var(--color-editor-secondary)]">
+                                <div className="flex justify-between">
+                                  <span>Missing Examples:</span>
+                                  <span className="font-bold">{reviewResult.missingExamples ? "⚠️ Yes" : "✅ No"}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Missing Images:</span>
+                                  <span className="font-bold">{reviewResult.missingImages ? "⚠️ Yes" : "✅ No"}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Missing Conclusion:</span>
+                                  <span className="font-bold">{reviewResult.missingConclusion ? "⚠️ Yes" : "✅ No"}</span>
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <span className="block font-bold text-[9px] uppercase tracking-wider text-[var(--color-editor-secondary)]">Refinements Suggestions</span>
+                                {reviewResult.suggestions && reviewResult.suggestions.length > 0 ? (
+                                  reviewResult.suggestions.slice(0, 3).map((s: any, idx: number) => (
+                                    <div key={idx} className="bg-[var(--color-editor-elevated)] p-1.5 rounded border border-[var(--color-editor-border)] flex items-start gap-1">
+                                      <AlertCircle size={10} className="text-amber-500 shrink-0 mt-0.5" />
+                                      <div>
+                                        <span className="font-bold block text-[9px] text-[var(--color-editor-secondary)]">[{s.severity.toUpperCase()}] {s.section}</span>
+                                        <p className="leading-relaxed mt-0.5">{s.message}</p>
+                                      </div>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-emerald-500 italic">Excellent draft! No revisions suggested.</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </BubbleMenu>
+                  )}
 
                   {/* Floating Block insert button */}
                   <div className="fixed bottom-8 right-8 z-40 animate-[slide-up_0.3s_ease-out]">
