@@ -16,6 +16,7 @@ import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useContentMetrics } from "@/features/seo/hooks/useContentMetrics";
 import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView } from "@/features/ai";
 import { parseMarkdownToHtml } from "@/features/ai/utils/markdownParser";
+import { LivePreviewSystem } from "@/features/preview";
 
 // ─── Context ────────────────────────────────────────────────────────────────
 import { EditorProvider } from "../context/EditorContext";
@@ -811,18 +812,8 @@ export default function EditorShell() {
                   </div>
                 </div>
               ) : mode === "preview" ? (
-                /* Preview mode — uses read-only EditorContent instead of dangerouslySetInnerHTML */
-                <div className="preview-pane animate-[fade-in_0.15s_ease-out]">
-                  <h1 className="text-[2.5rem] leading-[1.2] font-bold tracking-[-0.02em] text-[var(--color-editor-text)] mb-8">
-                    {title || "Untitled Post"}
-                  </h1>
-                  {editor && (
-                    <div
-                      className="prose prose-lg max-w-none"
-                      dangerouslySetInnerHTML={{ __html: getHTML() }}
-                    />
-                  )}
-                </div>
+                /* Dynamic Viewport and Theme Preview System */
+                <LivePreviewSystem html={getHTML()} title={title} />
               ) : (
                 /* Visual editor */
                 <div className="animate-[fade-in_0.15s_ease-out] relative">

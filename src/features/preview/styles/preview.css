@@ -1,0 +1,182 @@
+/* =============================================================================
+   AI PREVIEW FEATURE — LIVE PREVIEW SYSTEM STYLES
+   src/features/preview/styles/preview.css
+   ============================================================================= */
+
+/* ─── Base Color Themes ────────────────────────────────────────────────────── */
+.preview-light {
+  --color-preview-bg: #ffffff;
+  --color-preview-text: #1e293b;
+  --color-preview-muted: #64748b;
+  --color-preview-border: #e2e8f0;
+  --color-preview-pre-bg: #f8fafc;
+  --color-preview-pre-text: #0f172a;
+}
+
+.preview-dark {
+  --color-preview-bg: #090d16;
+  --color-preview-text: #f1f5f9;
+  --color-preview-muted: #94a3b8;
+  --color-preview-border: #1e293b;
+  --color-preview-pre-bg: #030712;
+  --color-preview-pre-text: #f8fafc;
+}
+
+.html-renderer-root {
+  font-family: 'Inter', sans-serif;
+  color: var(--color-preview-text);
+  line-height: 1.75;
+}
+
+/* ─── Table Styling ────────────────────────────────────────────────────────── */
+.responsive-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin: 1.75rem 0;
+  border-radius: 8px;
+  border: 1px solid var(--color-preview-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.preview-table th {
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  background-color: rgba(142, 45, 226, 0.08);
+  border-bottom: 2px solid var(--color-preview-border);
+  color: var(--color-preview-text);
+}
+
+.preview-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-preview-border);
+  color: var(--color-preview-muted);
+}
+
+.preview-light .preview-table tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+.preview-dark .preview-table tr:nth-child(even) {
+  background-color: #0f172a;
+}
+
+/* ─── Code Block Copy Styling ──────────────────────────────────────────────── */
+.html-renderer-root pre {
+  position: relative;
+  background-color: var(--color-preview-pre-bg);
+  border: 1px solid var(--color-preview-border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin: 1.75rem 0;
+  overflow-x: auto;
+}
+
+.html-renderer-root pre code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.85rem;
+  color: var(--color-preview-pre-text);
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.copy-code-container {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.html-renderer-root pre:hover .copy-code-container {
+  opacity: 1;
+}
+
+.copy-code-btn {
+  background-color: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s ease;
+}
+
+.copy-code-btn:hover {
+  background-color: rgba(15, 23, 42, 0.95);
+  border-color: #8e2de2;
+  transform: translateY(-1px);
+}
+
+.copy-code-btn:active {
+  transform: translateY(0);
+}
+
+/* ─── Image Lightbox Styling ───────────────────────────────────────────────── */
+.preview-content-prose img {
+  border-radius: 8px;
+  cursor: zoom-in;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  margin: 2rem auto;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.preview-content-prose img:hover {
+  opacity: 0.95;
+  transform: scale(1.01);
+}
+
+/* ─── Prose Overrides ──────────────────────────────────────────────────────── */
+.preview-content-prose {
+  font-size: 1rem;
+  max-width: none;
+}
+
+.preview-content-prose h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: var(--color-preview-text);
+  border-left: 3px solid #8e2de2;
+  padding-left: 0.5rem;
+}
+
+.preview-content-prose h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-preview-text);
+}
+
+.preview-content-prose p {
+  margin-bottom: 1.25rem;
+  color: var(--color-preview-muted);
+}
+
+.preview-content-prose a {
+  color: #8e2de2;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.preview-content-prose a:hover {
+  color: #00f2fe;
+}

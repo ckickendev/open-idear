@@ -8,6 +8,9 @@ export interface ContentMetrics {
   imageCount: number;
   linkCount: { internal: number; external: number };
   paragraphCount: number;
+  codeBlockCount: number;
+  tableCount: number;
+  affiliateLinkCount: number;
 }
 
 // ─── SEO Analysis ───────────────────────────────────────────────────────────
