@@ -18,6 +18,9 @@ const EMPTY_METRICS: ContentMetrics = {
   imageCount: 0,
   linkCount: { internal: 0, external: 0 },
   paragraphCount: 0,
+  codeBlockCount: 0,
+  tableCount: 0,
+  affiliateLinkCount: 0,
 };
 
 /**
@@ -64,6 +67,9 @@ export function useContentMetrics(
     const headingCount = { h1: 0, h2: 0, h3: 0 };
     let imageCount = 0;
     let paragraphCount = 0;
+    let codeBlockCount = 0;
+    let tableCount = 0;
+    let affiliateLinkCount = 0;
     const linkCount = { internal: 0, external: 0 };
 
     function walkContent(content: any[]) {
@@ -80,18 +86,31 @@ export function useContentMetrics(
         if (node.type === "paragraph") {
           paragraphCount++;
         }
+        if (node.type === "codeBlock") {
+          codeBlockCount++;
+        }
+        if (node.type === "table") {
+          tableCount++;
+        }
         // Count links in marks
         if (node.marks) {
           for (const mark of node.marks) {
             if (mark.type === "link" && mark.attrs?.href) {
               const href = mark.attrs.href;
-              if (
-                href.startsWith("/") ||
-                href.includes(window.location.hostname)
-              ) {
+              const isInternal = href.startsWith("/") || href.includes(window.location.hostname);
+              if (isInternal) {
                 linkCount.internal++;
               } else {
                 linkCount.external++;
+                // Check if it is an affiliate link
+                if (
+                  href.includes("amzn.to/") ||
+                  href.includes("amazon.com/dp/") ||
+                  href.includes("tag=") ||
+                  href.includes("ref=")
+                ) {
+                  affiliateLinkCount++;
+                }
               }
             }
           }
@@ -115,6 +134,9 @@ export function useContentMetrics(
       imageCount,
       linkCount,
       paragraphCount,
+      codeBlockCount,
+      tableCount,
+      affiliateLinkCount,
     });
 
     setIsAnalyzing(false);

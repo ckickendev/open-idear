@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Sparkles, Loader2, BookOpen, AlertCircle, Copy, Check, X, FileText } from "lucide-react";
 import { type PlannerResponse } from "../api/ai.api";
+import AIErrorBanner from "./AIErrorBanner";
+import AIProgressIndicator from "./AIProgressIndicator";
 
 interface AIPlannerViewProps {
   readonly plan: (payload: any) => Promise<void>;
@@ -30,6 +32,8 @@ export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
   initialTopic = "",
 }) => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [lastPayload, setLastPayload] = useState<any>(null);
+  const [secondsElapsed, setSecondsElapsed] = useState(0);
 
   // Form states
   const [topic, setTopic] = useState(initialTopic);
@@ -40,10 +44,28 @@ export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
   const [category, setCategory] = useState("programming");
   const [instructions, setInstructions] = useState("");
 
+  // Track elapsed time for progress bar
+  React.useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+    if (isRunning || isWriting) {
+      setSecondsElapsed(0);
+      interval = setInterval(() => {
+        setSecondsElapsed((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setSecondsElapsed(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRunning, isWriting]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!topic.trim()) return;
-    plan({ topic, audience, tone, length, goal, category });
+    const payload = { topic, audience, tone, length, goal, category };
+    setLastPayload(payload);
+    plan(payload);
   };
 
   const handleCopyOutline = () => {
@@ -58,6 +80,14 @@ export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
   const toastSuccess = () => {
     setCopiedIndex(-1);
     setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const isRateLimit = !!error && (error.toLowerCase().includes("rate limit") || error.includes("429"));
+
+  const handleRetry = () => {
+    if (lastPayload) {
+      plan(lastPayload);
+    }
   };
 
   return (
@@ -79,10 +109,12 @@ export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
       </div>
 
       {error && (
-        <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-xs animate-[fade-in_0.15s_ease-out]">
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-          <span>{error}</span>
-        </div>
+        <AIErrorBanner
+          errorMessage={error}
+          isRateLimit={isRateLimit}
+          retryDelaySeconds={isRateLimit ? 5 : 0}
+          onRetry={handleRetry}
+        />
       )}
 
       {/* ─── Planning Form ────────────────────────────────────────────────── */}
@@ -184,26 +216,24 @@ export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
 
       {/* ─── Loading state (Planning) ────────────────────────────────────── */}
       {isRunning && (
-        <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-          <Loader2 className="w-8 h-8 text-[var(--color-editor-accent)] animate-spin" />
-          <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium">Assembling Outline Plan...</p>
-            <p className="text-xs text-[var(--color-editor-secondary)]">Gemini is structuring headings and mapping keywords.</p>
-          </div>
-        </div>
+        <AIProgressIndicator
+          statusText="Assembling Outline Plan..."
+          maxDurationEstimateSeconds={30}
+          secondsElapsed={secondsElapsed}
+        />
       )}
 
       {/* ─── Loading state (Writing / Drafting Stream) ────────────────────── */}
       {isWriting && (
-        <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-          <Loader2 className="w-8 h-8 text-[var(--color-editor-accent)] animate-spin" />
-          <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium">Drafting Article Body...</p>
-            <p className="text-xs text-[var(--color-editor-secondary)]">Content is streaming directly into the editor.</p>
-          </div>
+        <div className="space-y-4">
+          <AIProgressIndicator
+            statusText="Drafting Article Body (Streaming content)..."
+            maxDurationEstimateSeconds={120}
+            secondsElapsed={secondsElapsed}
+          />
           <button
             onClick={cancelWriting}
-            className="mt-4 flex items-center gap-1.5 px-3 py-1.5 text-xs border border-red-500/20 text-red-500 rounded-lg hover:bg-red-500/10 cursor-pointer transition-all"
+            className="w-full flex items-center justify-center gap-1.5 py-2 border border-red-500/20 text-red-500 rounded-lg hover:bg-red-500/10 cursor-pointer transition-all text-xs"
           >
             <X className="w-3.5 h-3.5" />
             Cancel Writing
