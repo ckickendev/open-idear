@@ -70,7 +70,8 @@ export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
 
   const handleCopyOutline = () => {
     if (!outline) return;
-    const outlineText = outline.outline
+    const items = outline.outline || [];
+    const outlineText = items
       .map((item) => `${item.level === 3 ? "  " : ""}- ${item.title}: ${item.description}`)
       .join("\n");
     navigator.clipboard.writeText(outlineText);
@@ -267,18 +268,20 @@ export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
           </div>
 
           {/* Keywords */}
-          <div className="flex flex-col gap-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--color-editor-secondary)]">
-              Target SEO Keywords
-            </h4>
-            <div className="flex flex-wrap gap-1.5">
-              {outline.keywords.map((kw, i) => (
-                <span key={i} className="text-xs bg-[var(--color-editor-border)]/40 text-[var(--color-editor-secondary)] px-2.5 py-1 rounded-md">
-                  {kw}
-                </span>
-              ))}
+          {outline.keywords && outline.keywords.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--color-editor-secondary)]">
+                Target SEO Keywords
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {(outline.keywords || []).map((kw, i) => (
+                  <span key={i} className="text-xs bg-[var(--color-editor-border)]/40 text-[var(--color-editor-secondary)] px-2.5 py-1 rounded-md">
+                    {kw}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Outline Tree */}
           <div className="flex flex-col gap-3">
@@ -305,7 +308,7 @@ export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
             </div>
 
             <div className="flex flex-col border-l-2 border-[var(--color-editor-border)] pl-3 gap-4">
-              {outline.outline.map((item, idx) => (
+              {(outline.outline || []).map((item, idx) => (
                 <div
                   key={idx}
                   className={`flex flex-col gap-1 ${item.level === 3 ? "pl-4 border-l border-dashed border-[var(--color-editor-border)]" : ""}`}

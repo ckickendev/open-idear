@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* ---- Tailwind v4 Theme Color Extension ---- */
+@theme {
+  --color-admin-primary: #4f46e5;
+  --color-admin-primary-hover: #4338ca;
+  --color-admin-primary-light: #e0e7ff;
+  --color-admin-primary-ring: #818cf8;
+}
+
 /* ============================================================
    DESIGN TOKENS — OpenIdear Design System
 

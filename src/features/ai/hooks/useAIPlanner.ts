@@ -20,7 +20,11 @@ export function useAIPlanner() {
     try {
       const response = await aiApi.runPlanner(payload);
       if (response.success && response.data) {
-        setOutline(response.data);
+        const raw = response.data as any;
+        const actualPlan: PlannerResponse = raw?.data && Array.isArray(raw?.data?.outline)
+          ? raw.data
+          : (Array.isArray(raw?.outline) ? raw : (raw?.data || raw));
+        setOutline(actualPlan);
       } else {
         setError(response.message || "Failed to generate article outline plan.");
       }
