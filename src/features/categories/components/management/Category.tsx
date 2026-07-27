@@ -101,93 +101,100 @@ const Category = () => {
   };
 
   const handleAddCategory = async () => {
-    changeLoad();
-    if (formData.name.trim()) {
-      try {
-        const newCategory = await categoryApi.createCategory({
-          name: formData.name,
-          slug:
-            formData.slug || formData.name.toLowerCase().replace(/\s+/g, "-"),
-          description: formData.description,
-        });
-        if (newCategory.success) {
-          setCategories([...categories, newCategory.data.category]);
-
-          toast.success(t("management.category.add_success"));
-        } else throw new Error(newCategory.message);
-      } catch (error: any) {
-        toast.error(error?.message);
-      } finally {
-        setShowModal(false);
-        changeLoad();
-      }
-    }
-  };
-
-  const handleEditCategory = () => {
-    changeLoad();
     if (!formData.name.trim()) {
-      toast.success(t("management.category.no_name_empty"));
-      changeLoad();
+      toast.error(t("management.category.no_name_empty") || "Tên danh mục không được để trống");
       return;
     }
-    categoryApi
-      .updateCategory(selectedItem?._id as string, {
-        _id: selectedItem?._id,
-        name: formData.name,
+
+    try {
+      changeLoad();
+      const response = await categoryApi.createCategory({
+        name: formData.name.trim(),
         slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, "-"),
-        description: formData.description,
-      })
-      .then((response) => {
-        if (response.success) {
-          setCategories(
-            categories.map((cat) =>
-              cat._id === selectedItem?._id ? response.data.category : cat,
-            ),
-          );
-
-          toast.success(t("management.category.update_success"));
-        } else throw new Error(response.message);
-      })
-      .catch((error) => {
-        toast.error(error?.message);
-      })
-      .finally(() => {
-        setShowModal(false);
-        changeLoad();
+        description: formData.description || "",
       });
+
+      if (response.success && (response.data?.category || response.data)) {
+        const createdCat = response.data?.category || (response.data as any);
+        setCategories((prev) => [...prev, createdCat]);
+        toast.success(t("management.category.add_success"));
+        setShowModal(false);
+      } else {
+        throw new Error(response.message || "Không thể thêm danh mục");
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || "Lỗi khi thêm danh mục");
+    } finally {
+      changeLoad();
+    }
   };
 
-  const handleDeleteCategory = (id: string) => {
-    changeLoad();
-    categoryApi
-      .deleteCategory(id)
-      .then((response) => {
-        if (response.success) {
-          toast.success("Xóa danh mục thành công");
-        } else throw new Error(response.message);
-      })
-      .catch((error) => {
-        toast.error(error?.message);
-      })
-      .finally(() => changeLoad());
-    setCategories(categories.filter((cat) => cat._id !== id));
+  const handleEditCategory = async () => {
+    if (!formData.name.trim()) {
+      toast.error(t("management.category.no_name_empty") || "Tên danh mục không được để trống");
+      return;
+    }
+    if (!selectedItem?._id) return;
+
+    try {
+      changeLoad();
+      const response = await categoryApi.updateCategory(selectedItem._id, {
+        _id: selectedItem._id,
+        name: formData.name.trim(),
+        slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, "-"),
+        description: formData.description || "",
+      });
+
+      if (response.success && (response.data?.category || response.data)) {
+        const updatedCat = response.data?.category || (response.data as any);
+        setCategories((prev) =>
+          prev.map((cat) => (cat._id === selectedItem._id ? updatedCat : cat))
+        );
+        toast.success(t("management.category.update_success"));
+        setShowModal(false);
+      } else {
+        throw new Error(response.message || "Không thể cập nhật danh mục");
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || "Lỗi khi cập nhật danh mục");
+    } finally {
+      changeLoad();
+    }
   };
 
-  const handleRestoreCategory = (id: string) => {
-    changeLoad();
-    categoryApi
-      .restoreCategory(id)
-      .then((response) => {
-        if (response.success) {
-          toast.success("Khôi phục danh mục thành công");
-          setCategories(categories.filter((cat) => cat._id !== id));
-        } else throw new Error(response.message);
-      })
-      .catch((error) => {
-        toast.error(error?.message);
-      })
-      .finally(() => changeLoad());
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      changeLoad();
+      const response = await categoryApi.deleteCategory(id);
+      if (response.success) {
+        setCategories((prev) => prev.filter((cat) => cat._id !== id));
+        toast.success("Xóa danh mục thành công");
+      } else {
+        throw new Error(response.message || "Không thể xóa danh mục");
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || "Lỗi khi xóa danh mục");
+    } finally {
+      changeLoad();
+      setConfirmDelete(null);
+    }
+  };
+
+  const handleRestoreCategory = async (id: string) => {
+    try {
+      changeLoad();
+      const response = await categoryApi.restoreCategory(id);
+      if (response.success) {
+        setCategories((prev) => prev.filter((cat) => cat._id !== id));
+        toast.success("Khôi phục danh mục thành công");
+      } else {
+        throw new Error(response.message || "Không thể khôi phục danh mục");
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || "Lỗi khi khôi phục danh mục");
+    } finally {
+      changeLoad();
+    }
   };
 
   return (
@@ -204,7 +211,7 @@ const Category = () => {
         </div>
         <button
           onClick={() => openModal("add")}
-          className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors focus:outline-none focus:ring-2 focus:ring-admin-primary-ring"
+          className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition-all shadow-sm rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           <Plus size={16} />
           {t("management.category.add")}
@@ -352,14 +359,14 @@ const Category = () => {
                             <>
                               <button
                                 onClick={() => openModal("edit", category)}
-                                className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light transition-colors"
+                                className="p-2 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors cursor-pointer"
                                 title="Chỉnh sửa"
                               >
                                 <Edit size={16} />
                               </button>
                               <button
                                 onClick={() => setConfirmDelete(category._id)}
-                                className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                                className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/60 transition-colors cursor-pointer"
                                 title="Xóa"
                               >
                                 <Trash2 size={16} />
@@ -397,7 +404,7 @@ const Category = () => {
                       {listStatus === "trash" ? (
                         <button
                           onClick={() => handleRestoreCategory(category._id)}
-                          className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap"
+                          className="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors font-medium text-xs whitespace-nowrap cursor-pointer"
                         >
                           Khôi phục
                         </button>
@@ -405,13 +412,15 @@ const Category = () => {
                         <>
                           <button
                             onClick={() => openModal("edit", category)}
-                            className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light"
+                            className="p-2 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors cursor-pointer"
+                            title="Chỉnh sửa"
                           >
                             <Edit size={16} />
                           </button>
                           <button
                             onClick={() => setConfirmDelete(category._id)}
-                            className="p-2 rounded-lg text-red-500 hover:bg-red-50"
+                            className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/60 transition-colors cursor-pointer"
+                            title="Xóa"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -517,7 +526,7 @@ const Category = () => {
                 onClick={
                   modalType === "add" ? handleAddCategory : handleEditCategory
                 }
-                className="px-4 py-2 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors"
+                className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition-all shadow-sm rounded-lg cursor-pointer"
               >
                 {modalType === "add" ? "Thêm mới" : "Cập nhật"}
               </button>

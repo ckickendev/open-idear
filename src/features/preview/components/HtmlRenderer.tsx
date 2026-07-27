@@ -13,6 +13,7 @@
 
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { Copy, Check, ExternalLink, X } from "lucide-react";
+import { slugifyHeading } from "@/features/editor/hooks/useHeadingOutline";
 
 interface HtmlRendererProps {
   readonly html: string;
@@ -48,6 +49,20 @@ export default function HtmlRenderer({ html, isDark }: HtmlRendererProps) {
     parsed = parsed.replace(
       /<table([^>]*)>([\s\S]*?)<\/table>/g,
       '<div class="responsive-table-wrapper"><table class="preview-table" $1>$2</table></div>'
+    );
+
+    // 2. Inject anchor IDs into heading elements for scroll targets
+    let headingCount = 0;
+    parsed = parsed.replace(
+      /<(h[1-6])([^>]*)>([\s\S]*?)<\/\1>/gi,
+      (match, tag, attrs, innerText) => {
+        if (/id=["']/i.test(attrs)) {
+          return match;
+        }
+        const cleanText = innerText.replace(/<[^>]*>/g, "").trim();
+        const id = slugifyHeading(cleanText, headingCount++);
+        return `<${tag}${attrs} id="${id}">${innerText}</${tag}>`;
+      }
     );
 
     return { __html: parsed };

@@ -128,10 +128,8 @@ const CourseCategory = () => {
   };
 
   const handleEditCategory = () => {
-    changeLoad();
     if (!formData.name.trim()) {
-      toast.success("Tên danh mục không được để trống");
-      changeLoad();
+      toast.error("Tên danh mục không được để trống");
       return;
     }
     courseCategoryApi

@@ -12,6 +12,7 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 import PreviewToolbar from "./PreviewToolbar";
 import HtmlRenderer from "./HtmlRenderer";
+import { StickyOutlineNav } from "@/features/editor";
 
 interface LivePreviewSystemProps {
   readonly html: string;
@@ -33,7 +34,7 @@ export default function LivePreviewSystem({ html, title }: LivePreviewSystemProp
         return "max-w-[768px] border-[8px] border-zinc-700 rounded-2xl shadow-xl h-[960px]";
       case "desktop":
       default:
-        return "w-full border border-[var(--color-editor-border)] rounded-xl shadow-sm min-h-[600px]";
+        return "w-full max-w-[840px] border border-[var(--color-editor-border)] rounded-xl shadow-sm min-h-[600px]";
     }
   };
 
@@ -79,7 +80,12 @@ export default function LivePreviewSystem({ html, title }: LivePreviewSystemProp
       />
 
       {/* ─── Device Wrapper Canvas ───────────────────────────────────────────── */}
-      <div className="flex justify-center w-full overflow-x-auto py-4 bg-[var(--color-editor-bg)] rounded-2xl min-h-[640px]">
+      <div className="flex justify-center items-start gap-6 w-full overflow-x-auto py-4 bg-[var(--color-editor-bg)] rounded-2xl min-h-[640px]">
+        {viewport === "desktop" && (
+          <div className="hidden lg:block shrink-0 sticky top-4">
+            <StickyOutlineNav html={html} />
+          </div>
+        )}
         <div
           className={`flex flex-col transition-all duration-300 ease-out bg-[var(--color-editor-surface)] overflow-y-auto ${getWidthClass()}`}
         >

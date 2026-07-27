@@ -34,6 +34,7 @@ import Instruction from "@/app/(editor)/create/Instruction";
 import ImageUpload from "@/app/(editor)/create/ImageUpload";
 import { MediaLibraryModal } from "@/features/media-library";
 import EditorCanvas from "./EditorCanvas";
+import StickyOutlineNav from "./StickyOutlineNav";
 
 // ─── APIs ───────────────────────────────────────────────────────────────────
 import { categoryApi } from "@/features/categories/api/category.api";
@@ -778,8 +779,18 @@ export default function EditorShell() {
           onClose={() => setPostListOpen(false)}
         />
 
-        {/* Main Editor Wrapper with side-by-side AI planning */}
+        {/* Main Editor Wrapper with side-by-side AI planning & sticky outline */}
         <div className="flex-1 flex relative w-full overflow-hidden">
+          {/* Sticky Left Outline Navigation ("Xem nhanh") */}
+          {mode === "visual" && (
+            <aside className="hidden xl:block w-72 shrink-0 p-6 pr-2 sticky top-4 self-start">
+              <StickyOutlineNav
+                html={getHTML()}
+                outlinePlan={aiPlanner.outline?.outline}
+              />
+            </aside>
+          )}
+
           {/* Main editor area */}
           <main className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 overflow-y-auto">
             {/* Title */}

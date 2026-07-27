@@ -4,10 +4,12 @@
 export { default as EditorShell } from "./components/EditorShell";
 export { default as EditorCanvas } from "./components/EditorCanvas";
 export { EditorErrorBoundary } from "./components/EditorErrorBoundary";
+export { default as StickyOutlineNav } from "./components/StickyOutlineNav";
 
 // Hooks
 export { usePostEditor } from "./hooks/usePostEditor";
 export { useEditorShortcuts } from "./hooks/useEditorShortcuts";
+export { useHeadingOutline } from "./hooks/useHeadingOutline";
 
 // Context
 export { EditorProvider, useEditorContext } from "./context/EditorContext";
