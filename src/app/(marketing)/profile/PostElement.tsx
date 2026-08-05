@@ -1,6 +1,6 @@
 import { ENV } from "@/api/const";
 import { useState } from "react";
-import { Bookmark } from "lucide-react";
+import { Bookmark, Pencil } from "lucide-react";
 import { PostInterface } from "./[username]/page";
 import authenticationStore from "@/store/AuthenticationStore";
 import axios from "axios";
@@ -8,9 +8,12 @@ import { toast } from "sonner";
 import { getHeadersToken } from "@/lib/api/axios";
 import { CategoryLinkCustom } from "@/components/common/LinkCustom";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const PostElement = ({ post }: { post: PostInterface }) => {
+  const router = useRouter();
   const currentUser = authenticationStore((state) => state.currentUser);
+  const isOwner = currentUser?._id && post.author?._id && currentUser._id === post.author._id;
   const [bookmarked, setBookmarked] = useState(
     post.marked?.includes(currentUser?._id),
   );
@@ -112,12 +115,23 @@ const PostElement = ({ post }: { post: PostInterface }) => {
             </span>
           </div>
 
-          <button
-            onClick={onMarkedPost}
-            className="text-muted-foreground hover:text-blue-600 cursor-pointer p-1 rounded-full hover:bg-muted/50 transition-colors"
-          >
-            <Bookmark size={18} fill={bookmarked ? "currentColor" : "none"} />
-          </button>
+          <div className="flex items-center gap-1">
+            {isOwner && (
+              <button
+                onClick={() => router.push(`/create?id=${post._id}`)}
+                title="Edit post"
+                className="text-muted-foreground hover:text-indigo-600 cursor-pointer p-1.5 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
+              >
+                <Pencil size={16} />
+              </button>
+            )}
+            <button
+              onClick={onMarkedPost}
+              className="text-muted-foreground hover:text-blue-600 cursor-pointer p-1.5 rounded-full hover:bg-muted/50 transition-colors"
+            >
+              <Bookmark size={18} fill={bookmarked ? "currentColor" : "none"} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

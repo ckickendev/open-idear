@@ -227,6 +227,16 @@ export default function EditorShell() {
       setMode((prev) => (prev === "preview" ? "visual" : "preview")),
   });
 
+  // ─── Track fetched post for editor sync ──────────────────────────────
+  const [loadedPost, setLoadedPost] = useState<any>(null);
+
+  // Sync post content into TipTap editor whenever editor becomes ready or loadedPost updates
+  useEffect(() => {
+    if (editor && loadedPost?.content !== undefined) {
+      editor.commands.setContent(loadedPost.content || "");
+    }
+  }, [editor, isReady, loadedPost]);
+
   // ─── Fetch Initial Data ──────────────────────────────────────────────
 
   useEffect(() => {
@@ -253,15 +263,30 @@ export default function EditorShell() {
         setPostId(currentPostId);
         if (!currentPostId) {
           setTitle("");
-          setContent("");
+          setLoadedPost(null);
+          if (editor) setContent("");
           setPageLoading(false);
           return;
         }
 
         const resPost = await postApi.getPostToEdit(currentPostId);
-        if (resPost.success) {
-          setTitle(resPost.data.post.title);
-          setContent(resPost.data.post.content);
+        if (resPost.success && resPost.data?.post) {
+          const post = resPost.data.post;
+          setTitle(post.title || "");
+          setDescriptionPublic(post.description || "");
+          setCategoryPublic(
+            typeof post.category === "object" ? post.category?._id || "" : post.category || ""
+          );
+          setSeriesPublic(
+            typeof post.series === "object" ? post.series?._id || "" : post.series || ""
+          );
+          setImagePublic(
+            typeof post.image === "object" ? post.image?.url || null : post.image || null
+          );
+          setLoadedPost(post);
+          if (editor) {
+            editor.commands.setContent(post.content || "");
+          }
         }
       } catch (error) {
         console.error("Error fetching data:", error);
