@@ -14,7 +14,7 @@ import { useImageUpload } from "@/features/media/hooks/useImageUpload";
 import { mediaLibraryApi } from "@/features/media-library/api/mediaLibrary.api";
 import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useContentMetrics } from "@/features/seo/hooks/useContentMetrics";
-import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView } from "@/features/ai";
+import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView, ImageEnhancementReviewModal, useImageEnhancementReview, aiApi } from "@/features/ai";
 import { parseMarkdownToHtml } from "@/features/ai/utils/markdownParser";
 import { LivePreviewSystem } from "@/features/preview";
 
@@ -212,6 +212,20 @@ export default function EditorShell() {
   // ─── Image Upload Hook ───────────────────────────────────────────────
 
   const imageUpload = useImageUpload();
+
+  // ─── AI Image Enhancement Review Hook ─────────────────────────────
+
+  const enhancementReview = useImageEnhancementReview({
+    editor,
+    onSuccess: (count) => {
+      if (count > 0) {
+        toast.success(`Successfully inserted ${count} contextual images!`);
+      }
+    },
+    onError: (msg) => {
+      toast.error(msg);
+    },
+  });
 
   // ─── Content Metrics ─────────────────────────────────────────────────
 
@@ -676,6 +690,18 @@ export default function EditorShell() {
     }
   };
 
+  const handleHeaderPublish = async () => {
+    if (!title.trim()) {
+      toast.error("Please enter a title before publishing.");
+      return;
+    }
+    if (!postId) {
+      toast.info("Saving draft before publishing...");
+      await autoSave.save();
+    }
+    setPublishDrawerOpen(true);
+  };
+
   // ─── Title Change ────────────────────────────────────────────────────
 
   const handleTitleChange = (val: string) => {
@@ -684,6 +710,19 @@ export default function EditorShell() {
       autoSave.markDirty();
     }
   };
+
+  // ─── Post List Navigation ───────────────────────────────────────────
+
+  const handleSelectPost = useCallback(
+    (selectedPostId: string | null) => {
+      if (selectedPostId) {
+        router.push(`/create?id=${selectedPostId}`);
+      } else {
+        router.push("/create");
+      }
+    },
+    [router],
+  );
 
   // ─── AI Writer Stream Integration ────────────────────────────────────
 
@@ -716,8 +755,10 @@ export default function EditorShell() {
           editor.commands.setContent(html);
         }
       },
-      () => {
+      async () => {
         toast.success("Article compiled successfully!");
+        // Run review modal enhancement pipeline
+        enhancementReview.runEnhancementPipeline(accumulatedMarkdown, postId || undefined);
       }
     );
   };
@@ -755,7 +796,7 @@ export default function EditorShell() {
           htmlMode={mode === "html"}
           onToggleHtmlMode={toggleHtmlMode}
           onSave={() => autoSave.save()}
-          onPublish={() => setPublishDrawerOpen(true)}
+          onPublish={handleHeaderPublish}
           onTogglePostList={() => setPostListOpen(!postListOpen)}
           saveStatus={autoSave.status === "conflict" ? "error" : autoSave.status}
           onRetrySave={() => autoSave.retry()}
@@ -802,6 +843,8 @@ export default function EditorShell() {
         <PostListPanel
           isOpen={postListOpen}
           onClose={() => setPostListOpen(false)}
+          activePostId={postId}
+          onSelectPost={handleSelectPost}
         />
 
         {/* Main Editor Wrapper with side-by-side AI planning & sticky outline */}
@@ -1225,6 +1268,15 @@ export default function EditorShell() {
           allowDrag={true}
           typeFilter="image"
           editorContent={editor ? editor.getText() : ""}
+        />
+
+        {/* AI Image Enhancement Review Modal */}
+        <ImageEnhancementReviewModal
+          isOpen={enhancementReview.reviewModalOpen}
+          onClose={() => enhancementReview.setReviewModalOpen(false)}
+          resolvedImages={enhancementReview.resolvedImages}
+          onConfirm={enhancementReview.applyApprovedImages}
+          isLoading={enhancementReview.isEnhancing}
         />
       </div>
     </EditorProvider>

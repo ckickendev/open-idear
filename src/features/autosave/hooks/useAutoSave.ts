@@ -70,11 +70,21 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
       const currentPostId = postIdRef.current;
 
       // Don't save empty titles
-      if (!content.title.trim()) return;
+      if (!content.title.trim()) {
+        if (!isAutoSave) {
+          toast.error("Please enter a title before saving.");
+        }
+        return;
+      }
 
       // Don't save if content hasn't changed
       const hash = computeHash(content);
-      if (hash === lastSavedHash.current && currentPostId) return;
+      if (hash === lastSavedHash.current && currentPostId) {
+        if (!isAutoSave) {
+          toast.info("All changes are already saved!");
+        }
+        return;
+      }
 
       setStatus("saving");
 
@@ -126,8 +136,11 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
             toast.error(res.message || "Error creating post");
           }
         }
-      } catch {
+      } catch (err: any) {
         setStatus("error");
+        if (!isAutoSave) {
+          toast.error(err?.message || "Failed to save post");
+        }
       }
 
       // Fade status after delay

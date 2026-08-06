@@ -154,6 +154,7 @@
       "name": "Name",
       "description": "Discription",
       "background_image": "Background",
+      "postCount": "Posts count",
       "createDate": "Created date",
       "action": "Action",
       "previous": "Previous",

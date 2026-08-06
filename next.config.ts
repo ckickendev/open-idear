@@ -12,23 +12,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "res.cloudinary.com",
-        pathname: "/**",
+        hostname: "**",
       },
       {
         protocol: "http",
-        hostname: "localhost",
-        pathname: "/**",
-      },
-      {
-        protocol: "http",
-        hostname: "res.cloudinary.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "images.spiderum.com",
-        pathname: "/**",
+        hostname: "**",
       },
     ],
   },

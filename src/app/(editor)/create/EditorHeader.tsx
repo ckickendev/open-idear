@@ -225,12 +225,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         {/* Save button */}
         <button
           onClick={onSave}
-          disabled={!canSave}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer ${
-            canSave
-              ? "text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] hover:border-[var(--color-editor-secondary)]"
-              : "text-[var(--color-editor-muted)] cursor-not-allowed border border-transparent"
-          }`}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] hover:border-[var(--color-editor-secondary)] active:scale-[0.97]"
           aria-label="Save draft"
         >
           <Save size={14} />
@@ -240,9 +235,9 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         {/* Publish button */}
         <button
           onClick={onPublish}
-          disabled={!canPublish}
+          disabled={isPublished}
           className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
-            canPublish
+            !isPublished
               ? "bg-[var(--color-editor-accent)] hover:bg-[var(--color-editor-accent-hover)] text-white shadow-lg shadow-[var(--color-editor-accent)]/25 hover:shadow-[var(--color-editor-accent-hover)]/30 active:scale-[0.97]"
               : "bg-[var(--color-editor-elevated)] text-[var(--color-editor-muted)] cursor-not-allowed"
           }`}

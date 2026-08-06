@@ -138,7 +138,33 @@ export const aiApi = {
   generateDiagram: (payload: DiagramRequest) => {
     return api.post<DiagramResponse>("/ai/v1/diagram/generate", payload);
   },
+
+  /**
+   * Triggers the AI Content Enhancement Pipeline (auto-images, FAQ, tables, diagrams).
+   */
+  enhanceContent: (payload: { markdown: string; options?: Record<string, any> }) => {
+    return api.post<{
+      enhancedMarkdown: string;
+      insertedAssets: ResolvedImage[];
+      appliedEnhancements: string[];
+      executionTimeMs: number;
+    }>("/ai/v1/enhance", payload);
+  },
 };
+
+export interface ResolvedImage {
+  id: string;
+  suggestionId?: string;
+  position: number;
+  url: string;
+  previewUrl?: string;
+  alt: string;
+  caption?: string;
+  provider: "local" | "unsplash" | "pexels" | "ai-generated";
+  mediaId?: string;
+  dimensions?: { width: number; height: number };
+  markdownSnippet: string;
+}
 
 // ─── Image Editing Types ──────────────────────────────────────────────────────
 

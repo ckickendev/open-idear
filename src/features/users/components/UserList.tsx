@@ -435,6 +435,7 @@ const UserList = () => {
                                 width={36}
                                 height={36}
                                 className="h-9 w-9 rounded-full object-cover"
+                                unoptimized
                               />
                             ) : (
                               <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
@@ -556,6 +557,7 @@ const UserList = () => {
                           width={40}
                           height={40}
                           className="h-10 w-10 rounded-full object-cover"
+                          unoptimized
                         />
                       ) : (
                         <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">

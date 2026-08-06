@@ -17,10 +17,9 @@ export { AIDiagramView } from "./components/AIDiagramView";
 export { useAIPlanner } from "./hooks/useAIPlanner";
 export { useAIImageGenerator } from "./hooks/useAIImageGenerator";
 export { useAIImageEditor } from "./hooks/useAIImageEditor";
-export { useAIDiagram } from "./hooks/useAIDiagram";
-export { default as AIErrorBanner } from "./components/AIErrorBanner";
-export { default as AIProgressIndicator } from "./components/AIProgressIndicator";
-export { default as AIUsageDashboard } from "./components/AIUsageDashboard";
-export type { AspectRatio, ImageStyle, ImageGenerationRequest, ImageProviderMeta, EditOperation, ChangeStylePreset, ExpandDirection, UpscaleFactor, ImageEditRequest, ImageEditResponse, DiagramType, DiagramRequest, DiagramResponse } from "./api/ai.api";
+export { ImageEnhancementReviewModal } from "./components/ImageEnhancementReviewModal";
+export { useImageEnhancementReview } from "./hooks/useImageEnhancementReview";
+export { aiApi } from "./api/ai.api";
+export type { AspectRatio, ImageStyle, ImageGenerationRequest, ImageProviderMeta, EditOperation, ChangeStylePreset, ExpandDirection, UpscaleFactor, ImageEditRequest, ImageEditResponse, DiagramType, DiagramRequest, DiagramResponse, ResolvedImage } from "./api/ai.api";
 
 
