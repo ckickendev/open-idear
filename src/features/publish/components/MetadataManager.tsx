@@ -11,7 +11,10 @@
 // =============================================================================
 
 import React, { useState } from "react";
-import { Globe, Share2, ShieldAlert, CheckCircle, Search, Eye } from "lucide-react";
+import { Globe, Share2, ShieldAlert, CheckCircle, Search, Eye, Sparkles } from "lucide-react";
+import SmartFillButton from "./SmartFillButton";
+import SmartPublishResult from "./SmartPublishResult";
+import { useSmartPublish } from "../hooks/useSmartPublish";
 
 export interface PublishMetadata {
   seoTitle: string;
@@ -34,6 +37,8 @@ interface MetadataManagerProps {
   readonly metadata: PublishMetadata;
   readonly onChange: (updated: PublishMetadata) => void;
   readonly defaultCanonicalDomain?: string;
+  readonly articleId?: string;
+  readonly onApplyCoverImage?: (url: string, alt: string) => void;
 }
 
 type TabType = "seo" | "social" | "advanced";
@@ -43,10 +48,70 @@ export default function MetadataManager({
   metadata,
   onChange,
   defaultCanonicalDomain = "https://openidear.com",
+  articleId,
+  onApplyCoverImage,
 }: MetadataManagerProps) {
   const [activeTab, setActiveTab] = useState<TabType>("seo");
   const [previewTab, setPreviewTab] = useState<PreviewTabType>("google");
   const [keywordInput, setKeywordInput] = useState("");
+
+  const {
+    status: smartStatus,
+    result: smartResult,
+    error: smartError,
+    acceptedFields,
+    execute: executeSmartFill,
+    retry: retrySmartFill,
+    toggleField: toggleSmartField,
+    acceptAll: acceptAllSmartFields,
+  } = useSmartPublish();
+
+  const handleSmartFill = async () => {
+    if (articleId) {
+      await executeSmartFill(articleId);
+    }
+  };
+
+  const handleToggleSmartField = (field: keyof typeof acceptedFields) => {
+    toggleSmartField(field);
+
+    if (!smartResult) return;
+    const isNowAccepted = !acceptedFields[field];
+
+    if (isNowAccepted) {
+      if (field === "description" && smartResult.description) {
+        updateField("seoDescription", smartResult.description);
+        if (!metadata.ogDescription) updateField("ogDescription", smartResult.description);
+        if (!metadata.twitterDescription) updateField("twitterDescription", smartResult.description);
+      } else if (field === "slug" && smartResult.slug) {
+        updateField("slug", smartResult.slug);
+      } else if (field === "tags" && smartResult.tags) {
+        updateField("keywords", smartResult.tags);
+      } else if (field === "coverImage" && smartResult.coverImage && onApplyCoverImage) {
+        onApplyCoverImage(smartResult.coverImage.url, smartResult.coverImage.alt);
+      }
+    }
+  };
+
+  const handleAcceptAllSmartFields = () => {
+    acceptAllSmartFields();
+    if (!smartResult) return;
+
+    const updates: Partial<PublishMetadata> = {};
+    if (smartResult.description) {
+      updates.seoDescription = smartResult.description;
+      if (!metadata.ogDescription) updates.ogDescription = smartResult.description;
+      if (!metadata.twitterDescription) updates.twitterDescription = smartResult.description;
+    }
+    if (smartResult.slug) updates.slug = smartResult.slug;
+    if (smartResult.tags) updates.keywords = smartResult.tags;
+
+    onChange({ ...metadata, ...updates });
+
+    if (smartResult.coverImage && onApplyCoverImage) {
+      onApplyCoverImage(smartResult.coverImage.url, smartResult.coverImage.alt);
+    }
+  };
 
   // Helper helper to update fields cleanly
   const updateField = (key: keyof PublishMetadata, value: any) => {
@@ -80,6 +145,34 @@ export default function MetadataManager({
     <div className="metadata-manager-root grid grid-cols-1 lg:grid-cols-2 gap-6 w-full text-xs text-[var(--color-editor-text)] animate-[fade-in_0.2s_ease-out]">
       {/* ─── Column 1: Config Fields Panel ─────────────────────────────────── */}
       <div className="flex flex-col gap-4 p-5 bg-[var(--color-editor-surface)] border border-[var(--color-editor-border)] rounded-2xl shadow-sm">
+        {/* Smart Fill Header Banner */}
+        {articleId && (
+          <div className="p-3.5 rounded-xl bg-gradient-to-r from-violet-600/10 via-indigo-600/10 to-purple-600/10 border border-indigo-500/20 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles size={14} className="text-indigo-400" />
+                <span className="font-bold text-xs text-[var(--color-editor-text)]">
+                  AI Smart Fill Assistant
+                </span>
+              </div>
+              <SmartFillButton
+                status={smartStatus}
+                onClick={handleSmartFill}
+                onRetry={retrySmartFill}
+                error={smartError}
+              />
+            </div>
+            {smartResult && (
+              <SmartPublishResult
+                result={smartResult}
+                acceptedFields={acceptedFields}
+                onToggleField={handleToggleSmartField}
+                onAcceptAll={handleAcceptAllSmartFields}
+              />
+            )}
+          </div>
+        )}
+
         {/* Navigation Tabs */}
         <div className="flex items-center gap-1 border-b border-[var(--color-editor-border)] pb-2 mb-2">
           <button

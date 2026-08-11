@@ -14,5 +14,9 @@ export { default as PublishConfirmationModal, type ConfirmationDetails } from ".
 export { default as PublishWizard, type WizardStepType } from "./components/PublishWizard";
 export { default as PublishSuccessConsole } from "./components/PublishSuccessConsole";
 export { default as SharePanel } from "./components/SharePanel";
+export { default as SmartFillButton } from "./components/SmartFillButton";
+export { default as SmartPublishResult } from "./components/SmartPublishResult";
 export { usePublishPost } from "./hooks/usePublishPost";
 export { usePublishIntegration } from "./hooks/usePublishIntegration";
+export { useSmartPublish, type SmartPublishStatus, type UseSmartPublishReturn } from "./hooks/useSmartPublish";
+export { smartPublishApi, type SmartPublishResult as SmartPublishResultData } from "./services/smart-publish.service";
