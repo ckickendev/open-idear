@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { Editor } from "@tiptap/react";
 import { aiApi, ResolvedImage } from "../api/ai.api";
-import { parseMarkdownToHtml } from "../utils/markdownParser";
+import { toEditorHtml } from "../utils/contentTransformer";
 
 export interface UseImageEnhancementReviewOptions {
   editor: Editor | null;
@@ -78,7 +78,7 @@ export const useImageEnhancementReview = ({
         }
       });
 
-      const html = parseMarkdownToHtml(enhancedMarkdown);
+      const html = toEditorHtml(enhancedMarkdown);
 
       editor
         .chain()

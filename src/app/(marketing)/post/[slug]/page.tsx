@@ -7,6 +7,8 @@ import {
   CategoryLinkCustom,
   UserLinkCustom,
 } from "@/components/common/LinkCustom";
+import { ArticleRenderer } from "@/features/article";
+
 
 export default async function PostLists({
   params,
@@ -145,9 +147,14 @@ export default async function PostLists({
             </div>
           </div>
 
-          {/* Article Body */}
+          {/* Article Body — routed through ArticleRenderer for version-aware rendering */}
           <div className="prose prose-lg max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: postData.content }} />
+            <ArticleRenderer
+              contentVersion={postData.contentVersion ?? "html-v1"}
+              blocks={postData.blocks ?? null}
+              htmlContent={postData.content}
+              isDark={false}
+            />
           </div>
 
           <div className="mb-4">

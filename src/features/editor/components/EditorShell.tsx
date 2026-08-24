@@ -15,7 +15,7 @@ import { mediaLibraryApi } from "@/features/media-library/api/mediaLibrary.api";
 import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useContentMetrics } from "@/features/seo/hooks/useContentMetrics";
 import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView, ImageEnhancementReviewModal, useImageEnhancementReview, aiApi } from "@/features/ai";
-import { parseMarkdownToHtml } from "@/features/ai/utils/markdownParser";
+import { toEditorHtml } from "@/features/ai/utils/contentTransformer";
 import { LivePreviewSystem } from "@/features/preview";
 
 // ─── Context ────────────────────────────────────────────────────────────────
@@ -751,7 +751,7 @@ export default function EditorShell() {
       (chunk) => {
         accumulatedMarkdown += chunk;
         if (editor) {
-          const html = parseMarkdownToHtml(accumulatedMarkdown);
+          const html = toEditorHtml(accumulatedMarkdown);
           editor.commands.setContent(html);
         }
       },
