@@ -3,11 +3,14 @@
 // =============================================================================
 //  ARTICLE QUOTE BLOCK COMPONENT
 //  src/features/article/components/ArticleQuote.tsx
+//
+//  Sprint 3.1 — migrated to editorial.css .ed-quote classes.
+//  Large quotation mark is rendered as a CSS-styled text character
+//  rather than an icon for better typographic authenticity.
 // =============================================================================
 
 import React from "react";
 import type { QuoteBlock } from "../types/article.types";
-import { Quote } from "lucide-react";
 
 interface ArticleQuoteProps {
   block: QuoteBlock;
@@ -15,21 +18,23 @@ interface ArticleQuoteProps {
 
 export default function ArticleQuote({ block }: ArticleQuoteProps) {
   return (
-    <blockquote
-      id={`block-${block.id}`}
-      className="my-8 relative pl-6 border-l-4 border-accent"
-    >
-      <Quote
-        size={20}
-        className="absolute -top-2 -left-2 text-accent/40"
-        aria-hidden="true"
-      />
-      <p className="text-lg italic text-foreground/80 leading-relaxed">{block.content}</p>
+    <blockquote id={`block-${block.id}`} className="ed-quote">
+      {/* Decorative opening quotation mark */}
+      <span className="ed-quote__mark" aria-hidden="true">
+        &#8220;
+      </span>
+
+      {/* Quote text */}
+      <p className="ed-quote__text">{block.content}</p>
+
+      {/* Attribution */}
       {(block.author || block.source) && (
-        <footer className="mt-3 text-sm text-foreground/50 not-italic">
-          {block.author && <cite className="font-medium not-italic">— {block.author}</cite>}
+        <footer className="ed-quote__attribution">
+          {block.author && (
+            <cite className="not-italic">— {block.author}</cite>
+          )}
           {block.source && (
-            <span className="ml-1 opacity-70">
+            <span className="opacity-70">
               {block.author ? ", " : ""}
               {block.source}
             </span>

@@ -6,18 +6,15 @@
 //
 //  Master renderer that maps ArticleBlock[] → React components.
 //
-//  Design Decisions:
-//  - contentVersion drives the rendering branch:
-//      "blocks-v1"              → structured block components
-//      "html-v1" or undefined   → HtmlRenderer (dangerouslySetInnerHTML)
-//  - Unknown block types fail gracefully with a warning, not a crash.
-//  - HtmlRenderer is imported from the existing preview feature to preserve
-//    the exact same rendering behaviour for legacy HTML posts.
-//  - This component is the single integration point for future block types.
-//    Add new block type cases to the switch below only via approved Sprints.
+//  Sprint 3.4 Improvements:
+//  - Inline HTML markup rendering in paragraphs, headings, and lists.
+//  - Responsive image optimization with async decoding and lazy loading.
+//  - Accessible heading anchor links with hover/focus state.
+//  - Smooth block rhythm and consistent typography.
 // =============================================================================
 
 import React from "react";
+import "@/styles/editorial.css";
 import type { ArticleBlock, ContentVersion } from "../types/article.types";
 import HtmlRenderer from "@/features/preview/components/HtmlRenderer";
 
@@ -59,17 +56,25 @@ interface ArticleRendererProps {
   isDark?: boolean;
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────
+
+/** Checks if a string contains inline HTML tags (e.g. <strong>, <em>, <code>, <a>). */
+function hasInlineHtml(str: string): boolean {
+  return /<[a-z][\s\S]*>/i.test(str);
+}
+
 // ─── Inline Primitive Renderers ───────────────────────────────────────────
 
 function ArticleParagraph({ content, id }: { content: string; id: string }) {
-  return (
-    <p
-      id={`block-${id}`}
-      className="my-4 text-base leading-relaxed text-foreground/90"
-    >
-      {content}
-    </p>
-  );
+  if (hasInlineHtml(content)) {
+    return (
+      <p
+        id={`block-${id}`}
+        dangerouslySetInnerHTML={{ __html: content }}
+      />
+    );
+  }
+  return <p id={`block-${id}`}>{content}</p>;
 }
 
 function ArticleHeading({
@@ -81,21 +86,49 @@ function ArticleHeading({
   content: string;
   id: string;
 }) {
+  const anchorHref = `#block-${id}`;
+  const containsHtml = hasInlineHtml(content);
+
+  const anchor = (
+    <a
+      href={anchorHref}
+      className="ed-heading-anchor__link"
+      aria-label={`Link to section: ${content.replace(/<[^>]*>/g, "")}`}
+      tabIndex={0}
+    >
+      #
+    </a>
+  );
+
   if (level === 2) {
+    if (containsHtml) {
+      return (
+        <h2 id={`block-${id}`} className="ed-heading-anchor">
+          {anchor}
+          <span dangerouslySetInnerHTML={{ __html: content }} />
+        </h2>
+      );
+    }
     return (
-      <h2
-        id={`block-${id}`}
-        className="text-2xl font-bold mt-10 mb-4 text-foreground"
-      >
+      <h2 id={`block-${id}`} className="ed-heading-anchor">
+        {anchor}
         {content}
       </h2>
     );
   }
+
+  if (containsHtml) {
+    return (
+      <h3 id={`block-${id}`} className="ed-heading-anchor">
+        {anchor}
+        <span dangerouslySetInnerHTML={{ __html: content }} />
+      </h3>
+    );
+  }
+
   return (
-    <h3
-      id={`block-${id}`}
-      className="text-xl font-semibold mt-8 mb-3 text-foreground/90"
-    >
+    <h3 id={`block-${id}`} className="ed-heading-anchor">
+      {anchor}
       {content}
     </h3>
   );
@@ -107,18 +140,21 @@ function ArticleImage({
   block: Extract<ArticleBlock, { type: "image" }>;
 }) {
   return (
-    <figure id={`block-${block.id}`} className="my-8">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={block.src}
-        alt={block.alt}
-        width={block.width}
-        height={block.height}
-        className="w-full rounded-xl object-cover"
-        loading="lazy"
-      />
+    <figure id={`block-${block.id}`} className="ed-image">
+      <div className="ed-image__wrap">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={block.src}
+          alt={block.alt || ""}
+          width={block.width}
+          height={block.height}
+          className="ed-image__img"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
       {block.caption && (
-        <figcaption className="mt-2 text-center text-xs text-foreground/50 italic">
+        <figcaption className="ed-image__caption">
           {block.caption}
         </figcaption>
       )}
@@ -133,17 +169,15 @@ function ArticleList({
 }) {
   const Tag = block.style === "ordered" ? "ol" : "ul";
   return (
-    <Tag
-      id={`block-${block.id}`}
-      className={`my-4 pl-6 space-y-1 text-foreground/90 ${
-        block.style === "ordered" ? "list-decimal" : "list-disc"
-      }`}
-    >
-      {block.items.map((item, i) => (
-        <li key={i} className="leading-relaxed">
-          {item}
-        </li>
-      ))}
+    <Tag id={`block-${block.id}`}>
+      {block.items.map((item, i) => {
+        if (hasInlineHtml(item)) {
+          return (
+            <li key={i} dangerouslySetInnerHTML={{ __html: item }} />
+          );
+        }
+        return <li key={i}>{item}</li>;
+      })}
     </Tag>
   );
 }
@@ -154,7 +188,7 @@ function UnknownBlock({ type }: { type: string }) {
   if (process.env.NODE_ENV !== "production") {
     console.warn(`[ArticleRenderer] Unknown block type: "${type}". Block will not render.`);
   }
-  return null; // Fail gracefully — no crash, no visible output in production
+  return null;
 }
 
 // ─── Single Block Dispatcher ──────────────────────────────────────────────
@@ -195,15 +229,13 @@ export default function ArticleRenderer({
   isDark = false,
 }: ArticleRendererProps) {
   // ── Backward Compatibility Branch ────────────────────────────────────────
-  // If contentVersion is not "blocks-v1", fall back to the existing
-  // HtmlRenderer. This ensures all legacy html-v1 posts render identically.
   if (contentVersion !== "blocks-v1" || !blocks || blocks.length === 0) {
     return <HtmlRenderer html={htmlContent} isDark={isDark} />;
   }
 
   // ── Structured Block Rendering Branch ────────────────────────────────────
   return (
-    <article className="article-blocks-renderer max-w-none">
+    <article className="article-blocks-renderer" aria-label="Article content">
       {blocks.map((block) => (
         <ArticleBlockItem key={block.id} block={block} />
       ))}

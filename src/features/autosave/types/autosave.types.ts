@@ -14,7 +14,17 @@ export interface UseAutoSaveOptions {
   /** Current post ID. Null = new post (no auto-save until first manual save). */
   postId: string | null;
   /** Callback to get current editor content snapshot. */
-  getContent: () => { title: string; html: string; text: string };
+  getContent: () => {
+    title: string;
+    html: string;
+    text: string;
+    markdown?: string;
+    contentVersion?: "html-v1" | "blocks-v1";
+    blocks?: unknown[];
+    aiContext?: Record<string, unknown>;
+    hero?: Record<string, unknown>;
+    seo?: Record<string, unknown>;
+  };
   /** Debounce delay in ms. Default: 3000 */
   debounceMs?: number;
   /** Whether auto-save is enabled. Default: true */

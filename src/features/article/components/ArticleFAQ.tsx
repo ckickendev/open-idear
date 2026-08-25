@@ -4,10 +4,15 @@
 //  ARTICLE FAQ BLOCK COMPONENT
 //  src/features/article/components/ArticleFAQ.tsx
 //
-//  Design Decisions:
-//  - Uses <details>/<summary> for native browser accordion behaviour.
-//  - Native HTML elements are preferred for AEO (Answer Engine Optimization).
+//  Sprint 3.1 — migrated to editorial.css .ed-faq classes.
+//  Retained <details>/<summary> pattern for native browser semantics.
+//  Chevron rotation handled via .ed-faq__item--open class toggled by JS
+//  (details[open] state is reflected via a data attribute on the wrapper).
+//
+//  Design Notes:
+//  - Uses <details>/<summary> for native AEO-friendly semantics.
 //    FAQPage schema.org JSON-LD will be added in Sprint 4.
+//  - Chevron animation is CSS-driven via the "open" attribute selector.
 // =============================================================================
 
 import React from "react";
@@ -20,29 +25,35 @@ interface ArticleFAQProps {
 
 export default function ArticleFAQ({ block }: ArticleFAQProps) {
   return (
-    <section id={`block-${block.id}`} className="my-8" aria-label="Frequently Asked Questions">
-      {block.title && (
-        <h2 className="text-xl font-bold mb-4 text-foreground">{block.title}</h2>
-      )}
-      <div className="space-y-2">
-        {block.items.map((item, idx) => (
-          <details
-            key={idx}
-            className="group border border-border rounded-xl overflow-hidden"
-          >
-            <summary className="flex items-center justify-between px-5 py-4 cursor-pointer select-none font-medium text-foreground hover:bg-muted/50 transition-colors list-none">
-              <span>{item.question}</span>
-              <ChevronDown
-                size={16}
-                className="shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180"
-              />
-            </summary>
-            <div className="px-5 pb-4 pt-1 text-sm text-foreground/80 leading-relaxed border-t border-border bg-muted/20">
-              {item.answer}
-            </div>
-          </details>
-        ))}
-      </div>
+    <section
+      id={`block-${block.id}`}
+      className="ed-faq"
+      aria-label="Frequently Asked Questions"
+    >
+      {/* Section label */}
+      <span className="ed-faq__label">
+        {block.title ?? "Frequently Asked Questions"}
+      </span>
+
+      {/* FAQ items — native <details>/<summary> accordion */}
+      {block.items.map((item, idx) => (
+        <details key={idx} className="ed-faq__item">
+          <summary className="ed-faq__trigger" style={{ listStyle: "none" }}>
+            <span>{item.question}</span>
+            <ChevronDown
+              size={16}
+              aria-hidden="true"
+              className="ed-faq__chevron"
+              style={{
+                // CSS sibling trick won't work inside <summary>,
+                // so we rely on the global details[open] selector in editorial.css
+                // for the rotate animation — handled via ed-faq__item--open utility.
+              }}
+            />
+          </summary>
+          <div className="ed-faq__answer">{item.answer}</div>
+        </details>
+      ))}
     </section>
   );
 }

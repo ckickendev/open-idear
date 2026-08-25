@@ -3,6 +3,13 @@
 // =============================================================================
 //  ARTICLE CODE BLOCK COMPONENT
 //  src/features/article/components/ArticleCodeBlock.tsx
+//
+//  Sprint 3.4 — Enhanced Code Block UX & Accessibility.
+//  - Displays filename and language badge cleanly.
+//  - Copy button with feedback and aria-live.
+//  - Keyboard scrollable <pre> via tabIndex={0} and aria-label.
+//  - Edge-bleed on mobile via editorial.css.
+//  - Reduced-motion compliant.
 // =============================================================================
 
 import React, { useState } from "react";
@@ -22,39 +29,64 @@ export default function ArticleCodeBlock({ block }: ArticleCodeBlockProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard API may not be available in all environments
+      // Clipboard API fallback if restricted
     }
   };
+
+  const hasFilename = Boolean(block.filename);
+  const hasLanguage = Boolean(block.language);
+  const showLangBadge =
+    hasLanguage &&
+    (!hasFilename ||
+      block.language?.toLowerCase() !== block.filename?.toLowerCase());
 
   return (
     <div
       id={`block-${block.id}`}
-      className="my-6 rounded-xl overflow-hidden border border-[var(--color-editor-border,#2a2d3a)] bg-[#0d1117]"
+      className="ed-code"
+      role="region"
+      aria-label={`Code block${block.filename ? `: ${block.filename}` : block.language ? `: ${block.language}` : ""}`}
     >
-      {/* Header bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-[#30363d]">
-        <div className="flex items-center gap-2">
-          {block.filename && (
-            <span className="text-xs text-zinc-400 font-mono">{block.filename}</span>
-          )}
-          {block.language && (
-            <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded">
-              {block.language}
+      {/* Header bar — filename + language badge + copy button */}
+      <div className="ed-code__header">
+        <div className="flex items-center gap-2 overflow-hidden">
+          {hasFilename && (
+            <span className="ed-code__filename" title={block.filename}>
+              {block.filename}
             </span>
           )}
+          {showLangBadge && (
+            <span className="ed-code__lang">{block.language}</span>
+          )}
         </div>
+
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
-          aria-label="Copy code"
+          className={`ed-code__copy-btn${copied ? " ed-code__copy-btn--success" : ""}`}
+          aria-label={copied ? "Copied code to clipboard" : "Copy code to clipboard"}
+          aria-live="polite"
         >
-          {copied ? <Check size={12} /> : <Copy size={12} />}
-          {copied ? "Copied!" : "Copy"}
+          {copied ? (
+            <>
+              <Check size={12} aria-hidden="true" />
+              <span>Copied</span>
+            </>
+          ) : (
+            <>
+              <Copy size={12} aria-hidden="true" />
+              <span>Copy</span>
+            </>
+          )}
         </button>
       </div>
-      {/* Code */}
-      <pre className="overflow-x-auto p-4 text-sm leading-relaxed">
+
+      {/* Code surface — keyboard accessible horizontal scroll */}
+      <pre
+        className="ed-code__pre"
+        tabIndex={0}
+        aria-label={`Code snippet${block.language ? ` (${block.language})` : ""}`}
+      >
         <code className={block.language ? `language-${block.language}` : ""}>
           {block.code}
         </code>

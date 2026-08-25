@@ -96,6 +96,12 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
             title: content.title,
             text: content.text,
             content: content.html,
+            markdown: content.markdown,
+            contentVersion: content.contentVersion,
+            blocks: content.blocks,
+            aiContext: content.aiContext,
+            hero: content.hero,
+            seo: content.seo,
           });
 
           if (res.success) {
@@ -115,6 +121,12 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
             title: content.title,
             text: content.text,
             content: content.html,
+            markdown: content.markdown,
+            contentVersion: content.contentVersion,
+            blocks: content.blocks,
+            aiContext: content.aiContext,
+            hero: content.hero,
+            seo: content.seo,
           });
 
           if (res.success) {
@@ -136,10 +148,11 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
             toast.error(res.message || "Error creating post");
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const error = err as { message?: string };
         setStatus("error");
         if (!isAutoSave) {
-          toast.error(err?.message || "Failed to save post");
+          toast.error(error?.message || "Failed to save post");
         }
       }
 

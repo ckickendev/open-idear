@@ -1,13 +1,59 @@
+import type { Metadata } from "next";
 import { ENV } from "@/api/const";
 import HotPost from "@/features/ideas/components/hot_post/HotPost";
-import { Mail, Link } from "lucide-react";
 import CommentSection from "./CommentSection";
 import PostSidebarActions from "./PostSideBarActions";
 import {
-  CategoryLinkCustom,
-  UserLinkCustom,
-} from "@/components/common/LinkCustom";
-import { ArticleRenderer } from "@/features/article";
+  ArticleRenderer,
+  EditorialLayout,
+  ArticleMeta,
+} from "@/features/article";
+import TableOfContents from "@/features/article/components/TableOfContents";
+import ReadingProgress from "@/features/article/components/ReadingProgress";
+import { buildTableOfContents } from "@/features/article/utils/buildTableOfContents";
+import { calculateReadingTime } from "@/features/article/utils/calculateReadingTime";
+import { buildPostMetadata, getPostStructuredData, JsonLd } from "@/features/seo";
+import "@/styles/editorial.css";
+
+// ─── Post Fetcher ────────────────────────────────────────────────────────────
+
+async function getPost(slug: string) {
+  try {
+    const res = await fetch(`${ENV.ROOT_API}/post/getPostBySlug/${slug}`, {
+      next: { revalidate: 3600 },
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const data = await res.json();
+    return data.post;
+  } catch (error) {
+    console.error("Error fetching post for metadata/render:", error);
+    return null;
+  }
+}
+
+// ─── Server-Side Metadata Generator ──────────────────────────────────────────
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const postData = await getPost(slug);
+
+  if (!postData) {
+    return {
+      title: "Post Not Found",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  return buildPostMetadata(postData);
+}
 
 
 export default async function PostLists({
@@ -17,32 +63,6 @@ export default async function PostLists({
 }) {
   // Await params before destructuring
   const { slug } = await params;
-
-  const getPost = async (slug: string) => {
-    try {
-      // Using native fetch with Next.js optimizations
-      const res = await fetch(
-        `${ENV.ROOT_API}/post/getPostBySlug/${slug}`,
-        {
-          // Next.js 13+ fetch options
-          next: { revalidate: 3600 }, // Cache for 1 hour
-          // or use: cache: 'no-store' for always fresh data
-        },
-      );
-
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-
-      const data = await res.json();
-      //console.log("data.post:", data.post);
-
-      return data.post;
-    } catch (error) {
-      console.error("Error fetching post:", error);
-      throw new Error(`Failed to fetch post with slug: ${slug}`);
-    }
-  };
 
   const getRandomTopic = async () => {
     try {
@@ -70,118 +90,128 @@ export default async function PostLists({
     return <div>Post not found</div>;
   }
 
+  // Build TOC items server-side from structured blocks.
+  // Returns [] for html-v1 posts or posts with no headings.
+  const tocItems = buildTableOfContents(postData.blocks ?? null);
+  const hasToc = tocItems.length > 0;
+
+  // Calculate reading time from structured blocks.
+  // Prefer the AI-generated estimate stored in aiContext when present;
+  // fall back to our deterministic calculation for all other cases.
+  const calculatedReadingTime = calculateReadingTime(postData.blocks ?? null);
+  const displayReadingTime:
+    | number
+    | undefined =
+    postData.aiContext?.writerOutput?.estimatedReadingTime ??
+    (calculatedReadingTime.readingTimeMinutes > 0
+      ? calculatedReadingTime.readingTimeMinutes
+      : undefined);
+
+  // Generate server-side Schema.org JSON-LD structured data objects
+  const structuredData = getPostStructuredData(postData);
+
   return (
     <>
-      <div className="relative mb-6">
-        {/* <Image
- src={postData?.image?.url ||"/banner/openidear3.webp"} // adjust field name
- alt={postData?.title ||"Post banner"}
- fill
- priority
- sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1200px"
- className="w-full h-80 object-cover rounded-lg"
- /> */}
-        <img
-          src={postData.image?.url || "/banner/openidear3.webp"}
-          alt={postData.title}
-          className="w-full h-80 object-cover rounded-lg"
-        />
+      {/* ── Schema.org Structured Data (JSON-LD) ── */}
+      <JsonLd data={structuredData.article} />
+      <JsonLd data={structuredData.breadcrumb} />
+      {structuredData.faq && <JsonLd data={structuredData.faq} />}
 
-        {/* Image Caption */}
-        <div className="max-w-4xl mx-auto px-4 py-2 bg-background text-sm text-muted-foreground leading-relaxed">
-          <span className="text-yellow-600 font-medium">|</span>{" "}
-          {postData.image?.description || "No description available"}
-        </div>
-      </div>
-      <div className="max-w-4xl mx-auto px-4 py-8 bg-background">
-        <PostSidebarActions postData={postData} />
+      {/* ── Reading Progress Bar — fixed at viewport top, zero layout shift ── */}
+      <ReadingProgress />
 
-        {/* Article Content */}
-        <article className="max-w-4xl">
-          {/* Category Tag */}
-          <div className="mb-4">
-            <CategoryLinkCustom
-              className="inline-block px-3 py-1 text-xs font-semibold text-foreground bg-muted rounded uppercase tracking-wide"
-              slug={
-                postData.category ? postData.category.slug : "uncategorized"
-              }
-              name={
-                postData.category ? postData.category.name : "Uncategorized"
-              }
-            />
-          </div>
-          {/* Headline */}
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground leading-tight mb-6">
-            {postData.title}
-          </h1>
-          {/* Subheadline */}
-          <p className="text-xl text-foreground/80 leading-relaxed mb-6">
-            {postData.description}
-          </p>
-
-          {/* Author and Date Info */}
-          <div className="flex items-center justify-between mb-8 pb-6 border-b border-border">
-            <div>
-              <p className="text-sm font-medium text-foreground">
-                By {""}
-                <UserLinkCustom
-                  className="text-sm font-medium cursor-pointer hover:underline"
-                  username={postData?.author?.username}
-                  name={postData?.author?.username}
-                />
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Created date:{" "}
-                {new Date(postData.createdAt).toLocaleDateString()}
-              </p>
+      {/* ── Editorial Layout wraps the entire article reading experience ── */}
+      <EditorialLayout
+        hasToc={hasToc}
+        hero={
+          <div className="ed-hero">
+            {/* Hero Image */}
+            <div className="ed-hero__image-wrap">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={postData.image?.url || "/banner/openidear3.webp"}
+                alt={postData.title}
+                className="ed-hero__image"
+              />
             </div>
-
-            {/* Social Share Icons */}
-            <div className="flex items-center space-x-3">
-              <button className="p-2 rounded-full bg-accent text-white hover:bg-accent transition-colors">
-                <Mail size={16} />
-              </button>
-              <button className="p-2 rounded-full bg-accent text-white hover:bg-accent transition-colors">
-                <Link size={16} />
-              </button>
-            </div>
-          </div>
-
-          {/* Article Body — routed through ArticleRenderer for version-aware rendering */}
-          <div className="prose prose-lg max-w-none">
-            <ArticleRenderer
-              contentVersion={postData.contentVersion ?? "html-v1"}
-              blocks={postData.blocks ?? null}
-              htmlContent={postData.content}
-              isDark={false}
-            />
-          </div>
-
-          <div className="mb-4">
-            <p className="text-2xl mb-6 font-bold text-red-700">
-              Related Topics
-            </p>
-
-            {randomTopic && randomTopic.length > 0 ? (
-              <div className="flex flex-wrap gap-4">
-                {randomTopic.map((topic: any) => (
-                  <a
-                    key={topic._id}
-                    href={`/category/${topic.slug}`}
-                    className="inline-block px-3 py-1 text-xs font-semibold text-foreground bg-muted rounded uppercase tracking-wide hover:bg-muted transition-colors"
-                  >
-                    {topic.name}
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground">
-                No related topics available.
+            {postData.image?.description && (
+              <p className="ed-hero__caption">
+                {postData.image.description}
               </p>
             )}
+
+            {/* Article Metadata Header */}
+            <ArticleMeta
+              category={postData.category?.name}
+              title={postData.title}
+              description={postData.description}
+              author={
+                postData.author
+                  ? {
+                      name:
+                        postData.author.name ||
+                        postData.author.username ||
+                        "Anonymous",
+                      avatarUrl:
+                        postData.author.avatar ||
+                        postData.author.avatarUrl,
+                      role: postData.author.role,
+                    }
+                  : undefined
+              }
+              publishedAt={postData.createdAt}
+              updatedAt={postData.updatedAt}
+              readingTimeMinutes={displayReadingTime}
+              tags={postData.tags}
+            />
+
+            {/* Sidebar reaction actions */}
+            <PostSidebarActions postData={postData} />
           </div>
-        </article>
-      </div>
+        }
+        toc={
+          hasToc ? (
+            <TableOfContents items={tocItems} variant="desktop" />
+          ) : undefined
+        }
+        tocMobile={
+          hasToc ? (
+            <TableOfContents items={tocItems} variant="mobile" />
+          ) : undefined
+        }
+      >
+        {/* ── Article Body — version-aware rendering ── */}
+        <ArticleRenderer
+          contentVersion={postData.contentVersion ?? "html-v1"}
+          blocks={postData.blocks ?? null}
+          htmlContent={postData.content}
+          isDark={false}
+        />
+
+        {/* ── Related Topics ── */}
+        <div style={{ marginTop: "var(--ed-space-12)", borderTop: "1px solid var(--ed-border)", paddingTop: "var(--ed-space-8)" }}>
+          <p style={{ fontSize: "var(--ed-text-xl)", marginBottom: "var(--ed-space-6)", fontWeight: "var(--ed-weight-bold)", color: "var(--ed-text-primary)" }}>
+            Related Topics
+          </p>
+          {randomTopic && randomTopic.length > 0 ? (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--ed-space-3)" }}>
+              {randomTopic.map((topic: { _id: string; slug: string; name: string }) => (
+                <a
+                  key={topic._id}
+                  href={`/category/${topic.slug}`}
+                  className="ed-badge"
+                >
+                  {topic.name}
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p style={{ color: "var(--ed-text-tertiary)" }}>No related topics available.</p>
+          )}
+        </div>
+      </EditorialLayout>
+
+      {/* ── Below-the-fold content (outside the reading column) ── */}
       <div className="max-w-full mx-auto px-4 py-8 bg-background">
         <HotPost />
       </div>

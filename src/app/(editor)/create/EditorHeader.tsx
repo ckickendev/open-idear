@@ -13,6 +13,7 @@ import {
   Wand2,
   Paintbrush,
   Network,
+  TrendingUp,
 } from "lucide-react";
 import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
 import Link from "next/link";
@@ -55,6 +56,12 @@ interface EditorHeaderProps {
   onToggleAIDiagram: () => void;
   /** AI Diagram Generator open status */
   aiDiagramOpen: boolean;
+  /** Toggle SEO Score panel */
+  onToggleSEO: () => void;
+  /** SEO Score panel open status */
+  seoOpen: boolean;
+  /** Open 1-Click AI Publisher modal */
+  onOpen1ClickAI?: () => void;
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -78,6 +85,9 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   aiImageEditOpen,
   onToggleAIDiagram,
   aiDiagramOpen,
+  onToggleSEO,
+  seoOpen,
+  onOpen1ClickAI,
 }) => {
   const canSave = hasTitle;
   const canPublish = isEditMode && !isPublished;
@@ -131,6 +141,18 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
 
       {/* Right section */}
       <div className="flex items-center gap-1.5">
+        {/* 1-Click AI Publisher */}
+        {onOpen1ClickAI && (
+          <button
+            onClick={onOpen1ClickAI}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-md shadow-indigo-500/20 active:scale-95 transition-all cursor-pointer"
+            aria-label="Open 1-Click AI Publisher"
+          >
+            <Sparkles size={14} className="text-amber-300 animate-pulse" />
+            <span>1-Click AI</span>
+          </button>
+        )}
+
         {/* AI Planner */}
         <button
           onClick={onToggleAIPlanner}
@@ -185,6 +207,20 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         >
           <Network size={14} className="text-fuchsia-400" />
           <span>AI Diagram</span>
+        </button>
+
+        {/* SEO Score */}
+        <button
+          onClick={onToggleSEO}
+          className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+            seoOpen
+              ? "bg-emerald-500/15 text-emerald-500"
+              : "text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]"
+          }`}
+          aria-label="Toggle SEO Score panel"
+        >
+          <TrendingUp size={14} className={seoOpen ? "text-emerald-500" : "text-emerald-400"} />
+          <span>SEO Score</span>
         </button>
 
         {/* Separator */}

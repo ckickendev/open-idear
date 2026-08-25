@@ -3,6 +3,10 @@
 // =============================================================================
 //  ARTICLE CTA BLOCK COMPONENT
 //  src/features/article/components/ArticleCTA.tsx
+//
+//  Sprint 3.1 — migrated to editorial.css .ed-cta classes.
+//  Button hover animation is CSS-driven via .ed-cta__btn-primary.
+//  No inline styles or hardcoded colors.
 // =============================================================================
 
 import React from "react";
@@ -14,32 +18,37 @@ interface ArticleCTAProps {
 }
 
 export default function ArticleCTA({ block }: ArticleCTAProps) {
-  const isPrimary = !block.variant || block.variant === "primary";
-
   return (
     <div
       id={`block-${block.id}`}
-      className={`my-8 rounded-2xl p-8 text-center ${
-        isPrimary
-          ? "bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20"
-          : "bg-muted border border-border"
-      }`}
+      className="ed-cta"
+      role="complementary"
+      aria-label={block.title}
     >
-      <h3 className="text-xl font-bold text-foreground mb-2">{block.title}</h3>
+      {/* Optional brand icon / emoji */}
+      <div className="ed-cta__icon" aria-hidden="true">
+        🔮
+      </div>
+
+      {/* Heading */}
+      <h3 className="ed-cta__title">{block.title}</h3>
+
+      {/* Description */}
       {block.description && (
-        <p className="text-sm text-foreground/70 mb-6 max-w-md mx-auto">{block.description}</p>
+        <p className="ed-cta__description">{block.description}</p>
       )}
-      <a
-        href={block.button.href}
-        className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-all ${
-          isPrimary
-            ? "bg-accent text-white hover:bg-accent/90 shadow-md hover:shadow-lg"
-            : "bg-foreground text-background hover:opacity-90"
-        }`}
-      >
-        {block.button.label}
-        <ArrowRight size={14} />
-      </a>
+
+      {/* Actions */}
+      <div className="ed-cta__actions">
+        <a
+          href={block.button.href}
+          className="ed-cta__btn-primary"
+          aria-label={block.button.label}
+        >
+          {block.button.label}
+          <ArrowRight size={14} aria-hidden="true" />
+        </a>
+      </div>
     </div>
   );
 }

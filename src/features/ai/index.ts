@@ -19,7 +19,15 @@ export { useAIImageGenerator } from "./hooks/useAIImageGenerator";
 export { useAIImageEditor } from "./hooks/useAIImageEditor";
 export { ImageEnhancementReviewModal } from "./components/ImageEnhancementReviewModal";
 export { useImageEnhancementReview } from "./hooks/useImageEnhancementReview";
+export { AIGenerationModal } from "./components/AIGenerationModal";
+export { useAIGeneratorPipeline } from "./hooks/useAIGeneratorPipeline";
 export { aiApi } from "./api/ai.api";
 export type { AspectRatio, ImageStyle, ImageGenerationRequest, ImageProviderMeta, EditOperation, ChangeStylePreset, ExpandDirection, UpscaleFactor, ImageEditRequest, ImageEditResponse, DiagramType, DiagramRequest, DiagramResponse, ResolvedImage } from "./api/ai.api";
-
+export type {
+  PipelineStageId,
+  PipelineStageStatus,
+  PipelineStageState,
+  PipelineInput,
+  PipelineData,
+} from "./types/pipeline.types";
 

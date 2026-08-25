@@ -3,6 +3,10 @@
 // =============================================================================
 //  ARTICLE COMPARISON TABLE BLOCK COMPONENT
 //  src/features/article/components/ArticleComparisonTable.tsx
+//
+//  Sprint 3.1 — migrated to editorial.css .ed-comparison classes.
+//  Mobile: horizontal scroll with visible scroll affordance.
+//  Accessibility: proper <th scope> attributes for both axes.
 // =============================================================================
 
 import React from "react";
@@ -12,37 +16,51 @@ interface ArticleComparisonTableProps {
   block: ComparisonBlock;
 }
 
-export default function ArticleComparisonTable({ block }: ArticleComparisonTableProps) {
+export default function ArticleComparisonTable({
+  block,
+}: ArticleComparisonTableProps) {
   return (
-    <div id={`block-${block.id}`} className="my-8">
+    <div id={`block-${block.id}`} className="ed-comparison">
       {block.title && (
-        <h3 className="text-base font-semibold mb-3 text-foreground">{block.title}</h3>
+        <h3 className="ed-comparison__title">{block.title}</h3>
       )}
-      <div className="overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-muted">
+
+      {/* Horizontal scroll wrapper */}
+      <div
+        className="ed-comparison__scroll"
+        role="region"
+        aria-label={block.title ?? "Comparison table"}
+        tabIndex={0}
+      >
+        <table
+          className="ed-comparison__table"
+          aria-label={block.title ?? "Comparison table"}
+        >
+          <thead className="ed-comparison__thead">
+            <tr>
               {block.columns.map((col, i) => (
                 <th
                   key={i}
-                  className="px-4 py-3 text-left font-semibold text-foreground border-b border-border"
+                  scope={i === 0 ? "col" : "col"}
                 >
                   {col}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="ed-comparison__tbody">
             {block.rows.map((row, rowIdx) => (
-              <tr
-                key={rowIdx}
-                className="border-b border-border last:border-0 even:bg-muted/40 hover:bg-muted/70 transition-colors"
-              >
-                {row.cells.map((cell, cellIdx) => (
-                  <td key={cellIdx} className="px-4 py-3 text-foreground/80">
-                    {cell}
-                  </td>
-                ))}
+              <tr key={rowIdx}>
+                {row.cells.map((cell, cellIdx) =>
+                  cellIdx === 0 ? (
+                    // First column is a row header
+                    <th key={cellIdx} scope="row">
+                      {cell}
+                    </th>
+                  ) : (
+                    <td key={cellIdx}>{cell}</td>
+                  )
+                )}
               </tr>
             ))}
           </tbody>

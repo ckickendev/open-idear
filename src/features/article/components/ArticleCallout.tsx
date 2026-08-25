@@ -3,6 +3,9 @@
 // =============================================================================
 //  ARTICLE CALLOUT BLOCK COMPONENT
 //  src/features/article/components/ArticleCallout.tsx
+//
+//  Sprint 3.1 — updated to consume editorial.css design tokens via
+//  .ed-callout and variant modifier classes. No hardcoded colors.
 // =============================================================================
 
 import React from "react";
@@ -15,54 +18,65 @@ interface ArticleCalloutProps {
 
 type CalloutConfig = {
   icon: React.ReactNode;
-  className: string;
-  titleClass: string;
+  variantClass: string;
+  headerClass: string;
+  role: "note" | "alert";
 };
 
 function getCalloutConfig(variant: CalloutVariant): CalloutConfig {
   switch (variant) {
     case "info":
       return {
-        icon: <Info size={16} />,
-        className: "bg-blue-500/10 border-l-4 border-blue-500 text-blue-900 dark:text-blue-200",
-        titleClass: "text-blue-700 dark:text-blue-300",
+        icon: <Info size={14} aria-hidden="true" />,
+        variantClass: "ed-callout--info",
+        headerClass: "ed-callout__header--info",
+        role: "note",
       };
     case "tip":
       return {
-        icon: <Lightbulb size={16} />,
-        className: "bg-green-500/10 border-l-4 border-green-500 text-green-900 dark:text-green-200",
-        titleClass: "text-green-700 dark:text-green-300",
+        icon: <Lightbulb size={14} aria-hidden="true" />,
+        variantClass: "ed-callout--tip",
+        headerClass: "ed-callout__header--tip",
+        role: "note",
       };
     case "warning":
       return {
-        icon: <AlertTriangle size={16} />,
-        className: "bg-yellow-500/10 border-l-4 border-yellow-500 text-yellow-900 dark:text-yellow-200",
-        titleClass: "text-yellow-700 dark:text-yellow-300",
+        icon: <AlertTriangle size={14} aria-hidden="true" />,
+        variantClass: "ed-callout--warning",
+        headerClass: "ed-callout__header--warning",
+        role: "alert",
       };
     case "caution":
       return {
-        icon: <ShieldAlert size={16} />,
-        className: "bg-red-500/10 border-l-4 border-red-500 text-red-900 dark:text-red-200",
-        titleClass: "text-red-700 dark:text-red-300",
+        icon: <ShieldAlert size={14} aria-hidden="true" />,
+        variantClass: "ed-callout--caution",
+        headerClass: "ed-callout__header--caution",
+        role: "alert",
       };
   }
 }
 
 export default function ArticleCallout({ block }: ArticleCalloutProps) {
   const config = getCalloutConfig(block.variant);
+  const label =
+    block.title ??
+    block.variant.charAt(0).toUpperCase() + block.variant.slice(1);
 
   return (
     <div
       id={`block-${block.id}`}
-      className={`my-6 rounded-r-lg px-5 py-4 ${config.className}`}
-      role="note"
+      className={`ed-callout ${config.variantClass}`}
+      role={config.role}
       aria-label={`${block.variant} callout`}
     >
-      <div className={`flex items-center gap-2 font-semibold text-sm mb-1 ${config.titleClass}`}>
+      {/* Label row — icon + variant name */}
+      <div className={`ed-callout__header ${config.headerClass}`}>
         {config.icon}
-        <span>{block.title ?? block.variant.charAt(0).toUpperCase() + block.variant.slice(1)}</span>
+        <span>{label}</span>
       </div>
-      <p className="text-sm leading-relaxed">{block.content}</p>
+
+      {/* Body text */}
+      <p className="ed-callout__body">{block.content}</p>
     </div>
   );
 }
