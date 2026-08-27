@@ -33,6 +33,9 @@ export const postApi = {
   toggleMarkPost: async (postId: string) => {
     return await api.post(`/post/marked?postId=${postId}`);
   },
+  getPostsByAuthor: async () => {
+    return await api.get("/post/getPostByAuthor");
+  },
   deletePost: async (postId: string) => {
     return await api.post("/post/deletePost", { postId });
   },

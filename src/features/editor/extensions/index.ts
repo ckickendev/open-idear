@@ -2,13 +2,8 @@ import type { Extensions } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import ImageExtension from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
-import LinkExtension from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
-import UnderlineExtension from "@tiptap/extension-underline";
 import { TextStyleKit } from "@tiptap/extension-text-style";
-import Paragraph from "@tiptap/extension-paragraph";
-import Color from "@tiptap/extension-color";
-import CodeBlock from "@tiptap/extension-code-block";
 import FileHandler from "@tiptap/extension-file-handler";
 import type { Editor } from "@tiptap/react";
 
@@ -43,22 +38,35 @@ export function createEditorExtensions(
     options;
 
   return [
-    StarterKit,
-    TextStyleKit,
-    CodeBlock.configure({
-      exitOnArrowDown: true,
-      exitOnTripleEnter: true,
-      defaultLanguage: "plaintext",
-      HTMLAttributes: {
-        class: "my-code-block",
+    StarterKit.configure({
+      codeBlock: {
+        exitOnArrowDown: true,
+        exitOnTripleEnter: true,
+        defaultLanguage: "plaintext",
+        HTMLAttributes: {
+          class: "my-code-block",
+        },
+      },
+      paragraph: {
+        HTMLAttributes: {
+          class: "",
+        },
+      },
+      link: {
+        openOnClick: false,
+        HTMLAttributes: {
+          class: "editor-link",
+        },
+      },
+      underline: {
+        HTMLAttributes: {
+          class: "underline",
+        },
       },
     }),
-    Color.configure({
-      types: ["textStyle"],
-    }),
-    Paragraph.configure({
-      HTMLAttributes: {
-        class: "",
+    TextStyleKit.configure({
+      color: {
+        types: ["textStyle"],
       },
     }),
     HardBreakExtension,
@@ -87,19 +95,8 @@ export function createEditorExtensions(
     Placeholder.configure({
       placeholder,
     }),
-    LinkExtension.configure({
-      openOnClick: false,
-      HTMLAttributes: {
-        class: "editor-link",
-      },
-    }),
     TextAlign.configure({
       types: ["heading", "paragraph"],
-    }),
-    UnderlineExtension.configure({
-      HTMLAttributes: {
-        class: "underline",
-      },
     }),
     RawHtmlExtension,
     FileHandler.configure({

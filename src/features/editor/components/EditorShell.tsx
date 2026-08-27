@@ -14,8 +14,8 @@ import { useImageUpload } from "@/features/media/hooks/useImageUpload";
 import { mediaLibraryApi } from "@/features/media-library/api/mediaLibrary.api";
 import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useContentMetrics } from "@/features/seo/hooks/useContentMetrics";
-import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView } from "@/features/ai";
-import { parseMarkdownToHtml } from "@/features/ai/utils/markdownParser";
+import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView, ImageEnhancementReviewModal, useImageEnhancementReview, AIGenerationModal, type PipelineData, aiApi } from "@/features/ai";
+import { toEditorHtml } from "@/features/ai/utils/contentTransformer";
 import { LivePreviewSystem } from "@/features/preview";
 
 // ─── Context ────────────────────────────────────────────────────────────────
@@ -35,6 +35,9 @@ import ImageUpload from "@/app/(editor)/create/ImageUpload";
 import { MediaLibraryModal } from "@/features/media-library";
 import EditorCanvas from "./EditorCanvas";
 import StickyOutlineNav from "./StickyOutlineNav";
+import BlockActionMenu from "./BlockActionMenu";
+import SEOScoreSidebar from "./SEOScoreSidebar";
+import { useBlockActions } from "../hooks/useBlockActions";
 
 // ─── APIs ───────────────────────────────────────────────────────────────────
 import { categoryApi } from "@/features/categories/api/category.api";
@@ -151,14 +154,46 @@ export default function EditorShell() {
   const [categoryPublic, setCategoryPublic] = useState("");
   const [imagePublic, setImagePublic] = useState<string | null>(null);
 
-  // AI state
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [aiPlannerOpen, setAiPlannerOpen] = useState(false);
-  const [aiImageGenOpen, setAiImageGenOpen] = useState(false);
-  const [aiImageEditOpen, setAiImageEditOpen] = useState(false);
-  const [aiDiagramOpen, setAiDiagramOpen] = useState(false);
-  const [sourceAssetToEdit, setSourceAssetToEdit] = useState<import("@/features/media-library/types/mediaLibrary.types").MediaAsset | null>(null);
-  const [selectingSourceForEdit, setSelectingSourceForEdit] = useState(false);
+  // ─── Unified right-panel state ────────────────────────────────────────
+  // Replaces 4 separate booleans with a discriminated union.
+  // Only one panel can be open at a time (exclusive drawer pattern).
+  type RightPanel = "planner" | "image-gen" | "image-edit" | "diagram" | "seo" | null;
+  const [activeSidePanel, setActiveSidePanel] = useState<RightPanel>(null);
+
+  // Derived boolean helpers for backwards-compatible prop passing
+  const aiPlannerOpen = activeSidePanel === "planner";
+  const aiImageGenOpen = activeSidePanel === "image-gen";
+  const aiImageEditOpen = activeSidePanel === "image-edit";
+  const aiDiagramOpen = activeSidePanel === "diagram";
+  const seoOpen = activeSidePanel === "seo";
+
+  function togglePanel(panel: RightPanel) {
+    setActiveSidePanel((prev) => (prev === panel ? null : panel));
+  }
+
+  // 1-Click AI Publisher Modal state
+  const [is1ClickAIModalOpen, setIs1ClickAIModalOpen] = useState(false);
+
+  const handleApply1ClickAIPipeline = (data: PipelineData) => {
+    const generatedTitle = data.planner?.title || title;
+    if (generatedTitle) {
+      handleTitleChange(generatedTitle);
+    }
+
+    const markdown = data.enhancedMarkdown || data.writerMarkdown || "";
+    if (markdown && editor) {
+      const html = toEditorHtml(markdown);
+      editor.commands.setContent(html);
+      setGeneratedMarkdown(markdown);
+      setGeneratedAiContext((prev) => ({
+        ...prev,
+        ...(data.aiContext || {}),
+      }));
+    }
+    toast.success("1-Click Article pipeline generated and applied!");
+    autoSave.markDirty();
+  };
+
   const aiPlanner = useAIPlanner();
 
   // Bubble Menu AI Assist States
@@ -190,6 +225,9 @@ export default function EditorShell() {
     },
   });
 
+  const [generatedMarkdown, setGeneratedMarkdown] = useState<string>("");
+  const [generatedAiContext, setGeneratedAiContext] = useState<Record<string, unknown> | null>(null);
+
   // ─── Auto-Save Hook ──────────────────────────────────────────────────
 
   const autoSave = useAutoSave({
@@ -198,6 +236,11 @@ export default function EditorShell() {
       title,
       html: getHTML(),
       text: getText().replace(/\n/g, ""),
+      ...(generatedMarkdown ? {
+        markdown: generatedMarkdown,
+        aiContext: generatedAiContext || undefined,
+        contentVersion: "blocks-v1" as const,
+      } : {}),
     }),
     enabled: !!postId,
   });
@@ -213,9 +256,38 @@ export default function EditorShell() {
 
   const imageUpload = useImageUpload();
 
+  // ─── AI Image Enhancement Review Hook ─────────────────────────────
+
+  const enhancementReview = useImageEnhancementReview({
+    editor,
+    onSuccess: (count) => {
+      if (count > 0) {
+        toast.success(`Successfully inserted ${count} contextual images!`);
+      }
+    },
+    onError: (msg) => {
+      toast.error(msg);
+    },
+  });
+
   // ─── Content Metrics ─────────────────────────────────────────────────
 
   const { metrics } = useContentMetrics(editor);
+
+  // ─── Block Actions Hook ────────────────────────────────────────────────
+
+  const blockActions = useBlockActions({
+    editor,
+    title,
+    category: categoryPublic,
+    enabled: mode === "visual",
+  });
+
+  // ─── Missing AI state (moved from unified panel refactor) ─────────────
+
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [sourceAssetToEdit, setSourceAssetToEdit] = useState<import("@/features/media-library/types/mediaLibrary.types").MediaAsset | null>(null);
+  const [selectingSourceForEdit, setSelectingSourceForEdit] = useState(false);
 
   // ─── Keyboard Shortcuts ──────────────────────────────────────────────
 
@@ -226,6 +298,16 @@ export default function EditorShell() {
     onTogglePreview: () =>
       setMode((prev) => (prev === "preview" ? "visual" : "preview")),
   });
+
+  // ─── Track fetched post for editor sync ──────────────────────────────
+  const [loadedPost, setLoadedPost] = useState<any>(null);
+
+  // Sync post content into TipTap editor whenever editor becomes ready or loadedPost updates
+  useEffect(() => {
+    if (editor && loadedPost?.content !== undefined) {
+      editor.commands.setContent(loadedPost.content || "");
+    }
+  }, [editor, isReady, loadedPost]);
 
   // ─── Fetch Initial Data ──────────────────────────────────────────────
 
@@ -253,15 +335,30 @@ export default function EditorShell() {
         setPostId(currentPostId);
         if (!currentPostId) {
           setTitle("");
-          setContent("");
+          setLoadedPost(null);
+          if (editor) setContent("");
           setPageLoading(false);
           return;
         }
 
         const resPost = await postApi.getPostToEdit(currentPostId);
-        if (resPost.success) {
-          setTitle(resPost.data.post.title);
-          setContent(resPost.data.post.content);
+        if (resPost.success && resPost.data?.post) {
+          const post = resPost.data.post;
+          setTitle(post.title || "");
+          setDescriptionPublic(post.description || "");
+          setCategoryPublic(
+            typeof post.category === "object" ? post.category?._id || "" : post.category || ""
+          );
+          setSeriesPublic(
+            typeof post.series === "object" ? post.series?._id || "" : post.series || ""
+          );
+          setImagePublic(
+            typeof post.image === "object" ? post.image?.url || null : post.image || null
+          );
+          setLoadedPost(post);
+          if (editor) {
+            editor.commands.setContent(post.content || "");
+          }
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -292,7 +389,7 @@ export default function EditorShell() {
     if (postId && media._id) {
       mediaLibraryApi.addUsage(media._id, "post", postId, "content");
     }
-    setAiImageGenOpen(false);
+    setActiveSidePanel(null);
   };
 
   const handleImageEdited = (media: any) => {
@@ -312,7 +409,7 @@ export default function EditorShell() {
     if (postId && media._id) {
       mediaLibraryApi.addUsage(media._id, "post", postId, "content");
     }
-    setAiImageEditOpen(false);
+    setActiveSidePanel(null);
     setSourceAssetToEdit(null);
   };
 
@@ -324,7 +421,7 @@ export default function EditorShell() {
       .focus()
       .insertContentAt(position, `<pre><code class="language-mermaid">${mermaidCode}</code></pre>`)
       .run();
-    setAiDiagramOpen(false);
+    setActiveSidePanel(null);
   };
 
   // ─── AI Assist Bubble Menu Handlers ─────────────────────────────────────
@@ -579,6 +676,46 @@ export default function EditorShell() {
           )
           .run();
         break;
+      case "callout":
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(
+            position,
+            "<blockquote><strong>💡 Info:</strong> Add your callout content here.</blockquote>",
+          )
+          .run();
+        break;
+      case "faq":
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(
+            position,
+            "<p><strong>Q: What is your question?</strong></p><p>A: Your answer goes here.</p>",
+          )
+          .run();
+        break;
+      case "comparison":
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(
+            position,
+            "<table><tr><th>Option A</th><th>Option B</th></tr><tr><td>Feature 1</td><td>Feature 1</td></tr></table>",
+          )
+          .run();
+        break;
+      case "cta":
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(
+            position,
+            "<p><strong>🚀 Get Started Today</strong></p><p>Take the next step. <a href=\"#\">Click here to learn more</a>.</p>",
+          )
+          .run();
+        break;
     }
   };
 
@@ -651,6 +788,18 @@ export default function EditorShell() {
     }
   };
 
+  const handleHeaderPublish = async () => {
+    if (!title.trim()) {
+      toast.error("Please enter a title before publishing.");
+      return;
+    }
+    if (!postId) {
+      toast.info("Saving draft before publishing...");
+      await autoSave.save();
+    }
+    setPublishDrawerOpen(true);
+  };
+
   // ─── Title Change ────────────────────────────────────────────────────
 
   const handleTitleChange = (val: string) => {
@@ -659,6 +808,19 @@ export default function EditorShell() {
       autoSave.markDirty();
     }
   };
+
+  // ─── Post List Navigation ───────────────────────────────────────────
+
+  const handleSelectPost = useCallback(
+    (selectedPostId: string | null) => {
+      if (selectedPostId) {
+        router.push(`/create?id=${selectedPostId}`);
+      } else {
+        router.push("/create");
+      }
+    },
+    [router],
+  );
 
   // ─── AI Writer Stream Integration ────────────────────────────────────
 
@@ -687,12 +849,24 @@ export default function EditorShell() {
       (chunk) => {
         accumulatedMarkdown += chunk;
         if (editor) {
-          const html = parseMarkdownToHtml(accumulatedMarkdown);
+          const html = toEditorHtml(accumulatedMarkdown);
           editor.commands.setContent(html);
         }
       },
-      () => {
+      async () => {
         toast.success("Article compiled successfully!");
+        setGeneratedMarkdown(accumulatedMarkdown);
+        const wCount = accumulatedMarkdown.split(/\s+/).filter(Boolean).length;
+        setGeneratedAiContext({
+          plannerOutput: aiPlanner.outline,
+          writerOutput: {
+            wordCount: wCount,
+            estimatedReadingTime: Math.max(1, Math.ceil(wCount / 225)),
+          },
+        });
+        // Run review modal enhancement pipeline
+        enhancementReview.runEnhancementPipeline(accumulatedMarkdown, postId || undefined);
+        autoSave.markDirty();
       }
     );
   };
@@ -730,53 +904,30 @@ export default function EditorShell() {
           htmlMode={mode === "html"}
           onToggleHtmlMode={toggleHtmlMode}
           onSave={() => autoSave.save()}
-          onPublish={() => setPublishDrawerOpen(true)}
+          onPublish={handleHeaderPublish}
           onTogglePostList={() => setPostListOpen(!postListOpen)}
           saveStatus={autoSave.status === "conflict" ? "error" : autoSave.status}
           onRetrySave={() => autoSave.retry()}
           hasTitle={!!title.trim()}
-          onToggleAIPlanner={() => {
-            setAiPlannerOpen(!aiPlannerOpen);
-            if (!aiPlannerOpen) {
-              setAiImageGenOpen(false);
-              setAiImageEditOpen(false);
-              setAiDiagramOpen(false);
-            }
-          }}
+          onToggleAIPlanner={() => togglePanel("planner")}
           aiPlannerOpen={aiPlannerOpen}
-          onToggleAIImageGen={() => {
-            setAiImageGenOpen(!aiImageGenOpen);
-            if (!aiImageGenOpen) {
-              setAiPlannerOpen(false);
-              setAiImageEditOpen(false);
-              setAiDiagramOpen(false);
-            }
-          }}
+          onToggleAIImageGen={() => togglePanel("image-gen")}
           aiImageGenOpen={aiImageGenOpen}
-          onToggleAIImageEdit={() => {
-            setAiImageEditOpen(!aiImageEditOpen);
-            if (!aiImageEditOpen) {
-              setAiPlannerOpen(false);
-              setAiImageGenOpen(false);
-              setAiDiagramOpen(false);
-            }
-          }}
+          onToggleAIImageEdit={() => togglePanel("image-edit")}
           aiImageEditOpen={aiImageEditOpen}
-          onToggleAIDiagram={() => {
-            setAiDiagramOpen(!aiDiagramOpen);
-            if (!aiDiagramOpen) {
-              setAiPlannerOpen(false);
-              setAiImageGenOpen(false);
-              setAiImageEditOpen(false);
-            }
-          }}
+          onToggleAIDiagram={() => togglePanel("diagram")}
           aiDiagramOpen={aiDiagramOpen}
+          onToggleSEO={() => togglePanel("seo")}
+          seoOpen={seoOpen}
+          onOpen1ClickAI={() => setIs1ClickAIModalOpen(true)}
         />
 
         {/* Post list panel (left drawer) */}
         <PostListPanel
           isOpen={postListOpen}
           onClose={() => setPostListOpen(false)}
+          activePostId={postId}
+          onSelectPost={handleSelectPost}
         />
 
         {/* Main Editor Wrapper with side-by-side AI planning & sticky outline */}
@@ -1100,10 +1251,26 @@ export default function EditorShell() {
                     </BubbleMenu>
                   )}
 
-                  {/* Floating Block insert button */}
+                   {/* Floating Block insert button */}
                   <div className="fixed bottom-8 right-8 z-40 animate-[slide-up_0.3s_ease-out]">
                     <BlockInsertButton onInsert={insertElementAtPosition} />
                   </div>
+
+                  {/* Block Action Menu — hover overlay */}
+                  {blockActions.hoveredBlockRect && (
+                    <BlockActionMenu
+                      blockRect={blockActions.hoveredBlockRect}
+                      isAIWorking={blockActions.isAIWorking}
+                      aiActionLabel={blockActions.aiActionLabel}
+                      onMoveUp={blockActions.moveHoveredUp}
+                      onMoveDown={blockActions.moveHoveredDown}
+                      onDuplicate={blockActions.duplicateHovered}
+                      onDelete={blockActions.deleteHovered}
+                      onRewrite={blockActions.rewriteBlock}
+                      onShorten={blockActions.shortenBlock}
+                      onExpand={blockActions.expandBlock}
+                    />
+                  )}
                 </div>
               )}
             </EditorErrorBoundary>
@@ -1169,6 +1336,17 @@ export default function EditorShell() {
               />
             </aside>
           )}
+
+          {/* SEO Score side panel (right) */}
+          {seoOpen && (
+            <aside className="w-80 border-l border-[var(--color-editor-border)] bg-[var(--color-editor-bg)] h-full shrink-0 animate-[slide-left_0.2s_ease-out] z-30">
+              <SEOScoreSidebar
+                metrics={metrics}
+                title={title}
+                description={descriptionPublic}
+              />
+            </aside>
+          )}
         </div>
 
         {/* Publish drawer */}
@@ -1200,6 +1378,40 @@ export default function EditorShell() {
           allowDrag={true}
           typeFilter="image"
           editorContent={editor ? editor.getText() : ""}
+        />
+
+        {/* AI Image Enhancement Review Modal */}
+        <ImageEnhancementReviewModal
+          isOpen={enhancementReview.reviewModalOpen}
+          onClose={() => enhancementReview.setReviewModalOpen(false)}
+          resolvedImages={enhancementReview.resolvedImages}
+          onConfirm={enhancementReview.applyApprovedImages}
+          isLoading={enhancementReview.isEnhancing}
+        />
+
+        {/* 1-Click AI Publisher Modal */}
+        <AIGenerationModal
+          isOpen={is1ClickAIModalOpen}
+          onClose={() => setIs1ClickAIModalOpen(false)}
+          initialTopic={title}
+          initialCategory={categoryPublic || "general"}
+          onApplyGeneratedContent={handleApply1ClickAIPipeline}
+          onAutosaveDraft={async (data) => {
+            if (data.planner?.title) {
+              setTitle(data.planner.title);
+            }
+            if (data.aiContext) {
+              setGeneratedAiContext((prev) => ({
+                ...prev,
+                ...(data.aiContext || {}),
+              }));
+            }
+            if (data.enhancedMarkdown || data.writerMarkdown) {
+              setGeneratedMarkdown(data.enhancedMarkdown || data.writerMarkdown || "");
+            }
+            autoSave.markDirty();
+            await autoSave.save();
+          }}
         />
       </div>
     </EditorProvider>

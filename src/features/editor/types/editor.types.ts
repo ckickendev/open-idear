@@ -1,4 +1,11 @@
 import type { Editor, JSONContent } from "@tiptap/react";
+import type {
+  ArticleBlock,
+  ArticleHero,
+  ArticleAIContext,
+  ArticleSEO,
+  ContentVersion,
+} from "@/features/article/types/article.types";
 
 // ─── Editor State ───────────────────────────────────────────────────────────
 
@@ -32,6 +39,13 @@ export interface Post {
   readtime: number;
   createdAt: string;
   updatedAt: string;
+
+  // ─── Structured Article Fields (Sprint 1) ──────────────────────────────
+  contentVersion?: ContentVersion;
+  blocks?: ArticleBlock[] | null;
+  hero?: ArticleHero | null;
+  aiContext?: ArticleAIContext | null;
+  seo?: ArticleSEO | null;
 }
 
 export interface PostListItem {
@@ -45,6 +59,8 @@ export interface CreatePostPayload {
   title: string;
   text: string;
   content: string;
+  /** Defaults to "html-v1" on the backend when not supplied. */
+  contentVersion?: ContentVersion;
 }
 
 export interface UpdatePostPayload {
@@ -52,7 +68,10 @@ export interface UpdatePostPayload {
   title: string;
   text: string;
   content: string;
+  /** Pass to update the content version alongside a save. */
+  contentVersion?: ContentVersion;
 }
+
 
 // ─── Category & Series ──────────────────────────────────────────────────────
 

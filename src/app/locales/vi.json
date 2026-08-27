@@ -149,6 +149,7 @@
       "name": "Tên danh mục",
       "description": "Mô tả",
       "background_image": "Ảnh nền",
+      "postCount": "Số bài viết",
       "createDate": "Ngày tạo",
       "action": "Hành động",
       "previous": "Trước",

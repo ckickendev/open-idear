@@ -20,6 +20,7 @@ type CategoryType = {
   description: string;
   background_image: string;
   createdAt: string;
+  postCount?: number;
 };
 
 const Category = () => {
@@ -297,6 +298,9 @@ const Category = () => {
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       {t("management.category.background_image")}
                     </th>
+                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      {t("management.category.postCount")}
+                    </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
                       {t("management.category.createDate")}
                     </th>
@@ -339,6 +343,11 @@ const Category = () => {
                         >
                           <Eye size={14} /> Xem
                         </a>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
+                          {category.postCount ?? 0} bài viết
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground hidden lg:table-cell whitespace-nowrap">
                         {convertDate(category.createdAt)}
@@ -396,9 +405,14 @@ const Category = () => {
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                         {category.description}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {convertDate(category.createdAt)}
-                      </p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-primary/10 text-primary">
+                          {category.postCount ?? 0} bài viết
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {convertDate(category.createdAt)}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       {listStatus === "trash" ? (

@@ -63,6 +63,7 @@ export interface ImageProviderMeta {
 }
 
 export interface ImageGenerationResponse {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly assets: any[]; // MediaAsset documents
   readonly providerId: string;
   readonly revisedPrompts: (string | undefined)[];
@@ -138,7 +139,43 @@ export const aiApi = {
   generateDiagram: (payload: DiagramRequest) => {
     return api.post<DiagramResponse>("/ai/v1/diagram/generate", payload);
   },
+
+  /**
+   * Triggers the AI Content Enhancement Pipeline (auto-images, FAQ, tables, diagrams).
+   */
+  enhanceContent: (payload: { markdown: string; options?: Record<string, unknown> }) => {
+    return api.post<{
+      enhancedMarkdown: string;
+      insertedAssets: ResolvedImage[];
+      appliedEnhancements: string[];
+      executionTimeMs: number;
+    }>("/ai/v1/enhance", payload);
+  },
+
+  /**
+   * Converts Markdown and Growth Results into structured ArticleBlock[].
+   */
+  structureArticle: (payload: { markdown: string; growthResults?: Record<string, unknown> }) => {
+    return api.post<{
+      blocks: unknown[];
+      contentVersion: "blocks-v1";
+    }>("/ai/v1/structure", payload);
+  },
 };
+
+export interface ResolvedImage {
+  id: string;
+  suggestionId?: string;
+  position: number;
+  url: string;
+  previewUrl?: string;
+  alt: string;
+  caption?: string;
+  provider: "local" | "unsplash" | "pexels" | "ai-generated";
+  mediaId?: string;
+  dimensions?: { width: number; height: number };
+  markdownSnippet: string;
+}
 
 // ─── Image Editing Types ──────────────────────────────────────────────────────
 
@@ -171,6 +208,7 @@ export type ImageEditRequest =
   | { sourceMediaId: string; operation: "change-style"; preset: ChangeStylePreset; customPrompt?: string };
 
 export interface ImageEditResponse {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly asset: any; // MediaAsset document
   readonly operation: EditOperation;
   readonly summary: string;

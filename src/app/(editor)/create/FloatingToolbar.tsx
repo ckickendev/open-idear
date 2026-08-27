@@ -11,6 +11,10 @@ import {
   Link,
   Quote,
   Code,
+  Info,
+  HelpCircle,
+  Table2,
+  Megaphone,
 } from "lucide-react";
 
 interface BlockInsertButtonProps {
@@ -60,6 +64,30 @@ const blockItems = [
     label: "Code Block",
     icon: Code,
     description: "Add a code snippet",
+  },
+  {
+    type: "callout",
+    label: "Callout",
+    icon: Info,
+    description: "Info, tip, warning or caution box",
+  },
+  {
+    type: "faq",
+    label: "FAQ",
+    icon: HelpCircle,
+    description: "Frequently asked questions",
+  },
+  {
+    type: "comparison",
+    label: "Comparison",
+    icon: Table2,
+    description: "Side-by-side comparison table",
+  },
+  {
+    type: "cta",
+    label: "Call to Action",
+    icon: Megaphone,
+    description: "Promotional call-to-action block",
   },
 ];
 

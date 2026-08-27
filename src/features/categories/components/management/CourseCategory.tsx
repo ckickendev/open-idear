@@ -165,15 +165,15 @@ const CourseCategory = () => {
     courseCategoryApi
       .deleteCourseCategory(id)
       .then((response) => {
-        if (response.success || response.message) {
+        if (response.success) {
+          setCategories((prev) => prev.filter((cat) => cat._id !== id));
           toast.success("Xóa danh mục khoá học thành công");
         } else throw new Error(response.message || "Lỗi xóa danh mục");
       })
       .catch((error) => {
-        toast.error(error?.message);
+        toast.error(error?.message || "Lỗi xóa danh mục");
       })
       .finally(() => changeLoad());
-    setCategories(categories.filter((cat) => cat._id !== id));
   };
 
   return (

@@ -74,7 +74,18 @@ export function useAIPlanner() {
 
       while (true) {
         const { value, done } = await reader.read();
-        if (done) break;
+        if (done) {
+          if (buffer.trim().startsWith("data: ")) {
+            const dataStr = buffer.trim().substring(6);
+            if (dataStr !== "[DONE]") {
+              try {
+                const parsed = JSON.parse(dataStr);
+                if (parsed.chunk) onChunk(parsed.chunk);
+              } catch (_) {}
+            }
+          }
+          break;
+        }
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
