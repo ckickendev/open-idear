@@ -180,6 +180,32 @@ const CourseDetail = () => {
     router.push("/checkout");
   };
 
+  const [isEnrollingFree, setIsEnrollingFree] = useState(false);
+
+  const handleEnrollFree = async () => {
+    if (!currentUser?._id) {
+      toast.warning("Vui lòng đăng nhập để đăng ký khóa học");
+      return;
+    }
+    if (!course) return;
+
+    setIsEnrollingFree(true);
+    try {
+      const res = await courseApi.enrollCourse(course._id);
+      if (res.success) {
+        toast.success("Đăng ký khóa học thành công!");
+        setIsEnrolled(true);
+        router.push(`/courses/${course.slug}/learn`);
+      } else {
+        toast.error(res.message || "Không thể đăng ký khóa học");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Có lỗi xảy ra");
+    } finally {
+      setIsEnrollingFree(false);
+    }
+  };
+
   if (!course) return null;
 
   return (
@@ -426,21 +452,35 @@ const CourseDetail = () => {
               {/* Action Buttons - Enrollment Aware */}
               <div className="flex flex-col gap-3 mb-6">
                 {isEnrolled ? (
-                  /* Enrolled: Show"Go to Learn"*/
+                  /* Enrolled: Show "Go to Learn" */
                   <button
                     onClick={() => router.push(`/courses/${course.slug}/learn`)}
-                    className="w-full bg-emerald-600 text-white font-bold py-3 rounded hover:bg-emerald-700 transition-colors shadow-md flex items-center justify-center gap-2"
+                    className="w-full bg-emerald-600 text-white font-bold py-3 rounded hover:bg-emerald-700 transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Play size={18} /> Vào học ngay
                   </button>
+                ) : course.price === 0 ? (
+                  /* Free Course: Direct 1-click enroll */
+                  <button
+                    onClick={handleEnrollFree}
+                    disabled={isEnrollingFree}
+                    className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-lg hover:bg-primary/90 transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {isEnrollingFree ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Play size={18} />
+                    )}
+                    Đăng ký học miễn phí
+                  </button>
                 ) : (
-                  /* Not enrolled: Show cart + buy buttons */
+                  /* Paid: Show cart + buy buttons */
                   <>
                     <div className="flex gap-3">
                       {isInCart ? (
                         <button
                           onClick={() => router.push("/checkout")}
-                          className="flex-1 bg-muted text-foreground/80 font-bold py-3 rounded transition-colors flex items-center justify-center gap-2 border border-border"
+                          className="flex-1 bg-muted text-foreground/80 font-bold py-3 rounded transition-colors flex items-center justify-center gap-2 border border-border cursor-pointer"
                         >
                           <CheckCircle size={16} className="text-emerald-500" />{" "}
                           Đã thêm vào giỏ
@@ -449,7 +489,7 @@ const CourseDetail = () => {
                         <button
                           onClick={handleAddToCart}
                           disabled={isAddingToCart}
-                          className="flex-1 border border-border font-bold py-3 rounded hover:bg-muted/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                          className="flex-1 border border-border font-bold py-3 rounded hover:bg-muted/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                         >
                           {isAddingToCart ? (
                             <Loader2 size={16} className="animate-spin" />
@@ -462,7 +502,7 @@ const CourseDetail = () => {
                       <button
                         onClick={handleBuyNow}
                         disabled={isAddingToCart}
-                        className="flex-1 bg-background text-white font-bold py-3 rounded hover:bg-card transition-colors disabled:opacity-50"
+                        className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         Mua ngay
                       </button>

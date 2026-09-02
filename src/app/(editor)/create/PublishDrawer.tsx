@@ -7,9 +7,14 @@ import {
   ChevronUp,
   Plus,
   Send,
+  Sparkles,
+  Wand2,
+  Loader2,
   Image as ImageIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
+import { AIPublisherPanel, publisherApi, type AIPublisherResult, type CoverImageResult } from "@/features/ai";
 
 interface PublishDrawerProps {
   isOpen: boolean;
@@ -31,6 +36,10 @@ interface PublishDrawerProps {
   onCoverImageUploaded: (image: any) => void;
   /** Is publishing in progress */
   isPublishing?: boolean;
+  /** Topic from editor title */
+  initialTopic?: string;
+  /** Auto fill handler callback */
+  onAutoFillAI?: (result: AIPublisherResult) => void;
 }
 
 const PublishDrawer: React.FC<PublishDrawerProps> = ({
@@ -48,7 +57,11 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
   onDescriptionChange,
   onCoverImageUploaded,
   isPublishing = false,
+  initialTopic = "",
+  onAutoFillAI,
 }) => {
+  const [aiCoverImage, setAiCoverImage] = useState<CoverImageResult | null>(null);
+  const [isRegeneratingCover, setIsRegeneratingCover] = useState(false);
   const [showCreateSeries, setShowCreateSeries] = useState(false);
   const [newSeriesName, setNewSeriesName] = useState("");
   const [expandedSections, setExpandedSections] = useState({
@@ -82,12 +95,59 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
     setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const handleRegenerateCover = async () => {
+    const titleToUse = initialTopic || "Article Cover";
+    setIsRegeneratingCover(true);
+    try {
+      const cover = await publisherApi.regenerateCoverImage({ title: titleToUse });
+      setAiCoverImage(cover);
+      if (cover?.url) {
+        onCoverImageUploaded(cover);
+      }
+      toast.success("AI Cover image generated & uploaded to Cloudinary!");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to regenerate AI cover image.");
+    } finally {
+      setIsRegeneratingCover(false);
+    }
+  };
+
   const handleCreateSeries = () => {
     if (newSeriesName.trim()) {
       onCreateSeries(newSeriesName.trim());
       setNewSeriesName("");
       setShowCreateSeries(false);
     }
+  };
+
+  const handleAutoFillAIResult = (result: AIPublisherResult) => {
+    // Auto fill description if present
+    if (result.description) {
+      onDescriptionChange(result.description);
+    }
+
+    // Auto fill cover image if present
+    if (result.coverImage) {
+      setAiCoverImage(result.coverImage);
+      onCoverImageUploaded(result.coverImage);
+    }
+
+    // Auto match category if possible
+    if (result.category && categories.length > 0) {
+      const match = categories.find(
+        (c: any) =>
+          c.name?.toLowerCase() === result.category.toLowerCase() ||
+          c.slug?.toLowerCase() === result.category.toLowerCase()
+      );
+      if (match?._id) {
+        onCategoryChange(match._id);
+      } else if (!selectedCategory && categories[0]?._id) {
+        onCategoryChange(categories[0]._id);
+      }
+    }
+
+    // Call parent editor shell auto fill callback
+    onAutoFillAI?.(result);
   };
 
   if (!isOpen) return null;
@@ -132,7 +192,15 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
         </div>
 
         {/* Content — scrollable */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-1">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+          {/* Top Section: AI Publisher Panel */}
+          <AIPublisherPanel
+            initialTopic={initialTopic}
+            categories={categories}
+            onAutoFill={handleAutoFillAIResult}
+          />
+
+          {/* Existing Publish Settings Below */}
           {/* Description Section */}
           <CollapsibleSection
             title="Description"
@@ -153,16 +221,80 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
           {/* Cover Image Section */}
           <CollapsibleSection
             title="Cover Image"
-            subtitle="Recommended for SEO"
+            subtitle="Auto Generated"
             expanded={expandedSections.coverImage}
             onToggle={() => toggleSection("coverImage")}
           >
-            <div className="rounded-xl overflow-hidden">
-              <ImageUpload
-                onImageUploaded={onCoverImageUploaded}
-                onClose={() => {}}
-                isTitleDisplay={false}
-              />
+            <div className="space-y-3">
+              {aiCoverImage?.url ? (
+                <div className="relative rounded-xl overflow-hidden border border-purple-500/30 bg-purple-950/20 group">
+                  <img
+                    src={aiCoverImage.url}
+                    alt={aiCoverImage.alt || "AI Cover Image"}
+                    className="w-full h-44 object-cover rounded-xl"
+                  />
+                  <div className="absolute top-2 left-2 flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-950/80 backdrop-blur-md border border-purple-500/30 text-[10px] font-bold text-purple-200">
+                    <Sparkles className="w-3 h-3 text-purple-400" /> AI Generated
+                  </div>
+
+                  <div className="p-3 bg-purple-950/40 border-t border-purple-500/20">
+                    <p className="text-[11px] text-purple-200 font-medium truncate">
+                      {aiCoverImage.prompt || aiCoverImage.alt}
+                    </p>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-[10px] text-purple-300/60 font-mono">
+                        {aiCoverImage.width}×{aiCoverImage.height}px
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleRegenerateCover}
+                        disabled={isRegeneratingCover}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-purple-600 hover:bg-purple-500 text-white transition-colors cursor-pointer disabled:opacity-50"
+                      >
+                        {isRegeneratingCover ? (
+                          <>
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Regenerating...
+                          </>
+                        ) : (
+                          <>
+                            <Wand2 className="w-3 h-3 text-amber-300" />
+                            Regenerate Cover
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-xl overflow-hidden">
+                  <ImageUpload
+                    onImageUploaded={onCoverImageUploaded}
+                    onClose={() => {}}
+                    isTitleDisplay={false}
+                  />
+                  <div className="mt-2 text-right">
+                    <button
+                      type="button"
+                      onClick={handleRegenerateCover}
+                      disabled={isRegeneratingCover}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {isRegeneratingCover ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Generating AI Cover...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3 h-3 text-amber-300" />
+                          Generate AI Cover Image
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </CollapsibleSection>
 

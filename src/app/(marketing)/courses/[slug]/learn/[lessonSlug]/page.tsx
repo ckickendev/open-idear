@@ -156,8 +156,8 @@ const WatchPage = () => {
     [course?._id, currentUser?._id, completedLessons],
   );
 
-  // Access control: redirect if not enrolled
-  if (isEnrolled === false) {
+  // Access control: allow if enrolled OR if current lesson is free preview
+  if (isEnrolled === false && !currentLesson?.isFreePreview) {
     return (
       <div className="flex h-screen items-center justify-center bg-muted/30">
         <div className="text-center max-w-md p-8">
@@ -165,14 +165,14 @@ const WatchPage = () => {
             <Lock size={36} className="text-amber-600" />
           </div>
           <h2 className="text-2xl font-bold text-foreground mb-3">
-            Bạn chưa đăng ký khóa học này
+            Bài học này yêu cầu đăng ký khóa học
           </h2>
           <p className="text-muted-foreground mb-6">
-            Vui lòng mua khóa học để truy cập nội dung học tập.
+            Vui lòng mua hoặc đăng ký khóa học để truy cập đầy đủ nội dung.
           </p>
           <button
             onClick={() => router.push(`/courses/${slug}`)}
-            className="bg-[var(--color-admin-primary)] text-white font-bold px-8 py-3 rounded-xl hover:bg-[var(--color-admin-primary-hover)] transition-all shadow-lg"
+            className="bg-primary text-primary-foreground font-bold px-8 py-3 rounded-xl hover:bg-primary/90 transition-all shadow-lg cursor-pointer"
           >
             Quay lại trang khóa học
           </button>

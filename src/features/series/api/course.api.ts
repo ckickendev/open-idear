@@ -56,12 +56,31 @@ export const courseApi = {
   restoreCourse: async (courseId: string) => {
     return await api.patch(`/course/restore?courseId=${courseId}`);
   },
+  // Course Builder APIs
+  getCourseForEdit: async (id: string) => {
+    return await api.get(`/course/forEdit?id=${id}`);
+  },
+  publishCourse: async (courseId: string) => {
+    return await api.post("/course/publish", { courseId });
+  },
+  unpublishCourse: async (courseId: string) => {
+    return await api.post("/course/unpublish", { courseId });
+  },
+  reorderChapters: async (courseId: string, orderedIds: string[]) => {
+    return await api.patch("/course/chapter/reorder", { courseId, orderedIds });
+  },
+  reorderLessons: async (chapterId: string, orderedIds: string[]) => {
+    return await api.patch("/course/lesson/reorder", { chapterId, orderedIds });
+  },
   // Enrollment APIs
   getMyEnrollments: async () => {
     return await api.get("/enrollment/my-courses");
   },
   checkEnrollment: async (courseId: string) => {
     return await api.get(`/enrollment/check?courseId=${courseId}`);
+  },
+  enrollCourse: async (courseId: string) => {
+    return await api.post("/course/enroll", { courseId });
   },
   completeLesson: async (courseId: string, lessonId: string) => {
     return await api.post("/enrollment/lesson/complete", {

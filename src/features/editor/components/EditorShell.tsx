@@ -14,7 +14,7 @@ import { useImageUpload } from "@/features/media/hooks/useImageUpload";
 import { mediaLibraryApi } from "@/features/media-library/api/mediaLibrary.api";
 import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useContentMetrics } from "@/features/seo/hooks/useContentMetrics";
-import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView, ImageEnhancementReviewModal, useImageEnhancementReview, AIGenerationModal, type PipelineData, aiApi } from "@/features/ai";
+import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView, ImageEnhancementReviewModal, useImageEnhancementReview, AIGenerationModal, PublishByAIModal, OneClickPublisherModal, type PipelineData, type PublisherResponse, aiApi } from "@/features/ai";
 import { toEditorHtml } from "@/features/ai/utils/contentTransformer";
 import { LivePreviewSystem } from "@/features/preview";
 
@@ -173,6 +173,46 @@ export default function EditorShell() {
 
   // 1-Click AI Publisher Modal state
   const [is1ClickAIModalOpen, setIs1ClickAIModalOpen] = useState(false);
+
+  // Publish by AI Modal state
+  const [isPublishByAIOpen, setIsPublishByAIOpen] = useState(false);
+
+  const handleApplyPublishByAI = async (data: PublisherResponse) => {
+    // 1. Populate title
+    if (data.title) {
+      handleTitleChange(data.title);
+    }
+
+    // 2. Populate editor content from markdown
+    if (data.markdown && editor) {
+      const html = toEditorHtml(data.markdown);
+      editor.commands.setContent(html);
+      setGeneratedMarkdown(data.markdown);
+    }
+
+    // 3. Persist AI context (keywords, category, etc.)
+    setGeneratedAiContext({
+      plannerOutput: {
+        title: data.title,
+        keywords: data.keywords,
+        category: data.category,
+      },
+      generation: {
+        model: "PublishByAI-v1",
+        generatedAt: new Date().toISOString(),
+      },
+    });
+
+    // 4. Pre-fill publish panel fields from generated data
+    if (data.category) setCategoryPublic(data.category);
+    if (data.description) setDescriptionPublic(data.description);
+
+    // 5. Mark dirty and auto-save as Draft
+    autoSave.markDirty();
+    await autoSave.save();
+
+    toast.success("Draft created by AI and saved!");
+  };
 
   const handleApply1ClickAIPipeline = (data: PipelineData) => {
     const generatedTitle = data.planner?.title || title;
@@ -920,6 +960,7 @@ export default function EditorShell() {
           onToggleSEO={() => togglePanel("seo")}
           seoOpen={seoOpen}
           onOpen1ClickAI={() => setIs1ClickAIModalOpen(true)}
+          onOpenPublishByAI={() => setIsPublishByAIOpen(true)}
         />
 
         {/* Post list panel (left drawer) */}
@@ -1365,6 +1406,19 @@ export default function EditorShell() {
           onDescriptionChange={setDescriptionPublic}
           onCoverImageUploaded={handleImageUploadedPublic}
           isPublishing={publishHook.isPublishing}
+          initialTopic={title}
+          onAutoFillAI={async (result) => {
+            if (result.title) handleTitleChange(result.title);
+            if (result.markdown && editor) {
+              const html = toEditorHtml(result.markdown);
+              editor.commands.setContent(html);
+              setGeneratedMarkdown(result.markdown);
+            }
+            if (result.description) setDescriptionPublic(result.description);
+            autoSave.markDirty();
+            await autoSave.save();
+            toast.success("AI Publisher generated content and auto-saved Draft!");
+          }}
         />
 
         {/* Media Library modal — replaces old ImageUpload */}
@@ -1412,6 +1466,21 @@ export default function EditorShell() {
             autoSave.markDirty();
             await autoSave.save();
           }}
+        />
+
+        {/* Publish by AI Modal */}
+        <PublishByAIModal
+          isOpen={isPublishByAIOpen}
+          onClose={() => setIsPublishByAIOpen(false)}
+          initialTopic={title}
+          onApply={handleApplyPublishByAI}
+        />
+
+        {/* One Click Autonomous Publisher Modal */}
+        <OneClickPublisherModal
+          isOpen={is1ClickAIModalOpen}
+          onClose={() => setIs1ClickAIModalOpen(false)}
+          initialTopic={title}
         />
       </div>
     </EditorProvider>

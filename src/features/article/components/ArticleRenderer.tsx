@@ -220,6 +220,8 @@ function ArticleBlockItem({ block }: { block: ArticleBlock }) {
   }
 }
 
+import HTMLRenderer from "./HTMLRenderer";
+
 // ─── Main Renderer ─────────────────────────────────────────────────────────
 
 export default function ArticleRenderer({
@@ -230,7 +232,7 @@ export default function ArticleRenderer({
 }: ArticleRendererProps) {
   // ── Backward Compatibility Branch ────────────────────────────────────────
   if (contentVersion !== "blocks-v1" || !blocks || blocks.length === 0) {
-    return <HtmlRenderer html={htmlContent} isDark={isDark} />;
+    return <HTMLRenderer html={htmlContent} isDark={isDark} />;
   }
 
   // ── Structured Block Rendering Branch ────────────────────────────────────

@@ -62,6 +62,8 @@ interface EditorHeaderProps {
   seoOpen: boolean;
   /** Open 1-Click AI Publisher modal */
   onOpen1ClickAI?: () => void;
+  /** Open Publish by AI modal (simpler single-call pipeline) */
+  onOpenPublishByAI?: () => void;
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -88,6 +90,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   onToggleSEO,
   seoOpen,
   onOpen1ClickAI,
+  onOpenPublishByAI,
 }) => {
   const canSave = hasTitle;
   const canPublish = isEditMode && !isPublished;
@@ -141,6 +144,23 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
 
       {/* Right section */}
       <div className="flex items-center gap-1.5">
+        {/* ✨ Publish by AI — amber gradient (simpler pipeline) */}
+        {onOpenPublishByAI && (
+          <button
+            onClick={onOpenPublishByAI}
+            id="publish-by-ai-header-btn"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all cursor-pointer active:scale-95"
+            style={{
+              background: "linear-gradient(135deg, #f59e0b, #ea580c)",
+              boxShadow: "0 2px 12px rgba(245,158,11,0.25)",
+            }}
+            aria-label="Open Publish by AI"
+          >
+            <Sparkles size={13} className="text-white" />
+            <span>Publish by AI</span>
+          </button>
+        )}
+
         {/* 1-Click AI Publisher */}
         {onOpen1ClickAI && (
           <button

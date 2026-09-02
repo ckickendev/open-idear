@@ -1,40 +1,48 @@
 "use client";
-import { ENV } from "@/api/const";
-import { useParams } from "next/navigation";
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { toast } from "sonner";
-import loadingStore from "@/store/LoadingStore";
 import {
+  ArrowLeft,
   Plus,
+  GripVertical,
+  Pencil,
+  Trash2,
+  Check,
+  X,
   Video,
   FileText,
-  Type,
-  Trash2,
-  Edit2,
-  ArrowLeft,
-  CloudUpload,
-  ArrowRightLeft,
   ChevronDown,
-  ChevronUp,
-  GripVertical,
-  PlayCircle,
+  ChevronRight,
+  Globe,
+  EyeOff,
+  Loader2,
   BookOpen,
-  MoreHorizontal,
-  X,
+  Settings,
+  Image as ImageIcon,
+  Upload,
+  AlertTriangle,
+  CheckCircle,
 } from "lucide-react";
-import Link from "next/link";
+import { courseApi } from "@/features/series/api/course.api";
 import VideoUpload from "@/app/(editor)/create/VideoUpload";
+import ImageUpload from "@/app/(editor)/create/ImageUpload";
+
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+type LessonMedia = { url: string; type: string; cloudflareId?: string };
 
 type Lesson = {
   _id: string;
   title: string;
+  slug: string;
   description: string;
-  content: string;
-  type: "video" | "file" | "text";
+  type: "video" | "text" | "file";
   isFreePreview: boolean;
   order: number;
-  media?: { url: string; type: string };
+  media?: LessonMedia | string;
 };
 
 type Chapter = {
@@ -44,807 +52,1023 @@ type Chapter = {
   lessons: Lesson[];
 };
 
-// ─── Video Upload Modal ─────────────────────────────────────────────────────
-
-type VideoUploadModalProps = {
-  chapterId: string;
-  onClose: () => void;
-  onSuccess: (chapterId: string, lesson: Lesson) => void;
+type Course = {
+  _id: string;
+  title: string;
+  slug: string;
+  description: string;
+  status: "draft" | "published";
+  thumbnail?: { url: string };
+  chapters: Chapter[];
+  instructor: { name: string };
+  price?: number;
+  discountPrice?: number;
 };
 
-const VideoUploadModal = ({
-  chapterId,
-  onClose,
-  onSuccess,
-}: VideoUploadModalProps) => {
-  const handleVideoUploaded = async (mediaId: string, title: string) => {
-    try {
-      const token = localStorage.getItem("access_token");
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      const lessonRes = await axios.post(
-        `${ENV.ROOT_API}/course/lesson/add`,
-        { chapterId, title, type: "video", media: mediaId, order: 0 },
-      );
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-      toast.success("Video uploaded successfully!");
-      onSuccess(chapterId, lessonRes.data.data);
-      onClose();
-    } catch (err: any) {
-      toast.success(err?.response?.data?.message || "Failed to create lesson");
-    }
+const LESSON_TYPE_ICONS: Record<string, React.ReactNode> = {
+  video: <Video size={14} className="text-blue-500" />,
+  text: <FileText size={14} className="text-emerald-500" />,
+  file: <FileText size={14} className="text-orange-500" />,
+};
+
+// ─── Inline editable text ─────────────────────────────────────────────────────
+
+function InlineEdit({
+  value,
+  onSave,
+  placeholder = "Enter title…",
+  className = "",
+}: {
+  value: string;
+  onSave: (v: string) => void;
+  placeholder?: string;
+  className?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const start = () => {
+    setDraft(value);
+    setEditing(true);
+    setTimeout(() => inputRef.current?.select(), 0);
   };
 
+  const commit = () => {
+    if (draft.trim() && draft.trim() !== value) onSave(draft.trim());
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-1.5 w-full">
+        <input
+          ref={inputRef}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commit();
+            if (e.key === "Escape") setEditing(false);
+          }}
+          className={`flex-1 bg-background border border-primary rounded-md px-2 py-1 text-sm outline-none ring-1 ring-primary/40 ${className}`}
+          autoFocus
+        />
+        <button
+          onClick={commit}
+          className="p-1 text-primary hover:bg-primary/10 rounded transition-colors"
+        >
+          <Check size={14} />
+        </button>
+        <button
+          onClick={() => setEditing(false)}
+          className="p-1 text-muted-foreground hover:bg-muted rounded transition-colors"
+        >
+          <X size={14} />
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <VideoUpload
-        onVideoUploaded={handleVideoUploaded}
-        onClose={onClose}
-        isTitleDisplay={true}
+    <button
+      onClick={start}
+      className={`text-left hover:text-primary transition-colors group ${className}`}
+    >
+      {value || <span className="text-muted-foreground">{placeholder}</span>}
+      <Pencil
+        size={12}
+        className="inline ml-1.5 opacity-0 group-hover:opacity-60 transition-opacity"
       />
-    </div>
+    </button>
   );
-};
+}
 
-// ─── Lesson Type Config ─────────────────────────────────────────────────────
+// ─── Lesson Row ──────────────────────────────────────────────────────────────
 
-const LESSON_TYPE_CONFIG = {
-  video: {
-    icon: PlayCircle,
-    label: "Video",
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-  },
-  text: {
-    icon: Type,
-    label: "Bài viết",
-    color: "text-emerald-600",
-    bg: "bg-emerald-50",
-  },
-  file: {
-    icon: FileText,
-    label: "Tài liệu",
-    color: "text-amber-600",
-    bg: "bg-amber-50",
-  },
-};
-
-// ─── Add Content Menu ───────────────────────────────────────────────────────
-
-const AddContentMenu = ({
-  onAddVideo,
-  onAddText,
-}: {
-  onAddVideo: () => void;
-  onAddText: () => void;
-}) => {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-sm font-bold text-[#1c1d1f] border border-[#1c1d1f] px-4 py-2 hover:bg-muted/30 transition-colors"
-      >
-        <Plus size={16} /> Thêm nội dung
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-20 bg-background border border-border shadow-xl w-56">
-            <button
-              onClick={() => {
-                onAddVideo();
-                setOpen(false);
-              }}
-              className="w-full text-left px-4 py-3 hover:bg-muted/30 flex items-center gap-3 transition-colors"
-            >
-              <Video size={18} className="text-blue-600" />
-              <div>
-                <div className="text-sm font-bold text-[#1c1d1f]">Video</div>
-                <div className="text-xs text-muted-foreground">
-                  Tải lên bài giảng video
-                </div>
-              </div>
-            </button>
-            <button
-              onClick={() => {
-                onAddText();
-                setOpen(false);
-              }}
-              className="w-full text-left px-4 py-3 hover:bg-muted/30 flex items-center gap-3 transition-colors border-t border-border"
-            >
-              <Type size={18} className="text-emerald-600" />
-              <div>
-                <div className="text-sm font-bold text-[#1c1d1f]">Bài viết</div>
-                <div className="text-xs text-muted-foreground">
-                  Tạo bài viết dạng văn bản
-                </div>
-              </div>
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
-
-// ─── Move Lesson Modal ──────────────────────────────────────────────────────
-
-const MoveLessonModal = ({
+function LessonRow({
   lesson,
-  chapters,
-  sourceChapterId,
-  onMove,
-  onClose,
+  chapterId,
+  onUpdate,
+  onDelete,
+  onVideoAttach,
 }: {
   lesson: Lesson;
-  chapters: Chapter[];
-  sourceChapterId: string;
-  onMove: (targetChapterId: string) => void;
-  onClose: () => void;
-}) => {
-  const otherChapters = chapters.filter((c) => c._id !== sourceChapterId);
+  chapterId: string;
+  onUpdate: (lessonId: string, data: Partial<Lesson>) => Promise<void>;
+  onDelete: (lessonId: string, chapterId: string) => Promise<void>;
+  onVideoAttach: (lessonId: string, mediaId: string) => void;
+}) {
+  const [showVideoUpload, setShowVideoUpload] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const hasVideo = lesson.media != null;
+
+  const handleRename = async (title: string) => {
+    setSaving(true);
+    try {
+      await onUpdate(lesson._id, { title });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`Delete lesson "${lesson.title}"?`)) return;
+    setDeleting(true);
+    await onDelete(lesson._id, chapterId);
+  };
+
+  const handleVideoUploaded = (mediaId: string, title: string) => {
+    setShowVideoUpload(false);
+    onVideoAttach(lesson._id, mediaId);
+    toast.success("Video attached to lesson!");
+  };
 
   return (
-    <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-background w-full max-w-md shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-5 border-b">
-          <h3 className="text-lg font-bold text-[#1c1d1f]">Chuyển bài học</h3>
+    <>
+      <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-muted/40 group transition-colors border border-transparent hover:border-border">
+        <div className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground transition-colors flex-shrink-0">
+          <GripVertical size={14} />
+        </div>
+
+        <span className="flex-shrink-0">{LESSON_TYPE_ICONS[lesson.type]}</span>
+
+        <div className="flex-1 min-w-0 text-sm">
+          <InlineEdit
+            value={lesson.title}
+            onSave={handleRename}
+            placeholder="Lesson title…"
+          />
+        </div>
+
+        <button
+          onClick={() =>
+            onUpdate(lesson._id, { isFreePreview: !lesson.isFreePreview })
+          }
+          className={`text-[11px] font-medium px-2 py-0.5 rounded-full border transition-colors flex-shrink-0 ${
+            lesson.isFreePreview
+              ? "border-emerald-200 text-emerald-700 bg-emerald-50"
+              : "border-border text-muted-foreground hover:border-border hover:bg-muted"
+          }`}
+          title="Toggle free preview"
+        >
+          {lesson.isFreePreview ? "Free" : "Paid"}
+        </button>
+
+        {lesson.type === "video" && (
           <button
-            onClick={onClose}
-            className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setShowVideoUpload(true)}
+            title={hasVideo ? "Replace video" : "Attach video"}
+            className={`flex-shrink-0 flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border transition-colors ${
+              hasVideo
+                ? "border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100"
+                : "border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary"
+            }`}
           >
-            <X size={20} />
+            <Video size={11} />
+            {hasVideo ? "Video ✓" : "Add video"}
           </button>
-        </div>
-        <div className="p-6">
-          <p className="text-sm text-muted-foreground mb-4">
-            Di chuyển"
-            <span className="font-bold text-[#1c1d1f]">{lesson.title}</span>"đến
-            chương:
-          </p>
-          {otherChapters.length === 0 ? (
-            <p className="text-sm text-muted-foreground italic">
-              Không có chương khác để chuyển đến.
-            </p>
+        )}
+
+        {saving && (
+          <Loader2
+            size={13}
+            className="animate-spin text-muted-foreground flex-shrink-0"
+          />
+        )}
+
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive rounded transition-all flex-shrink-0"
+        >
+          {deleting ? (
+            <Loader2 size={13} className="animate-spin" />
           ) : (
-            <div className="space-y-2">
-              {otherChapters.map((c) => (
-                <button
-                  key={c._id}
-                  onClick={() => onMove(c._id)}
-                  className="w-full text-left px-4 py-3 border border-border hover:border-[#1c1d1f] hover:bg-muted/30 transition-colors flex items-center justify-between group"
-                >
-                  <span className="text-sm font-medium text-[#1c1d1f]">
-                    {c.title}
-                  </span>
-                  <span className="text-xs text-muted-foreground group-hover:text-muted-foreground">
-                    {c.lessons?.length || 0} bài
-                  </span>
-                </button>
-              ))}
-            </div>
+            <Trash2 size={13} />
           )}
-        </div>
+        </button>
       </div>
+
+      {showVideoUpload && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <VideoUpload
+            onVideoUploaded={handleVideoUploaded}
+            onClose={() => setShowVideoUpload(false)}
+            isTitleDisplay={true}
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── Chapter Card ─────────────────────────────────────────────────────────────
+
+function ChapterCard({
+  chapter,
+  onUpdateChapter,
+  onDeleteChapter,
+  onAddLesson,
+  onUpdateLesson,
+  onDeleteLesson,
+  onVideoAttach,
+}: {
+  chapter: Chapter;
+  onUpdateChapter: (id: string, data: Partial<Chapter>) => Promise<void>;
+  onDeleteChapter: (id: string) => Promise<void>;
+  onAddLesson: (chapterId: string, type: Lesson["type"]) => Promise<void>;
+  onUpdateLesson: (lessonId: string, data: Partial<Lesson>) => Promise<void>;
+  onDeleteLesson: (lessonId: string, chapterId: string) => Promise<void>;
+  onVideoAttach: (lessonId: string, mediaId: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(true);
+  const [addingLesson, setAddingLesson] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (
+      !confirm(
+        `Delete section "${chapter.title}" and all its lessons? This cannot be undone.`
+      )
+    )
+      return;
+    setDeleting(true);
+    await onDeleteChapter(chapter._id);
+  };
+
+  const handleAddLesson = async (type: Lesson["type"]) => {
+    setAddingLesson(true);
+    await onAddLesson(chapter._id, type);
+    setAddingLesson(false);
+  };
+
+  return (
+    <div className="bg-background border border-border rounded-xl overflow-hidden shadow-sm">
+      <div className="flex items-center gap-2 px-4 py-3 bg-muted/30">
+        <div className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground transition-colors flex-shrink-0">
+          <GripVertical size={16} />
+        </div>
+
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+        >
+          {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+        </button>
+
+        <div className="flex-1 min-w-0 font-semibold text-sm">
+          <InlineEdit
+            value={chapter.title}
+            onSave={(title) => onUpdateChapter(chapter._id, { title })}
+            placeholder="Section title…"
+          />
+        </div>
+
+        <span className="text-xs text-muted-foreground flex-shrink-0 hidden sm:block">
+          {chapter.lessons.length} lesson
+          {chapter.lessons.length !== 1 ? "s" : ""}
+        </span>
+
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="p-1.5 text-muted-foreground hover:text-destructive rounded-lg hover:bg-destructive/10 transition-colors flex-shrink-0"
+        >
+          {deleting ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Trash2 size={14} />
+          )}
+        </button>
+      </div>
+
+      {expanded && (
+        <div className="px-3 py-2 space-y-0.5">
+          {chapter.lessons.length === 0 && (
+            <p className="text-xs text-muted-foreground text-center py-4">
+              No lessons yet. Add one below.
+            </p>
+          )}
+          {chapter.lessons.map((lesson) => (
+            <LessonRow
+              key={lesson._id}
+              lesson={lesson}
+              chapterId={chapter._id}
+              onUpdate={onUpdateLesson}
+              onDelete={onDeleteLesson}
+              onVideoAttach={onVideoAttach}
+            />
+          ))}
+
+          <div className="flex gap-2 pt-2 pb-1">
+            <button
+              onClick={() => handleAddLesson("video")}
+              disabled={addingLesson}
+              className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-blue-600 transition-colors px-2 py-1.5 rounded-lg hover:bg-blue-50"
+            >
+              {addingLesson ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <Video size={12} />
+              )}
+              + Video lesson
+            </button>
+            <button
+              onClick={() => handleAddLesson("text")}
+              disabled={addingLesson}
+              className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-emerald-600 transition-colors px-2 py-1.5 rounded-lg hover:bg-emerald-50"
+            >
+              <FileText size={12} />+ Text lesson
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
+}
 
-// ─── Main Curriculum Manager ────────────────────────────────────────────────
+// ─── Main Page ────────────────────────────────────────────────────────────────
 
-const CurriculumManager = () => {
-  const { id: courseId } = useParams();
-  const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [courseTitle, setCourseTitle] = useState("");
-  const [courseStatus, setCourseStatus] = useState<"draft" | "published">(
-    "draft",
-  );
-  const [videoUploadModal, setVideoUploadModal] = useState<{
-    chapterId: string;
-  } | null>(null);
-  const [moveLessonModal, setMoveLessonModal] = useState<{
-    lesson: Lesson;
-    sourceChapterId: string;
-  } | null>(null);
-  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(
-    new Set(),
+export default function CourseBuilderPage() {
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+
+  const [course, setCourse] = useState<Course | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"curriculum" | "settings">(
+    "curriculum"
   );
 
-  const changeLoad = loadingStore((state) => state.changeLoad);
+  const [settingsForm, setSettingsForm] = useState({
+    title: "",
+    description: "",
+    price: 0,
+    discountPrice: 0,
+  });
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [showThumbnailUpload, setShowThumbnailUpload] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
-  useEffect(() => {
-    fetchCourseData();
-  }, [courseId]);
+  // ── Load course ────────────────────────────────────────────────────────────
 
-  // Expand all chapters by default once loaded
-  useEffect(() => {
-    if (chapters.length > 0) {
-      setExpandedChapters(new Set(chapters.map((c) => c._id)));
-    }
-  }, [chapters.length]);
-
-  const toggleChapter = (id: string) => {
-    setExpandedChapters((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const fetchCourseData = async () => {
+  const fetchCourse = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
     try {
-      changeLoad();
-      const response = await axios.get(
-        `${ENV.ROOT_API}/course/getById?id=${courseId}`,
-      );
-      setCourseTitle(response.data.data.title);
-      setCourseStatus(response.data.data.status || "draft");
-      setChapters(response.data.data.chapters || []);
-    } catch (error: any) {
-      console.error(error);
+      const res = await courseApi.getCourseForEdit(id as string);
+      if (res.success) {
+        const data = (res.data as any).data;
+        setCourse(data);
+        setSettingsForm({
+          title: data.title || "",
+          description: data.description || "",
+          price: data.price || 0,
+          discountPrice: data.discountPrice || 0,
+        });
+      } else {
+        toast.error(res.message || "Failed to load course");
+        router.replace("/management/my-courses");
+      }
+    } catch {
+      toast.error("Could not load course");
+      router.replace("/management/my-courses");
     } finally {
-      changeLoad();
+      setLoading(false);
     }
-  };
+  }, [id, router]);
+
+  useEffect(() => {
+    fetchCourse();
+  }, [fetchCourse]);
+
+  // ── Chapter operations ─────────────────────────────────────────────────────
 
   const handleAddChapter = async () => {
-    const title = prompt("Nhập tiêu đề chương:");
-    if (!title) return;
-    changeLoad();
+    if (!course) return;
+    const order = course.chapters.length;
     try {
-      const token = localStorage.getItem("access_token");
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      const response = await axios.post(
-        `${ENV.ROOT_API}/course/chapter/add`,
-        {
-          courseId,
-          title,
-          order: chapters.length,
-        },
+      const res = await courseApi.addChapter({
+        courseId: course._id,
+        title: `Section ${order + 1}`,
+        order,
+      });
+      if (!res.success) throw new Error(res.message);
+      const newChapter: Chapter = { ...(res.data as any).data, lessons: [] };
+      setCourse((prev) =>
+        prev ? { ...prev, chapters: [...prev.chapters, newChapter] } : prev
       );
-      const newChapter = { ...response.data.data, lessons: [] };
-      setChapters((prev) => [...prev, newChapter]);
-      setExpandedChapters((prev) => new Set(prev).add(newChapter._id));
-      toast.success("Đã thêm chương mới");
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Lỗi khi thêm chương");
-    } finally {
-      changeLoad();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to add section");
     }
   };
 
-  const handleAddLesson = async (chapterId: string, type: "text" | "file") => {
-    const title = prompt("Nhập tiêu đề bài học:");
-    if (!title) return;
-    changeLoad();
-    try {
-      const chapterIndex = chapters.findIndex((c) => c._id === chapterId);
-      if (chapterIndex === -1) return;
-      const token = localStorage.getItem("access_token");
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      const response = await axios.post(
-        `${ENV.ROOT_API}/course/lesson/add`,
-        {
-          chapterId,
-          title,
-          type,
-          order: chapters[chapterIndex].lessons.length,
-        },
-      );
-      setChapters((prev) =>
-        prev.map((c, i) =>
-          i === chapterIndex
-            ? { ...c, lessons: [...c.lessons, response.data.data] }
-            : c,
-        ),
-      );
-      toast.success("Đã thêm bài học mới");
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Lỗi khi thêm bài học");
-    } finally {
-      changeLoad();
-    }
-  };
-
-  const handleVideoUploadSuccess = (chapterId: string, lesson: Lesson) => {
-    setChapters((prev) =>
-      prev.map((c) =>
-        c._id === chapterId ? { ...c, lessons: [...c.lessons, lesson] } : c,
-      ),
-    );
-  };
-
-  const handleEditChapter = async (chapterId: string, currentTitle: string) => {
-    const title = prompt("Sửa tiêu đề chương:", currentTitle);
-    if (!title || title === currentTitle) return;
-    changeLoad();
-    try {
-      const token = localStorage.getItem("access_token");
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      await axios.patch(
-        `${ENV.ROOT_API}/course/chapter/update`,
-        {
-          chapterId,
-          title,
-        },
-      );
-      setChapters((prev) =>
-        prev.map((c) => (c._id === chapterId ? { ...c, title } : c)),
-      );
-      toast.success("Đã cập nhật chương");
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Lỗi khi cập nhật chương");
-    } finally {
-      changeLoad();
-    }
-  };
-
-  const handleMoveLesson = async (
-    lesson: Lesson,
-    sourceChapterId: string,
-    targetChapterId: string,
-  ) => {
-    changeLoad();
-    try {
-      const token = localStorage.getItem("access_token");
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      await axios.patch(
-        `${ENV.ROOT_API}/course/lesson/move`,
-        {
-          lessonId: lesson._id,
-          sourceChapterId,
-          targetChapterId,
-        },
-      );
-
-      setChapters((prev) =>
-        prev.map((c) => {
-          if (c._id === sourceChapterId) {
-            return {
-              ...c,
-              lessons: c.lessons.filter((l) => l._id !== lesson._id),
-            };
-          }
-          if (c._id === targetChapterId) {
-            return { ...c, lessons: [...c.lessons, lesson] };
-          }
-          return c;
-        }),
-      );
-
-      toast.success("Đã chuyển bài học");
-      setMoveLessonModal(null);
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Lỗi khi chuyển bài học");
-    } finally {
-      changeLoad();
-    }
-  };
-
-  const handleEditLesson = async (
+  const handleUpdateChapter = async (
     chapterId: string,
-    lessonId: string,
-    currentTitle: string,
+    data: Partial<Chapter>
   ) => {
-    const title = prompt("Sửa tiêu đề bài học:", currentTitle);
-    if (!title || title === currentTitle) return;
-    changeLoad();
     try {
-      const token = localStorage.getItem("access_token");
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      await axios.patch(
-        `${ENV.ROOT_API}/course/lesson/update`,
-        {
-          lessonId,
-          title,
-        },
-      );
-      setChapters((prev) =>
-        prev.map((c) =>
-          c._id === chapterId
-            ? {
-              ...c,
-              lessons: c.lessons.map((l) =>
-                l._id === lessonId ? { ...l, title } : l,
+      const res = await courseApi.updateChapter({ chapterId, ...data });
+      if (!res.success) throw new Error(res.message);
+      setCourse((prev) =>
+        prev
+          ? {
+              ...prev,
+              chapters: prev.chapters.map((ch) =>
+                ch._id === chapterId ? { ...ch, ...data } : ch
               ),
             }
-            : c,
-        ),
+          : prev
       );
-      toast.success("Đã cập nhật bài học");
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Lỗi khi cập nhật bài học");
-    } finally {
-      changeLoad();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to update section");
     }
   };
 
-  const handleDeleteLesson = async (chapterId: string, lessonId: string) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa bài học này không?")) return;
-    changeLoad();
+  const handleDeleteChapter = async (chapterId: string) => {
     try {
-      const token = localStorage.getItem("access_token");
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      await axios.delete(
-        `${ENV.ROOT_API}/course/lesson/delete`,
-        {
-          data: { lessonId },
-        },
-      );
-      setChapters((prev) =>
-        prev.map((c) =>
-          c._id === chapterId
-            ? {
-              ...c,
-              lessons: c.lessons.filter((l) => l._id !== lessonId),
+      const res = await courseApi.deleteChapter({ chapterId });
+      if (!res.success) throw new Error(res.message);
+      setCourse((prev) =>
+        prev
+          ? {
+              ...prev,
+              chapters: prev.chapters.filter((ch) => ch._id !== chapterId),
             }
-            : c,
-        ),
+          : prev
       );
-      toast.success("Đã xóa bài học");
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Lỗi khi xóa bài học");
-    } finally {
-      changeLoad();
+      toast.success("Section deleted");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to delete section");
     }
   };
 
-  const handleTogglePublish = async () => {
-    changeLoad();
+  // ── Lesson operations ──────────────────────────────────────────────────────
+
+  const handleAddLesson = async (chapterId: string, type: Lesson["type"]) => {
+    if (!course) return;
+    const chapter = course.chapters.find((ch) => ch._id === chapterId);
+    const order = chapter?.lessons.length ?? 0;
     try {
-      const token = localStorage.getItem("access_token");
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      const newStatus = courseStatus === "published" ? "draft" : "published";
-      await axios.patch(
-        `${ENV.ROOT_API}/course/update`,
-        {
-          courseId,
-          status: newStatus,
-        },
+      const res = await courseApi.addLesson({
+        chapterId,
+        title: `Lesson ${order + 1}`,
+        type,
+        order,
+      });
+      if (!res.success) throw new Error(res.message);
+      const newLesson: Lesson = (res.data as any).data;
+      setCourse((prev) =>
+        prev
+          ? {
+              ...prev,
+              chapters: prev.chapters.map((ch) =>
+                ch._id === chapterId
+                  ? { ...ch, lessons: [...ch.lessons, newLesson] }
+                  : ch
+              ),
+            }
+          : prev
       );
-      setCourseStatus(newStatus);
-
-      toast.success(
-        newStatus === "published"
-          ? "Đã xuất bản khóa học"
-          : "Đã đưa khóa học về bản nháp",
-      );
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message ||
-        "Lỗi khi cập nhật trạng thái khóa học",
-      );
-    } finally {
-      changeLoad();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to add lesson");
     }
   };
 
-  const totalLessons = chapters.reduce(
-    (acc, c) => acc + (c.lessons?.length || 0),
-    0,
+  const handleUpdateLesson = async (
+    lessonId: string,
+    data: Partial<Lesson>
+  ) => {
+    try {
+      const res = await courseApi.updateLesson({ lessonId, ...data });
+      if (!res.success) throw new Error(res.message);
+      const updated = (res.data as any).data;
+      setCourse((prev) =>
+        prev
+          ? {
+              ...prev,
+              chapters: prev.chapters.map((ch) => ({
+                ...ch,
+                lessons: ch.lessons.map((l) =>
+                  l._id === lessonId ? { ...l, ...updated } : l
+                ),
+              })),
+            }
+          : prev
+      );
+    } catch (e: any) {
+      toast.error(e.message || "Failed to update lesson");
+    }
+  };
+
+  const handleDeleteLesson = async (lessonId: string, chapterId: string) => {
+    try {
+      const res = await courseApi.deleteLesson({ lessonId });
+      if (!res.success) throw new Error(res.message);
+      setCourse((prev) =>
+        prev
+          ? {
+              ...prev,
+              chapters: prev.chapters.map((ch) =>
+                ch._id === chapterId
+                  ? {
+                      ...ch,
+                      lessons: ch.lessons.filter((l) => l._id !== lessonId),
+                    }
+                  : ch
+              ),
+            }
+          : prev
+      );
+      toast.success("Lesson deleted");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to delete lesson");
+    }
+  };
+
+  const handleVideoAttach = (lessonId: string, mediaId: string) => {
+    handleUpdateLesson(lessonId, { media: mediaId as any, type: "video" });
+  };
+
+  // ── Settings ───────────────────────────────────────────────────────────────
+
+  const handleSaveSettings = async () => {
+    if (!course) return;
+    setSettingsSaving(true);
+    try {
+      const res = await courseApi.updateCourse({
+        courseId: course._id,
+        ...settingsForm,
+      });
+      if (!res.success) throw new Error(res.message);
+      const updated = (res.data as any).data;
+      setCourse((prev) => (prev ? { ...prev, ...updated } : prev));
+      toast.success("Course info saved!");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to save");
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
+  const handleThumbnailUploaded = async (image: any) => {
+    if (!course) return;
+    setShowThumbnailUpload(false);
+    try {
+      const res = await courseApi.updateCourse({
+        courseId: course._id,
+        thumbnail: image._id,
+      });
+      if (!res.success) throw new Error(res.message);
+      setCourse((prev) =>
+        prev ? { ...prev, thumbnail: { url: image.url } } : prev
+      );
+      toast.success("Thumbnail updated!");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to update thumbnail");
+    }
+  };
+
+  // ── Publish / Unpublish ────────────────────────────────────────────────────
+
+  const handlePublish = async () => {
+    if (!course) return;
+    setPublishing(true);
+    try {
+      const res = await courseApi.publishCourse(course._id);
+      if (!res.success) throw new Error(res.message);
+      setCourse((prev) => (prev ? { ...prev, status: "published" } : prev));
+      toast.success("🎉 Course is now live!");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to publish");
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleUnpublish = async () => {
+    if (!course) return;
+    if (
+      !confirm(
+        "Take this course offline? Learners won't be able to access it."
+      )
+    )
+      return;
+    setPublishing(true);
+    try {
+      const res = await courseApi.unpublishCourse(course._id);
+      if (!res.success) throw new Error(res.message);
+      setCourse((prev) => (prev ? { ...prev, status: "draft" } : prev));
+      toast.success("Course moved to draft.");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to unpublish");
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  // ── Loading / missing ──────────────────────────────────────────────────────
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground font-medium">
+            Loading course builder…
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!course) return null;
+
+  const totalLessons = course.chapters.reduce(
+    (sum, ch) => sum + ch.lessons.length,
+    0
   );
+  const isPublished = course.status === "published";
+
+  const checks = [
+    { ok: course.title.trim().length > 0, text: "Course has a title" },
+    {
+      ok: (course.description?.trim()?.length || 0) > 0,
+      text: "Course has a description",
+    },
+    { ok: course.thumbnail != null, text: "Course has a thumbnail" },
+    {
+      ok: course.chapters.some((ch) => ch.lessons.length > 0),
+      text: "At least one section with a lesson",
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-background font-sans text-[#1c1d1f]">
-      {/* Modals */}
-      {videoUploadModal && (
-        <VideoUploadModal
-          chapterId={videoUploadModal.chapterId}
-          onClose={() => setVideoUploadModal(null)}
-          onSuccess={handleVideoUploadSuccess}
-        />
-      )}
-      {moveLessonModal && (
-        <MoveLessonModal
-          lesson={moveLessonModal.lesson}
-          chapters={chapters}
-          sourceChapterId={moveLessonModal.sourceChapterId}
-          onMove={(targetId) =>
-            handleMoveLesson(
-              moveLessonModal.lesson,
-              moveLessonModal.sourceChapterId,
-              targetId,
-            )
-          }
-          onClose={() => setMoveLessonModal(null)}
-        />
-      )}
-
-      {/* Top Bar */}
-      <div className="bg-[#1c1d1f] text-white">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/management/my-courses"
-              className="text-muted-foreground hover:text-white transition-colors"
-            >
-              <ArrowLeft size={20} />
-            </Link>
-            <div className="h-6 w-px bg-accent" />
-            <div>
-              <p className="text-[13px] text-muted-foreground leading-none">
-                Chương trình học
-              </p>
-              <p className="text-sm font-bold leading-tight mt-0.5 truncate max-w-md">
-                {courseTitle || "Đang tải..."}
-                {courseTitle && (
-                  <span
-                    className={`ml-3 px-2 py-0.5 text-xs rounded border ${courseStatus === "published" ? "bg-card border-border text-muted-foreground/70" : "bg-yellow-900/40 border-yellow-700/50 text-yellow-500"}`}
-                  >
-                    {courseStatus === "published" ? "Đã xuất bản" : "Bản nháp"}
-                  </span>
-                )}
-              </p>
-            </div>
+    <div className="min-h-screen bg-muted/20 flex flex-col">
+      {/* ── Top bar ───────────────────────────────────────────────────── */}
+      <header className="sticky top-0 z-30 bg-background border-b border-border h-14 flex items-center justify-between px-4 lg:px-6 gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link
+            href="/management/my-courses"
+            className="p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
+          >
+            <ArrowLeft size={18} />
+          </Link>
+          <div className="min-w-0">
+            <h1 className="text-sm font-bold text-foreground truncate leading-tight">
+              {course.title}
+            </h1>
+            <p className="text-[11px] text-muted-foreground hidden sm:block">
+              Course Builder
+            </p>
           </div>
-          <div className="flex items-center gap-6 text-sm">
-            <span className="text-muted-foreground">
-              {chapters.length} chương • {totalLessons} bài
-            </span>
+        </div>
 
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span
+            className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+              isPublished
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-yellow-100 text-yellow-700"
+            }`}
+          >
+            {isPublished ? "Live" : "Draft"}
+          </span>
+
+          <Link
+            href={`/courses/${course.slug}`}
+            target="_blank"
+            className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground border border-border rounded-lg px-3 py-1.5 hover:bg-muted transition-colors"
+          >
+            Preview
+          </Link>
+
+          {isPublished ? (
             <button
-              onClick={handleTogglePublish}
-              className={`px-4 py-2 font-bold text-sm transition-colors border ${courseStatus === "published" ? "bg-transparent text-white border-white hover:bg-background/10" : "bg-background text-[#1c1d1f] border-white hover:bg-muted"}`}
+              onClick={handleUnpublish}
+              disabled={publishing}
+              className="flex items-center gap-1.5 text-sm font-semibold px-4 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors disabled:opacity-50"
             >
-              {courseStatus === "published"
-                ? "Hủy xuất bản"
-                : "Xuất bản khóa học"}
+              {publishing ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <EyeOff size={14} />
+              )}
+              Unpublish
             </button>
-          </div>
+          ) : (
+            <button
+              onClick={handlePublish}
+              disabled={publishing}
+              className="flex items-center gap-1.5 text-sm font-semibold px-4 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50"
+            >
+              {publishing ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Globe size={14} />
+              )}
+              Publish
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* ── Tabs ──────────────────────────────────────────────────────── */}
+      <div className="bg-background border-b border-border px-4 lg:px-6">
+        <div className="flex">
+          {(
+            [
+              { id: "curriculum", label: "Curriculum", icon: BookOpen },
+              { id: "settings", label: "Settings", icon: Settings },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tab.id
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+              }`}
+            >
+              <tab.icon size={15} />
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Page Content */}
-      <div className="max-w-5xl mx-auto px-6 py-10">
-        {/* Page Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold mb-1">Chương trình học</h1>
-            <p className="text-sm text-muted-foreground">
-              Sắp xếp nội dung giảng dạy của bạn theo chương và bài học. Kéo thả
-              để thay đổi thứ tự.
-            </p>
-          </div>
-          <button
-            onClick={handleAddChapter}
-            className="bg-[#1c1d1f] text-white font-bold px-5 py-3 hover:bg-background transition-colors flex items-center gap-2"
-          >
-            <Plus size={18} /> Thêm chương
-          </button>
-        </div>
-
-        {/* Chapters */}
-        {chapters.length === 0 ? (
-          <div className="border-2 border-dashed border-border p-16 text-center bg-[#f7f9fa]">
-            <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center bg-muted rounded-full text-muted-foreground">
-              <BookOpen size={32} />
-            </div>
-            <h3 className="text-xl font-bold mb-2">
-              Bắt đầu xây dựng chương trình học
-            </h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Tạo chương đầu tiên cho khóa học của bạn. Mỗi chương chứa nhiều
-              bài học với nội dung video, bài viết hoặc tài liệu.
-            </p>
-            <button
-              onClick={handleAddChapter}
-              className="bg-[#1c1d1f] text-white font-bold px-6 py-3 hover:bg-background transition-colors inline-flex items-center gap-2"
-            >
-              <Plus size={18} /> Tạo chương đầu tiên
-            </button>
-          </div>
-        ) : (
+      {/* ── Content ───────────────────────────────────────────────────── */}
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 lg:px-6 py-6">
+        {/* ── Curriculum ── */}
+        {activeTab === "curriculum" && (
           <div className="space-y-4">
-            {chapters
-              .sort((a, b) => a.order - b.order)
-              .map((chapter, chapterIndex) => {
-                const isExpanded = expandedChapters.has(chapter._id);
-                return (
-                  <div
-                    key={chapter._id}
-                    className="border border-border bg-background"
-                  >
-                    {/* Chapter Header */}
-                    <div
-                      className="bg-[#f7f9fa] border-b border-border px-5 py-4 flex items-center justify-between cursor-pointer select-none"
-                      onClick={() => toggleChapter(chapter._id)}
+            <div className="flex items-center gap-6 text-sm text-muted-foreground pb-2">
+              <span>
+                <strong className="text-foreground">
+                  {course.chapters.length}
+                </strong>{" "}
+                sections
+              </span>
+              <span>
+                <strong className="text-foreground">{totalLessons}</strong>{" "}
+                lessons
+              </span>
+            </div>
+
+            {course.chapters.length === 0 && (
+              <div className="text-center py-16 border-2 border-dashed border-border rounded-2xl">
+                <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <BookOpen size={26} className="text-primary" />
+                </div>
+                <h3 className="text-lg font-bold text-foreground mb-2">
+                  Start building your curriculum
+                </h3>
+                <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
+                  Add sections to organize your course content, then add lessons
+                  to each section.
+                </p>
+                <button
+                  onClick={handleAddChapter}
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
+                >
+                  <Plus size={16} />
+                  Add First Section
+                </button>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {course.chapters.map((chapter) => (
+                <ChapterCard
+                  key={chapter._id}
+                  chapter={chapter}
+                  onUpdateChapter={handleUpdateChapter}
+                  onDeleteChapter={handleDeleteChapter}
+                  onAddLesson={handleAddLesson}
+                  onUpdateLesson={handleUpdateLesson}
+                  onDeleteLesson={handleDeleteLesson}
+                  onVideoAttach={handleVideoAttach}
+                />
+              ))}
+            </div>
+
+            {course.chapters.length > 0 && (
+              <button
+                onClick={handleAddChapter}
+                className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl py-3.5 text-sm font-semibold text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
+              >
+                <Plus size={16} />
+                Add Section
+              </button>
+            )}
+
+            {!isPublished && (
+              <div className="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <h4 className="text-sm font-bold text-amber-800 mb-2 flex items-center gap-2">
+                  <AlertTriangle size={15} />
+                  Before publishing, make sure:
+                </h4>
+                <ul className="space-y-1.5">
+                  {checks.map((item) => (
+                    <li
+                      key={item.text}
+                      className={`flex items-center gap-2 text-xs font-medium ${
+                        item.ok ? "text-emerald-700" : "text-amber-700"
+                      }`}
                     >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="flex-shrink-0 text-muted-foreground">
-                          {isExpanded ? (
-                            <ChevronUp size={20} />
-                          ) : (
-                            <ChevronDown size={20} />
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <span className="font-bold text-[#1c1d1f] text-[15px]">
-                            Chương {chapterIndex + 1}:
-                          </span>
-                          <span className="text-[15px] text-[#1c1d1f] truncate">
-                            {chapter.title}
-                          </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditChapter(chapter._id, chapter.title);
-                            }}
-                            className="flex-shrink-0 p-1 text-muted-foreground hover:text-[#1c1d1f] transition-colors"
-                            title="Sửa tên chương"
-                          >
-                            <Edit2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                      <div
-                        className="flex items-center gap-3 flex-shrink-0 ml-4"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <span className="text-xs text-muted-foreground font-medium">
-                          {chapter.lessons?.length || 0} bài
-                        </span>
-                        <AddContentMenu
-                          onAddVideo={() =>
-                            setVideoUploadModal({ chapterId: chapter._id })
-                          }
-                          onAddText={() => handleAddLesson(chapter._id, "text")}
+                      {item.ok ? (
+                        <CheckCircle
+                          size={13}
+                          className="text-emerald-500 flex-shrink-0"
                         />
-                      </div>
-                    </div>
-
-                    {/* Lessons Panel */}
-                    {isExpanded && (
-                      <div>
-                        {chapter.lessons && chapter.lessons.length > 0 ? (
-                          chapter.lessons
-                            .sort((a, b) => a.order - b.order)
-                            .map((lesson, index) => {
-                              const typeConfig =
-                                LESSON_TYPE_CONFIG[lesson.type] ||
-                                LESSON_TYPE_CONFIG.text;
-                              const TypeIcon = typeConfig.icon;
-
-                              return (
-                                <div
-                                  key={lesson._id}
-                                  className="group border-b border-border last:border-0 hover:bg-[#f7f9fa] transition-colors"
-                                >
-                                  <div className="flex items-center px-5 py-3.5">
-                                    {/* Drag handle */}
-                                    <div className="flex-shrink-0 text-muted-foreground/70 mr-3 cursor-grab">
-                                      <GripVertical size={16} />
-                                    </div>
-
-                                    {/* Lesson number */}
-                                    <div className="flex-shrink-0 w-8 text-xs text-muted-foreground font-mono">
-                                      {chapterIndex + 1}.{index + 1}
-                                    </div>
-
-                                    {/* Type Icon */}
-                                    <div
-                                      className={`flex-shrink-0 w-8 h-8 ${typeConfig.bg} flex items-center justify-center mr-3`}
-                                    >
-                                      <TypeIcon
-                                        size={16}
-                                        className={typeConfig.color}
-                                      />
-                                    </div>
-
-                                    {/* Title */}
-                                    <div className="flex-1 min-w-0">
-                                      <span className="text-sm font-medium text-[#1c1d1f] truncate block">
-                                        {lesson.title}
-                                      </span>
-                                    </div>
-
-                                    {/* Badges */}
-                                    <div className="flex-shrink-0 flex items-center gap-2 ml-4">
-                                      {lesson.isFreePreview && (
-                                        <span className="text-[10px] bg-[#eceb98] text-[#3d3c0a] px-2 py-0.5 font-bold uppercase tracking-wide">
-                                          Xem trước
-                                        </span>
-                                      )}
-                                      <span
-                                        className={`text-[10px] ${typeConfig.bg} ${typeConfig.color} px-2 py-0.5 font-bold uppercase tracking-wide`}
-                                      >
-                                        {typeConfig.label}
-                                      </span>
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="flex-shrink-0 flex items-center gap-0.5 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                      <button
-                                        onClick={() =>
-                                          setMoveLessonModal({
-                                            lesson,
-                                            sourceChapterId: chapter._id,
-                                          })
-                                        }
-                                        className="p-2 text-muted-foreground hover:text-[#1c1d1f] hover:bg-muted transition-colors"
-                                        title="Chuyển chương"
-                                      >
-                                        <ArrowRightLeft size={15} />
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          handleEditLesson(
-                                            chapter._id,
-                                            lesson._id,
-                                            lesson.title,
-                                          )
-                                        }
-                                        className="p-2 text-muted-foreground hover:text-[#1c1d1f] hover:bg-muted transition-colors"
-                                        title="Sửa tên bài học"
-                                      >
-                                        <Edit2 size={15} />
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          handleDeleteLesson(
-                                            chapter._id,
-                                            lesson._id,
-                                          )
-                                        }
-                                        className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors"
-                                        title="Xóa bài học"
-                                      >
-                                        <Trash2 size={15} />
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })
-                        ) : (
-                          <div className="px-5 py-8 text-center">
-                            <p className="text-sm text-muted-foreground mb-3">
-                              Chưa có bài học trong chương này
-                            </p>
-                            <div className="flex items-center justify-center gap-3">
-                              <button
-                                onClick={() =>
-                                  setVideoUploadModal({
-                                    chapterId: chapter._id,
-                                  })
-                                }
-                                className="text-sm font-bold text-[#5624d0] hover:text-[#401b9c] flex items-center gap-1.5 transition-colors"
-                              >
-                                <Video size={16} /> Thêm Video
-                              </button>
-                              <span className="text-muted-foreground/70">
-                                |
-                              </span>
-                              <button
-                                onClick={() =>
-                                  handleAddLesson(chapter._id, "text")
-                                }
-                                className="text-sm font-bold text-[#5624d0] hover:text-[#401b9c] flex items-center gap-1.5 transition-colors"
-                              >
-                                <Type size={16} /> Thêm Bài viết
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-
-            {/* Add another chapter CTA */}
-            <button
-              onClick={handleAddChapter}
-              className="w-full border-2 border-dashed border-border py-4 text-sm font-bold text-muted-foreground hover:text-[#1c1d1f] hover:border-border transition-colors flex items-center justify-center gap-2"
-            >
-              <Plus size={18} /> Thêm chương mới
-            </button>
+                      ) : (
+                        <X size={13} className="text-amber-500 flex-shrink-0" />
+                      )}
+                      {item.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
-      </div>
+
+        {/* ── Settings ── */}
+        {activeTab === "settings" && (
+          <div className="space-y-6 max-w-2xl">
+            {/* Thumbnail */}
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-2">
+                Course Thumbnail
+              </label>
+              <div className="flex items-start gap-4">
+                <div className="w-40 h-24 rounded-xl overflow-hidden border border-border bg-muted flex-shrink-0">
+                  {course.thumbnail?.url ? (
+                    <img
+                      src={course.thumbnail.url}
+                      alt="Thumbnail"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                      <ImageIcon size={28} />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <button
+                    onClick={() => setShowThumbnailUpload(true)}
+                    className="flex items-center gap-2 text-sm font-medium text-primary border border-primary/30 rounded-lg px-3 py-2 hover:bg-primary/5 transition-colors"
+                  >
+                    <Upload size={14} />
+                    {course.thumbnail ? "Replace Thumbnail" : "Upload Thumbnail"}
+                  </button>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Recommended: 1280×720 px (16:9)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Title */}
+            <div>
+              <label
+                htmlFor="course-title"
+                className="block text-sm font-semibold text-foreground mb-1.5"
+              >
+                Title <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="course-title"
+                type="text"
+                value={settingsForm.title}
+                onChange={(e) =>
+                  setSettingsForm((f) => ({ ...f, title: e.target.value }))
+                }
+                placeholder="What will students learn?"
+                className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <label
+                htmlFor="course-desc"
+                className="block text-sm font-semibold text-foreground mb-1.5"
+              >
+                Description <span className="text-destructive">*</span>
+              </label>
+              <textarea
+                id="course-desc"
+                rows={5}
+                value={settingsForm.description}
+                onChange={(e) =>
+                  setSettingsForm((f) => ({
+                    ...f,
+                    description: e.target.value,
+                  }))
+                }
+                placeholder="Describe your course, who it's for, and what students will achieve…"
+                className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+              />
+            </div>
+
+            {/* Pricing */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="course-price"
+                  className="block text-sm font-semibold text-foreground mb-1.5"
+                >
+                  Price (VNĐ)
+                </label>
+                <input
+                  id="course-price"
+                  type="number"
+                  min={0}
+                  value={settingsForm.price}
+                  onChange={(e) =>
+                    setSettingsForm((f) => ({
+                      ...f,
+                      price: Number(e.target.value),
+                    }))
+                  }
+                  className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Set to 0 for a free course
+                </p>
+              </div>
+              <div>
+                <label
+                  htmlFor="course-discount"
+                  className="block text-sm font-semibold text-foreground mb-1.5"
+                >
+                  Discount Price (VNĐ)
+                </label>
+                <input
+                  id="course-discount"
+                  type="number"
+                  min={0}
+                  value={settingsForm.discountPrice}
+                  onChange={(e) =>
+                    setSettingsForm((f) => ({
+                      ...f,
+                      discountPrice: Number(e.target.value),
+                    }))
+                  }
+                  className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2 border-t border-border">
+              <button
+                onClick={handleSaveSettings}
+                disabled={settingsSaving}
+                className="flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50"
+              >
+                {settingsSaving ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin" />
+                    Saving…
+                  </>
+                ) : (
+                  <>
+                    <Check size={15} />
+                    Save Changes
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* ── Thumbnail upload modal ─────────────────────────────────────── */}
+      {showThumbnailUpload && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-background rounded-2xl border border-border shadow-2xl overflow-hidden max-w-lg w-full">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <h2 className="text-base font-bold">Upload Thumbnail</h2>
+              <button
+                onClick={() => setShowThumbnailUpload(false)}
+                className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <ImageUpload
+              onImageUploaded={handleThumbnailUploaded}
+              onClose={() => setShowThumbnailUpload(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-export default CurriculumManager;
+}

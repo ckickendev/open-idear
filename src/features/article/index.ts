@@ -4,6 +4,7 @@
 // =============================================================================
 
 export { default as ArticleRenderer } from "./components/ArticleRenderer";
+export { default as HTMLRenderer } from "./components/HTMLRenderer";
 export { default as ArticleCallout } from "./components/ArticleCallout";
 export { default as ArticleCodeBlock } from "./components/ArticleCodeBlock";
 export { default as ArticleComparisonTable } from "./components/ArticleComparisonTable";

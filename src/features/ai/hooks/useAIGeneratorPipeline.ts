@@ -157,7 +157,12 @@ export function useAIGeneratorPipeline(
 
           if (signal.aborted) throw new Error("Aborted");
 
-          const plan = res.data;
+          // Backend returns { status, data: planObject }; axios wrapper wraps it again as res.data.
+          // So the actual plan lives at res.data.data — unwrap it here.
+          const rawPlanResponse = res.data as any;
+          const plan = (rawPlanResponse?.data && rawPlanResponse.data.title)
+            ? rawPlanResponse.data
+            : rawPlanResponse;
           const outlineCount = plan.outline?.length || 0;
           const summary = `Outline ready: "${plan.title}" (${outlineCount} sections, ~${plan.estimatedReadingTime} min read)`;
 
