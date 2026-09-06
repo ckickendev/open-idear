@@ -16,6 +16,7 @@ import {
   FileText,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   Globe,
   EyeOff,
   Loader2,
@@ -25,45 +26,18 @@ import {
   Upload,
   AlertTriangle,
   CheckCircle,
+  Sparkles,
 } from "lucide-react";
 import { courseApi } from "@/features/series/api/course.api";
 import VideoUpload from "@/app/(editor)/create/VideoUpload";
 import ImageUpload from "@/app/(editor)/create/ImageUpload";
-
-// ─── Types ──────────────────────────────────────────────────────────────────
-
-type LessonMedia = { url: string; type: string; cloudflareId?: string };
-
-type Lesson = {
-  _id: string;
-  title: string;
-  slug: string;
-  description: string;
-  type: "video" | "text" | "file";
-  isFreePreview: boolean;
-  order: number;
-  media?: LessonMedia | string;
-};
-
-type Chapter = {
-  _id: string;
-  title: string;
-  order: number;
-  lessons: Lesson[];
-};
-
-type Course = {
-  _id: string;
-  title: string;
-  slug: string;
-  description: string;
-  status: "draft" | "published";
-  thumbnail?: { url: string };
-  chapters: Chapter[];
-  instructor: { name: string };
-  price?: number;
-  discountPrice?: number;
-};
+import LessonAIPanel from "@/components/course/LessonAIPanel";
+import {
+  Lesson,
+  Chapter,
+  Course,
+  MediaAsset,
+} from "@/features/series/types/course.types";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -116,14 +90,16 @@ function InlineEdit({
           autoFocus
         />
         <button
+          type="button"
           onClick={commit}
-          className="p-1 text-primary hover:bg-primary/10 rounded transition-colors"
+          className="p-1 text-primary hover:bg-primary/10 rounded transition-colors cursor-pointer"
         >
           <Check size={14} />
         </button>
         <button
+          type="button"
           onClick={() => setEditing(false)}
-          className="p-1 text-muted-foreground hover:bg-muted rounded transition-colors"
+          className="p-1 text-muted-foreground hover:bg-muted rounded transition-colors cursor-pointer"
         >
           <X size={14} />
         </button>
@@ -133,8 +109,9 @@ function InlineEdit({
 
   return (
     <button
+      type="button"
       onClick={start}
-      className={`text-left hover:text-primary transition-colors group ${className}`}
+      className={`text-left hover:text-primary transition-colors group cursor-pointer ${className}`}
     >
       {value || <span className="text-muted-foreground">{placeholder}</span>}
       <Pencil
@@ -150,15 +127,23 @@ function InlineEdit({
 function LessonRow({
   lesson,
   chapterId,
+  index,
+  totalLessons,
   onUpdate,
   onDelete,
   onVideoAttach,
+  onMoveLesson,
+  onOpenAI,
 }: {
   lesson: Lesson;
   chapterId: string;
+  index: number;
+  totalLessons: number;
   onUpdate: (lessonId: string, data: Partial<Lesson>) => Promise<void>;
   onDelete: (lessonId: string, chapterId: string) => Promise<void>;
   onVideoAttach: (lessonId: string, mediaId: string) => void;
+  onMoveLesson: (chapterId: string, fromIndex: number, toIndex: number) => Promise<void>;
+  onOpenAI: (lesson: Lesson) => void;
 }) {
   const [showVideoUpload, setShowVideoUpload] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -181,7 +166,7 @@ function LessonRow({
     await onDelete(lesson._id, chapterId);
   };
 
-  const handleVideoUploaded = (mediaId: string, title: string) => {
+  const handleVideoUploaded = (mediaId: string) => {
     setShowVideoUpload(false);
     onVideoAttach(lesson._id, mediaId);
     toast.success("Video attached to lesson!");
@@ -190,8 +175,26 @@ function LessonRow({
   return (
     <>
       <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-muted/40 group transition-colors border border-transparent hover:border-border">
-        <div className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground transition-colors flex-shrink-0">
-          <GripVertical size={14} />
+        {/* Reorder arrows */}
+        <div className="flex flex-col gap-0.5 opacity-40 group-hover:opacity-100 transition-opacity">
+          <button
+            type="button"
+            disabled={index === 0}
+            onClick={() => onMoveLesson(chapterId, index, index - 1)}
+            className="p-0.5 hover:text-primary disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed"
+            title="Move lesson up"
+          >
+            <ChevronUp size={12} />
+          </button>
+          <button
+            type="button"
+            disabled={index === totalLessons - 1}
+            onClick={() => onMoveLesson(chapterId, index, index + 1)}
+            className="p-0.5 hover:text-primary disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed"
+            title="Move lesson down"
+          >
+            <ChevronDown size={12} />
+          </button>
         </div>
 
         <span className="flex-shrink-0">{LESSON_TYPE_ICONS[lesson.type]}</span>
@@ -204,11 +207,27 @@ function LessonRow({
           />
         </div>
 
+        {/* AI Intelligence Trigger */}
         <button
+          type="button"
+          onClick={() => onOpenAI(lesson)}
+          title="AI Course Intelligence (Transcripts, Summaries, Learning Objectives)"
+          className={`flex-shrink-0 flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${
+            lesson.aiIntelligence || lesson.summary || (lesson.learningObjectives && lesson.learningObjectives.length > 0)
+              ? "border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300"
+              : "border-border text-muted-foreground hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50"
+          }`}
+        >
+          <Sparkles size={11} className="text-indigo-500" />
+          {lesson.aiIntelligence || lesson.summary ? "AI Ready ✓" : "AI"}
+        </button>
+
+        <button
+          type="button"
           onClick={() =>
             onUpdate(lesson._id, { isFreePreview: !lesson.isFreePreview })
           }
-          className={`text-[11px] font-medium px-2 py-0.5 rounded-full border transition-colors flex-shrink-0 ${
+          className={`text-[11px] font-medium px-2 py-0.5 rounded-full border transition-colors flex-shrink-0 cursor-pointer ${
             lesson.isFreePreview
               ? "border-emerald-200 text-emerald-700 bg-emerald-50"
               : "border-border text-muted-foreground hover:border-border hover:bg-muted"
@@ -220,9 +239,10 @@ function LessonRow({
 
         {lesson.type === "video" && (
           <button
+            type="button"
             onClick={() => setShowVideoUpload(true)}
             title={hasVideo ? "Replace video" : "Attach video"}
-            className={`flex-shrink-0 flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border transition-colors ${
+            className={`flex-shrink-0 flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${
               hasVideo
                 ? "border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100"
                 : "border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary"
@@ -241,9 +261,11 @@ function LessonRow({
         )}
 
         <button
+          type="button"
           onClick={handleDelete}
           disabled={deleting}
-          className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive rounded transition-all flex-shrink-0"
+          className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive rounded transition-all flex-shrink-0 cursor-pointer"
+          title="Delete lesson"
         >
           {deleting ? (
             <Loader2 size={13} className="animate-spin" />
@@ -270,20 +292,30 @@ function LessonRow({
 
 function ChapterCard({
   chapter,
+  index,
+  totalChapters,
   onUpdateChapter,
   onDeleteChapter,
   onAddLesson,
   onUpdateLesson,
   onDeleteLesson,
   onVideoAttach,
+  onMoveChapter,
+  onMoveLesson,
+  onOpenAI,
 }: {
   chapter: Chapter;
+  index: number;
+  totalChapters: number;
   onUpdateChapter: (id: string, data: Partial<Chapter>) => Promise<void>;
   onDeleteChapter: (id: string) => Promise<void>;
   onAddLesson: (chapterId: string, type: Lesson["type"]) => Promise<void>;
   onUpdateLesson: (lessonId: string, data: Partial<Lesson>) => Promise<void>;
   onDeleteLesson: (lessonId: string, chapterId: string) => Promise<void>;
   onVideoAttach: (lessonId: string, mediaId: string) => void;
+  onMoveChapter: (fromIndex: number, toIndex: number) => Promise<void>;
+  onMoveLesson: (chapterId: string, fromIndex: number, toIndex: number) => Promise<void>;
+  onOpenAI: (lesson: Lesson) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
   const [addingLesson, setAddingLesson] = useState(false);
@@ -309,13 +341,32 @@ function ChapterCard({
   return (
     <div className="bg-background border border-border rounded-xl overflow-hidden shadow-sm">
       <div className="flex items-center gap-2 px-4 py-3 bg-muted/30">
-        <div className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground transition-colors flex-shrink-0">
-          <GripVertical size={16} />
+        {/* Reorder chapter up/down */}
+        <div className="flex flex-col gap-0.5 opacity-50 hover:opacity-100 transition-opacity">
+          <button
+            type="button"
+            disabled={index === 0}
+            onClick={() => onMoveChapter(index, index - 1)}
+            className="p-0.5 hover:text-primary disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed"
+            title="Move section up"
+          >
+            <ChevronUp size={13} />
+          </button>
+          <button
+            type="button"
+            disabled={index === totalChapters - 1}
+            onClick={() => onMoveChapter(index, index + 1)}
+            className="p-0.5 hover:text-primary disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed"
+            title="Move section down"
+          >
+            <ChevronDown size={13} />
+          </button>
         </div>
 
         <button
+          type="button"
           onClick={() => setExpanded(!expanded)}
-          className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+          className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 cursor-pointer"
         >
           {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </button>
@@ -334,9 +385,11 @@ function ChapterCard({
         </span>
 
         <button
+          type="button"
           onClick={handleDelete}
           disabled={deleting}
-          className="p-1.5 text-muted-foreground hover:text-destructive rounded-lg hover:bg-destructive/10 transition-colors flex-shrink-0"
+          className="p-1.5 text-muted-foreground hover:text-destructive rounded-lg hover:bg-destructive/10 transition-colors flex-shrink-0 cursor-pointer"
+          title="Delete section"
         >
           {deleting ? (
             <Loader2 size={14} className="animate-spin" />
@@ -353,22 +406,27 @@ function ChapterCard({
               No lessons yet. Add one below.
             </p>
           )}
-          {chapter.lessons.map((lesson) => (
+          {chapter.lessons.map((lesson, lessonIdx) => (
             <LessonRow
               key={lesson._id}
               lesson={lesson}
               chapterId={chapter._id}
+              index={lessonIdx}
+              totalLessons={chapter.lessons.length}
               onUpdate={onUpdateLesson}
               onDelete={onDeleteLesson}
               onVideoAttach={onVideoAttach}
+              onMoveLesson={onMoveLesson}
+              onOpenAI={onOpenAI}
             />
           ))}
 
           <div className="flex gap-2 pt-2 pb-1">
             <button
+              type="button"
               onClick={() => handleAddLesson("video")}
               disabled={addingLesson}
-              className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-blue-600 transition-colors px-2 py-1.5 rounded-lg hover:bg-blue-50"
+              className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-blue-600 transition-colors px-2 py-1.5 rounded-lg hover:bg-blue-50 cursor-pointer"
             >
               {addingLesson ? (
                 <Loader2 size={12} className="animate-spin" />
@@ -378,9 +436,10 @@ function ChapterCard({
               + Video lesson
             </button>
             <button
+              type="button"
               onClick={() => handleAddLesson("text")}
               disabled={addingLesson}
-              className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-emerald-600 transition-colors px-2 py-1.5 rounded-lg hover:bg-emerald-50"
+              className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-emerald-600 transition-colors px-2 py-1.5 rounded-lg hover:bg-emerald-50 cursor-pointer"
             >
               <FileText size={12} />+ Text lesson
             </button>
@@ -399,9 +458,7 @@ export default function CourseBuilderPage() {
 
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"curriculum" | "settings">(
-    "curriculum"
-  );
+  const [activeTab, setActiveTab] = useState<"curriculum" | "settings">("curriculum");
 
   const [settingsForm, setSettingsForm] = useState({
     title: "",
@@ -412,6 +469,24 @@ export default function CourseBuilderPage() {
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [showThumbnailUpload, setShowThumbnailUpload] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [selectedAILesson, setSelectedAILesson] = useState<Lesson | null>(null);
+
+  const handleLessonAIUpdated = (updatedData: Partial<Lesson>) => {
+    if (!selectedAILesson) return;
+    setCourse((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        chapters: prev.chapters.map((ch) => ({
+          ...ch,
+          lessons: ch.lessons.map((l) =>
+            l._id === selectedAILesson._id ? { ...l, ...updatedData } : l
+          ),
+        })),
+      };
+    });
+    setSelectedAILesson((prev) => (prev ? { ...prev, ...updatedData } : null));
+  };
 
   // ── Load course ────────────────────────────────────────────────────────────
 
@@ -461,6 +536,7 @@ export default function CourseBuilderPage() {
       setCourse((prev) =>
         prev ? { ...prev, chapters: [...prev.chapters, newChapter] } : prev
       );
+      toast.success("Section added");
     } catch (e: any) {
       toast.error(e.message || "Failed to add section");
     }
@@ -506,6 +582,27 @@ export default function CourseBuilderPage() {
     }
   };
 
+  const handleMoveChapter = async (fromIndex: number, toIndex: number) => {
+    if (!course) return;
+    const chapters = [...course.chapters];
+    if (toIndex < 0 || toIndex >= chapters.length) return;
+
+    const [moved] = chapters.splice(fromIndex, 1);
+    chapters.splice(toIndex, 0, moved);
+
+    // Optimistic update
+    setCourse((prev) => (prev ? { ...prev, chapters } : prev));
+
+    try {
+      const orderedIds = chapters.map((ch) => ch._id);
+      const res = await courseApi.reorderChapters(course._id, orderedIds);
+      if (!res.success) throw new Error(res.message);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to reorder sections");
+      fetchCourse(); // Rollback on error
+    }
+  };
+
   // ── Lesson operations ──────────────────────────────────────────────────────
 
   const handleAddLesson = async (chapterId: string, type: Lesson["type"]) => {
@@ -533,6 +630,7 @@ export default function CourseBuilderPage() {
             }
           : prev
       );
+      toast.success("Lesson added");
     } catch (e: any) {
       toast.error(e.message || "Failed to add lesson");
     }
@@ -589,6 +687,43 @@ export default function CourseBuilderPage() {
     }
   };
 
+  const handleMoveLesson = async (
+    chapterId: string,
+    fromIndex: number,
+    toIndex: number
+  ) => {
+    if (!course) return;
+    const chapter = course.chapters.find((ch) => ch._id === chapterId);
+    if (!chapter) return;
+
+    const lessons = [...chapter.lessons];
+    if (toIndex < 0 || toIndex >= lessons.length) return;
+
+    const [moved] = lessons.splice(fromIndex, 1);
+    lessons.splice(toIndex, 0, moved);
+
+    // Optimistic update
+    setCourse((prev) =>
+      prev
+        ? {
+            ...prev,
+            chapters: prev.chapters.map((ch) =>
+              ch._id === chapterId ? { ...ch, lessons } : ch
+            ),
+          }
+        : prev
+    );
+
+    try {
+      const orderedIds = lessons.map((l) => l._id);
+      const res = await courseApi.reorderLessons(chapterId, orderedIds);
+      if (!res.success) throw new Error(res.message);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to reorder lessons");
+      fetchCourse();
+    }
+  };
+
   const handleVideoAttach = (lessonId: string, mediaId: string) => {
     handleUpdateLesson(lessonId, { media: mediaId as any, type: "video" });
   };
@@ -641,7 +776,7 @@ export default function CourseBuilderPage() {
       const res = await courseApi.publishCourse(course._id);
       if (!res.success) throw new Error(res.message);
       setCourse((prev) => (prev ? { ...prev, status: "published" } : prev));
-      toast.success("🎉 Course is now live!");
+      toast.success("🎉 Course is now published and live!");
     } catch (e: any) {
       toast.error(e.message || "Failed to publish");
     } finally {
@@ -653,7 +788,7 @@ export default function CourseBuilderPage() {
     if (!course) return;
     if (
       !confirm(
-        "Take this course offline? Learners won't be able to access it."
+        "Take this course offline? Learners will not be able to browse or enroll in it."
       )
     )
       return;
@@ -699,7 +834,7 @@ export default function CourseBuilderPage() {
       ok: (course.description?.trim()?.length || 0) > 0,
       text: "Course has a description",
     },
-    { ok: course.thumbnail != null, text: "Course has a thumbnail" },
+    { ok: course.thumbnail != null, text: "Course has a thumbnail image" },
     {
       ok: course.chapters.some((ch) => ch.lessons.length > 0),
       text: "At least one section with a lesson",
@@ -731,8 +866,8 @@ export default function CourseBuilderPage() {
           <span
             className={`text-xs font-bold px-2.5 py-1 rounded-full ${
               isPublished
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-yellow-100 text-yellow-700"
+                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
             }`}
           >
             {isPublished ? "Live" : "Draft"}
@@ -748,9 +883,10 @@ export default function CourseBuilderPage() {
 
           {isPublished ? (
             <button
+              type="button"
               onClick={handleUnpublish}
               disabled={publishing}
-              className="flex items-center gap-1.5 text-sm font-semibold px-4 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 text-sm font-semibold px-4 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors disabled:opacity-50 cursor-pointer"
             >
               {publishing ? (
                 <Loader2 size={14} className="animate-spin" />
@@ -761,9 +897,10 @@ export default function CourseBuilderPage() {
             </button>
           ) : (
             <button
+              type="button"
               onClick={handlePublish}
               disabled={publishing}
-              className="flex items-center gap-1.5 text-sm font-semibold px-4 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50"
+              className="flex items-center gap-1.5 text-sm font-semibold px-4 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
             >
               {publishing ? (
                 <Loader2 size={14} className="animate-spin" />
@@ -786,9 +923,10 @@ export default function CourseBuilderPage() {
             ] as const
           ).map((tab) => (
             <button
+              type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
                 activeTab === tab.id
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
@@ -832,8 +970,9 @@ export default function CourseBuilderPage() {
                   to each section.
                 </p>
                 <button
+                  type="button"
                   onClick={handleAddChapter}
-                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
                 >
                   <Plus size={16} />
                   Add First Section
@@ -842,24 +981,30 @@ export default function CourseBuilderPage() {
             )}
 
             <div className="space-y-3">
-              {course.chapters.map((chapter) => (
+              {course.chapters.map((chapter, chapterIdx) => (
                 <ChapterCard
                   key={chapter._id}
                   chapter={chapter}
+                  index={chapterIdx}
+                  totalChapters={course.chapters.length}
                   onUpdateChapter={handleUpdateChapter}
                   onDeleteChapter={handleDeleteChapter}
                   onAddLesson={handleAddLesson}
                   onUpdateLesson={handleUpdateLesson}
                   onDeleteLesson={handleDeleteLesson}
                   onVideoAttach={handleVideoAttach}
+                  onMoveChapter={handleMoveChapter}
+                  onMoveLesson={handleMoveLesson}
+                  onOpenAI={setSelectedAILesson}
                 />
               ))}
             </div>
 
             {course.chapters.length > 0 && (
               <button
+                type="button"
                 onClick={handleAddChapter}
-                className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl py-3.5 text-sm font-semibold text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
+                className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl py-3.5 text-sm font-semibold text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition-all cursor-pointer"
               >
                 <Plus size={16} />
                 Add Section
@@ -867,8 +1012,8 @@ export default function CourseBuilderPage() {
             )}
 
             {!isPublished && (
-              <div className="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-4">
-                <h4 className="text-sm font-bold text-amber-800 mb-2 flex items-center gap-2">
+              <div className="mt-6 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+                <h4 className="text-sm font-bold text-amber-800 dark:text-amber-400 mb-2 flex items-center gap-2">
                   <AlertTriangle size={15} />
                   Before publishing, make sure:
                 </h4>
@@ -877,7 +1022,7 @@ export default function CourseBuilderPage() {
                     <li
                       key={item.text}
                       className={`flex items-center gap-2 text-xs font-medium ${
-                        item.ok ? "text-emerald-700" : "text-amber-700"
+                        item.ok ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"
                       }`}
                     >
                       {item.ok ? (
@@ -921,8 +1066,9 @@ export default function CourseBuilderPage() {
                 </div>
                 <div>
                   <button
+                    type="button"
                     onClick={() => setShowThumbnailUpload(true)}
-                    className="flex items-center gap-2 text-sm font-medium text-primary border border-primary/30 rounded-lg px-3 py-2 hover:bg-primary/5 transition-colors"
+                    className="flex items-center gap-2 text-sm font-medium text-primary border border-primary/30 rounded-lg px-3 py-2 hover:bg-primary/5 transition-colors cursor-pointer"
                   >
                     <Upload size={14} />
                     {course.thumbnail ? "Replace Thumbnail" : "Upload Thumbnail"}
@@ -1028,9 +1174,10 @@ export default function CourseBuilderPage() {
 
             <div className="flex gap-3 pt-2 border-t border-border">
               <button
+                type="button"
                 onClick={handleSaveSettings}
                 disabled={settingsSaving}
-                className="flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50"
+                className="flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
               >
                 {settingsSaving ? (
                   <>
@@ -1056,8 +1203,9 @@ export default function CourseBuilderPage() {
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <h2 className="text-base font-bold">Upload Thumbnail</h2>
               <button
+                type="button"
                 onClick={() => setShowThumbnailUpload(false)}
-                className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+                className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -1068,6 +1216,16 @@ export default function CourseBuilderPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* ── Lesson AI Intelligence Panel ───────────────────────────── */}
+      {selectedAILesson && (
+        <LessonAIPanel
+          lesson={selectedAILesson}
+          isOpen={!!selectedAILesson}
+          onClose={() => setSelectedAILesson(null)}
+          onLessonUpdated={handleLessonAIUpdated}
+        />
       )}
     </div>
   );

@@ -272,7 +272,7 @@ export default function PostListPanel({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-editor-border)]">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[var(--color-editor-accent)]/15 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-[var(--color-editor-accent)]/12 flex items-center justify-center">
               <FileText
                 size={16}
                 className="text-[var(--color-editor-accent)]"
@@ -301,10 +301,12 @@ export default function PostListPanel({
         <div className="px-4 py-3">
           <button
             onClick={handleCreateNew}
-            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-[var(--color-editor-accent)] hover:bg-[var(--color-editor-accent-hover)] text-white text-sm font-semibold transition-all duration-150 shadow-lg shadow-[var(--color-editor-accent)]/20 active:scale-[0.97] cursor-pointer"
+            className="group relative flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-[var(--color-editor-accent)] hover:bg-[var(--color-editor-accent-hover)] text-white text-sm font-semibold transition-all duration-200 shadow-lg shadow-[var(--color-editor-accent)]/20 active:scale-[0.97] cursor-pointer overflow-hidden"
           >
-            <BadgePlus size={16} />
-            Create New Post
+            {/* Shimmer overlay */}
+            <span className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-transparent via-white/15 to-transparent animate-shimmer transition-opacity duration-300" />
+            <BadgePlus size={16} className="relative z-10" />
+            <span className="relative z-10">Create New Post</span>
           </button>
         </div>
 
@@ -320,7 +322,7 @@ export default function PostListPanel({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search posts..."
-              className="w-full pl-9 pr-3 py-2 text-xs bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-lg text-[var(--color-editor-text)] placeholder:text-[var(--color-editor-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/30 focus:border-[var(--color-editor-accent)]/50 transition-all duration-150"
+              className="w-full pl-9 pr-3 py-2 text-xs bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl text-[var(--color-editor-text)] placeholder:text-[var(--color-editor-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/30 focus:border-[var(--color-editor-accent)]/50 transition-all duration-200"
             />
             {searchQuery && (
               <button
@@ -335,12 +337,12 @@ export default function PostListPanel({
 
         {/* Status filter tabs */}
         <div className="px-4 pb-3">
-          <div className="flex gap-1 p-0.5 bg-[var(--color-editor-elevated)] rounded-lg border border-[var(--color-editor-border)]">
+          <div className="flex gap-1 p-0.5 bg-[var(--color-editor-elevated)] rounded-xl border border-[var(--color-editor-border)]">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setStatusFilter(tab.key)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-[10px] font-semibold transition-all duration-150 cursor-pointer ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-semibold transition-all duration-200 cursor-pointer ${
                   statusFilter === tab.key
                     ? "bg-[var(--color-editor-surface)] text-[var(--color-editor-text)] shadow-sm"
                     : "text-[var(--color-editor-muted)] hover:text-[var(--color-editor-secondary)]"
@@ -406,20 +408,24 @@ export default function PostListPanel({
                 return (
                   <div
                     key={item._id}
-                    className={`relative group rounded-xl transition-all duration-150 ${
+                    className={`relative group rounded-xl transition-all duration-200 ${
                       isActive
-                        ? "bg-[var(--color-editor-accent)]/8 ring-1 ring-[var(--color-editor-accent)]/25"
-                        : "hover:bg-[var(--color-editor-elevated)]"
+                        ? "bg-[var(--color-editor-accent)]/8 ring-1 ring-[var(--color-editor-accent)]/25 shadow-sm"
+                        : "hover:bg-[var(--color-editor-elevated)] hover:shadow-sm"
                     }`}
                   >
+                    {/* Active indicator bar */}
+                    {isActive && (
+                      <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-[var(--color-editor-accent)] animate-[fade-in_0.2s_ease-out]" />
+                    )}
                     <button
                       onClick={() => handlePostClick(item._id)}
-                      className="w-full p-3 text-left cursor-pointer"
+                      className={`w-full p-3 text-left cursor-pointer ${isActive ? "pl-4" : ""}`}
                     >
                       {/* Title row */}
                       <div className="flex items-start gap-2">
                         <h4
-                          className={`flex-1 text-sm font-medium truncate transition-colors ${
+                          className={`flex-1 text-sm font-medium truncate transition-colors duration-200 ${
                             isActive
                               ? "text-[var(--color-editor-accent)]"
                               : "text-[var(--color-editor-text)] group-hover:text-[var(--color-editor-accent)]"
@@ -473,7 +479,7 @@ export default function PostListPanel({
                         e.stopPropagation();
                         setDeleteTarget(item);
                       }}
-                      className="absolute top-3 right-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 text-[var(--color-editor-muted)] hover:text-red-400 hover:bg-red-500/10 transition-all duration-150 cursor-pointer"
+                      className="absolute top-3 right-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 text-[var(--color-editor-muted)] hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 cursor-pointer"
                       aria-label={`Delete "${item.title || "Untitled"}"`}
                     >
                       <Trash2 size={12} />
@@ -486,8 +492,11 @@ export default function PostListPanel({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-[var(--color-editor-border)] px-4 py-3 flex items-center justify-center">
-          <Logo className="h-8 opacity-40" />
+        <div className="border-t border-[var(--color-editor-border)] px-4 py-3 flex items-center justify-between">
+          <span className="text-[10px] text-[var(--color-editor-muted)] tabular-nums">
+            {filteredPosts.length} of {counts.all} posts
+          </span>
+          <Logo className="h-6 opacity-30" />
         </div>
       </aside>
 

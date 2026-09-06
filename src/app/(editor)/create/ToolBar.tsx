@@ -35,9 +35,9 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({
 }) => (
   <button
     onClick={onClick}
-    className={`p-2 rounded-lg transition-all duration-150 cursor-pointer ${
+    className={`p-2 rounded-lg transition-all duration-200 cursor-pointer ${
       isActive
-        ? "bg-[var(--color-editor-accent)]/15 text-[var(--color-editor-accent)]"
+        ? "bg-[var(--color-editor-accent)]/15 text-[var(--color-editor-accent)] shadow-[0_0_0_1px_var(--color-editor-accent)]/20"
         : "text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]"
     }`}
     title={title}
@@ -49,7 +49,13 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({
 );
 
 const Divider = () => (
-  <div className="w-px h-5 bg-[var(--color-editor-border)] mx-0.5 flex-shrink-0" />
+  <div className="w-px h-5 bg-gradient-to-b from-transparent via-[var(--color-editor-border)] to-transparent mx-1 flex-shrink-0" />
+);
+
+const GroupLabel = ({ children }: { children: React.ReactNode }) => (
+  <span className="text-[8px] uppercase tracking-widest font-bold text-[var(--color-editor-muted)]/60 px-1 select-none hidden md:inline">
+    {children}
+  </span>
 );
 
 const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
@@ -59,11 +65,12 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
 
   return (
     <div
-      className="flex items-center justify-center flex-wrap gap-0.5 px-4 py-2 bg-[var(--color-editor-surface)] border-b border-[var(--color-editor-border)]"
+      className="flex items-center justify-center flex-wrap gap-0.5 px-4 py-2.5 editor-glass rounded-2xl shadow-sm mb-4"
       role="toolbar"
       aria-label="Formatting toolbar"
     >
       {/* Text formatting */}
+      <GroupLabel>Format</GroupLabel>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBold().run()}
         isActive={editor.isActive("bold")}
@@ -89,6 +96,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
       <Divider />
 
       {/* Alignment */}
+      <GroupLabel>Align</GroupLabel>
       <ToolbarButton
         onClick={() => editor.chain().focus().setTextAlign("left").run()}
         isActive={editor.isActive({ textAlign: "left" })}
@@ -114,6 +122,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
       <Divider />
 
       {/* Lists */}
+      <GroupLabel>Lists</GroupLabel>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         isActive={editor.isActive("bulletList")}
@@ -132,17 +141,18 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
       <Divider />
 
       {/* Block elements */}
+      <GroupLabel>Block</GroupLabel>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
         isActive={editor.isActive("blockquote")}
-        title="Blockquote"
+        title="Blockquote (⌘⇧B)"
       >
         <Quote size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         isActive={editor.isActive("codeBlock")}
-        title="Code block"
+        title="Code block (⌘⇧C)"
       >
         <Code size={iconSize} />
       </ToolbarButton>
@@ -156,24 +166,25 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
       <Divider />
 
       {/* Heading shortcuts */}
+      <GroupLabel>Heading</GroupLabel>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         isActive={editor.isActive("heading", { level: 1 })}
-        title="Heading 1"
+        title="Heading 1 (⌘⌥1)"
       >
         <span className="text-xs font-bold">H1</span>
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         isActive={editor.isActive("heading", { level: 2 })}
-        title="Heading 2"
+        title="Heading 2 (⌘⌥2)"
       >
         <span className="text-xs font-bold">H2</span>
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
         isActive={editor.isActive("heading", { level: 3 })}
-        title="Heading 3"
+        title="Heading 3 (⌘⌥3)"
       >
         <span className="text-xs font-bold">H3</span>
       </ToolbarButton>

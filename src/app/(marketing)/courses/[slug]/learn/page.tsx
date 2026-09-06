@@ -1,9 +1,8 @@
 "use client";
-import { ENV } from "@/api/const";
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import axios from "axios";
 import loadingStore from "@/store/LoadingStore";
+import { courseApi } from "@/features/series/api/course.api";
 
 export default function LearnIndexPage() {
   const { slug } = useParams();
@@ -14,10 +13,8 @@ export default function LearnIndexPage() {
     const fetchCourse = async () => {
       try {
         changeLoad();
-        const response = await axios.get(
-          `${ENV.ROOT_API}/course/getBySlug?slug=${slug}`,
-        );
-        const courseData = response.data.data;
+        const response = await courseApi.getCourseBySlug(slug as string);
+        const courseData = (response.data as any)?.data || (response as any)?.data;
 
         if (courseData?.chapters?.length > 0) {
           // Find first chapter with lessons

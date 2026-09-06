@@ -95,18 +95,20 @@ const CourseDetail = () => {
     const fetchCourse = async () => {
       try {
         changeLoad();
-        const response = await axios.get(
-          `${ENV.ROOT_API}/course/getBySlug?slug=${slug}`,
-        );
-        console.log("course", response.data.data);
-        setCourse(response.data.data);
+        const response = await courseApi.getCourseBySlug(slug as string);
+        if (response.success) {
+          setCourse((response.data as any)?.data || (response as any)?.data);
+        } else {
+          toast.error("Khóa học không tồn tại hoặc chưa được công khai");
+        }
       } catch (error) {
         console.error(error);
+        toast.error("Khóa học không tồn tại hoặc chưa được công khai");
       } finally {
         changeLoad();
       }
     };
-    fetchCourse();
+    if (slug) fetchCourse();
   }, [slug]);
 
   // Check enrollment status when user and course are available
