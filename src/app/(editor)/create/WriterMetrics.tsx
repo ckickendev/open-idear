@@ -21,17 +21,17 @@ const WriterMetrics: React.FC<WriterMetricsProps> = ({ text }) => {
 
   return (
     <div className="flex items-center justify-center gap-4 py-4 animate-[fade-in_0.2s_ease-out]">
-      <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-[var(--color-editor-surface)] border border-[var(--color-editor-border)] shadow-sm">
-        <span className="text-[11px] text-[var(--color-editor-muted)] tabular-nums">
+      <div className="flex items-center gap-3 px-4 py-2 rounded-full editor-glass shadow-sm">
+        <span className="text-[11px] text-[var(--color-editor-muted)] tabular-nums font-medium">
           {wordCount.toLocaleString()} {wordCount === 1 ? "word" : "words"}
         </span>
         <span className="w-px h-3 bg-[var(--color-editor-border)]" />
-        <span className="text-[11px] text-[var(--color-editor-muted)] tabular-nums">
+        <span className="text-[11px] text-[var(--color-editor-muted)] tabular-nums font-medium">
           {charCount.toLocaleString()} chars
         </span>
         <span className="w-px h-3 bg-[var(--color-editor-border)]" />
-        <span className="flex items-center gap-1 text-[11px] text-[var(--color-editor-muted)]">
-          <Clock size={10} />
+        <span className="flex items-center gap-1 text-[11px] text-[var(--color-editor-muted)] font-medium">
+          <Clock size={10} className="text-[var(--color-editor-accent)]/60" />
           {readingTime} min read
         </span>
       </div>

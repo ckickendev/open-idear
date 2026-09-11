@@ -11,6 +11,7 @@ import {
   Wand2,
   Loader2,
   Image as ImageIcon,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
@@ -150,6 +151,9 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
     onAutoFillAI?.(result);
   };
 
+  // Determine publish readiness for visual feedback
+  const isPublishReady = !!selectedCategory && !!description.trim();
+
   if (!isOpen) return null;
 
   return (
@@ -184,11 +188,42 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
           </div>
           <button
             onClick={handleClose}
-            className="p-2 rounded-lg text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-all duration-150 cursor-pointer"
+            className="p-2 rounded-xl text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-all duration-200 cursor-pointer"
             aria-label="Close publish drawer"
           >
             <X size={18} />
           </button>
+        </div>
+
+        {/* Progress steps */}
+        <div className="px-6 py-3 border-b border-[var(--color-editor-border)]/50">
+          <div className="flex items-center gap-2">
+            {[
+              { label: "Description", done: !!description.trim() },
+              { label: "Category", done: !!selectedCategory },
+              { label: "Publish", done: false },
+            ].map((step, i) => (
+              <React.Fragment key={step.label}>
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold transition-colors duration-200 ${
+                      step.done
+                        ? "bg-[var(--color-editor-success)]/15 text-[var(--color-editor-success)]"
+                        : "bg-[var(--color-editor-elevated)] text-[var(--color-editor-muted)]"
+                    }`}
+                  >
+                    {step.done ? "✓" : i + 1}
+                  </div>
+                  <span className={`text-[10px] font-medium ${step.done ? "text-[var(--color-editor-success)]" : "text-[var(--color-editor-muted)]"}`}>
+                    {step.label}
+                  </span>
+                </div>
+                {i < 2 && (
+                  <ChevronRight size={10} className="text-[var(--color-editor-muted)]/40 flex-shrink-0" />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
         </div>
 
         {/* Content — scrollable */}
@@ -213,7 +248,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
               onChange={(e) => onDescriptionChange(e.target.value)}
               rows={3}
               placeholder="Write a compelling summary of your post..."
-              className="w-full bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-editor-text)] placeholder:text-[var(--color-editor-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50 resize-none transition-all duration-150"
+              className="w-full bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-editor-text)] placeholder:text-[var(--color-editor-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50 resize-none transition-all duration-200"
               aria-label="Post description"
             />
           </CollapsibleSection>
@@ -306,19 +341,23 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
             onToggle={() => toggleSection("category")}
             required
           >
-            <select
-              value={selectedCategory}
-              onChange={(e) => onCategoryChange(e.target.value)}
-              className="w-full bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-editor-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50 transition-all duration-150 cursor-pointer appearance-none"
-              aria-label="Select category"
-            >
-              <option value="">Select a category</option>
-              {categories.map((cat: any) => (
-                <option key={cat._id} value={cat._id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={selectedCategory}
+                onChange={(e) => onCategoryChange(e.target.value)}
+                className="w-full bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl px-4 py-3 pr-10 text-sm text-[var(--color-editor-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50 transition-all duration-200 cursor-pointer appearance-none"
+                aria-label="Select category"
+              >
+                <option value="">Select a category</option>
+                {categories.map((cat: any) => (
+                  <option key={cat._id} value={cat._id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              {/* Custom dropdown arrow */}
+              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-editor-muted)] pointer-events-none" />
+            </div>
           </CollapsibleSection>
 
           {/* Series Section */}
@@ -330,19 +369,22 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
           >
             {!showCreateSeries ? (
               <div className="space-y-3">
-                <select
-                  value={selectedSeries}
-                  onChange={(e) => onSeriesChange(e.target.value)}
-                  className="w-full bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-editor-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50 transition-all duration-150 cursor-pointer appearance-none"
-                  aria-label="Select series"
-                >
-                  <option value="">No series</option>
-                  {seriesList.map((ser: any) => (
-                    <option key={ser._id} value={ser._id}>
-                      {ser.title}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={selectedSeries}
+                    onChange={(e) => onSeriesChange(e.target.value)}
+                    className="w-full bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl px-4 py-3 pr-10 text-sm text-[var(--color-editor-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50 transition-all duration-200 cursor-pointer appearance-none"
+                    aria-label="Select series"
+                  >
+                    <option value="">No series</option>
+                    {seriesList.map((ser: any) => (
+                      <option key={ser._id} value={ser._id}>
+                        {ser.title}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-editor-muted)] pointer-events-none" />
+                </div>
                 <button
                   onClick={() => setShowCreateSeries(true)}
                   className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-editor-accent)] hover:text-[var(--color-editor-accent-hover)] transition-colors cursor-pointer"
@@ -357,7 +399,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                   value={newSeriesName}
                   onChange={(e) => setNewSeriesName(e.target.value)}
                   placeholder="Series name"
-                  className="w-full bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-editor-text)] placeholder:text-[var(--color-editor-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50 transition-all duration-150"
+                  className="w-full bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-editor-text)] placeholder:text-[var(--color-editor-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50 transition-all duration-200"
                   aria-label="New series name"
                   autoFocus
                 />
@@ -367,14 +409,14 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                       setShowCreateSeries(false);
                       setNewSeriesName("");
                     }}
-                    className="flex-1 px-3 py-2 text-xs font-medium text-[var(--color-editor-secondary)] border border-[var(--color-editor-border)] rounded-lg hover:bg-[var(--color-editor-elevated)] transition-all duration-150 cursor-pointer"
+                    className="flex-1 px-3 py-2 text-xs font-medium text-[var(--color-editor-secondary)] border border-[var(--color-editor-border)] rounded-lg hover:bg-[var(--color-editor-elevated)] transition-all duration-200 cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleCreateSeries}
                     disabled={!newSeriesName.trim()}
-                    className="flex-1 px-3 py-2 text-xs font-medium bg-[var(--color-editor-accent)] text-white rounded-lg hover:bg-[var(--color-editor-accent-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer"
+                    className="flex-1 px-3 py-2 text-xs font-medium bg-[var(--color-editor-accent)] text-white rounded-lg hover:bg-[var(--color-editor-accent-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer"
                   >
                     Create
                   </button>
@@ -389,19 +431,25 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
           <div className="flex gap-3">
             <button
               onClick={handleClose}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-[var(--color-editor-secondary)] border border-[var(--color-editor-border)] rounded-xl hover:bg-[var(--color-editor-elevated)] hover:text-[var(--color-editor-text)] transition-all duration-150 cursor-pointer"
+              className="flex-1 px-4 py-2.5 text-sm font-medium text-[var(--color-editor-secondary)] border border-[var(--color-editor-border)] rounded-xl hover:bg-[var(--color-editor-elevated)] hover:text-[var(--color-editor-text)] transition-all duration-200 cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={onPublish}
               disabled={isPublishing || !selectedCategory}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold bg-[var(--color-editor-accent)] text-white rounded-xl hover:bg-[var(--color-editor-accent-hover)] shadow-lg shadow-[var(--color-editor-accent)]/25 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-150 cursor-pointer active:scale-[0.97]"
+              className={`group relative flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold bg-[var(--color-editor-accent)] text-white rounded-xl hover:bg-[var(--color-editor-accent-hover)] shadow-lg shadow-[var(--color-editor-accent)]/25 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-200 cursor-pointer active:scale-[0.97] overflow-hidden ${
+                isPublishReady && !isPublishing ? "animate-[pulse-ring_2s_ease-in-out_infinite]" : ""
+              }`}
             >
+              {/* Shimmer overlay */}
+              {!isPublishing && !(!selectedCategory) && (
+                <span className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer transition-opacity duration-300" />
+              )}
               {isPublishing ? (
                 <>
                   <svg
-                    className="animate-spin w-4 h-4"
+                    className="animate-spin w-4 h-4 relative z-10"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -420,12 +468,12 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  Publishing...
+                  <span className="relative z-10">Publishing...</span>
                 </>
               ) : (
                 <>
-                  <Send size={14} />
-                  Publish Now
+                  <Send size={14} className="relative z-10" />
+                  <span className="relative z-10">Publish Now</span>
                 </>
               )}
             </button>
@@ -473,17 +521,12 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
           </span>
         )}
       </div>
-      {expanded ? (
-        <ChevronUp
-          size={16}
-          className="text-[var(--color-editor-muted)] group-hover:text-[var(--color-editor-secondary)] transition-colors"
-        />
-      ) : (
+      <div className={`transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}>
         <ChevronDown
           size={16}
           className="text-[var(--color-editor-muted)] group-hover:text-[var(--color-editor-secondary)] transition-colors"
         />
-      )}
+      </div>
     </button>
     {expanded && (
       <div className="pb-4 animate-[fade-in_0.15s_ease-out]">{children}</div>

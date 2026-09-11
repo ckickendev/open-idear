@@ -53,10 +53,10 @@ export default function Instruction() {
         <button
           key={i}
           onClick={() => setCurrentPage(i + 1)}
-          className={`w-2 h-2 rounded-full transition-all duration-200 cursor-pointer ${
+          className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
             currentPage === i + 1
               ? "bg-[var(--color-editor-accent)] w-6"
-              : "bg-[var(--color-editor-border)] hover:bg-[var(--color-editor-muted)]"
+              : "bg-[var(--color-editor-border)] hover:bg-[var(--color-editor-muted)] w-2"
           }`}
           aria-label={`Go to page ${i + 1}`}
         />
@@ -71,7 +71,7 @@ export default function Instruction() {
         {currentPage > 1 && (
           <button
             onClick={handleBack}
-            className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-[var(--color-editor-secondary)] border border-[var(--color-editor-border)] rounded-lg hover:bg-[var(--color-editor-elevated)] transition-all duration-150 cursor-pointer"
+            className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-[var(--color-editor-secondary)] border border-[var(--color-editor-border)] rounded-xl hover:bg-[var(--color-editor-elevated)] transition-all duration-200 cursor-pointer"
           >
             <ChevronLeft size={14} />
             Back
@@ -79,14 +79,14 @@ export default function Instruction() {
         )}
         <button
           onClick={handleSkip}
-          className="px-4 py-2 text-sm font-medium text-[var(--color-editor-muted)] hover:text-[var(--color-editor-secondary)] transition-colors duration-150 cursor-pointer"
+          className="px-4 py-2 text-sm font-medium text-[var(--color-editor-muted)] hover:text-[var(--color-editor-secondary)] transition-colors duration-200 cursor-pointer"
         >
           Skip tutorial
         </button>
       </div>
       <button
         onClick={handleContinue}
-        className="flex items-center gap-1.5 px-5 py-2 text-sm font-semibold text-white bg-[var(--color-editor-accent)] rounded-lg hover:bg-[var(--color-editor-accent-hover)] shadow-md shadow-[var(--color-editor-accent)]/20 transition-all duration-150 cursor-pointer active:scale-[0.97]"
+        className="flex items-center gap-1.5 px-5 py-2 text-sm font-semibold text-white bg-[var(--color-editor-accent)] rounded-xl hover:bg-[var(--color-editor-accent-hover)] shadow-lg shadow-[var(--color-editor-accent)]/20 transition-all duration-200 cursor-pointer active:scale-[0.97]"
       >
         {isLast ? (
           <>
@@ -106,21 +106,21 @@ export default function Instruction() {
   // ─── Mascot ───
   const Mascot = ({ className = "" }: { className?: string }) => (
     <div
-      className={`w-14 h-14 bg-blue-400 rounded-full relative flex-shrink-0 ${className}`}
+      className={`w-14 h-14 bg-[var(--color-editor-accent)] rounded-full relative flex-shrink-0 animate-[bounce-subtle_2s_ease-in-out_infinite] ${className}`}
     >
       <div className="absolute top-3.5 left-1.5">
         <div className="flex space-x-0.5">
-          <div className="w-5 h-5 bg-background rounded-full border-2 border-border flex items-center justify-center">
-            <div className="w-2.5 h-2.5 bg-background rounded-full" />
+          <div className="w-5 h-5 bg-[var(--color-editor-surface)] rounded-full border-2 border-[var(--color-editor-border)] flex items-center justify-center">
+            <div className="w-2.5 h-2.5 bg-[var(--color-editor-text)] rounded-full" />
           </div>
-          <div className="w-5 h-5 bg-background rounded-full border-2 border-border flex items-center justify-center">
-            <div className="w-2.5 h-2.5 bg-background rounded-full" />
+          <div className="w-5 h-5 bg-[var(--color-editor-surface)] rounded-full border-2 border-[var(--color-editor-border)] flex items-center justify-center">
+            <div className="w-2.5 h-2.5 bg-[var(--color-editor-text)] rounded-full" />
           </div>
         </div>
-        <div className="w-1 h-0.5 bg-card absolute top-2.5 left-5" />
+        <div className="w-1 h-0.5 bg-[var(--color-editor-surface)] absolute top-2.5 left-5" />
       </div>
       <div className="absolute -top-1.5 -right-1.5">
-        <Lightbulb className="w-5 h-5 text-yellow-400 fill-yellow-200" />
+        <Lightbulb className="w-5 h-5 text-amber-400 fill-amber-200" />
       </div>
     </div>
   );
@@ -128,9 +128,9 @@ export default function Instruction() {
   // ─── Page Content ───
   const pages: Record<number, React.ReactNode> = {
     1: (
-      <div className="space-y-6">
-        {/* Hero */}
-        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-xl p-8 text-center">
+      <div className="space-y-6 animate-[fade-in_0.3s_ease-out]">
+        {/* Hero — uses editor tokens for dark mode support */}
+        <div className="bg-[var(--color-editor-accent)]/8 rounded-2xl p-8 text-center border border-[var(--color-editor-accent)]/15">
           <div className="flex justify-center mb-4">
             <Mascot />
           </div>
@@ -163,8 +163,8 @@ export default function Instruction() {
       </div>
     ),
     2: (
-      <div className="space-y-6">
-        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-xl p-6">
+      <div className="space-y-6 animate-[fade-in_0.3s_ease-out]">
+        <div className="bg-[var(--color-editor-accent)]/8 rounded-2xl p-6 border border-[var(--color-editor-accent)]/15">
           <div className="flex items-start gap-4">
             <Mascot />
             <div>
@@ -172,7 +172,7 @@ export default function Instruction() {
                 Getting Started
               </h2>
               <p className="text-sm text-[var(--color-editor-secondary)]">
-                Here's how the editor is organized
+                Here&apos;s how the editor is organized
               </p>
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function Instruction() {
             <div className="flex gap-6">
               <div className="flex-1 space-y-3">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                  <div className="w-6 h-6 rounded-full bg-[var(--color-editor-accent)]/15 text-[var(--color-editor-accent)] flex items-center justify-center text-xs font-bold">
                     1
                   </div>
                   <h4 className="text-sm font-semibold text-[var(--color-editor-text)]">
@@ -198,7 +198,7 @@ export default function Instruction() {
               <div className="w-px bg-[var(--color-editor-border)]" />
               <div className="flex-1 space-y-3">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xs font-bold">
+                  <div className="w-6 h-6 rounded-full bg-violet-500/15 text-violet-500 flex items-center justify-center text-xs font-bold">
                     2
                   </div>
                   <h4 className="text-sm font-semibold text-[var(--color-editor-text)]">
@@ -222,8 +222,8 @@ export default function Instruction() {
       </div>
     ),
     3: (
-      <div className="space-y-6">
-        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-xl p-6">
+      <div className="space-y-6 animate-[fade-in_0.3s_ease-out]">
+        <div className="bg-[var(--color-editor-accent)]/8 rounded-2xl p-6 border border-[var(--color-editor-accent)]/15">
           <div className="flex items-start gap-4">
             <Mascot />
             <div>
@@ -262,7 +262,7 @@ export default function Instruction() {
           ].map((item, i) => (
             <div
               key={i}
-              className="flex items-start gap-3 p-3 rounded-lg hover:bg-[var(--color-editor-elevated)] transition-colors"
+              className="flex items-start gap-3 p-3 rounded-xl hover:bg-[var(--color-editor-elevated)] transition-colors duration-200"
             >
               <span className="text-xl flex-shrink-0 mt-0.5">{item.emoji}</span>
               <div>
@@ -279,8 +279,8 @@ export default function Instruction() {
       </div>
     ),
     4: (
-      <div className="space-y-6">
-        <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-xl p-6">
+      <div className="space-y-6 animate-[fade-in_0.3s_ease-out]">
+        <div className="bg-[var(--color-editor-success)]/8 rounded-2xl p-6 border border-[var(--color-editor-success)]/15">
           <div className="flex items-start gap-4">
             <Mascot />
             <div>
@@ -296,7 +296,7 @@ export default function Instruction() {
 
         <div className="bg-[var(--color-editor-surface)] rounded-xl p-6 border border-[var(--color-editor-border)] space-y-4">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-[var(--color-editor-accent)]/12 text-[var(--color-editor-accent)] flex items-center justify-center text-sm font-bold flex-shrink-0">
               1
             </div>
             <div>
@@ -304,17 +304,17 @@ export default function Instruction() {
                 Save your draft first
               </h4>
               <p className="text-xs text-[var(--color-editor-secondary)] mt-0.5">
-                Click"Save"in the header or let auto-save handle it.
+                Click &quot;Save&quot; in the header or let auto-save handle it.
               </p>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-violet-500/12 text-violet-500 flex items-center justify-center text-sm font-bold flex-shrink-0">
               2
             </div>
             <div>
               <h4 className="text-sm font-semibold text-[var(--color-editor-text)]">
-                Click"Publish"
+                Click &quot;Publish&quot;
               </h4>
               <p className="text-xs text-[var(--color-editor-secondary)] mt-0.5">
                 A panel will slide open where you can add a description, cover
@@ -323,12 +323,12 @@ export default function Instruction() {
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-green-100 text-green-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-[var(--color-editor-success)]/12 text-[var(--color-editor-success)] flex items-center justify-center text-sm font-bold flex-shrink-0">
               3
             </div>
             <div>
               <h4 className="text-sm font-semibold text-[var(--color-editor-text)]">
-                Hit"Publish Now"
+                Hit &quot;Publish Now&quot;
               </h4>
               <p className="text-xs text-[var(--color-editor-secondary)] mt-0.5">
                 Your post goes live and can be shared with the community!
@@ -337,13 +337,13 @@ export default function Instruction() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-[var(--color-editor-accent)]/5 to-[var(--color-editor-success)]/5 rounded-xl p-6 text-center border border-[var(--color-editor-border)]">
+        <div className="bg-[var(--color-editor-accent)]/5 rounded-2xl p-6 text-center border border-[var(--color-editor-border)]">
           <p className="text-2xl mb-2">🎉</p>
           <h3 className="text-lg font-bold text-[var(--color-editor-text)] mb-1">
-            You're all set!
+            You&apos;re all set!
           </h3>
           <p className="text-sm text-[var(--color-editor-secondary)]">
-            Click"Start Writing"to begin creating your first post.
+            Click &quot;Start Writing&quot; to begin creating your first post.
           </p>
         </div>
       </div>
@@ -352,11 +352,11 @@ export default function Instruction() {
 
   return (
     <div className="fixed inset-0 z-[100] bg-background/30 backdrop-blur-sm flex items-center justify-center p-4 animate-[fade-in_0.2s_ease-out]">
-      <div className="w-full max-w-2xl bg-[var(--color-editor-bg)] rounded-2xl shadow-2xl border border-[var(--color-editor-border)] overflow-hidden animate-[slide-up_0.3s_ease-out] max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-2xl bg-[var(--color-editor-bg)] rounded-2xl shadow-2xl border border-[var(--color-editor-border)] overflow-hidden animate-[slide-up_0.3s_ease-out] max-h-[90vh] flex flex-col">
         {/* Close button */}
         <button
           onClick={handleSkip}
-          className="absolute top-4 right-4 p-2 rounded-lg text-[var(--color-editor-muted)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-all duration-150 cursor-pointer z-10"
+          className="absolute top-4 right-4 p-2 rounded-xl text-[var(--color-editor-muted)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-all duration-200 cursor-pointer z-10"
           aria-label="Close tutorial"
         >
           <X size={18} />
