@@ -515,12 +515,18 @@ const WatchPage = () => {
       </header>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden">
-        <main className="flex-1 overflow-auto bg-background flex flex-col">
+      <div className="flex-1 flex overflow-hidden relative">
+        <main className="flex-1 overflow-auto bg-background flex flex-col min-w-0">
           {/* Player Container */}
-          <div className="w-full bg-black aspect-video flex-shrink-0 relative overflow-hidden">
+          <div
+            className="w-full bg-black relative flex-shrink-0"
+            style={{
+              aspectRatio: '16 / 9',
+              maxHeight: 'min(calc(100vh - 7.5rem), 75vh)',
+            }}
+          >
             {isLocked ? (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-950 text-white p-8 text-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 text-white p-8 text-center">
                 <Lock size={48} className="text-muted-foreground mb-4" />
                 <h2 className="text-xl font-bold mb-2">Bài học này bị khóa</h2>
                 <p className="text-muted-foreground text-sm max-w-md mb-6">
@@ -537,11 +543,12 @@ const WatchPage = () => {
               <>
                 {currentLesson.type === "video" &&
                   (currentLesson.media?.url || currentLesson.media?.cloudflareId) && (
-                    <div className="absolute inset-0 [&>iframe]:!w-full [&>iframe]:!h-full">
+                    <div className="absolute inset-0 [&>div]:!absolute [&>div]:!inset-0 [&>div]:!p-0 [& iframe]:!absolute [& iframe]:!inset-0 [& iframe]:!w-full [& iframe]:!h-full">
                       <Stream
                         src={currentLesson.media?.cloudflareId || currentLesson.media?.url || ""}
                         controls
                         autoplay
+                        responsive={false}
                         width="100%"
                         height="100%"
                         streamRef={streamRef}
@@ -558,7 +565,7 @@ const WatchPage = () => {
                     </div>
                   )}
                 {currentLesson.type === "text" && (
-                  <div className="w-full h-full bg-background p-12 overflow-auto">
+                  <div className="absolute inset-0 bg-background p-12 overflow-auto">
                     <h2 className="text-3xl font-bold mb-6">{currentLesson.title}</h2>
                     <div
                       className="prose max-w-none text-foreground"
@@ -567,7 +574,7 @@ const WatchPage = () => {
                   </div>
                 )}
                 {currentLesson.type === "file" && (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-background text-white p-8">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-background text-white p-8">
                     <FileText size={64} className="text-muted-foreground mb-4" />
                     <h2 className="text-2xl font-bold mb-2">{currentLesson.title}</h2>
                     <p className="text-muted-foreground mb-6">
@@ -1315,15 +1322,14 @@ const WatchPage = () => {
             </button>
           </footer>
         </main>
-      </div>
 
       {/* Curriculum Sidebar */}
-      <div
+      <aside
         className={`${
-          sidebarOpen ? "w-[360px]" : "w-0"
-        } border-l flex-shrink-0 flex flex-col transition-all duration-300 overflow-hidden bg-background shadow-xl z-20`}
+          sidebarOpen ? "w-[340px] min-w-[340px]" : "w-0 min-w-0"
+        } border-l border-border flex-shrink-0 flex flex-col transition-all duration-300 overflow-hidden bg-background z-20`}
       >
-        <div className="p-4 border-b flex items-center justify-between text-foreground flex-shrink-0">
+        <div className="p-4 border-b border-border flex items-center justify-between text-foreground flex-shrink-0">
           <span className="font-bold text-base">Nội dung khóa học</span>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -1408,7 +1414,9 @@ const WatchPage = () => {
             );
           })}
         </div>
+      </aside>
       </div>
+
     </div>
   );
 };
