@@ -20,6 +20,7 @@ import {
   ShoppingCart,
   CheckCircle,
   Loader2,
+  Lock,
 } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api/axios";
@@ -29,6 +30,7 @@ import { toast } from "sonner";
 type Lesson = {
   _id: string;
   title: string;
+  slug: string;
   type: string;
   url: string;
   isFreePreview: boolean;
@@ -328,16 +330,31 @@ const CourseDetail = () => {
                     {expandedChapters.includes(chapter._id) && (
                       <div className="bg-background">
                         {chapter.lessons?.length > 0 ? (
-                          chapter.lessons.map((lesson) => (
+                          chapter.lessons.map((lesson) => {
+                            const canPreview = lesson.isFreePreview || isEnrolled;
+                            const lessonUrl = `/courses/${course.slug}/learn/${lesson.slug}`;
+
+                            return (
                             <div
                               key={lesson._id}
-                              className="p-4 pl-10 hover:bg-muted/30 flex items-center justify-between group border-t border-border first:border-0"
+                              className={`p-4 pl-10 flex items-center justify-between group border-t border-border first:border-0 ${
+                                canPreview
+                                  ? "hover:bg-muted/30 cursor-pointer"
+                                  : "opacity-70"
+                              }`}
+                              onClick={() => {
+                                if (canPreview) {
+                                  router.push(lessonUrl);
+                                } else {
+                                  toast.info("Bạn cần đăng ký khóa học để xem bài giảng này");
+                                }
+                              }}
                             >
                               <div className="flex items-center gap-3">
                                 {lesson.type === "video" ? (
                                   <Play
                                     size={14}
-                                    className="text-muted-foreground"
+                                    className={canPreview ? "text-[var(--color-admin-primary)]" : "text-muted-foreground"}
                                   />
                                 ) : (
                                   <Globe
@@ -345,22 +362,30 @@ const CourseDetail = () => {
                                     className="text-muted-foreground"
                                   />
                                 )}
-                                <span className="text-sm text-foreground">
+                                <span className={`text-sm ${
+                                  canPreview
+                                    ? "text-foreground hover:text-[var(--color-admin-primary)] transition-colors"
+                                    : "text-foreground"
+                                }`}>
                                   {lesson.title}
                                 </span>
                               </div>
                               <div className="flex items-center gap-4">
                                 {lesson.isFreePreview && (
-                                  <span className="text-blue-600 font-bold text-xs underline cursor-pointer">
+                                  <span className="text-blue-600 font-bold text-xs underline">
                                     Xem trước
                                   </span>
+                                )}
+                                {!canPreview && (
+                                  <Lock size={14} className="text-muted-foreground" />
                                 )}
                                 <span className="text-xs text-muted-foreground">
                                   05:20
                                 </span>
                               </div>
                             </div>
-                          ))
+                          );
+                          })
                         ) : (
                           <div className="p-4 pl-10 text-sm text-muted-foreground italic">
                             Chưa có bài giảng nào trong phần này.
