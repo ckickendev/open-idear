@@ -9,6 +9,7 @@ interface StickyOutlineNavProps {
   readonly className?: string;
   readonly onHeadingClick?: (heading: HeadingItem) => void;
   readonly defaultCollapsed?: boolean;
+  readonly asAside?: boolean;
 }
 
 export const StickyOutlineNav: React.FC<StickyOutlineNavProps> = ({
@@ -18,6 +19,7 @@ export const StickyOutlineNav: React.FC<StickyOutlineNavProps> = ({
   className = "",
   onHeadingClick,
   defaultCollapsed = false,
+  asAside = false,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
   const { headings, activeId, scrollToHeading } = useHeadingOutline({
@@ -36,9 +38,9 @@ export const StickyOutlineNav: React.FC<StickyOutlineNavProps> = ({
     }
   };
 
-  return (
+  const content = (
     <div
-      className={`sticky top-6 z-20 w-full max-w-xs transition-all duration-200 ease-out ${className}`}
+      className={`sticky top-6 z-20 w-full max-w-xs transition-all duration-200 ease-out ${!asAside ? className : ""}`}
     >
       <div className="flex flex-col bg-[var(--color-editor-surface,white)] border border-[var(--color-editor-border,#e4e4e7)] rounded-2xl shadow-sm overflow-hidden p-4 sm:p-5">
         {/* Header Block with Title & Icon Badge */}
@@ -100,6 +102,16 @@ export const StickyOutlineNav: React.FC<StickyOutlineNavProps> = ({
       </div>
     </div>
   );
+
+  if (asAside) {
+    return (
+      <aside className={`hidden xl:block w-72 shrink-0 p-6 pr-2 sticky top-4 self-start ${className}`}>
+        {content}
+      </aside>
+    );
+  }
+
+  return content;
 };
 
 export default StickyOutlineNav;

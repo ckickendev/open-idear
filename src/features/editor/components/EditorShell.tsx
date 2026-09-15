@@ -211,7 +211,7 @@ export default function EditorShell() {
     autoSave.markDirty();
     await autoSave.save();
 
-    toast.success("Draft created by AI and saved!");
+    toast.success("Draft created by AI and saved!", { id: "publish-by-ai-saved" });
   };
 
   const handleApply1ClickAIPipeline = (data: PipelineData) => {
@@ -973,18 +973,17 @@ export default function EditorShell() {
 
         {/* Main Editor Wrapper with side-by-side AI planning & sticky outline */}
         <div className="flex-1 flex relative w-full overflow-hidden">
-          {/* Sticky Left Outline Navigation ("Xem nhanh") */}
+          {/* Sticky Left Outline Navigation ("Xem nhanh") — only renders aside when headings exist */}
           {mode === "visual" && (
-            <aside className="hidden xl:block w-72 shrink-0 p-6 pr-2 sticky top-4 self-start">
-              <StickyOutlineNav
-                html={getHTML()}
-                outlinePlan={aiPlanner.outline?.outline}
-              />
-            </aside>
+            <StickyOutlineNav
+              asAside
+              html={getHTML()}
+              outlinePlan={aiPlanner.outline?.outline}
+            />
           )}
 
           {/* Main editor area */}
-          <main className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 overflow-y-auto">
+          <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-8 py-8 sm:py-10 overflow-y-auto custom-scrollbar">
             {/* Title */}
             <EditorTitle
               value={title}
@@ -1293,7 +1292,11 @@ export default function EditorShell() {
                   )}
 
                    {/* Floating Block insert button */}
-                  <div className="fixed bottom-8 right-8 z-40 animate-[slide-up_0.3s_ease-out]">
+                  <div
+                    className={`fixed bottom-8 ${
+                      activeSidePanel ? "right-[21.5rem]" : "right-8"
+                    } z-30 transition-all duration-200 animate-[slide-up_0.3s_ease-out]`}
+                  >
                     <BlockInsertButton onInsert={insertElementAtPosition} />
                   </div>
 

@@ -35,7 +35,7 @@ const EditorTitle: React.FC<EditorTitleProps> = ({
         className="
  w-full resize-none overflow-hidden
  bg-transparent border-none outline-none
- text-[2.5rem] leading-[1.15] font-bold tracking-[-0.025em]
+ text-[2.25rem] sm:text-[2.75rem] md:text-[3rem] leading-[1.15] font-bold tracking-[-0.025em]
  text-[var(--color-editor-text)]
  placeholder:text-[var(--color-editor-muted)]/60
  placeholder:transition-all placeholder:duration-300

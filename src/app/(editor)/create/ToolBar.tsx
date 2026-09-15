@@ -65,7 +65,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
 
   return (
     <div
-      className="flex items-center justify-center flex-wrap gap-0.5 px-4 py-2.5 editor-glass rounded-2xl shadow-sm mb-4"
+      className="w-fit max-w-full mx-auto flex items-center justify-center gap-0.5 sm:gap-1 px-3 sm:px-4 py-1.5 sm:py-2 editor-glass rounded-2xl shadow-sm mb-6 overflow-x-auto scrollbar-hide"
       role="toolbar"
       aria-label="Formatting toolbar"
     >

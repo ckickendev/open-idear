@@ -75,17 +75,11 @@ export const PublishByAIModal: React.FC<PublishByAIModalProps> = ({
   // ── AI mutation hook ─────────────────────────────────────────────────────────
   const ai = usePublishByAI();
 
-  // Auto-close and apply on success
+  // Reset hook state when modal opens
   useEffect(() => {
-    if (ai.isSuccess && ai.data) {
-      onApply(ai.data);
-      onClose();
+    if (isOpen) {
+      ai.reset();
     }
-  }, [ai.isSuccess, ai.data, onApply, onClose]);
-
-  // Reset hook state when modal reopens
-  useEffect(() => {
-    if (isOpen) ai.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
@@ -103,7 +97,12 @@ export const PublishByAIModal: React.FC<PublishByAIModalProps> = ({
       goal: "educate and provide actionable insights",
       tone: "informative",
     };
-    await ai.generate(payload);
+    const result = await ai.generate(payload);
+    if (result) {
+      onApply(result);
+      ai.reset();
+      onClose();
+    }
   };
 
   const handleRetry = () => {
@@ -112,6 +111,7 @@ export const PublishByAIModal: React.FC<PublishByAIModalProps> = ({
 
   const handleClose = () => {
     if (ai.isPending) ai.abort();
+    ai.reset();
     onClose();
   };
 
