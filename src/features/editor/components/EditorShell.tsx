@@ -1477,6 +1477,10 @@ export default function EditorShell() {
           onClose={() => setIsPublishByAIOpen(false)}
           initialTopic={title}
           onApply={handleApplyPublishByAI}
+          plannerData={aiPlanner.outline ? {
+            title: aiPlanner.outline.title,
+            category: aiPlanner.outline.category,
+          } : undefined}
         />
 
         {/* One Click Autonomous Publisher Modal */}

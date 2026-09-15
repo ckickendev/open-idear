@@ -29,7 +29,9 @@ import {
   Clock,
   ChevronRight,
   FileText,
+  Copy,
 } from "lucide-react";
+import { toast } from "sonner";
 import { usePublishByAI } from "../hooks/usePublishByAI";
 import type { PublisherResponse, PublisherRequest } from "../api/publisher.api";
 
@@ -45,6 +47,16 @@ export interface PublishByAIModalProps {
    * The parent EditorShell uses this to populate the editor and save as Draft.
    */
   onApply: (data: PublisherResponse) => void;
+  /** Optional planner data passed directly from parent */
+  plannerData?: {
+    topic?: string;
+    title?: string;
+    audience?: string;
+    length?: string;
+    tone?: string;
+    goal?: string;
+    category?: string;
+  } | null;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -54,11 +66,15 @@ export const PublishByAIModal: React.FC<PublishByAIModalProps> = ({
   onClose,
   initialTopic = "",
   onApply,
+  plannerData,
 }) => {
   // ── Form state ──────────────────────────────────────────────────────────────
   const [topic, setTopic] = useState(initialTopic);
   const [audience, setAudience] = useState("developers");
   const [length, setLength] = useState("medium");
+  const [tone, setTone] = useState("informative");
+  const [goal, setGoal] = useState("educate and provide actionable insights");
+  const [category, setCategory] = useState("");
 
   // Sync initial topic when modal opens
   useEffect(() => {
@@ -85,6 +101,72 @@ export const PublishByAIModal: React.FC<PublishByAIModalProps> = ({
 
   if (!isOpen) return null;
 
+  // ── Copy from AI Planner handler ───────────────────────────────────────────
+  const handleCopyFromPlanner = () => {
+    try {
+      let data: any = plannerData || null;
+
+      if (!data && typeof window !== "undefined") {
+        const savedForm = localStorage.getItem("ai_planner_last_form");
+        if (savedForm) {
+          data = JSON.parse(savedForm);
+        } else {
+          const savedOutline = localStorage.getItem("ai_planner_last_outline");
+          if (savedOutline) {
+            data = JSON.parse(savedOutline);
+          }
+        }
+      }
+
+      if (!data) {
+        toast.info("No AI Planner draft found. Please enter details in the AI Planner form first.");
+        return;
+      }
+
+      // Copy topic / title if available
+      const nextTopic = (data.topic || data.title || "").trim();
+      if (nextTopic) {
+        setTopic(nextTopic);
+      }
+
+      // Copy audience with normalization to supported select options
+      if (data.audience) {
+        const rawAudience = String(data.audience).toLowerCase().trim();
+        if (rawAudience.includes("arch") || rawAudience.includes("lead")) {
+          setAudience("architects");
+        } else if (rawAudience.includes("begin") || rawAudience.includes("junior")) {
+          setAudience("beginners");
+        } else if (rawAudience.includes("exec") || rawAudience.includes("manager")) {
+          setAudience("executives");
+        } else {
+          setAudience("developers");
+        }
+      }
+
+      // Copy length with normalization to supported select options
+      if (data.length) {
+        const rawLength = String(data.length).toLowerCase().trim();
+        if (rawLength.includes("short") || rawLength.includes("800") || rawLength.includes("quick")) {
+          setLength("short");
+        } else if (rawLength.includes("long") || rawLength.includes("2500") || rawLength.includes("deep")) {
+          setLength("long");
+        } else {
+          setLength("medium");
+        }
+      }
+
+      // Copy tone, goal, category
+      if (data.tone) setTone(data.tone);
+      if (data.goal) setGoal(data.goal);
+      if (data.category) setCategory(data.category);
+
+      toast.success("Copied fields from AI Planner form!");
+    } catch (err) {
+      console.error("Failed to copy from AI Planner:", err);
+      toast.error("Failed to copy fields from AI Planner.");
+    }
+  };
+
   // ── Handlers ────────────────────────────────────────────────────────────────
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,8 +176,9 @@ export const PublishByAIModal: React.FC<PublishByAIModalProps> = ({
       topic: topic.trim(),
       audience,
       length,
-      goal: "educate and provide actionable insights",
-      tone: "informative",
+      goal: goal || "educate and provide actionable insights",
+      tone: tone || "informative",
+      category: category || undefined,
     };
     const result = await ai.generate(payload);
     if (result) {
@@ -228,59 +311,83 @@ export const PublishByAIModal: React.FC<PublishByAIModalProps> = ({
                 </p>
               </div>
 
-              {/* Audience + Length */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label
-                    htmlFor="publish-ai-audience"
-                    className="block text-[10px] font-bold uppercase tracking-wider mb-1"
+              {/* Audience + Length with Copy from AI Planner */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span
+                    className="text-[10px] font-bold uppercase tracking-wider"
                     style={{ color: "var(--color-editor-muted)" }}
                   >
-                    Audience
-                  </label>
-                  <select
-                    id="publish-ai-audience"
-                    value={audience}
-                    onChange={(e) => setAudience(e.target.value)}
+                    Targeting & Length
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCopyFromPlanner}
                     disabled={ai.isPending}
-                    className="w-full px-3 py-2 rounded-lg text-xs focus:outline-none cursor-pointer disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-amber-500 hover:text-amber-400 active:scale-95 border border-amber-500/30 hover:border-amber-500/50"
                     style={{
-                      background: "var(--color-editor-elevated)",
-                      border: "1px solid var(--color-editor-border)",
-                      color: "var(--color-editor-text)",
+                      background: "rgba(245, 158, 11, 0.1)",
                     }}
+                    title="Copy fields from AI Planner form"
                   >
-                    <option value="developers">Developers</option>
-                    <option value="architects">Software Architects</option>
-                    <option value="beginners">Beginners</option>
-                    <option value="executives">Tech Executives</option>
-                  </select>
+                    <Sparkles className="w-3 h-3 text-amber-400 animate-pulse" />
+                    <span>Copy from AI Planner</span>
+                  </button>
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="publish-ai-length"
-                    className="block text-[10px] font-bold uppercase tracking-wider mb-1"
-                    style={{ color: "var(--color-editor-muted)" }}
-                  >
-                    Article Length
-                  </label>
-                  <select
-                    id="publish-ai-length"
-                    value={length}
-                    onChange={(e) => setLength(e.target.value)}
-                    disabled={ai.isPending}
-                    className="w-full px-3 py-2 rounded-lg text-xs focus:outline-none cursor-pointer disabled:opacity-60"
-                    style={{
-                      background: "var(--color-editor-elevated)",
-                      border: "1px solid var(--color-editor-border)",
-                      color: "var(--color-editor-text)",
-                    }}
-                  >
-                    <option value="short">Short (~800 words)</option>
-                    <option value="medium">Medium (~1,500 words)</option>
-                    <option value="long">In-depth (~2,500 words)</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      htmlFor="publish-ai-audience"
+                      className="block text-[10px] font-bold uppercase tracking-wider mb-1"
+                      style={{ color: "var(--color-editor-muted)" }}
+                    >
+                      Audience
+                    </label>
+                    <select
+                      id="publish-ai-audience"
+                      value={audience}
+                      onChange={(e) => setAudience(e.target.value)}
+                      disabled={ai.isPending}
+                      className="w-full px-3 py-2 rounded-lg text-xs focus:outline-none cursor-pointer disabled:opacity-60"
+                      style={{
+                        background: "var(--color-editor-elevated)",
+                        border: "1px solid var(--color-editor-border)",
+                        color: "var(--color-editor-text)",
+                      }}
+                    >
+                      <option value="developers">Developers</option>
+                      <option value="architects">Software Architects</option>
+                      <option value="beginners">Beginners</option>
+                      <option value="executives">Tech Executives</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="publish-ai-length"
+                      className="block text-[10px] font-bold uppercase tracking-wider mb-1"
+                      style={{ color: "var(--color-editor-muted)" }}
+                    >
+                      Article Length
+                    </label>
+                    <select
+                      id="publish-ai-length"
+                      value={length}
+                      onChange={(e) => setLength(e.target.value)}
+                      disabled={ai.isPending}
+                      className="w-full px-3 py-2 rounded-lg text-xs focus:outline-none cursor-pointer disabled:opacity-60"
+                      style={{
+                        background: "var(--color-editor-elevated)",
+                        border: "1px solid var(--color-editor-border)",
+                        color: "var(--color-editor-text)",
+                      }}
+                    >
+                      <option value="short">Short (~800 words)</option>
+                      <option value="medium">Medium (~1,500 words)</option>
+                      <option value="long">In-depth (~2,500 words)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 

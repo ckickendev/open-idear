@@ -25,6 +25,7 @@ export interface PlannerResponse {
   readonly estimatedReadingTime: number;
   readonly keywords: string[];
   readonly outline: OutlineItem[];
+  readonly category?: string;
 }
 
 export interface WriterResponse {
