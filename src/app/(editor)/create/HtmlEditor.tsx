@@ -31,29 +31,33 @@ const HtmlEditor: React.FC<HtmlEditorProps> = ({
   return (
     <div className="html-editor-container w-full">
       <div className="w-full flex flex-col items-center">
-        <textarea
-          value={rawHtml}
-          onChange={handleRawHtmlChange}
-          className="
+        <div className="relative w-full">
+          {/* Line number gutter hint */}
+          <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl bg-gradient-to-b from-[var(--color-editor-accent)]/20 via-[var(--color-editor-accent)]/5 to-transparent pointer-events-none" />
+          <textarea
+            value={rawHtml}
+            onChange={handleRawHtmlChange}
+            className="
  w-full min-h-[60vh] font-mono text-sm leading-relaxed
- px-6 py-5 rounded-xl
+ pl-6 pr-6 py-5 rounded-2xl
  bg-[var(--color-editor-elevated)]
  border border-[var(--color-editor-border)]
  text-[var(--color-editor-text)]
  placeholder:text-[var(--color-editor-muted)]
  focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50
- resize-y transition-all duration-150
+ resize-y transition-all duration-200
  whitespace-pre
 "
-          placeholder="Enter raw HTML..."
-          style={{
-            fontFamily:
-              "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-            tabSize: 2,
-          }}
-          spellCheck={false}
-          aria-label="HTML source editor"
-        />
+            placeholder="Enter raw HTML..."
+            style={{
+              fontFamily:
+                "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+              tabSize: 2,
+            }}
+            spellCheck={false}
+            aria-label="HTML source editor"
+          />
+        </div>
       </div>
     </div>
   );

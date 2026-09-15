@@ -157,18 +157,18 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="w-full max-w-lg bg-background rounded-2xl shadow-2xl overflow-hidden border border-border">
+    <div className="w-full max-w-lg bg-[var(--color-editor-surface)] rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-editor-border)]">
       {/* Header */}
       {isTitleDisplay && (
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-editor-border)]">
           <div className="flex items-center gap-2">
-            <CloudUpload className="text-blue-600" size={22} />
-            <h2 className="text-lg font-bold text-foreground">Upload Video</h2>
+            <CloudUpload className="text-[var(--color-editor-accent)]" size={22} />
+            <h2 className="text-lg font-bold text-[var(--color-editor-text)]">Upload Video</h2>
           </div>
           {!isUploading && (
             <button
               onClick={onClose}
-              className="p-1.5 rounded-full hover:bg-muted text-muted-foreground transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl hover:bg-[var(--color-editor-elevated)] text-[var(--color-editor-muted)] hover:text-[var(--color-editor-text)] transition-all duration-200 cursor-pointer"
               aria-label="Close"
             >
               <X size={18} />
@@ -191,8 +191,8 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
             className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200
  ${
    isDragging
-     ? "border-blue-400 bg-blue-50 scale-[1.01]"
-     : "border-border hover:border-blue-400 hover:bg-muted/30"
+     ? "border-[var(--color-editor-accent)] bg-[var(--color-editor-accent)]/5 scale-[1.01]"
+     : "border-[var(--color-editor-border)] hover:border-[var(--color-editor-accent)] hover:bg-[var(--color-editor-elevated)]"
  }`}
           >
             <input
@@ -203,38 +203,38 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
               onChange={handleInputChange}
             />
             <Upload
-              className={`mx-auto mb-3 transition-colors ${isDragging ? "text-blue-500" : "text-muted-foreground"}`}
+              className={`mx-auto mb-3 transition-colors duration-200 ${isDragging ? "text-[var(--color-editor-accent)]" : "text-[var(--color-editor-muted)]"}`}
               size={40}
             />
-            <p className="text-sm font-semibold text-foreground/80">
+            <p className="text-sm font-semibold text-[var(--color-editor-text)]">
               Drag & drop your video here
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-[var(--color-editor-muted)] mt-1">
               or{" "}
-              <span className="text-blue-500 font-medium">
+              <span className="text-[var(--color-editor-accent)] font-medium">
                 browse from your computer
               </span>
             </p>
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-xs text-[var(--color-editor-muted)] mt-2">
               MP4, MOV, AVI — max 2 GB
             </p>
           </div>
         ) : (
           /* Selected file display */
-          <div className="flex items-center gap-3 bg-blue-50 rounded-xl p-3 border border-blue-100">
-            <Video className="text-blue-500 shrink-0" size={22} />
+          <div className="flex items-center gap-3 bg-[var(--color-editor-accent)]/8 rounded-xl p-3 border border-[var(--color-editor-accent)]/20">
+            <Video className="text-[var(--color-editor-accent)] shrink-0" size={22} />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
+              <p className="text-sm font-medium text-[var(--color-editor-text)] truncate">
                 {file.name}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-[var(--color-editor-muted)]">
                 {formatSize(file.size)}
               </p>
             </div>
             {!isUploading && uploadState !== "done" && (
               <button
                 onClick={clearFile}
-                className="text-muted-foreground hover:text-red-500 text-xs transition-colors cursor-pointer"
+                className="text-[var(--color-editor-muted)] hover:text-red-500 text-xs transition-colors cursor-pointer"
                 aria-label="Remove file"
               >
                 <X size={16} />
@@ -245,7 +245,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
 
         {/* Lesson title input */}
         <div>
-          <label className="block text-sm font-medium text-foreground/80 mb-1">
+          <label className="block text-sm font-medium text-[var(--color-editor-secondary)] mb-1">
             Lesson title
           </label>
           <input
@@ -254,36 +254,36 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
             onChange={(e) => setTitle(e.target.value)}
             disabled={isUploading}
             placeholder="Enter lesson title…"
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm
- focus:ring-2 focus:ring-blue-500 outline-none
- disabled:bg-muted/30 disabled:text-muted-foreground transition-shadow"
+            className="w-full px-3 py-2 border border-[var(--color-editor-border)] rounded-xl text-sm bg-[var(--color-editor-elevated)] text-[var(--color-editor-text)] placeholder:text-[var(--color-editor-muted)]
+ focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50 outline-none
+ disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           />
         </div>
 
         {/* Error message */}
         {error && (
-          <div className="text-red-600 text-sm bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+          <div className="text-red-500 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2 animate-[fade-in_0.15s_ease-out]">
             {error}
           </div>
         )}
 
         {/* Upload progress */}
         {uploadState === "uploading" && (
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="space-y-2 animate-[fade-in_0.15s_ease-out]">
+            <div className="flex justify-between text-xs text-[var(--color-editor-muted)]">
               <span className="flex items-center gap-1.5">
                 <Loader2 className="animate-spin" size={12} />
                 Uploading to Cloudflare Stream…
               </span>
-              <span className="font-bold text-blue-600">{progress}%</span>
+              <span className="font-bold text-[var(--color-editor-accent)]">{progress}%</span>
             </div>
-            <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+            <div className="w-full bg-[var(--color-editor-elevated)] rounded-full h-2.5 overflow-hidden">
               <div
-                className="h-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-300 ease-out"
+                className="h-2.5 bg-gradient-to-r from-[var(--color-editor-accent)] to-violet-500 rounded-full transition-all duration-300 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <p className="text-xs text-muted-foreground text-right">
+            <p className="text-xs text-[var(--color-editor-muted)] text-right">
               {formatSize(file?.size ?? 0)} total
             </p>
           </div>
@@ -291,7 +291,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
 
         {/* Saving state */}
         {uploadState === "saving" && (
-          <div className="flex items-center gap-2 text-sm text-blue-600 animate-pulse">
+          <div className="flex items-center gap-2 text-sm text-[var(--color-editor-accent)] animate-pulse">
             <Loader2 className="animate-spin" size={14} />
             Saving video metadata…
           </div>
@@ -299,20 +299,20 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
 
         {/* Done state */}
         {uploadState === "done" && (
-          <div className="flex items-center gap-2 text-sm text-green-600 font-medium">
-            <CheckCircle2 size={16} className="text-green-500" />
+          <div className="flex items-center gap-2 text-sm text-[var(--color-editor-success)] font-medium animate-[fade-in_0.2s_ease-out]">
+            <CheckCircle2 size={16} className="text-[var(--color-editor-success)]" />
             Video uploaded successfully!
           </div>
         )}
       </div>
 
       {/* Footer actions */}
-      <div className="flex gap-2 justify-end px-5 py-4 border-t border-border bg-muted/30">
+      <div className="flex gap-2 justify-end px-5 py-4 border-t border-[var(--color-editor-border)] bg-[var(--color-editor-elevated)]/50">
         <button
           onClick={onClose}
           disabled={isUploading}
-          className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted
- disabled:opacity-50 transition-colors cursor-pointer"
+          className="px-4 py-2 text-sm rounded-xl border border-[var(--color-editor-border)] text-[var(--color-editor-secondary)] hover:bg-[var(--color-editor-elevated)]
+ disabled:opacity-50 transition-all duration-200 cursor-pointer"
         >
           Cancel
         </button>
@@ -321,9 +321,9 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
           disabled={
             !file || !title.trim() || isUploading || uploadState === "done"
           }
-          className="px-5 py-2 text-sm rounded-lg bg-blue-600 text-white font-semibold
- hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed
- flex items-center gap-2 transition-colors shadow-sm"
+          className="px-5 py-2 text-sm rounded-xl bg-[var(--color-editor-accent)] text-white font-semibold
+ hover:bg-[var(--color-editor-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed
+ flex items-center gap-2 transition-all duration-200 shadow-sm active:scale-[0.97]"
         >
           {isUploading ? (
             <>

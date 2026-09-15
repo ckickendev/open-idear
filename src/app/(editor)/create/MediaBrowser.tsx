@@ -67,7 +67,7 @@ const MediaBrowser: React.FC<MediaBrowserProps> = ({ onSelect, onClose }) => {
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] rounded-lg transition-all duration-150 cursor-pointer"
+            className="p-2 text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] rounded-xl transition-all duration-200 cursor-pointer"
             aria-label="Close media browser"
           >
             <X size={20} />
@@ -90,7 +90,7 @@ const MediaBrowser: React.FC<MediaBrowserProps> = ({ onSelect, onClose }) => {
               </p>
               <button
                 onClick={fetchMedia}
-                className="px-6 py-2 bg-[var(--color-editor-accent)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-editor-accent-hover)] transition-all duration-150 cursor-pointer"
+                className="px-6 py-2 bg-[var(--color-editor-accent)] text-white text-sm font-medium rounded-xl hover:bg-[var(--color-editor-accent-hover)] transition-all duration-200 cursor-pointer"
               >
                 Retry
               </button>
@@ -112,20 +112,24 @@ const MediaBrowser: React.FC<MediaBrowserProps> = ({ onSelect, onClose }) => {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 pb-4">
-              {mediaList.map((media) => (
+              {mediaList.map((media, index) => (
                 <div
                   key={media._id}
                   onClick={() => onSelect(media)}
                   className="group relative cursor-pointer border border-[var(--color-editor-border)] rounded-xl overflow-hidden hover:border-[var(--color-editor-accent)] hover:shadow-lg hover:shadow-[var(--color-editor-accent)]/10 transition-all duration-300 aspect-square bg-[var(--color-editor-elevated)]"
+                  style={{
+                    animationDelay: `${index * 30}ms`,
+                    animation: "fade-in 0.3s ease-out both",
+                  }}
                 >
                   <img
                     src={media.url}
                     alt={media.description || "Media item"}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
-                    <div className="translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                      <button className="w-full bg-[var(--color-editor-accent)] text-white text-sm font-medium py-2 rounded-lg shadow-sm">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-3">
+                    <div className="translate-y-2 group-hover:translate-y-0 transition-transform duration-200 ease-out">
+                      <button className="w-full bg-[var(--color-editor-accent)] text-white text-sm font-medium py-2 rounded-lg shadow-sm hover:bg-[var(--color-editor-accent-hover)] transition-colors">
                         Select
                       </button>
                     </div>

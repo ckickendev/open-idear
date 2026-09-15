@@ -33,6 +33,7 @@ const ImageUpload = ({
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showBrowser, setShowBrowser] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Dark mode class helpers
@@ -150,11 +151,19 @@ const ImageUpload = ({
   const handleDragOver = (e: any) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
   };
 
   const handleDrop = (e: any) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsDragging(false);
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       handleFileSelect({ target: { files: [files[0]] } });
@@ -175,10 +184,15 @@ const ImageUpload = ({
         </div>
       )}
 
-      {/* Upload Area */}
+      {/* Upload Area — with drag-active visual feedback */}
       <div
-        className={`border-2 border-dashed ${border} ${borderHover} rounded-xl p-8 text-center transition-all duration-200 cursor-pointer`}
+        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer ${
+          isDragging
+            ? `border-[var(--color-editor-accent)] bg-[var(--color-editor-accent)]/5 scale-[1.01]`
+            : `${border} ${borderHover}`
+        }`}
         onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
       >
@@ -195,14 +209,14 @@ const ImageUpload = ({
             <img
               src={preview}
               alt="Preview"
-              className="max-w-full max-h-64 mx-auto rounded-xl shadow-lg"
+              className="max-w-full max-h-64 mx-auto rounded-xl shadow-lg ring-1 ring-[var(--color-editor-border)]"
             />
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleClearSelection();
               }}
-              className="absolute top-2 right-2 bg-[var(--color-editor-danger)] text-white rounded-full p-1.5 hover:opacity-90 transition-opacity cursor-pointer shadow-lg"
+              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors cursor-pointer shadow-lg"
             >
               <X size={14} />
             </button>
@@ -210,13 +224,13 @@ const ImageUpload = ({
         ) : (
           <div className="space-y-3">
             <div className="flex justify-center">
-              <div className={`p-3 rounded-xl ${bgElevated}`}>
-                <FileImage size={32} className={textMuted} />
+              <div className={`p-4 rounded-2xl ${bgElevated} transition-colors duration-200 ${isDragging ? "bg-[var(--color-editor-accent)]/10" : ""}`}>
+                <FileImage size={32} className={`${isDragging ? "text-[var(--color-editor-accent)]" : textMuted} transition-colors duration-200`} />
               </div>
             </div>
             <div>
               <p className={`text-sm font-medium ${text}`}>
-                Click to upload or drag and drop
+                {isDragging ? "Drop your image here" : "Click to upload or drag and drop"}
               </p>
               <p className={`text-xs ${textSec} mt-1`}>
                 JPEG, PNG, GIF, or WebP (max 5MB)
@@ -240,7 +254,7 @@ const ImageUpload = ({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe this image..."
-            className={`w-full px-4 py-3 ${bgElevated} border ${border} rounded-xl text-sm ${text} placeholder:${textMuted} focus:outline-none focus:ring-2 ${ring} resize-none transition-all duration-150`}
+            className={`w-full px-4 py-3 ${bgElevated} border ${border} rounded-xl text-sm ${text} placeholder:${textMuted} focus:outline-none focus:ring-2 ${ring} resize-none transition-all duration-200`}
             rows={2}
           />
           <p className={`text-[11px] ${textMuted}`}>
@@ -251,8 +265,8 @@ const ImageUpload = ({
 
       {/* Error */}
       {error && (
-        <div className="mt-4 p-3 bg-[var(--color-editor-danger)]/10 border border-[var(--color-editor-danger)]/30 rounded-xl">
-          <p className="text-sm text-[var(--color-editor-danger)]">{error}</p>
+        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl animate-[fade-in_0.15s_ease-out]">
+          <p className="text-sm text-red-500">{error}</p>
         </div>
       )}
 
@@ -262,7 +276,7 @@ const ImageUpload = ({
           <button
             onClick={handleUpload}
             disabled={uploading}
-            className={`flex-1 ${accent} text-white py-3 px-6 rounded-xl font-medium ${accentHover} disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer`}
+            className={`flex-1 ${accent} text-white py-3 px-6 rounded-xl font-medium ${accentHover} disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer`}
           >
             {uploading ? (
               <>
@@ -277,7 +291,7 @@ const ImageUpload = ({
           <button
             onClick={handleClearSelection}
             disabled={uploading}
-            className={`px-4 py-3 border ${border} ${text} rounded-xl hover:${bgElevated} disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer text-sm`}
+            className={`px-4 py-3 border ${border} ${text} rounded-xl hover:${bgElevated} disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer text-sm`}
           >
             Clear
           </button>

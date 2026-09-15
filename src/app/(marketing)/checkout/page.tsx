@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ShoppingCart,
@@ -14,13 +14,15 @@ import {
   ChevronRight,
   Sparkles,
   Lock,
+  Landmark,
+  XCircle,
 } from "lucide-react";
 import cartStore, { CartItem } from "@/store/CartStore";
 import { paymentApi } from "@/features/series/api/payment.api";
 import authenticationStore from "@/store/AuthenticationStore";
 import { toast } from "sonner";
 
-type PaymentGateway = "demo" | "stripe" | "vnpay" | "momo";
+type PaymentGateway = "demo" | "payos" | "stripe" | "momo";
 
 const GATEWAYS: {
   id: PaymentGateway;
@@ -28,6 +30,12 @@ const GATEWAYS: {
   desc: string;
   available: boolean;
 }[] = [
+  {
+    id: "payos",
+    label: "Chuyển khoản ngân hàng",
+    desc: "QR Code VietQR — Chuyển khoản liên ngân hàng 24/7",
+    available: true,
+  },
   {
     id: "demo",
     label: "Demo Payment",
@@ -38,12 +46,6 @@ const GATEWAYS: {
     id: "stripe",
     label: "Stripe",
     desc: "Visa, Mastercard, Apple Pay",
-    available: false,
-  },
-  {
-    id: "vnpay",
-    label: "VNPay",
-    desc: "Ngân hàng nội địa, QR Code",
     available: false,
   },
   { id: "momo", label: "MoMo", desc: "Ví điện tử MoMo", available: false },
@@ -204,24 +206,104 @@ const CartSkeleton = () => (
   </div>
 );
 
+// ─── Payment Cancelled State ────────────────────────────────────────────────
+
+const PaymentCancelled = () => {
+  const router = useRouter();
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white dark:from-amber-950/20 dark:to-background flex items-center justify-center p-4">
+      <div className="text-center max-w-md">
+        <div className="relative mb-8">
+          <div className="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mx-auto relative">
+            <XCircle size={48} className="text-amber-500" />
+          </div>
+        </div>
+        <h1 className="text-3xl font-extrabold text-foreground mb-3">
+          Thanh toán bị hủy
+        </h1>
+        <p className="text-muted-foreground mb-8 leading-relaxed">
+          Giao dịch của bạn đã bị hủy. Giỏ hàng của bạn vẫn được giữ nguyên.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            onClick={() => router.push("/checkout")}
+            className="bg-[var(--color-admin-primary)] text-white font-bold px-8 py-3.5 rounded-xl hover:bg-[var(--color-admin-primary-hover)] transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2"
+          >
+            Thử lại <ChevronRight size={18} />
+          </button>
+          <button
+            onClick={() => router.push("/courses")}
+            className="border border-border text-foreground/80 font-bold px-8 py-3.5 rounded-xl hover:bg-muted/30 transition-colors"
+          >
+            Tiếp tục khám phá
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Main Checkout Page ─────────────────────────────────────────────────────
 
-const CheckoutPage = () => {
+const CheckoutPageInner = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { items, isLoading, fetchCart, removeFromCart, clearLocalCart } =
     cartStore();
   const currentUser = authenticationStore((state) => state.currentUser);
   const [selectedGateway, setSelectedGateway] =
-    useState<PaymentGateway>("demo");
+    useState<PaymentGateway>("payos");
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentCancelled, setPaymentCancelled] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+
+  // Handle return URL from payOS
+  useEffect(() => {
+    const status = searchParams.get("status");
+    const orderCode = searchParams.get("orderCode");
+
+    if (status && orderCode && currentUser?._id) {
+      if (status === "success") {
+        // Verify payment with backend
+        setIsVerifying(true);
+        paymentApi
+          .getPaymentStatus(orderCode)
+          .then((res) => {
+            const paymentData = res.data?.data;
+            if (paymentData?.status === "paid") {
+              clearLocalCart();
+              setPaymentSuccess(true);
+            } else {
+              // Payment not yet confirmed by webhook — show success anyway
+              // (webhook might take a few seconds)
+              clearLocalCart();
+              setPaymentSuccess(true);
+            }
+          })
+          .catch(() => {
+            toast.info("Đang xác nhận thanh toán, vui lòng chờ...");
+            clearLocalCart();
+            setPaymentSuccess(true);
+          })
+          .finally(() => setIsVerifying(false));
+      } else if (status === "cancel") {
+        setPaymentCancelled(true);
+      }
+    }
+  }, [searchParams, currentUser?._id]);
 
   useEffect(() => {
     if (!currentUser?._id) {
       return;
     }
-    fetchCart();
+    // Don't fetch cart if we're coming back from payOS
+    const status = searchParams.get("status");
+    if (!status) {
+      fetchCart();
+    }
   }, [currentUser?._id]);
 
   const handleRemove = async (courseId: string) => {
@@ -240,8 +322,29 @@ const CheckoutPage = () => {
     setIsProcessing(true);
 
     try {
-      // Step 1: Create checkout
-      const checkoutRes = await paymentApi.createCheckout();
+      if (selectedGateway === "payos") {
+        // payOS flow: create checkout → redirect to payOS
+        const checkoutRes = await paymentApi.createCheckout("payos");
+        if (!checkoutRes.success) {
+          toast.error(checkoutRes.message || "Không thể tạo đơn thanh toán");
+          setIsProcessing(false);
+          return;
+        }
+
+        const checkoutUrl = checkoutRes.data?.data?.checkoutUrl;
+        if (!checkoutUrl) {
+          toast.error("Lỗi hệ thống: không thể tạo link thanh toán");
+          setIsProcessing(false);
+          return;
+        }
+
+        // Redirect to payOS checkout page
+        window.location.href = checkoutUrl;
+        return; // Don't setIsProcessing(false) — page is navigating away
+      }
+
+      // Demo flow: create checkout → process instantly
+      const checkoutRes = await paymentApi.createCheckout("demo");
       if (!checkoutRes.success) {
         toast.error(checkoutRes.message || "Không thể tạo đơn thanh toán");
         setIsProcessing(false);
@@ -255,7 +358,6 @@ const CheckoutPage = () => {
         return;
       }
 
-      // Step 2: Process demo payment
       const payRes = await paymentApi.processDemoPayment(paymentId);
       if (payRes.success) {
         clearLocalCart();
@@ -270,9 +372,26 @@ const CheckoutPage = () => {
     }
   };
 
+  // Verifying return from payOS
+  if (isVerifying) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 size={48} className="animate-spin text-[var(--color-admin-primary)] mx-auto mb-4" />
+          <p className="text-muted-foreground">Đang xác nhận thanh toán...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Payment success view
   if (paymentSuccess) {
     return <PaymentSuccess />;
+  }
+
+  // Payment cancelled view
+  if (paymentCancelled) {
+    return <PaymentCancelled />;
   }
 
   // Calculate totals
@@ -393,10 +512,16 @@ const CheckoutPage = () => {
                           {gw.desc}
                         </p>
                       </div>
+                      {gw.id === "payos" && (
+                        <Landmark
+                          size={20}
+                          className="text-[var(--color-admin-primary)]"
+                        />
+                      )}
                       {gw.id === "demo" && (
                         <CreditCard
                           size={20}
-                          className="text-[var(--color-admin-primary)]"
+                          className="text-muted-foreground"
                         />
                       )}
                     </label>
@@ -470,5 +595,16 @@ const CheckoutPage = () => {
     </div>
   );
 };
+
+// Wrap with Suspense for useSearchParams
+const CheckoutPage = () => (
+  <Suspense fallback={
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 size={32} className="animate-spin text-muted-foreground" />
+    </div>
+  }>
+    <CheckoutPageInner />
+  </Suspense>
+);
 
 export default CheckoutPage;

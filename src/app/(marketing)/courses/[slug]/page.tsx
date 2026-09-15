@@ -20,6 +20,7 @@ import {
   ShoppingCart,
   CheckCircle,
   Loader2,
+  Lock,
 } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api/axios";
@@ -29,6 +30,7 @@ import { toast } from "sonner";
 type Lesson = {
   _id: string;
   title: string;
+  slug: string;
   type: string;
   url: string;
   isFreePreview: boolean;
@@ -95,18 +97,20 @@ const CourseDetail = () => {
     const fetchCourse = async () => {
       try {
         changeLoad();
-        const response = await axios.get(
-          `${ENV.ROOT_API}/course/getBySlug?slug=${slug}`,
-        );
-        console.log("course", response.data.data);
-        setCourse(response.data.data);
+        const response = await courseApi.getCourseBySlug(slug as string);
+        if (response.success) {
+          setCourse((response.data as any)?.data || (response as any)?.data);
+        } else {
+          toast.error("Khóa học không tồn tại hoặc chưa được công khai");
+        }
       } catch (error) {
         console.error(error);
+        toast.error("Khóa học không tồn tại hoặc chưa được công khai");
       } finally {
         changeLoad();
       }
     };
-    fetchCourse();
+    if (slug) fetchCourse();
   }, [slug]);
 
   // Check enrollment status when user and course are available
@@ -178,6 +182,32 @@ const CourseDetail = () => {
       }
     }
     router.push("/checkout");
+  };
+
+  const [isEnrollingFree, setIsEnrollingFree] = useState(false);
+
+  const handleEnrollFree = async () => {
+    if (!currentUser?._id) {
+      toast.warning("Vui lòng đăng nhập để đăng ký khóa học");
+      return;
+    }
+    if (!course) return;
+
+    setIsEnrollingFree(true);
+    try {
+      const res = await courseApi.enrollCourse(course._id);
+      if (res.success) {
+        toast.success("Đăng ký khóa học thành công!");
+        setIsEnrolled(true);
+        router.push(`/courses/${course.slug}/learn`);
+      } else {
+        toast.error(res.message || "Không thể đăng ký khóa học");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Có lỗi xảy ra");
+    } finally {
+      setIsEnrollingFree(false);
+    }
   };
 
   if (!course) return null;
@@ -300,16 +330,31 @@ const CourseDetail = () => {
                     {expandedChapters.includes(chapter._id) && (
                       <div className="bg-background">
                         {chapter.lessons?.length > 0 ? (
-                          chapter.lessons.map((lesson) => (
+                          chapter.lessons.map((lesson) => {
+                            const canPreview = lesson.isFreePreview || isEnrolled;
+                            const lessonUrl = `/courses/${course.slug}/learn/${lesson.slug}`;
+
+                            return (
                             <div
                               key={lesson._id}
-                              className="p-4 pl-10 hover:bg-muted/30 flex items-center justify-between group border-t border-border first:border-0"
+                              className={`p-4 pl-10 flex items-center justify-between group border-t border-border first:border-0 ${
+                                canPreview
+                                  ? "hover:bg-muted/30 cursor-pointer"
+                                  : "opacity-70"
+                              }`}
+                              onClick={() => {
+                                if (canPreview) {
+                                  router.push(lessonUrl);
+                                } else {
+                                  toast.info("Bạn cần đăng ký khóa học để xem bài giảng này");
+                                }
+                              }}
                             >
                               <div className="flex items-center gap-3">
                                 {lesson.type === "video" ? (
                                   <Play
                                     size={14}
-                                    className="text-muted-foreground"
+                                    className={canPreview ? "text-[var(--color-admin-primary)]" : "text-muted-foreground"}
                                   />
                                 ) : (
                                   <Globe
@@ -317,22 +362,30 @@ const CourseDetail = () => {
                                     className="text-muted-foreground"
                                   />
                                 )}
-                                <span className="text-sm text-foreground">
+                                <span className={`text-sm ${
+                                  canPreview
+                                    ? "text-foreground hover:text-[var(--color-admin-primary)] transition-colors"
+                                    : "text-foreground"
+                                }`}>
                                   {lesson.title}
                                 </span>
                               </div>
                               <div className="flex items-center gap-4">
                                 {lesson.isFreePreview && (
-                                  <span className="text-blue-600 font-bold text-xs underline cursor-pointer">
+                                  <span className="text-blue-600 font-bold text-xs underline">
                                     Xem trước
                                   </span>
+                                )}
+                                {!canPreview && (
+                                  <Lock size={14} className="text-muted-foreground" />
                                 )}
                                 <span className="text-xs text-muted-foreground">
                                   05:20
                                 </span>
                               </div>
                             </div>
-                          ))
+                          );
+                          })
                         ) : (
                           <div className="p-4 pl-10 text-sm text-muted-foreground italic">
                             Chưa có bài giảng nào trong phần này.
@@ -426,21 +479,35 @@ const CourseDetail = () => {
               {/* Action Buttons - Enrollment Aware */}
               <div className="flex flex-col gap-3 mb-6">
                 {isEnrolled ? (
-                  /* Enrolled: Show"Go to Learn"*/
+                  /* Enrolled: Show "Go to Learn" */
                   <button
                     onClick={() => router.push(`/courses/${course.slug}/learn`)}
-                    className="w-full bg-emerald-600 text-white font-bold py-3 rounded hover:bg-emerald-700 transition-colors shadow-md flex items-center justify-center gap-2"
+                    className="w-full bg-emerald-600 text-white font-bold py-3 rounded hover:bg-emerald-700 transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Play size={18} /> Vào học ngay
                   </button>
+                ) : course.price === 0 ? (
+                  /* Free Course: Direct 1-click enroll */
+                  <button
+                    onClick={handleEnrollFree}
+                    disabled={isEnrollingFree}
+                    className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-lg hover:bg-primary/90 transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {isEnrollingFree ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Play size={18} />
+                    )}
+                    Đăng ký học miễn phí
+                  </button>
                 ) : (
-                  /* Not enrolled: Show cart + buy buttons */
+                  /* Paid: Show cart + buy buttons */
                   <>
                     <div className="flex gap-3">
                       {isInCart ? (
                         <button
                           onClick={() => router.push("/checkout")}
-                          className="flex-1 bg-muted text-foreground/80 font-bold py-3 rounded transition-colors flex items-center justify-center gap-2 border border-border"
+                          className="flex-1 bg-muted text-foreground/80 font-bold py-3 rounded transition-colors flex items-center justify-center gap-2 border border-border cursor-pointer"
                         >
                           <CheckCircle size={16} className="text-emerald-500" />{" "}
                           Đã thêm vào giỏ
@@ -449,7 +516,7 @@ const CourseDetail = () => {
                         <button
                           onClick={handleAddToCart}
                           disabled={isAddingToCart}
-                          className="flex-1 border border-border font-bold py-3 rounded hover:bg-muted/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                          className="flex-1 border border-border font-bold py-3 rounded hover:bg-muted/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                         >
                           {isAddingToCart ? (
                             <Loader2 size={16} className="animate-spin" />
@@ -462,7 +529,7 @@ const CourseDetail = () => {
                       <button
                         onClick={handleBuyNow}
                         disabled={isAddingToCart}
-                        className="flex-1 bg-background text-white font-bold py-3 rounded hover:bg-card transition-colors disabled:opacity-50"
+                        className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         Mua ngay
                       </button>

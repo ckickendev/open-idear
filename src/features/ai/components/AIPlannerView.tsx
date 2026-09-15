@@ -60,11 +60,60 @@ export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
     };
   }, [isRunning, isWriting]);
 
+  // Persist form fields so other AI modals (e.g. PublishByAI) can copy from planner
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(
+          "ai_planner_last_form",
+          JSON.stringify({
+            topic,
+            audience,
+            tone,
+            length,
+            goal,
+            category,
+            instructions,
+            updatedAt: Date.now(),
+          })
+        );
+      } catch (_) {}
+    }
+  }, [topic, audience, tone, length, goal, category, instructions]);
+
+  // Also persist generated outline info if present
+  React.useEffect(() => {
+    if (outline && typeof window !== "undefined") {
+      try {
+        localStorage.setItem(
+          "ai_planner_last_outline",
+          JSON.stringify({
+            title: outline.title,
+            category: outline.category,
+            audience,
+            tone,
+            length,
+            goal,
+            updatedAt: Date.now(),
+          })
+        );
+      } catch (_) {}
+    }
+  }, [outline, audience, tone, length, goal]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!topic.trim()) return;
     const payload = { topic, audience, tone, length, goal, category };
     setLastPayload(payload);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(
+          "ai_planner_last_form",
+          JSON.stringify({ ...payload, instructions, updatedAt: Date.now() })
+        );
+      } catch (_) {}
+    }
     plan(payload);
   };
 
