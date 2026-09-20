@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI FEATURE — ERROR RECOVERY BANNER
 //  src/features/ai/components/AIErrorBanner.tsx

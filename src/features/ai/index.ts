@@ -53,3 +53,26 @@ export type {
   PipelineInput,
   PipelineData,
 } from "./types/pipeline.types";
+export {
+  clientAIFeatureRegistry,
+  type AIFeatureId,
+  type AIFeatureCategory,
+  type AIFeatureDefinition,
+  AI_FEATURE_IDS,
+  AI_FEATURE_CATEGORIES,
+} from "./registry/ai-feature.registry";
+export { getMyAIUsage } from "./api/aiUsage.api";
+export { useMyAIUsage, AI_USAGE_QUERY_KEY } from "./hooks/useAIUsage";
+export type {
+  UserUsageSummary,
+  UserHistoryItem,
+  FeatureUsageItem,
+  DailyActivityItem,
+  MostUsedFeature,
+} from "./types/aiUsage.types";
+
+export { AICreatorDashboard } from "./components/dashboard";
+
+
+
+

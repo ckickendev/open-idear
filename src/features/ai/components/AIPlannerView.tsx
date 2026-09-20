@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Sparkles, Loader2, BookOpen, AlertCircle, Copy, Check, X, FileText } from "lucide-react";
 import { type PlannerResponse } from "../api/ai.api";

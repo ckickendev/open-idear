@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI PUBLISHING FEATURE — VERSION HISTORY COMPONENT
 //  src/features/publish/components/VersionHistory.tsx

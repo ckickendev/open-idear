@@ -1,3 +1,5 @@
+"use client";
+
 export const TextAreaCustom = ({
   id,
   value,

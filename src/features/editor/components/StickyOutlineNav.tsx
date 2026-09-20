@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { ListTree, ChevronDown, ChevronUp } from "lucide-react";
 import { useHeadingOutline, type HeadingItem } from "../hooks/useHeadingOutline";

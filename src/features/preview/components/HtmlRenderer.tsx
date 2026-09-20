@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI PREVIEW FEATURE — HTML RENDERER
 //  src/features/preview/components/HtmlRenderer.tsx

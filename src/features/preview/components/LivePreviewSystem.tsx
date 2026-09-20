@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI PREVIEW FEATURE — LIVE PREVIEW SYSTEM
 //  src/features/preview/components/LivePreviewSystem.tsx

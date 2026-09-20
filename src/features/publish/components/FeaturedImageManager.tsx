@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI PUBLISHING FEATURE — FEATURED IMAGE MANAGER
 //  src/features/publish/components/FeaturedImageManager.tsx

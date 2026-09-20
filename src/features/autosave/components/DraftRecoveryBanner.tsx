@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI AUTOSAVE FEATURE — DRAFT RECOVERY PROMPT BANNER
 //  src/features/autosave/components/DraftRecoveryBanner.tsx

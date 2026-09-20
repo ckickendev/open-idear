@@ -1,3 +1,5 @@
+"use client";
+
 import { create } from "zustand";
 
 const STORAGE_KEY_DISPLAY = "openidear_instruction_dismissed";

@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI PUBLISHING FEATURE — SHARE PANEL COMPONENT
 //  src/features/publish/components/SharePanel.tsx

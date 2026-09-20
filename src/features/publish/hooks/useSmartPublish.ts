@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  SMART PUBLISH HOOK
 //  src/features/publish/hooks/useSmartPublish.ts

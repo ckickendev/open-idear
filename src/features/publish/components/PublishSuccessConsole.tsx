@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI PUBLISHING FEATURE — PUBLISH SUCCESS CONSOLE
 //  src/features/publish/components/PublishSuccessConsole.tsx

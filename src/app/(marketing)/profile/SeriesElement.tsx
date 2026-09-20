@@ -1,3 +1,5 @@
+"use client";
+
 import { ENV } from "@/api/const";
 import { useState } from "react";
 import { Bookmark, Upload } from "lucide-react";

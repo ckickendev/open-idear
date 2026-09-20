@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  SMART PUBLISH RESULT PANEL
 //  src/features/publish/components/SmartPublishResult.tsx

@@ -1,3 +1,5 @@
+"use client";
+
 import { ENV } from "@/api/const";
 import React, { useEffect, useState } from "react";
 import { getHeadersToken } from "@/lib/api/axios";

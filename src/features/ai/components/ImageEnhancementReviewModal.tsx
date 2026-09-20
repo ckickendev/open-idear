@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Check, X, CheckCheck, Sparkles, Image as ImageIcon, ExternalLink } from "lucide-react";
 import { ResolvedImage } from "../api/ai.api";

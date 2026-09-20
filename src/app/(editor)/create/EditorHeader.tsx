@@ -14,6 +14,7 @@ import {
   Paintbrush,
   Network,
   TrendingUp,
+  Gauge,
 } from "lucide-react";
 import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
 import Link from "next/link";
@@ -255,6 +256,17 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             <TrendingUp size={14} className={seoOpen ? "text-emerald-500" : "text-emerald-400"} />
             <span className="hidden lg:inline">SEO</span>
           </button>
+
+          {/* AI Usage Dashboard Link */}
+          <Link
+            href="/app/dashboard/ai"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--color-editor-secondary)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-[var(--color-editor-surface)] transition-all duration-200 cursor-pointer"
+            aria-label="AI Creator Dashboard"
+            title="Open AI Creator Dashboard"
+          >
+            <Gauge size={14} className="text-blue-500" />
+            <span className="hidden lg:inline">AI Usage</span>
+          </Link>
         </div>
 
         {/* Gradient separator */}

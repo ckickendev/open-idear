@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI PUBLISHING FEATURE — PUBLISH INTEGRATION HOOK
 //  src/features/publish/hooks/usePublishIntegration.ts

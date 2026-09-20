@@ -1,3 +1,5 @@
+"use client";
+
 import { authApi } from "@/features/auth/api/auth.api";
 import { useRef, useState } from "react";
 import Image from "next/image";

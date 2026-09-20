@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI PUBLISHING FEATURE — PUBLISH CONFIRMATION MODAL
 //  src/features/publish/components/PublishConfirmationModal.tsx
