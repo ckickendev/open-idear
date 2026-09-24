@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   SquarePen,
+  Layers,
 } from "lucide-react";
 import authenticationStore from "@/store/AuthenticationStore";
 
@@ -42,6 +43,12 @@ const navItems: NavItem[] = [
     label: "My Courses",
     href: "/profile/courses",
     icon: <BookOpen size={20} />,
+  },
+  {
+    id: "collections",
+    label: "Collections",
+    href: "/profile/collections",
+    icon: <Layers size={20} />,
   },
   {
     id: "saved",

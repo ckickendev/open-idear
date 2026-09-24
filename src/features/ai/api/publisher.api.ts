@@ -8,6 +8,7 @@
 
 import { api } from "@/lib/api/axios";
 import type { ArticleBlock } from "@/features/article/types/article.types";
+import type { ImageSuggestion, VisualSuggestion } from "@/features/ai-visual";
 
 // ─── Request ──────────────────────────────────────────────────────────────────
 
@@ -57,6 +58,10 @@ export interface PublisherResponse {
   readonly markdown: string;
   /** All keywords from the planner. */
   readonly keywords: string[];
+  /** Optional AI-suggested image metadata per section */
+  readonly imageSuggestions?: ImageSuggestion[];
+  /** Structured visual suggestions with technical type classification */
+  readonly visualSuggestions?: VisualSuggestion[];
   /** Estimated reading time in minutes. */
   readonly estimatedReadingTime: number;
 }

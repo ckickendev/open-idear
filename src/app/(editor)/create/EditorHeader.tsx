@@ -65,6 +65,8 @@ interface EditorHeaderProps {
   onOpen1ClickAI?: () => void;
   /** Open Publish by AI modal (simpler single-call pipeline) */
   onOpenPublishByAI?: () => void;
+  /** Open Generate All Visuals (Batch) modal */
+  onOpenBatchVisuals?: () => void;
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -92,6 +94,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   seoOpen,
   onOpen1ClickAI,
   onOpenPublishByAI,
+  onOpenBatchVisuals,
 }) => {
   const canSave = hasTitle;
   const canPublish = isEditMode && !isPublished;
@@ -267,6 +270,18 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             <Gauge size={14} className="text-blue-500" />
             <span className="hidden lg:inline">AI Usage</span>
           </Link>
+
+          {/* Batch Action: Generate All Visuals */}
+          <button
+            onClick={onOpenBatchVisuals}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-violet-500/15 hover:bg-violet-500/25 text-violet-600 dark:text-violet-300 border border-violet-500/25 shadow-2xs transition-all duration-200 cursor-pointer"
+            aria-label="Generate All Visuals"
+            title="Batch Analyze & Generate All Visuals"
+          >
+            <Sparkles size={14} className="text-violet-500 animate-pulse" />
+            <span className="hidden xl:inline">Generate All Visuals</span>
+            <span className="inline xl:hidden">All Visuals</span>
+          </button>
         </div>
 
         {/* Gradient separator */}

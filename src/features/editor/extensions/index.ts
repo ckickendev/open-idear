@@ -10,6 +10,7 @@ import type { Editor } from "@tiptap/react";
 import { HardBreakExtension } from "./hardBreak";
 import { SelectionExtension } from "./selection";
 import { RawHtmlExtension } from "./rawHtml";
+import { ImagePlaceholderExtension } from "./imagePlaceholder";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -99,6 +100,7 @@ export function createEditorExtensions(
       types: ["heading", "paragraph"],
     }),
     RawHtmlExtension,
+    ImagePlaceholderExtension,
     FileHandler.configure({
       allowedMimeTypes: [
         "image/png",
@@ -130,3 +132,5 @@ export function createEditorExtensions(
 export { HardBreakExtension } from "./hardBreak";
 export { SelectionExtension } from "./selection";
 export { RawHtmlExtension } from "./rawHtml";
+export { ImagePlaceholderExtension } from "./imagePlaceholder";
+

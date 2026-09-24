@@ -7,11 +7,13 @@ import {
   ArticleRenderer,
   EditorialLayout,
   ArticleMeta,
+  ArticleVersionAction,
 } from "@/features/article";
 import TableOfContents from "@/features/article/components/TableOfContents";
 import ReadingProgress from "@/features/article/components/ReadingProgress";
 import { buildTableOfContents } from "@/features/article/utils/buildTableOfContents";
 import { calculateReadingTime } from "@/features/article/utils/calculateReadingTime";
+import { ReadingTrackerWrapper } from "@/features/reading";
 import { buildPostMetadata, getPostStructuredData, JsonLd } from "@/features/seo";
 import "@/styles/editorial.css";
 
@@ -120,6 +122,9 @@ export default async function PostLists({
       {/* ── Reading Progress Bar — fixed at viewport top, zero layout shift ── */}
       <ReadingProgress />
 
+      {/* ── Reading Progress Tracker & Resume Toast ── */}
+      <ReadingTrackerWrapper articleId={postData._id} slug={slug} />
+
       {/* ── Editorial Layout wraps the entire article reading experience ── */}
       <EditorialLayout
         hasToc={hasToc}
@@ -164,6 +169,18 @@ export default async function PostLists({
               readingTimeMinutes={displayReadingTime}
               tags={postData.tags}
             />
+
+            {/* Version History Action Button */}
+            <div className="flex items-center gap-3 my-4">
+              <ArticleVersionAction
+                slug={slug}
+                postId={postData._id}
+                currentVersion={postData.latestVersion || postData.currentVersionId?.version || "1.0"}
+                currentContent={postData.content || postData.text || ""}
+                authorId={postData.author?._id || postData.author}
+                variant="button"
+              />
+            </div>
 
             {/* Sidebar reaction actions */}
             <PostSidebarActions postData={postData} />
