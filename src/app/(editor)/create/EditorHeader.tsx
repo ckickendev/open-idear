@@ -9,6 +9,7 @@ import {
   Save,
   Send,
   PanelLeftOpen,
+  PanelLeftClose,
   Sparkles,
   Wand2,
   Paintbrush,
@@ -36,6 +37,8 @@ interface EditorHeaderProps {
   onPublish: () => void;
   /** Toggle post list panel */
   onTogglePostList: () => void;
+  /** Post list panel open status */
+  postListOpen?: boolean;
   /** Auto-save status */
   saveStatus: SaveStatus;
   onRetrySave?: () => void;
@@ -79,6 +82,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   onSave,
   onPublish,
   onTogglePostList,
+  postListOpen = false,
   saveStatus,
   onRetrySave,
   hasTitle,
@@ -109,11 +113,15 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         {/* Post list toggle */}
         <button
           onClick={onTogglePostList}
-          className="p-2 rounded-xl text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-all duration-200 cursor-pointer hover:shadow-sm"
-          aria-label="Toggle post list"
-          title="Post list"
+          className={`p-2 rounded-xl transition-all duration-200 cursor-pointer hover:shadow-sm ${
+            postListOpen
+              ? "text-[var(--color-editor-accent)] bg-[var(--color-editor-accent)]/10 ring-1 ring-[var(--color-editor-accent)]/20 shadow-xs"
+              : "text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]"
+          }`}
+          aria-label={postListOpen ? "Hide posts menu (⌘\\)" : "Show posts menu (⌘\\)"}
+          title={postListOpen ? "Hide posts menu (⌘\\)" : "Show posts menu (⌘\\)"}
         >
-          <PanelLeftOpen size={18} />
+          {postListOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
         </button>
 
         {/* Back link */}

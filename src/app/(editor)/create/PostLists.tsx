@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   BadgePlus,
   FileText,
@@ -12,6 +12,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
+  PanelLeftClose,
+  RotateCw,
 } from "lucide-react";
 import Logo from "@/components/common/Logo";
 import { postApi } from "@/features/ideas/api/post.api";
@@ -137,36 +139,48 @@ export default function PostListPanel({
   const [deleteTarget, setDeleteTarget] = useState<PostListItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // ─── Fetch posts when panel opens ─────────────────────────────────────
+  // ─── Fetch posts when panel opens or active post changes ───────────────
+
+  const fetchPosts = useCallback(async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+
+    setIsLoading(true);
+    try {
+      const res = await postApi.getPostsByAuthor();
+      if (res.success && res.data?.posts) {
+        setAllPosts(res.data.posts);
+      }
+    } catch (err) {
+      console.error("Error fetching posts:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (isOpen) {
+      fetchPosts();
+    }
+  }, [isOpen, fetchPosts, activePostId]);
 
-    const fetchPosts = async () => {
-      const token = localStorage.getItem("access_token");
-      if (!token) return;
-
-      setIsLoading(true);
-      try {
-        const res = await postApi.getPostsByAuthor();
-        if (res.success && res.data?.posts) {
-          setAllPosts(res.data.posts);
-        }
-      } catch (err) {
-        console.error("Error fetching posts:", err);
-      } finally {
-        setIsLoading(false);
-      }
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (isOpen) fetchPosts();
     };
+    window.addEventListener("refresh-post-list", handleRefresh);
+    return () => window.removeEventListener("refresh-post-list", handleRefresh);
+  }, [isOpen, fetchPosts]);
 
-    fetchPosts();
-  }, [isOpen]);
-
-  // ─── Escape key to close ──────────────────────────────────────────────
+  // ─── Escape key to close (mobile only) ─────────────────────────────────
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen && !deleteTarget) onClose();
+      if (e.key === "Escape" && isOpen && !deleteTarget) {
+        if (typeof window !== "undefined" && window.innerWidth < 1024) {
+          onClose();
+        }
+      }
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
@@ -236,12 +250,16 @@ export default function PostListPanel({
 
   const handlePostClick = (postId: string) => {
     onSelectPost(postId);
-    onClose();
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      onClose();
+    }
   };
 
   const handleCreateNew = () => {
     onSelectPost(null);
-    onClose();
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      onClose();
+    }
   };
 
   if (!isOpen) return null;
@@ -256,30 +274,30 @@ export default function PostListPanel({
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop — only for mobile overlay drawer */}
       <div
-        className="fixed inset-0 z-40 bg-background/20 backdrop-blur-sm animate-[fade-in_0.15s_ease-out] lg:bg-background/10"
+        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs animate-[fade-in_0.15s_ease-out] lg:hidden"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Panel */}
       <aside
-        className="fixed left-0 top-0 z-50 h-full w-80 max-w-[85vw] bg-[var(--color-editor-surface)] border-r border-[var(--color-editor-border)] shadow-2xl flex flex-col animate-slide-in-left"
+        className="fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] bg-[var(--color-editor-surface)] border-r border-[var(--color-editor-border)] shadow-2xl flex flex-col animate-slide-in-left lg:relative lg:inset-auto lg:z-20 lg:w-72 xl:w-80 lg:h-full lg:shadow-none lg:shrink-0 lg:max-w-none"
         role="complementary"
         aria-label="Post list"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-editor-border)]">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-[var(--color-editor-accent)]/12 flex items-center justify-center">
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-[var(--color-editor-border)] bg-[var(--color-editor-surface)]">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-[var(--color-editor-accent)]/12 flex items-center justify-center shrink-0">
               <FileText
                 size={16}
                 className="text-[var(--color-editor-accent)]"
               />
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-[var(--color-editor-text)]">
+            <div className="min-w-0">
+              <h2 className="text-sm font-bold text-[var(--color-editor-text)] truncate">
                 My Posts
               </h2>
               <p className="text-[11px] text-[var(--color-editor-muted)]">
@@ -288,13 +306,26 @@ export default function PostListPanel({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-all duration-150 cursor-pointer"
-            aria-label="Close post list"
-          >
-            <X size={16} />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => fetchPosts()}
+              disabled={isLoading}
+              className="p-1.5 rounded-lg text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-all duration-150 cursor-pointer disabled:opacity-40"
+              aria-label="Refresh posts"
+              title="Refresh post list"
+            >
+              <RotateCw size={14} className={isLoading ? "animate-spin" : ""} />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-all duration-150 cursor-pointer"
+              aria-label="Collapse post menu"
+              title="Collapse sidebar (⌘\)"
+            >
+              <PanelLeftClose size={16} className="hidden lg:block" />
+              <X size={16} className="lg:hidden" />
+            </button>
+          </div>
         </div>
 
         {/* Create new */}

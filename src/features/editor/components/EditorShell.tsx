@@ -144,12 +144,41 @@ export default function EditorShell() {
   const [pageLoading, setPageLoading] = useState(true);
 
   // Panel states
-  const [postListOpen, setPostListOpen] = useState(false);
+  const [postListOpen, setPostListOpen] = useState(true);
   const [publishDrawerOpen, setPublishDrawerOpen] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [imageInsertPosition, setImageInsertPosition] = useState<number | null>(
     null,
   );
+
+  // Responsive & persisted state for postListOpen
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("editor_post_list_open");
+      if (saved !== null) {
+        setPostListOpen(saved === "true");
+      } else if (window.innerWidth < 1024) {
+        setPostListOpen(false);
+      }
+    }
+  }, []);
+
+  const handleTogglePostList = useCallback(() => {
+    setPostListOpen((prev) => {
+      const next = !prev;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("editor_post_list_open", String(next));
+      }
+      return next;
+    });
+  }, []);
+
+  const handleClosePostList = useCallback(() => {
+    setPostListOpen(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("editor_post_list_open", "false");
+    }
+  }, []);
 
   // Publish form state
   const [categories, setCategories] = useState<Category[]>([]);
@@ -497,6 +526,7 @@ export default function EditorShell() {
     onPublish: () => setPublishDrawerOpen(true),
     onTogglePreview: () =>
       setMode((prev) => (prev === "preview" ? "visual" : "preview")),
+    onTogglePostList: handleTogglePostList,
   });
 
   // ─── Track fetched post for editor sync ──────────────────────────────
@@ -985,6 +1015,9 @@ export default function EditorShell() {
 
     if (success) {
       setPublishDrawerOpen(false);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("refresh-post-list"));
+      }
     }
   };
 
@@ -1105,7 +1138,8 @@ export default function EditorShell() {
           onToggleHtmlMode={toggleHtmlMode}
           onSave={() => autoSave.save()}
           onPublish={handleHeaderPublish}
-          onTogglePostList={() => setPostListOpen(!postListOpen)}
+          onTogglePostList={handleTogglePostList}
+          postListOpen={postListOpen}
           saveStatus={autoSave.status === "conflict" ? "error" : autoSave.status}
           onRetrySave={() => autoSave.retry()}
           hasTitle={!!title.trim()}
@@ -1124,22 +1158,23 @@ export default function EditorShell() {
           onOpenBatchVisuals={() => setIsBatchVisualsModalOpen(true)}
         />
 
-        {/* Post list panel (left drawer) */}
-        <PostListPanel
-          isOpen={postListOpen}
-          onClose={() => setPostListOpen(false)}
-          activePostId={postId}
-          onSelectPost={handleSelectPost}
-        />
-
-        {/* Main Editor Wrapper with side-by-side AI planning & sticky outline */}
+        {/* Main Editor Wrapper with side-by-side post menu, outline, editor & AI planning */}
         <div className="flex-1 flex relative w-full overflow-hidden">
+          {/* Post list panel (left bar) */}
+          <PostListPanel
+            isOpen={postListOpen}
+            onClose={handleClosePostList}
+            activePostId={postId}
+            onSelectPost={handleSelectPost}
+          />
+
           {/* Sticky Left Outline Navigation ("Xem nhanh") — only renders aside when headings exist */}
           {mode === "visual" && (
             <StickyOutlineNav
               asAside
               html={getHTML()}
               outlinePlan={aiPlanner.outline?.outline}
+              className={postListOpen ? "hidden 2xl:block" : "hidden xl:block"}
             />
           )}
 

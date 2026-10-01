@@ -8,6 +8,7 @@ interface UseEditorShortcutsOptions {
   onSave: () => void;
   onPublish: () => void;
   onTogglePreview: () => void;
+  onTogglePostList?: () => void;
 }
 
 /**
@@ -19,14 +20,16 @@ interface UseEditorShortcutsOptions {
  * ⌘+S → Save
  * ⌘+Enter → Open publish
  * ⌘+Shift+P → Toggle preview
+ * ⌘+\ → Toggle posts menu
  */
 export function useEditorShortcuts(options: UseEditorShortcutsOptions): void {
-  const { editor, onSave, onPublish, onTogglePreview } = options;
+  const { editor, onSave, onPublish, onTogglePreview, onTogglePostList } = options;
 
   // Use refs to avoid re-registering handlers on every render
   const onSaveRef = useRef(onSave);
   const onPublishRef = useRef(onPublish);
   const onTogglePreviewRef = useRef(onTogglePreview);
+  const onTogglePostListRef = useRef(onTogglePostList);
 
   useEffect(() => {
     onSaveRef.current = onSave;
@@ -39,6 +42,10 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions): void {
   useEffect(() => {
     onTogglePreviewRef.current = onTogglePreview;
   }, [onTogglePreview]);
+
+  useEffect(() => {
+    onTogglePostListRef.current = onTogglePostList;
+  }, [onTogglePostList]);
 
   useEffect(() => {
     if (!editor) return;
@@ -64,6 +71,13 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions): void {
       if (isMod && e.shiftKey && e.key === "p") {
         e.preventDefault();
         onTogglePreviewRef.current();
+        return;
+      }
+
+      // ⌘+\ → Toggle post menu
+      if (isMod && e.key === "\\") {
+        e.preventDefault();
+        onTogglePostListRef.current?.();
         return;
       }
     };
