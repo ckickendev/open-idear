@@ -564,6 +564,26 @@ export default function EditorShell() {
 
         setPostId(currentPostId);
         if (!currentPostId) {
+          try {
+            const studioDraftRaw = sessionStorage.getItem("content_studio_draft");
+            if (studioDraftRaw) {
+              const draft = JSON.parse(studioDraftRaw);
+              sessionStorage.removeItem("content_studio_draft");
+              if (draft.title) setTitle(draft.title);
+              if (draft.description) setDescriptionPublic(draft.description);
+              if (draft.category) setCategoryPublic(draft.category);
+              if (draft.markdown) setGeneratedMarkdown(draft.markdown);
+              setLoadedPost(draft);
+              if (editor && draft.content) {
+                editor.commands.setContent(draft.content);
+              }
+              setPageLoading(false);
+              return;
+            }
+          } catch (e) {
+            console.warn("[EditorShell] Error loading content_studio_draft:", e);
+          }
+
           setTitle("");
           setLoadedPost(null);
           if (editor) setContent("");

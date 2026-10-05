@@ -17,7 +17,9 @@ import {
   Lightbulb,
   Mail,
   MessageSquare,
+  Sparkles,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import Logo from "@/components/common/Logo";
 import Category from "@/features/categories/components/management/Category";
 import CourseCategory from "@/features/categories/components/management/CourseCategory";
@@ -34,6 +36,7 @@ import ContributionAdmin from "@/features/users/components/ContributionAdmin";
 
 
 const AdminDashboard = () => {
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("categories");
   const isLoading = loadingStore((state) => state.isLoading);
@@ -42,6 +45,13 @@ const AdminDashboard = () => {
     { id: "categories", label: "Danh mục", icon: Folder },
     { id: "topics", label: "Chủ đề", icon: Lightbulb },
     { id: "posts", label: "Ý tưởng/Bài viết", icon: FileText },
+    {
+      id: "content-studio",
+      label: "AI Content Studio",
+      icon: Sparkles,
+      href: "/management/content-studio",
+      badge: "AI",
+    },
     { id: "users", label: "Người dùng", icon: Users },
     { id: "series", label: "Series", icon: BookText },
     { id: "courses", label: "Khóa học", icon: BookOpen },
@@ -122,11 +132,17 @@ const AdminDashboard = () => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => {
+                    if (item.href) {
+                      router.push(item.href);
+                    } else {
+                      setActiveTab(item.id);
+                    }
+                  }}
                   className={`
- w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left
+ w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left
  transition-all duration-150 text-[13.5px] font-medium
- focus:outline-none focus-visible:ring-2 focus-visible:ring-ring
+ focus:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer
  ${
    isActive
      ? "bg-primary/10 text-primary border-l-[3px] border-primary pl-[9px]"
@@ -135,14 +151,21 @@ const AdminDashboard = () => {
  `}
                   title={!sidebarOpen ? item.label : undefined}
                 >
-                  <item.icon
-                    size={18}
-                    className={
-                      isActive ? "text-primary" : "text-muted-foreground"
-                    }
-                  />
-                  {sidebarOpen && (
-                    <span className="truncate">{item.label}</span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <item.icon
+                      size={18}
+                      className={
+                        isActive ? "text-primary" : "text-muted-foreground"
+                      }
+                    />
+                    {sidebarOpen && (
+                      <span className="truncate">{item.label}</span>
+                    )}
+                  </div>
+                  {sidebarOpen && (item as any).badge && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/20 text-primary uppercase">
+                      {(item as any).badge}
+                    </span>
                   )}
                 </button>
               );

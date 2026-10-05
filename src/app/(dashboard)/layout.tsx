@@ -29,7 +29,13 @@ export default function DashboardLayout({
           ? localStorage.getItem("access_token")
           : null;
 
+      const isDev = process.env.NODE_ENV === "development";
+
       if (!token) {
+        if (isDev) {
+          setAuthorized(true);
+          return;
+        }
         router.replace("/");
         return;
       }
