@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI FEATURE — TELEMETRY USAGE DASHBOARD
 //  src/features/ai/components/AIUsageDashboard.tsx

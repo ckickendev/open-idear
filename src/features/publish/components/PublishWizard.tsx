@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI PUBLISHING FEATURE — REUSABLE PUBLISH WIZARD COORDINATOR
 //  src/features/publish/components/PublishWizard.tsx

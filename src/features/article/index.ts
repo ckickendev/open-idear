@@ -45,3 +45,5 @@ export type {
   ListBlock,
   ListStyle,
 } from "./types/article.types";
+
+export * from "./versioning";

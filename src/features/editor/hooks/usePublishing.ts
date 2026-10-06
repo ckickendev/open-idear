@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useCallback } from "react";
 import { publishingApi, type PublishTaskResult } from "../api/publishing.api";
 

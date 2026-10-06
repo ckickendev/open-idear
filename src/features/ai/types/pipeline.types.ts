@@ -58,6 +58,8 @@ export interface PipelineData {
   blocks?: ArticleBlock[];
   seo?: ArticleSEO;
   aiContext?: ArticleAIContext;
+  imageSuggestions?: import("@/features/ai-visual").ImageSuggestion[];
+  visualSuggestions?: import("@/features/ai-visual").VisualSuggestion[];
   postId?: string | null;
 }
 

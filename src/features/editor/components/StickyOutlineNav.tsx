@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { ListTree, ChevronDown, ChevronUp } from "lucide-react";
 import { useHeadingOutline, type HeadingItem } from "../hooks/useHeadingOutline";
@@ -105,7 +107,7 @@ export const StickyOutlineNav: React.FC<StickyOutlineNavProps> = ({
 
   if (asAside) {
     return (
-      <aside className={`hidden xl:block w-72 shrink-0 p-6 pr-2 sticky top-4 self-start ${className}`}>
+      <aside className={`w-72 shrink-0 p-6 pr-2 sticky top-4 self-start ${className || "hidden xl:block"}`}>
         {content}
       </aside>
     );

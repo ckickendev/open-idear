@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI PREVIEW FEATURE — PREVIEW TOOLBAR COMPONENT
 //  src/features/preview/components/PreviewToolbar.tsx

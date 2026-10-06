@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI PUBLISHING FEATURE — PUBLISH METRICS COMPONENT
 //  src/features/publish/components/PublishMetrics.tsx

@@ -11,12 +11,16 @@ import {
 } from "lucide-react";
 import authenticationStore from "@/store/AuthenticationStore";
 import { getHeadersToken } from "@/lib/api/axios";
-import { REACT_APP_ROOT_BACKEND } from "@/features/auth/components/authentication";
 import axios from "axios";
+import { REACT_APP_ROOT_BACKEND } from "@/features/auth/components/authentication";
 import { toast } from "sonner";
 import Link from "next/link";
+import { ArticleVersionAction } from "@/features/article/versioning";
+import { SaveToCollectionModal } from "@/features/collections";
 
 export default function PostSidebarActions({ postData }: any) {
+  const currentUser = authenticationStore((state) => state.currentUser);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isFollowed, setIsFollowed] = useState(false);
@@ -191,12 +195,19 @@ export default function PostSidebarActions({ postData }: any) {
             )}
           </div>
 
-          {/* Bookmark Button */}
+          {/* Save to Collection Button */}
           <button
-            onClick={handleBookmark}
+            onClick={() => {
+              if (!currentUser?._id) {
+                toast.info("Please sign in to save articles to collections");
+                return;
+              }
+              setIsSaveModalOpen(true);
+            }}
+            title="Save to Collection"
             className={`p-3 rounded-full transition-all duration-200 hover:scale-110 ${
               isBookmarked
-                ? "bg-blue-100 text-blue-500 hover:bg-blue-200"
+                ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400"
                 : "bg-muted text-muted-foreground hover:bg-muted"
             } cursor-pointer`}
           >
@@ -216,12 +227,33 @@ export default function PostSidebarActions({ postData }: any) {
             </span>
           </div>
 
+          {/* Version History Button */}
+          {postData?.slug && (
+            <ArticleVersionAction
+              slug={postData.slug}
+              postId={postData._id}
+              currentVersion={postData.latestVersion || postData.currentVersionId?.version || "1.0"}
+              currentContent={postData.content || postData.text || ""}
+              authorId={postData.author?._id || postData.author}
+              variant="sidebar"
+            />
+          )}
+
           {/* Share Button */}
           <button className="p-3 rounded-full bg-muted text-muted-foreground hover:bg-muted transition-all duration-200 hover:scale-110 cursor-pointer">
             <Share2 size={20} />
           </button>
         </div>
       )}
+
+      {/* ── Save To Collection Modal ── */}
+      <SaveToCollectionModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        articleId={postData._id}
+        articleTitle={postData.title}
+        onSaveStateChange={(isSavedInAny) => setIsBookmarked(isSavedInAny)}
+      />
     </>
   );
 }

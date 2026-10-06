@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI PUBLISHING FEATURE — PUBLISH SCHEDULER COMPONENT
 //  src/features/publish/components/PublishScheduler.tsx

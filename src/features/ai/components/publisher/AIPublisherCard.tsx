@@ -24,6 +24,8 @@ export interface AIPublisherResult {
   coverImage?: any;
   markdown?: string;
   validation?: any;
+  imageSuggestions?: import("@/features/ai-visual").ImageSuggestion[];
+  visualSuggestions?: import("@/features/ai-visual").VisualSuggestion[];
 }
 
 export interface AIPublisherCardProps {
@@ -225,6 +227,8 @@ export const AIPublisherCard: React.FC<AIPublisherCardProps> = ({
         coverImage: resData.coverImage || null,
         markdown: resData.markdown || "",
         validation: resData.validation,
+        imageSuggestions: resData.imageSuggestions,
+        visualSuggestions: resData.visualSuggestions,
       };
 
       onAutoFill(result);

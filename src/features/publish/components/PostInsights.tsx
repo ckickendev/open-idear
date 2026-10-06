@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI PUBLISHING FEATURE — POST INSIGHTS VIEW COMPONENT
 //  src/features/publish/components/PostInsights.tsx

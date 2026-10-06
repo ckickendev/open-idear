@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback } from "react";
 import type { Editor } from "@tiptap/react";
 import type { Asset } from "../api/asset.api";

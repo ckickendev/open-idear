@@ -1,3 +1,5 @@
+"use client";
+
 import { ENV } from "@/api/const";
 // ProfilePage.tsx
 import React, { useEffect, useState } from "react";

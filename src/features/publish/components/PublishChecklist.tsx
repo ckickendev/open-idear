@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI PUBLISHING FEATURE — REUSABLE PUBLISH CHECKLIST COMPONENT
 //  src/features/publish/components/PublishChecklist.tsx

@@ -15,6 +15,7 @@ import authenticationStore from "@/store/AuthenticationStore";
 import { courseApi } from "@/features/series/api/course.api";
 import StatCard from "@/components/profile/StatCard";
 import SkeletonCard from "@/components/profile/SkeletonCard";
+import { ReadingStatsCard } from "@/features/reading";
 import axios from "axios";
 import { getHeadersToken } from "@/lib/api/axios";
 
@@ -159,6 +160,9 @@ export default function ProfileOverviewPage() {
           />
         </div>
       )}
+
+      {/* Reading Insights & Activity */}
+      <ReadingStatsCard />
 
       {/* Activity Heatmap */}
       <div className="bg-background dark:bg-card rounded-2xl border border-border dark:border-border p-6 shadow-sm">

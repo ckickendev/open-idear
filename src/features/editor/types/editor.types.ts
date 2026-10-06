@@ -138,3 +138,21 @@ export interface BlockItem {
   description: string;
   icon: React.ComponentType<{ size?: number }>;
 }
+
+// ─── AI Assist Actions ───────────────────────────────────────────────────────
+
+export type AIAssistActionId =
+  | "continue"
+  | "improve"
+  | "example"
+  | "review"
+  | "image";
+
+export interface AIAssistAction {
+  id: AIAssistActionId | string;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  onClick?: () => void;
+  variant?: "default" | "accent";
+}

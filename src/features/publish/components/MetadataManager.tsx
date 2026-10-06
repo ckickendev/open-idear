@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI PUBLISHING FEATURE — METADATA MANAGER COMPONENT
 //  src/features/publish/components/MetadataManager.tsx

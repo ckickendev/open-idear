@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  AI AUTOSAVE FEATURE — DRAFT RECOVERY & OFFLINE ENGINE
 //  src/features/autosave/hooks/useDraftRecovery.ts

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useCallback, useRef } from "react";
 import { aiApi, type PlannerRequest, type PlannerResponse } from "../api/ai.api";
 

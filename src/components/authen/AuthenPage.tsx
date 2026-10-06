@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { SignUp } from "@/features/auth/components/SignUp";
 import Login from "@/features/auth/components/Login";

@@ -9,11 +9,13 @@ import {
   Save,
   Send,
   PanelLeftOpen,
+  PanelLeftClose,
   Sparkles,
   Wand2,
   Paintbrush,
   Network,
   TrendingUp,
+  Gauge,
 } from "lucide-react";
 import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
 import Link from "next/link";
@@ -35,6 +37,8 @@ interface EditorHeaderProps {
   onPublish: () => void;
   /** Toggle post list panel */
   onTogglePostList: () => void;
+  /** Post list panel open status */
+  postListOpen?: boolean;
   /** Auto-save status */
   saveStatus: SaveStatus;
   onRetrySave?: () => void;
@@ -64,6 +68,8 @@ interface EditorHeaderProps {
   onOpen1ClickAI?: () => void;
   /** Open Publish by AI modal (simpler single-call pipeline) */
   onOpenPublishByAI?: () => void;
+  /** Open Generate All Visuals (Batch) modal */
+  onOpenBatchVisuals?: () => void;
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -76,6 +82,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   onSave,
   onPublish,
   onTogglePostList,
+  postListOpen = false,
   saveStatus,
   onRetrySave,
   hasTitle,
@@ -91,6 +98,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   seoOpen,
   onOpen1ClickAI,
   onOpenPublishByAI,
+  onOpenBatchVisuals,
 }) => {
   const canSave = hasTitle;
   const canPublish = isEditMode && !isPublished;
@@ -105,11 +113,15 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         {/* Post list toggle */}
         <button
           onClick={onTogglePostList}
-          className="p-2 rounded-xl text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-all duration-200 cursor-pointer hover:shadow-sm"
-          aria-label="Toggle post list"
-          title="Post list"
+          className={`p-2 rounded-xl transition-all duration-200 cursor-pointer hover:shadow-sm ${
+            postListOpen
+              ? "text-[var(--color-editor-accent)] bg-[var(--color-editor-accent)]/10 ring-1 ring-[var(--color-editor-accent)]/20 shadow-xs"
+              : "text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]"
+          }`}
+          aria-label={postListOpen ? "Hide posts menu (⌘\\)" : "Show posts menu (⌘\\)"}
+          title={postListOpen ? "Hide posts menu (⌘\\)" : "Show posts menu (⌘\\)"}
         >
-          <PanelLeftOpen size={18} />
+          {postListOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
         </button>
 
         {/* Back link */}
@@ -254,6 +266,29 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
           >
             <TrendingUp size={14} className={seoOpen ? "text-emerald-500" : "text-emerald-400"} />
             <span className="hidden lg:inline">SEO</span>
+          </button>
+
+          {/* AI Usage Dashboard Link */}
+          <Link
+            href="/app/dashboard/ai"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--color-editor-secondary)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-[var(--color-editor-surface)] transition-all duration-200 cursor-pointer"
+            aria-label="AI Creator Dashboard"
+            title="Open AI Creator Dashboard"
+          >
+            <Gauge size={14} className="text-blue-500" />
+            <span className="hidden lg:inline">AI Usage</span>
+          </Link>
+
+          {/* Batch Action: Generate All Visuals */}
+          <button
+            onClick={onOpenBatchVisuals}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-violet-500/15 hover:bg-violet-500/25 text-violet-600 dark:text-violet-300 border border-violet-500/25 shadow-2xs transition-all duration-200 cursor-pointer"
+            aria-label="Generate All Visuals"
+            title="Batch Analyze & Generate All Visuals"
+          >
+            <Sparkles size={14} className="text-violet-500 animate-pulse" />
+            <span className="hidden xl:inline">Generate All Visuals</span>
+            <span className="inline xl:hidden">All Visuals</span>
           </button>
         </div>
 

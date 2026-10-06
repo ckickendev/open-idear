@@ -1,3 +1,5 @@
+"use client";
+
 // =============================================================================
 //  SMART FILL BUTTON
 //  src/features/publish/components/SmartFillButton.tsx

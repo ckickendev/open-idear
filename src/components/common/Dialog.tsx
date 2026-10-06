@@ -1,3 +1,5 @@
+"use client";
+
 const Dialog = ({ title, message, confirmTitle, confirmAction }: any) => {
   return (
     <div id="YOUR_ID" className="fixed z-99 inset-0 overflow-y-auto">

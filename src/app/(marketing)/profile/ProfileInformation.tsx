@@ -1,3 +1,5 @@
+"use client";
+
 import { ENV } from "@/api/const";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";

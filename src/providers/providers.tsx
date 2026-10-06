@@ -1,4 +1,5 @@
 import { ThemeProvider } from "./theme-provider";
+import { QueryProvider } from "./query-provider";
 import { Toaster } from "sonner";
 
 /**
@@ -7,20 +8,23 @@ import { Toaster } from "sonner";
  *
  * Order matters:
  * 1. ThemeProvider — must wrap everything for CSS variable resolution
- * 2. Toaster — global toast notifications (replaces AlertStore + Toast + Notification)
+ * 2. QueryProvider — TanStack Query client for data fetching & caching
+ * 3. Toaster — global toast notifications (replaces AlertStore + Toast + Notification)
  */
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
-      {children}
-      <Toaster
-        richColors
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          className: "font-sans",
-        }}
-      />
+      <QueryProvider>
+        {children}
+        <Toaster
+          richColors
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            className: "font-sans",
+          }}
+        />
+      </QueryProvider>
     </ThemeProvider>
   );
 }

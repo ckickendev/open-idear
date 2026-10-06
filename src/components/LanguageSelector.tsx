@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, Globe } from "lucide-react";
 import { useLanguageStore } from "@/store/useLanguage";

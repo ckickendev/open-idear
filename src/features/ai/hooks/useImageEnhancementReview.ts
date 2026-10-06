@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useCallback, useRef } from "react";
 import { Editor } from "@tiptap/react";
 import { aiApi, ResolvedImage } from "../api/ai.api";

@@ -37,6 +37,13 @@ import EditorCanvas from "./EditorCanvas";
 import StickyOutlineNav from "./StickyOutlineNav";
 import BlockActionMenu from "./BlockActionMenu";
 import SEOScoreSidebar from "./SEOScoreSidebar";
+import { AssetPickerDrawer } from "./AssetPickerDrawer";
+import { BatchVisualsModal } from "./BatchVisualsModal";
+import { AIImageModal } from "./AIImageModal";
+import { extractEditorContextForAiImage, trackAiImageTelemetry } from "../utils/aiAssistContext";
+import { showImageInsertedToast } from "./ImageInsertedToast";
+import { aiVisualApi, type ImageSearchResult, type GeneratedIllustrationAsset } from "@/features/ai-visual";
+import type { ImportedAssetRecord } from "@/features/ai-visual/types/aiVisual.types";
 import { useBlockActions } from "../hooks/useBlockActions";
 
 // ─── APIs ───────────────────────────────────────────────────────────────────
@@ -63,6 +70,7 @@ import {
   AlertCircle,
   X,
   Loader2,
+  Image as ImageIcon,
 } from "lucide-react";
 import { BubbleMenu } from "@tiptap/react/menus";
 
@@ -139,12 +147,41 @@ export default function EditorShell() {
   const [pageLoading, setPageLoading] = useState(true);
 
   // Panel states
-  const [postListOpen, setPostListOpen] = useState(false);
+  const [postListOpen, setPostListOpen] = useState(true);
   const [publishDrawerOpen, setPublishDrawerOpen] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [imageInsertPosition, setImageInsertPosition] = useState<number | null>(
     null,
   );
+
+  // Responsive & persisted state for postListOpen
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("editor_post_list_open");
+      if (saved !== null) {
+        setPostListOpen(saved === "true");
+      } else if (window.innerWidth < 1024) {
+        setPostListOpen(false);
+      }
+    }
+  }, []);
+
+  const handleTogglePostList = useCallback(() => {
+    setPostListOpen((prev) => {
+      const next = !prev;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("editor_post_list_open", String(next));
+      }
+      return next;
+    });
+  }, []);
+
+  const handleClosePostList = useCallback(() => {
+    setPostListOpen(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("editor_post_list_open", "false");
+    }
+  }, []);
 
   // Publish form state
   const [categories, setCategories] = useState<Category[]>([]);
@@ -155,9 +192,9 @@ export default function EditorShell() {
   const [imagePublic, setImagePublic] = useState<string | null>(null);
 
   // ─── Unified right-panel state ────────────────────────────────────────
-  // Replaces 4 separate booleans with a discriminated union.
+  // Replaces separate booleans with a discriminated union.
   // Only one panel can be open at a time (exclusive drawer pattern).
-  type RightPanel = "planner" | "image-gen" | "image-edit" | "diagram" | "seo" | null;
+  type RightPanel = "planner" | "image-gen" | "image-edit" | "diagram" | "seo" | "asset-picker" | null;
   const [activeSidePanel, setActiveSidePanel] = useState<RightPanel>(null);
 
   // Derived boolean helpers for backwards-compatible prop passing
@@ -166,10 +203,106 @@ export default function EditorShell() {
   const aiImageEditOpen = activeSidePanel === "image-edit";
   const aiDiagramOpen = activeSidePanel === "diagram";
   const seoOpen = activeSidePanel === "seo";
+  const assetPickerOpen = activeSidePanel === "asset-picker";
+
+  const [assetPickerContext, setAssetPickerContext] = useState<{
+    heading?: string;
+    searchQuery?: string;
+    imagePrompt?: string;
+    alt?: string;
+    placeholderPos?: number;
+  } | null>(null);
 
   function togglePanel(panel: RightPanel) {
     setActiveSidePanel((prev) => (prev === panel ? null : panel));
   }
+
+  // Listen for ImagePlaceholder search button triggers
+  useEffect(() => {
+    const handleOpenAssetPicker = (e: Event) => {
+      const customEvent = e as CustomEvent<{
+        heading?: string;
+        searchQuery?: string;
+        imagePrompt?: string;
+        alt?: string;
+        placeholderPos?: number;
+      }>;
+      if (customEvent.detail) {
+        setAssetPickerContext(customEvent.detail);
+        setActiveSidePanel("asset-picker");
+      }
+    };
+
+    window.addEventListener("open-asset-picker", handleOpenAssetPicker);
+    return () => {
+      window.removeEventListener("open-asset-picker", handleOpenAssetPicker);
+    };
+  }, []);
+
+  const handleSelectAssetForPlaceholder = (
+    asset: ImageSearchResult,
+    altText: string,
+    importedAsset?: ImportedAssetRecord
+  ) => {
+    if (!editor) return;
+
+    // Use alt text from confirmation card (user may have edited it)
+    const targetAlt = altText || asset.alt || assetPickerContext?.alt || asset.title || "Section visual";
+    // Prefer imported asset URL (Cloudinary CDN) over raw external URL
+    const targetUrl = importedAsset?.url || asset.url;
+    const targetId  = importedAsset?._id || (asset.source === "asset_library" ? asset.id : undefined);
+    const pos = assetPickerContext?.placeholderPos;
+
+    if (typeof pos === "number" && pos >= 0) {
+      try {
+        editor
+          .chain()
+          .focus()
+          .setNodeSelection(pos)
+          .deleteSelection()
+          .insertContentAt(pos, {
+            type: "image",
+            attrs: {
+              src: targetUrl,
+              alt: targetAlt,
+              ...(targetId ? { "data-media-id": targetId } : {}),
+            },
+          })
+          .run();
+      } catch (err) {
+        editor.chain().focus().setImage({ src: targetUrl, alt: targetAlt }).run();
+      }
+    } else {
+      editor.chain().focus().setImage({ src: targetUrl, alt: targetAlt }).run();
+    }
+
+    // Track media library usage (only for existing library assets)
+    if (postId && asset.source === "asset_library" && asset.id && !asset.id.startsWith("stock_")) {
+      mediaLibraryApi.addUsage(asset.id, "post", postId, "content");
+    }
+
+    // Telemetry: visual_search_selected
+    aiVisualApi.trackAnalytics({
+      heading: assetPickerContext?.heading,
+      actionTaken: "visual_search_selected",
+      postId: postId || undefined,
+      metadata: { assetId: targetId, source: asset.source },
+    });
+
+    // Show post-insertion action bar
+    showImageInsertedToast({
+      pos,
+      currentAlt: targetAlt,
+      heading:    assetPickerContext?.heading,
+      searchQuery: assetPickerContext?.searchQuery,
+      imagePrompt: assetPickerContext?.imagePrompt,
+      assetId:    targetId,
+    });
+
+    setActiveSidePanel(null);
+    setAssetPickerContext(null);
+    autoSave.markDirty();
+  };
 
   // 1-Click AI Publisher Modal state
   const [is1ClickAIModalOpen, setIs1ClickAIModalOpen] = useState(false);
@@ -177,15 +310,18 @@ export default function EditorShell() {
   // Publish by AI Modal state
   const [isPublishByAIOpen, setIsPublishByAIOpen] = useState(false);
 
+  // Batch Visuals Modal state (Sprint 3)
+  const [isBatchVisualsModalOpen, setIsBatchVisualsModalOpen] = useState(false);
+
   const handleApplyPublishByAI = async (data: PublisherResponse) => {
     // 1. Populate title
     if (data.title) {
       handleTitleChange(data.title);
     }
 
-    // 2. Populate editor content from markdown
+    // 2. Populate editor content from markdown and inject image suggestion placeholders
     if (data.markdown && editor) {
-      const html = toEditorHtml(data.markdown);
+      const html = toEditorHtml(data.markdown, data.visualSuggestions || data.imageSuggestions);
       editor.commands.setContent(html);
       setGeneratedMarkdown(data.markdown);
     }
@@ -222,7 +358,7 @@ export default function EditorShell() {
 
     const markdown = data.enhancedMarkdown || data.writerMarkdown || "";
     if (markdown && editor) {
-      const html = toEditorHtml(markdown);
+      const html = toEditorHtml(markdown, data.visualSuggestions || data.imageSuggestions);
       editor.commands.setContent(html);
       setGeneratedMarkdown(markdown);
       setGeneratedAiContext((prev) => ({
@@ -245,6 +381,23 @@ export default function EditorShell() {
   const [reviewResult, setReviewResult] = useState<any>(null);
   const [lastSelectedText, setLastSelectedText] = useState("");
 
+  // AI Image Modal States (Sprint 1, 2 & 3)
+  const [isAiImageModalOpen, setIsAiImageModalOpen] = useState(false);
+  const [aiImageContext, setAiImageContext] = useState<{
+    prompt: string;
+    heading?: string;
+    sourceContext?: string;
+    suggestedAlt?: string;
+    visualSuggestion?: any;
+    visualType?: string;
+    visualIntent?: any;
+    confidence?: number;
+    recommendationReason?: string;
+    recommendedPreset?: any;
+    recommendedRatio?: string;
+    contextType?: any;
+  }>({ prompt: "" });
+
   // ─── Editor Hook ──────────────────────────────────────────────────────
 
   const {
@@ -265,8 +418,64 @@ export default function EditorShell() {
     },
   });
 
+  // ─── Post-Insertion Event Handlers (edit-image-alt, remove-image-node) ────────
+  useEffect(() => {
+    const handleEditAlt = (e: Event) => {
+      if (!editor) return;
+      const { pos, newAlt } = (e as CustomEvent<{ pos?: number; newAlt: string }>).detail;
+      if (!newAlt) return;
+      try {
+        if (typeof pos === "number" && pos >= 0) {
+          const node = editor.state.doc.nodeAt(pos);
+          if (node?.type.name === "image") {
+            editor.chain().focus().setNodeSelection(pos).updateAttributes("image", { alt: newAlt }).run();
+          }
+        }
+      } catch (err) {
+        console.warn("[EditorShell] edit-image-alt failed:", err);
+      }
+    };
+
+    const handleRemoveNode = (e: Event) => {
+      if (!editor) return;
+      const { pos } = (e as CustomEvent<{ pos?: number }>).detail;
+      try {
+        if (typeof pos === "number" && pos >= 0) {
+          editor.chain().focus().setNodeSelection(pos).deleteSelection().run();
+        }
+      } catch (err) {
+        console.warn("[EditorShell] remove-image-node failed:", err);
+      }
+    };
+
+    window.addEventListener("edit-image-alt", handleEditAlt);
+    window.addEventListener("remove-image-node", handleRemoveNode);
+    return () => {
+      window.removeEventListener("edit-image-alt", handleEditAlt);
+      window.removeEventListener("remove-image-node", handleRemoveNode);
+    };
+  }, [editor]);
+
   const [generatedMarkdown, setGeneratedMarkdown] = useState<string>("");
   const [generatedAiContext, setGeneratedAiContext] = useState<Record<string, unknown> | null>(null);
+
+  const getCurrentArticleMarkdown = useCallback(() => {
+    if (generatedMarkdown && generatedMarkdown.trim()) {
+      return generatedMarkdown;
+    }
+    if (editor) {
+      const html = editor.getHTML();
+      return html
+        .replace(/<h1>(.*?)<\/h1>/gi, "# $1\n\n")
+        .replace(/<h2>(.*?)<\/h2>/gi, "## $1\n\n")
+        .replace(/<h3>(.*?)<\/h3>/gi, "### $1\n\n")
+        .replace(/<h4>(.*?)<\/h4>/gi, "#### $1\n\n")
+        .replace(/<p>(.*?)<\/p>/gi, "$1\n\n")
+        .replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, "![$2]($1)\n\n")
+        .replace(/<[^>]+>/g, "");
+    }
+    return "";
+  }, [generatedMarkdown, editor]);
 
   // ─── Auto-Save Hook ──────────────────────────────────────────────────
 
@@ -337,6 +546,7 @@ export default function EditorShell() {
     onPublish: () => setPublishDrawerOpen(true),
     onTogglePreview: () =>
       setMode((prev) => (prev === "preview" ? "visual" : "preview")),
+    onTogglePostList: handleTogglePostList,
   });
 
   // ─── Track fetched post for editor sync ──────────────────────────────
@@ -374,6 +584,26 @@ export default function EditorShell() {
 
         setPostId(currentPostId);
         if (!currentPostId) {
+          try {
+            const studioDraftRaw = sessionStorage.getItem("content_studio_draft");
+            if (studioDraftRaw) {
+              const draft = JSON.parse(studioDraftRaw);
+              sessionStorage.removeItem("content_studio_draft");
+              if (draft.title) setTitle(draft.title);
+              if (draft.description) setDescriptionPublic(draft.description);
+              if (draft.category) setCategoryPublic(draft.category);
+              if (draft.markdown) setGeneratedMarkdown(draft.markdown);
+              setLoadedPost(draft);
+              if (editor && draft.content) {
+                editor.commands.setContent(draft.content);
+              }
+              setPageLoading(false);
+              return;
+            }
+          } catch (e) {
+            console.warn("[EditorShell] Error loading content_studio_draft:", e);
+          }
+
           setTitle("");
           setLoadedPost(null);
           if (editor) setContent("");
@@ -602,6 +832,92 @@ export default function EditorShell() {
     }
   };
 
+  const handleOpenAiImageModal = useCallback((suggestion?: any) => {
+    const ctx = extractEditorContextForAiImage(editor, suggestion, {
+      title,
+      category: categoryPublic,
+    });
+    setAiImageContext({
+      prompt: ctx.suggestedPrompt,
+      heading: ctx.heading,
+      sourceContext: ctx.contextSnippet,
+      suggestedAlt: ctx.suggestedAlt,
+      visualSuggestion: ctx.visualSuggestion,
+      visualType: ctx.visualIntent,
+      visualIntent: ctx.visualIntent,
+      confidence: ctx.confidence,
+      recommendationReason: ctx.recommendationReason,
+      recommendedPreset: ctx.recommendedPreset,
+      recommendedRatio: ctx.recommendedRatio,
+      contextType: ctx.contextType,
+    });
+    setBubbleView("icon");
+    setIsAiImageModalOpen(true);
+  }, [editor, title, categoryPublic]);
+
+  const handleInsertAIImage = useCallback(
+    (asset: GeneratedIllustrationAsset, customAlt?: string, customCaption?: string) => {
+      if (!editor) return;
+      const imgUrl = asset.url;
+      const imgAlt = customAlt || asset.alt || asset.prompt || "AI generated illustration";
+      const mediaId = asset._id;
+
+      const { from, to, $to } = editor.state.selection;
+      const hasActiveSelection = from !== to;
+
+      if (hasActiveSelection) {
+        // Safe insertion: insert AFTER the selected block rather than destroying selected text
+        const insertPos = $to.end();
+        editor
+          .chain()
+          .focus()
+          .setTextSelection(insertPos)
+          .insertContentAt(insertPos, {
+            type: "image",
+            attrs: {
+              src: imgUrl,
+              alt: imgAlt,
+              ...(mediaId ? { "data-media-id": mediaId } : {}),
+              ...(customCaption ? { caption: customCaption, title: customCaption } : {}),
+            },
+          })
+          .run();
+      } else {
+        // Normal cursor insertion
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: "image",
+            attrs: {
+              src: imgUrl,
+              alt: imgAlt,
+              ...(mediaId ? { "data-media-id": mediaId } : {}),
+              ...(customCaption ? { caption: customCaption, title: customCaption } : {}),
+            },
+          })
+          .run();
+      }
+
+      if (postId && mediaId) {
+        mediaLibraryApi.addUsage(mediaId, "post", postId, "content");
+      }
+
+      // Telemetry: ai_image_inserted
+      trackAiImageTelemetry("ai_image_inserted", {
+        heading: aiImageContext.heading,
+        intent: aiImageContext.visualIntent,
+        postId: postId || undefined,
+        contextType: aiImageContext.contextType,
+      });
+
+      setIsAiImageModalOpen(false);
+      autoSave.markDirty();
+      toast.success("AI Image inserted into editor!");
+    },
+    [editor, postId, autoSave, aiImageContext]
+  );
+
   // ─── AI Generate ──────────────────────────────────────────────────────
 
   const handleAutoGenerate = async () => {
@@ -825,6 +1141,9 @@ export default function EditorShell() {
 
     if (success) {
       setPublishDrawerOpen(false);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("refresh-post-list"));
+      }
     }
   };
 
@@ -945,7 +1264,8 @@ export default function EditorShell() {
           onToggleHtmlMode={toggleHtmlMode}
           onSave={() => autoSave.save()}
           onPublish={handleHeaderPublish}
-          onTogglePostList={() => setPostListOpen(!postListOpen)}
+          onTogglePostList={handleTogglePostList}
+          postListOpen={postListOpen}
           saveStatus={autoSave.status === "conflict" ? "error" : autoSave.status}
           onRetrySave={() => autoSave.retry()}
           hasTitle={!!title.trim()}
@@ -961,24 +1281,26 @@ export default function EditorShell() {
           seoOpen={seoOpen}
           onOpen1ClickAI={() => setIs1ClickAIModalOpen(true)}
           onOpenPublishByAI={() => setIsPublishByAIOpen(true)}
+          onOpenBatchVisuals={() => setIsBatchVisualsModalOpen(true)}
         />
 
-        {/* Post list panel (left drawer) */}
-        <PostListPanel
-          isOpen={postListOpen}
-          onClose={() => setPostListOpen(false)}
-          activePostId={postId}
-          onSelectPost={handleSelectPost}
-        />
-
-        {/* Main Editor Wrapper with side-by-side AI planning & sticky outline */}
+        {/* Main Editor Wrapper with side-by-side post menu, outline, editor & AI planning */}
         <div className="flex-1 flex relative w-full overflow-hidden">
+          {/* Post list panel (left bar) */}
+          <PostListPanel
+            isOpen={postListOpen}
+            onClose={handleClosePostList}
+            activePostId={postId}
+            onSelectPost={handleSelectPost}
+          />
+
           {/* Sticky Left Outline Navigation ("Xem nhanh") — only renders aside when headings exist */}
           {mode === "visual" && (
             <StickyOutlineNav
               asAside
               html={getHTML()}
               outlinePlan={aiPlanner.outline?.outline}
+              className={postListOpen ? "hidden 2xl:block" : "hidden xl:block"}
             />
           )}
 
@@ -1100,6 +1422,15 @@ export default function EditorShell() {
                             >
                               <FileText size={12} className="text-amber-500" />
                               <span>Review Article</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleOpenAiImageModal}
+                              className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-lg hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer group"
+                              title="Generate an AI illustration based on context"
+                            >
+                              <ImageIcon size={12} className="text-pink-500 group-hover:scale-110 transition-transform" />
+                              <span className="font-medium text-pink-600 dark:text-pink-400">AI Image</span>
                             </button>
                           </div>
                         )}
@@ -1391,6 +1722,20 @@ export default function EditorShell() {
               />
             </aside>
           )}
+
+          {/* AI Visual Assistant Asset Picker side drawer (right) */}
+          {assetPickerOpen && (
+            <aside className="w-88 border-l border-[var(--color-editor-border)] bg-[var(--color-editor-bg)] h-full overflow-hidden shrink-0 animate-[slide-left_0.2s_ease-out] z-30">
+              <AssetPickerDrawer
+                context={assetPickerContext}
+                onClose={() => {
+                  setActiveSidePanel(null);
+                  setAssetPickerContext(null);
+                }}
+                onSelectAsset={handleSelectAssetForPlaceholder}
+              />
+            </aside>
+          )}
         </div>
 
         {/* Publish drawer */}
@@ -1413,7 +1758,7 @@ export default function EditorShell() {
           onAutoFillAI={async (result) => {
             if (result.title) handleTitleChange(result.title);
             if (result.markdown && editor) {
-              const html = toEditorHtml(result.markdown);
+              const html = toEditorHtml(result.markdown, result.visualSuggestions || result.imageSuggestions);
               editor.commands.setContent(html);
               setGeneratedMarkdown(result.markdown);
             }
@@ -1488,6 +1833,40 @@ export default function EditorShell() {
           isOpen={is1ClickAIModalOpen}
           onClose={() => setIs1ClickAIModalOpen(false)}
           initialTopic={title}
+        />
+
+        {/* Batch Visuals Pipeline Modal (Sprint 3) */}
+        <BatchVisualsModal
+          isOpen={isBatchVisualsModalOpen}
+          onClose={() => setIsBatchVisualsModalOpen(false)}
+          markdown={getCurrentArticleMarkdown()}
+          postId={postId || undefined}
+          onApplyResult={(updatedMarkdown) => {
+            if (!editor || !updatedMarkdown) return;
+            const html = toEditorHtml(updatedMarkdown);
+            editor.commands.setContent(html);
+            setGeneratedMarkdown(updatedMarkdown);
+            autoSave.markDirty();
+          }}
+        />
+
+        {/* AI Assist Image Generation Modal (Sprint 1, 2 & 3) */}
+        <AIImageModal
+          isOpen={isAiImageModalOpen}
+          onClose={() => setIsAiImageModalOpen(false)}
+          initialPrompt={aiImageContext.prompt}
+          heading={aiImageContext.heading}
+          sourceContext={aiImageContext.sourceContext}
+          visualSuggestion={aiImageContext.visualSuggestion}
+          initialIntent={aiImageContext.visualIntent}
+          initialConfidence={aiImageContext.confidence}
+          recommendationReason={aiImageContext.recommendationReason}
+          initialStyle={aiImageContext.recommendedPreset}
+          initialAspectRatio={aiImageContext.recommendedRatio}
+          contextType={aiImageContext.contextType}
+          articleTitle={title}
+          postId={postId || undefined}
+          onInsert={handleInsertAIImage}
         />
       </div>
     </EditorProvider>
