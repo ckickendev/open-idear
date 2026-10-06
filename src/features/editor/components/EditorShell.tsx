@@ -39,8 +39,10 @@ import BlockActionMenu from "./BlockActionMenu";
 import SEOScoreSidebar from "./SEOScoreSidebar";
 import { AssetPickerDrawer } from "./AssetPickerDrawer";
 import { BatchVisualsModal } from "./BatchVisualsModal";
+import { AIImageModal } from "./AIImageModal";
+import { extractEditorContextForAiImage } from "../utils/aiAssistContext";
 import { showImageInsertedToast } from "./ImageInsertedToast";
-import { aiVisualApi, type ImageSearchResult } from "@/features/ai-visual";
+import { aiVisualApi, type ImageSearchResult, type GeneratedIllustrationAsset } from "@/features/ai-visual";
 import type { ImportedAssetRecord } from "@/features/ai-visual/types/aiVisual.types";
 import { useBlockActions } from "../hooks/useBlockActions";
 
@@ -68,6 +70,7 @@ import {
   AlertCircle,
   X,
   Loader2,
+  Image as ImageIcon,
 } from "lucide-react";
 import { BubbleMenu } from "@tiptap/react/menus";
 
@@ -377,6 +380,17 @@ export default function EditorShell() {
   const [improvedResult, setImprovedResult] = useState<any>(null);
   const [reviewResult, setReviewResult] = useState<any>(null);
   const [lastSelectedText, setLastSelectedText] = useState("");
+
+  // AI Image Modal States (Sprint 1 & 2)
+  const [isAiImageModalOpen, setIsAiImageModalOpen] = useState(false);
+  const [aiImageContext, setAiImageContext] = useState<{
+    prompt: string;
+    heading?: string;
+    sourceContext?: string;
+    suggestedAlt?: string;
+    visualSuggestion?: any;
+    visualType?: string;
+  }>({ prompt: "" });
 
   // ─── Editor Hook ──────────────────────────────────────────────────────
 
@@ -811,6 +825,75 @@ export default function EditorShell() {
       setBubbleView("menu");
     }
   };
+
+  const handleOpenAiImageModal = useCallback((suggestion?: any) => {
+    const ctx = extractEditorContextForAiImage(editor, suggestion);
+    setAiImageContext({
+      prompt: ctx.suggestedPrompt,
+      heading: ctx.heading,
+      sourceContext: ctx.contextSnippet,
+      suggestedAlt: ctx.suggestedAlt,
+      visualSuggestion: ctx.visualSuggestion,
+      visualType: ctx.visualType,
+    });
+    setBubbleView("icon");
+    setIsAiImageModalOpen(true);
+  }, [editor]);
+
+  const handleInsertAIImage = useCallback(
+    (asset: GeneratedIllustrationAsset, customAlt?: string, customCaption?: string) => {
+      if (!editor) return;
+      const imgUrl = asset.url;
+      const imgAlt = customAlt || asset.alt || asset.prompt || "AI generated illustration";
+      const mediaId = asset._id;
+
+      const { from, to, $to } = editor.state.selection;
+      const hasActiveSelection = from !== to;
+
+      if (hasActiveSelection) {
+        // Safe insertion: insert AFTER the selected block rather than destroying selected text
+        const insertPos = $to.end();
+        editor
+          .chain()
+          .focus()
+          .setTextSelection(insertPos)
+          .insertContentAt(insertPos, {
+            type: "image",
+            attrs: {
+              src: imgUrl,
+              alt: imgAlt,
+              ...(mediaId ? { "data-media-id": mediaId } : {}),
+              ...(customCaption ? { caption: customCaption, title: customCaption } : {}),
+            },
+          })
+          .run();
+      } else {
+        // Normal cursor insertion
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: "image",
+            attrs: {
+              src: imgUrl,
+              alt: imgAlt,
+              ...(mediaId ? { "data-media-id": mediaId } : {}),
+              ...(customCaption ? { caption: customCaption, title: customCaption } : {}),
+            },
+          })
+          .run();
+      }
+
+      if (postId && mediaId) {
+        mediaLibraryApi.addUsage(mediaId, "post", postId, "content");
+      }
+
+      setIsAiImageModalOpen(false);
+      autoSave.markDirty();
+      toast.success("AI Image inserted into editor!");
+    },
+    [editor, postId, autoSave]
+  );
 
   // ─── AI Generate ──────────────────────────────────────────────────────
 
@@ -1317,6 +1400,15 @@ export default function EditorShell() {
                               <FileText size={12} className="text-amber-500" />
                               <span>Review Article</span>
                             </button>
+                            <button
+                              type="button"
+                              onClick={handleOpenAiImageModal}
+                              className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-lg hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer group"
+                              title="Generate an AI illustration based on context"
+                            >
+                              <ImageIcon size={12} className="text-pink-500 group-hover:scale-110 transition-transform" />
+                              <span className="font-medium text-pink-600 dark:text-pink-400">AI Image</span>
+                            </button>
                           </div>
                         )}
 
@@ -1733,6 +1825,18 @@ export default function EditorShell() {
             setGeneratedMarkdown(updatedMarkdown);
             autoSave.markDirty();
           }}
+        />
+
+        {/* AI Assist Image Generation Modal (Sprint 1 & 2) */}
+        <AIImageModal
+          isOpen={isAiImageModalOpen}
+          onClose={() => setIsAiImageModalOpen(false)}
+          initialPrompt={aiImageContext.prompt}
+          heading={aiImageContext.heading}
+          sourceContext={aiImageContext.sourceContext}
+          visualSuggestion={aiImageContext.visualSuggestion}
+          postId={postId || undefined}
+          onInsert={handleInsertAIImage}
         />
       </div>
     </EditorProvider>

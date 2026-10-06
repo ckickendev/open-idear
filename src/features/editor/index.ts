@@ -5,6 +5,7 @@ export { default as EditorShell } from "./components/EditorShell";
 export { default as EditorCanvas } from "./components/EditorCanvas";
 export { EditorErrorBoundary } from "./components/EditorErrorBoundary";
 export { default as StickyOutlineNav } from "./components/StickyOutlineNav";
+export { AIImageModal } from "./components/AIImageModal";
 
 // Hooks
 export { usePostEditor } from "./hooks/usePostEditor";
@@ -33,6 +34,21 @@ export type {
   EditorState,
   BlockType,
   BlockItem,
+  AIAssistAction,
+  AIAssistActionId,
   UsePostEditorOptions,
   UsePostEditorReturn,
 } from "./types/editor.types";
+export type { AIImageModalProps, AIImageModalState } from "./components/AIImageModal";
+export { STYLE_PRESETS, ASPECT_RATIOS } from "./components/AIImageModal";
+
+// Utilities
+export {
+  extractEditorContextForAiImage,
+  synthesizeAiImagePrompt,
+  buildImageNodeAttributes,
+  getStandardAIAssistActions,
+  type EditorAiImageContext,
+  type VisualSuggestionInput,
+} from "./utils/aiAssistContext";
+

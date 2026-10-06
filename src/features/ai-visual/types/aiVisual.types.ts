@@ -107,6 +107,18 @@ export interface BatchVisualResult {
   summaryMessage: string;
 }
 
+export type VisualIntent =
+  | "technical_illustration"
+  | "diagram"
+  | "architecture"
+  | "comparison"
+  | "workflow"
+  | "concept"
+  | "chart"
+  | "screenshot"
+  | "code_visual"
+  | "abstract";
+
 export type VisualAnalyticsAction =
   | "visual_suggestion_created"
   | "visual_search_started"
@@ -120,7 +132,15 @@ export type VisualAnalyticsAction =
   | "accepted"
   | "regenerated"
   | "deleted"
-  | "search_preferred";
+  | "search_preferred"
+  | "ai_image_opened"
+  | "ai_image_context_detected"
+  | "ai_image_recommendation_shown"
+  | "ai_image_generated"
+  | "ai_image_regenerated"
+  | "ai_image_accepted"
+  | "ai_image_rejected"
+  | "ai_image_inserted";
 
 export interface VisualAnalyticsEvent {
   heading?: string;
