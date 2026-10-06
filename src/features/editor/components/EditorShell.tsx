@@ -40,7 +40,7 @@ import SEOScoreSidebar from "./SEOScoreSidebar";
 import { AssetPickerDrawer } from "./AssetPickerDrawer";
 import { BatchVisualsModal } from "./BatchVisualsModal";
 import { AIImageModal } from "./AIImageModal";
-import { extractEditorContextForAiImage } from "../utils/aiAssistContext";
+import { extractEditorContextForAiImage, trackAiImageTelemetry } from "../utils/aiAssistContext";
 import { showImageInsertedToast } from "./ImageInsertedToast";
 import { aiVisualApi, type ImageSearchResult, type GeneratedIllustrationAsset } from "@/features/ai-visual";
 import type { ImportedAssetRecord } from "@/features/ai-visual/types/aiVisual.types";
@@ -381,7 +381,7 @@ export default function EditorShell() {
   const [reviewResult, setReviewResult] = useState<any>(null);
   const [lastSelectedText, setLastSelectedText] = useState("");
 
-  // AI Image Modal States (Sprint 1 & 2)
+  // AI Image Modal States (Sprint 1, 2 & 3)
   const [isAiImageModalOpen, setIsAiImageModalOpen] = useState(false);
   const [aiImageContext, setAiImageContext] = useState<{
     prompt: string;
@@ -390,6 +390,12 @@ export default function EditorShell() {
     suggestedAlt?: string;
     visualSuggestion?: any;
     visualType?: string;
+    visualIntent?: any;
+    confidence?: number;
+    recommendationReason?: string;
+    recommendedPreset?: any;
+    recommendedRatio?: string;
+    contextType?: any;
   }>({ prompt: "" });
 
   // ─── Editor Hook ──────────────────────────────────────────────────────
@@ -827,18 +833,27 @@ export default function EditorShell() {
   };
 
   const handleOpenAiImageModal = useCallback((suggestion?: any) => {
-    const ctx = extractEditorContextForAiImage(editor, suggestion);
+    const ctx = extractEditorContextForAiImage(editor, suggestion, {
+      title,
+      category: categoryPublic,
+    });
     setAiImageContext({
       prompt: ctx.suggestedPrompt,
       heading: ctx.heading,
       sourceContext: ctx.contextSnippet,
       suggestedAlt: ctx.suggestedAlt,
       visualSuggestion: ctx.visualSuggestion,
-      visualType: ctx.visualType,
+      visualType: ctx.visualIntent,
+      visualIntent: ctx.visualIntent,
+      confidence: ctx.confidence,
+      recommendationReason: ctx.recommendationReason,
+      recommendedPreset: ctx.recommendedPreset,
+      recommendedRatio: ctx.recommendedRatio,
+      contextType: ctx.contextType,
     });
     setBubbleView("icon");
     setIsAiImageModalOpen(true);
-  }, [editor]);
+  }, [editor, title, categoryPublic]);
 
   const handleInsertAIImage = useCallback(
     (asset: GeneratedIllustrationAsset, customAlt?: string, customCaption?: string) => {
@@ -888,11 +903,19 @@ export default function EditorShell() {
         mediaLibraryApi.addUsage(mediaId, "post", postId, "content");
       }
 
+      // Telemetry: ai_image_inserted
+      trackAiImageTelemetry("ai_image_inserted", {
+        heading: aiImageContext.heading,
+        intent: aiImageContext.visualIntent,
+        postId: postId || undefined,
+        contextType: aiImageContext.contextType,
+      });
+
       setIsAiImageModalOpen(false);
       autoSave.markDirty();
       toast.success("AI Image inserted into editor!");
     },
-    [editor, postId, autoSave]
+    [editor, postId, autoSave, aiImageContext]
   );
 
   // ─── AI Generate ──────────────────────────────────────────────────────
@@ -1827,7 +1850,7 @@ export default function EditorShell() {
           }}
         />
 
-        {/* AI Assist Image Generation Modal (Sprint 1 & 2) */}
+        {/* AI Assist Image Generation Modal (Sprint 1, 2 & 3) */}
         <AIImageModal
           isOpen={isAiImageModalOpen}
           onClose={() => setIsAiImageModalOpen(false)}
@@ -1835,6 +1858,13 @@ export default function EditorShell() {
           heading={aiImageContext.heading}
           sourceContext={aiImageContext.sourceContext}
           visualSuggestion={aiImageContext.visualSuggestion}
+          initialIntent={aiImageContext.visualIntent}
+          initialConfidence={aiImageContext.confidence}
+          recommendationReason={aiImageContext.recommendationReason}
+          initialStyle={aiImageContext.recommendedPreset}
+          initialAspectRatio={aiImageContext.recommendedRatio}
+          contextType={aiImageContext.contextType}
+          articleTitle={title}
           postId={postId || undefined}
           onInsert={handleInsertAIImage}
         />

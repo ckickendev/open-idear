@@ -1,20 +1,14 @@
 // =============================================================================
-//  AI IMAGE MODAL — PRODUCTION UX (SPRINT 2)
+//  AI IMAGE MODAL — INTELLIGENT CONTEXT-AWARE VISUAL ASSISTANT (SPRINT 3)
 //  src/features/editor/components/AIImageModal.tsx
 //
 //  Design Decisions:
-//  - Clean, focused single-image generation modal matching the "Generate All Visuals"
-//    aesthetic, but streamlined for in-editor single image creation.
-//  - Strictly follows the requested ASCII layout:
-//      Header -> Context -> Prompt -> Style -> Aspect Ratio -> Preview -> Actions.
-//  - Complete 5-state lifecycle: Idle -> Generating -> Preview -> Error -> Accepted.
-//  - Intelligent pre-fill for selected text and visual suggestions.
-//  - Accessible (role="dialog", aria-modal="true", keyboard shortcuts, focus trap).
-//  - Keyboard support:
-//      * Escape: Cancel / close dialog
-//      * Cmd/Ctrl + Enter in Idle/Error: Generate Image
-//      * Cmd/Ctrl + Enter in Preview: Accept Image
-//      * Cmd/Ctrl + A inside prompt: Native text selection
+//  - Transforms AI Image from prompt-box to an intelligent Visual Assistant.
+//  - Analyzes editor context with priority hierarchy (selection > paragraph > heading).
+//  - Lightweight Explainable Recommendation Card ("Recommended: Architecture Diagram").
+//  - 10 Visual Intents with tailored structured prompt synthesis & style intelligence.
+//  - Guardrail: Never silently auto-publish or insert without author review.
+//  - Complete telemetry suite tracking all 8 lifecycle events with sanitized metadata.
 // =============================================================================
 
 "use client";
@@ -32,14 +26,27 @@ import {
   Type,
   AlignLeft,
   Command,
+  ArrowRight,
 } from "lucide-react";
 import {
   aiVisualApi,
   type IllustrationPreset,
   type GeneratedIllustrationAsset,
+  type VisualIntent,
 } from "@/features/ai-visual";
-import { STYLE_PRESETS, ASPECT_RATIOS } from "../constants/aiVisualTaxonomy";
-import type { VisualSuggestionInput } from "../utils/aiAssistContext";
+import {
+  STYLE_PRESETS,
+  ASPECT_RATIOS,
+  VISUAL_INTENTS,
+  VISUAL_INTENT_LIST,
+} from "../constants/aiVisualTaxonomy";
+import {
+  classifyVisualIntent,
+  generateStructuredAiImagePrompt,
+  trackAiImageTelemetry,
+  type VisualSuggestionInput,
+  type ContextSourceType,
+} from "../utils/aiAssistContext";
 import { toast } from "sonner";
 
 export { STYLE_PRESETS, ASPECT_RATIOS };
@@ -62,6 +69,11 @@ export interface AIImageModalProps {
   heading?: string;
   sourceContext?: string;
   visualSuggestion?: VisualSuggestionInput;
+  initialIntent?: VisualIntent;
+  initialConfidence?: number;
+  recommendationReason?: string;
+  contextType?: ContextSourceType;
+  articleTitle?: string;
   onInsert: (asset: GeneratedIllustrationAsset, alt?: string, caption?: string) => void;
   postId?: string;
 }
@@ -75,9 +87,31 @@ export function AIImageModal({
   heading,
   sourceContext,
   visualSuggestion,
+  initialIntent,
+  initialConfidence,
+  recommendationReason,
+  contextType = "selection",
+  articleTitle,
   onInsert,
   postId,
 }: AIImageModalProps) {
+  // Recommendation & Intent State
+  const [activeIntent, setActiveIntent] = useState<VisualIntent>(
+    initialIntent || "architecture"
+  );
+  const [recommendation, setRecommendation] = useState<{
+    intent: VisualIntent;
+    confidence: number;
+    reason: string;
+  }>({
+    intent: initialIntent || "architecture",
+    confidence: initialConfidence || 0.92,
+    reason:
+      recommendationReason ||
+      "The selected text describes component boundaries, service interactions, and system architecture.",
+  });
+  const [showIntentSelector, setShowIntentSelector] = useState(false);
+
   // Form State
   const [prompt, setPrompt] = useState(initialPrompt);
   const [selectedStyle, setSelectedStyle] = useState<IllustrationPreset>(initialStyle);
@@ -94,28 +128,44 @@ export function AIImageModal({
   const abortControllerRef = useRef<AbortController | null>(null);
   const promptInputRef = useRef<HTMLTextAreaElement>(null);
   const modalContainerRef = useRef<HTMLDivElement>(null);
+  const generationStartTimeRef = useRef<number>(0);
 
-  // Sync state when opened
+  // Sync state & perform context intelligence on modal open
   useEffect(() => {
     if (isOpen) {
+      const rawText = sourceContext || initialPrompt;
+      const classification = classifyVisualIntent(rawText, heading);
+      const chosenIntent = (visualSuggestion?.visualType as VisualIntent) || initialIntent || classification.intent;
+      const intentDef = VISUAL_INTENTS[chosenIntent] || VISUAL_INTENTS.architecture;
+
+      setActiveIntent(chosenIntent);
+      setRecommendation({
+        intent: chosenIntent,
+        confidence: visualSuggestion ? 0.95 : initialConfidence || classification.confidence,
+        reason: visualSuggestion?.reason || recommendationReason || classification.reason,
+      });
+
       if (visualSuggestion) {
         const p = visualSuggestion.prompt?.trim() || initialPrompt.trim();
         setPrompt(p);
-        setSelectedStyle((visualSuggestion.style as IllustrationPreset) || initialStyle);
-        setSelectedRatio(visualSuggestion.aspectRatio || initialAspectRatio);
+        setSelectedStyle((visualSuggestion.style as IllustrationPreset) || intentDef.defaultPreset);
+        setSelectedRatio(visualSuggestion.aspectRatio || intentDef.defaultRatio);
         setAltText(visualSuggestion.altText || p);
         setCaption(visualSuggestion.caption || "");
       } else {
-        const derivedPrompt = initialPrompt.trim()
+        const structuredPrompt = initialPrompt.trim()
           ? initialPrompt.trim()
-          : heading
-          ? `Technical illustration explaining ${heading}`
-          : "";
+          : generateStructuredAiImagePrompt({
+              text: rawText,
+              heading,
+              intent: chosenIntent,
+              articleTitle,
+            });
 
-        setPrompt(derivedPrompt);
-        setSelectedStyle(initialStyle);
-        setSelectedRatio(initialAspectRatio);
-        setAltText(derivedPrompt);
+        setPrompt(structuredPrompt);
+        setSelectedStyle(initialStyle || intentDef.defaultPreset);
+        setSelectedRatio(initialAspectRatio || intentDef.defaultRatio);
+        setAltText(`Illustration of ${heading || articleTitle || "system architecture"}`);
         setCaption("");
       }
 
@@ -123,18 +173,55 @@ export function AIImageModal({
       setGeneratedAsset(null);
       setErrorMessage(null);
       setLoadingStep(0);
+      setShowIntentSelector(false);
+
+      // Telemetry: ai_image_opened & recommendation_shown
+      trackAiImageTelemetry("ai_image_opened", {
+        heading,
+        intent: chosenIntent,
+        postId,
+        contextType,
+      });
+      trackAiImageTelemetry("ai_image_context_detected", {
+        heading,
+        intent: chosenIntent,
+        postId,
+        contextType,
+        promptLength: rawText.length,
+      });
+      trackAiImageTelemetry("ai_image_recommendation_shown", {
+        heading,
+        intent: chosenIntent,
+        confidence: classification.confidence,
+        preset: intentDef.defaultPreset,
+        postId,
+      });
 
       // Auto-focus prompt textarea
       const timer = setTimeout(() => {
         promptInputRef.current?.focus();
-      }, 50);
+      }, 60);
       return () => clearTimeout(timer);
     } else {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     }
-  }, [isOpen, initialPrompt, initialStyle, initialAspectRatio, heading, visualSuggestion]);
+  }, [
+    isOpen,
+    initialPrompt,
+    initialStyle,
+    initialAspectRatio,
+    heading,
+    sourceContext,
+    visualSuggestion,
+    initialIntent,
+    initialConfidence,
+    recommendationReason,
+    contextType,
+    articleTitle,
+    postId,
+  ]);
 
   // Loading animation step simulator
   useEffect(() => {
@@ -147,6 +234,45 @@ export function AIImageModal({
     }
     return () => clearInterval(interval);
   }, [modalState]);
+
+  // ─── Intent Switching & Recommendation Handling ─────────────────────────────
+
+  const handleApplyRecommendation = useCallback(() => {
+    const targetIntent = recommendation.intent;
+    setActiveIntent(targetIntent);
+    const def = VISUAL_INTENTS[targetIntent] || VISUAL_INTENTS.architecture;
+    setSelectedStyle(def.defaultPreset);
+    setSelectedRatio(def.defaultRatio);
+
+    const structuredPrompt = generateStructuredAiImagePrompt({
+      text: sourceContext || initialPrompt,
+      heading,
+      intent: targetIntent,
+      articleTitle,
+    });
+    setPrompt(structuredPrompt);
+    setShowIntentSelector(false);
+    toast.success(`Applied ${def.label} recommendation`);
+  }, [recommendation, sourceContext, initialPrompt, heading, articleTitle]);
+
+  const handleSelectIntent = useCallback(
+    (newIntent: VisualIntent) => {
+      setActiveIntent(newIntent);
+      const def = VISUAL_INTENTS[newIntent] || VISUAL_INTENTS.technical_illustration;
+      setSelectedStyle(def.defaultPreset);
+      setSelectedRatio(def.defaultRatio);
+
+      const structuredPrompt = generateStructuredAiImagePrompt({
+        text: sourceContext || initialPrompt,
+        heading,
+        intent: newIntent,
+        articleTitle,
+      });
+      setPrompt(structuredPrompt);
+      toast.info(`Switched to ${def.label}`);
+    },
+    [sourceContext, initialPrompt, heading, articleTitle]
+  );
 
   // ─── Actions ────────────────────────────────────────────────────────────────
 
@@ -164,16 +290,20 @@ export function AIImageModal({
       const controller = new AbortController();
       abortControllerRef.current = controller;
       const freshSeed = Math.floor(Math.random() * 1_000_000);
+      generationStartTimeRef.current = Date.now();
 
       // Telemetry: visual_generation_started
-      aiVisualApi.trackAnalytics({
+      const analyticsAction = forceRegenerate
+        ? "ai_image_regenerated"
+        : "ai_image_generated";
+
+      trackAiImageTelemetry(analyticsAction, {
         heading: heading || visualSuggestion?.heading || "AI Assist Image",
-        visualType: "illustration",
-        recommendedAction: "generate",
-        actionTaken: forceRegenerate ? "visual_generation_regenerated" : "visual_generation_started",
+        intent: activeIntent,
         preset: selectedStyle,
-        prompt: prompt.trim(),
         postId,
+        contextType,
+        promptLength: prompt.trim().length,
       });
 
       try {
@@ -188,16 +318,28 @@ export function AIImageModal({
           controller.signal
         );
 
+        const latencyMs = Date.now() - generationStartTimeRef.current;
         setGeneratedAsset(asset);
         if (!altText.trim()) {
           setAltText(asset.alt || prompt.trim());
         }
         setModalState("preview");
 
+        // Telemetry: success
+        trackAiImageTelemetry("visual_generation_started", {
+          heading: heading || "AI Assist Image",
+          intent: activeIntent,
+          preset: selectedStyle,
+          postId,
+          latencyMs,
+          success: true,
+          model: asset.model,
+        });
+
         if (asset.isReused) {
           toast.info("Reused matching illustration from library");
         } else {
-          toast.success("AI image generated successfully!");
+          toast.success("Technical visual generated successfully!");
         }
       } catch (err: any) {
         if (controller.signal.aborted || err.message?.includes("cancelled")) {
@@ -206,6 +348,7 @@ export function AIImageModal({
           return;
         }
 
+        const latencyMs = Date.now() - generationStartTimeRef.current;
         console.error("[AIImageModal] Generation failed:", err);
         const friendlyMessage =
           err.response?.data?.error ||
@@ -214,9 +357,29 @@ export function AIImageModal({
         setErrorMessage(friendlyMessage);
         setModalState("error");
         toast.error(friendlyMessage);
+
+        trackAiImageTelemetry("visual_generation_started", {
+          heading: heading || "AI Assist Image",
+          intent: activeIntent,
+          preset: selectedStyle,
+          postId,
+          latencyMs,
+          success: false,
+        });
       }
     },
-    [prompt, selectedStyle, selectedRatio, heading, visualSuggestion, postId, generatedAsset, altText]
+    [
+      prompt,
+      selectedStyle,
+      selectedRatio,
+      heading,
+      visualSuggestion,
+      postId,
+      generatedAsset,
+      altText,
+      activeIntent,
+      contextType,
+    ]
   );
 
   const handleCancelGeneration = useCallback(() => {
@@ -229,15 +392,14 @@ export function AIImageModal({
   const handleAccept = useCallback(() => {
     if (!generatedAsset) return;
 
-    // Telemetry: visual_generation_accepted
-    aiVisualApi.trackAnalytics({
+    // Telemetry: ai_image_accepted
+    trackAiImageTelemetry("ai_image_accepted", {
       heading: heading || visualSuggestion?.heading || "AI Assist Image",
-      visualType: "illustration",
-      recommendedAction: "generate",
-      actionTaken: "visual_generation_accepted",
+      intent: activeIntent,
       preset: selectedStyle,
-      prompt: prompt.trim(),
       postId,
+      contextType,
+      model: generatedAsset.model,
     });
 
     setModalState("accepted");
@@ -247,7 +409,32 @@ export function AIImageModal({
       caption.trim() || undefined
     );
     onClose();
-  }, [generatedAsset, heading, visualSuggestion, selectedStyle, prompt, postId, altText, caption, onInsert, onClose]);
+  }, [
+    generatedAsset,
+    heading,
+    visualSuggestion,
+    activeIntent,
+    selectedStyle,
+    postId,
+    contextType,
+    onInsert,
+    altText,
+    prompt,
+    caption,
+    onClose,
+  ]);
+
+  const handleRejectOrClose = useCallback(() => {
+    if (modalState === "preview") {
+      trackAiImageTelemetry("ai_image_rejected", {
+        heading,
+        intent: activeIntent,
+        postId,
+        contextType,
+      });
+    }
+    onClose();
+  }, [modalState, heading, activeIntent, postId, contextType, onClose]);
 
   // ─── Keyboard Shortcuts ─────────────────────────────────────────────────────
 
@@ -261,7 +448,7 @@ export function AIImageModal({
         if (modalState === "generating" && abortControllerRef.current) {
           abortControllerRef.current.abort();
         }
-        onClose();
+        handleRejectOrClose();
         return;
       }
 
@@ -278,9 +465,12 @@ export function AIImageModal({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, modalState, handleAccept, handleGenerate, onClose]);
+  }, [isOpen, modalState, handleAccept, handleGenerate, handleRejectOrClose]);
 
   if (!isOpen) return null;
+
+  const currentIntentDef = VISUAL_INTENTS[activeIntent] || VISUAL_INTENTS.architecture;
+  const IntentIcon = currentIntentDef.icon;
 
   return (
     <div
@@ -291,7 +481,7 @@ export function AIImageModal({
       onClick={(e) => {
         // Backdrop click closes dialog safely (only if not currently generating)
         if (e.target === e.currentTarget && modalState !== "generating") {
-          onClose();
+          handleRejectOrClose();
         }
       }}
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in-50 duration-200"
@@ -316,18 +506,18 @@ export function AIImageModal({
                   AI Image
                 </h2>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-md bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
-                  AI Assist
+                  AI Visual Assistant
                 </span>
               </div>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-                Generate high-craft technical diagrams and illustrations for your article
+                Context-aware visual recommendations and structured diagram synthesis
               </p>
             </div>
           </div>
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleRejectOrClose}
             aria-label="Close dialog"
             className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
@@ -337,28 +527,89 @@ export function AIImageModal({
 
         {/* ── Modal Body (Single Scrollable View) ─────────────────────────────── */}
         <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4 text-sm">
-          {/* Visual Suggestion Context Banner (Requirement 2) */}
-          {visualSuggestion && (
-            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-violet-500/10 border border-violet-500/20 text-xs">
-              <Sparkles className="w-4 h-4 text-violet-500 mt-0.5 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 font-semibold text-violet-700 dark:text-violet-300">
-                  <span>Visual type: {visualSuggestion.visualTypeLabel || visualSuggestion.visualType || "Technical Illustration"}</span>
+          {/* ── Sprint 3 Lightweight Recommendation Card ──────────────────────── */}
+          {recommendation && (
+            <div className="rounded-xl border border-violet-500/30 bg-gradient-to-br from-violet-500/10 via-indigo-500/5 to-transparent p-3.5 space-y-2.5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-violet-500/20 text-violet-600 dark:text-violet-400 shrink-0 mt-0.5">
+                    <Sparkles className="w-4 h-4 animate-pulse" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-violet-600 dark:text-violet-400">
+                        AI Recommendation
+                      </span>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-violet-500/20 text-violet-700 dark:text-violet-300">
+                        {Math.round(recommendation.confidence * 100)}% match
+                      </span>
+                    </div>
+                    <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-0.5 flex items-center gap-1.5">
+                      <IntentIcon className="w-3.5 h-3.5 text-violet-500" />
+                      <span>{currentIntentDef.label}</span>
+                    </h3>
+                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5 leading-relaxed">
+                      {recommendation.reason}
+                    </p>
+                  </div>
                 </div>
-                {visualSuggestion.reason && (
-                  <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5 leading-relaxed">
-                    <span className="font-medium text-zinc-700 dark:text-zinc-300">Reason: </span>
-                    {visualSuggestion.reason}
-                  </p>
-                )}
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleApplyRecommendation}
+                    disabled={modalState === "generating"}
+                    className="px-2.5 py-1 rounded-lg text-xs font-semibold text-violet-700 dark:text-violet-300 bg-violet-100 dark:bg-violet-900/60 hover:bg-violet-200 dark:hover:bg-violet-800 border border-violet-300 dark:border-violet-700 transition-all cursor-pointer shadow-xs active:scale-95"
+                  >
+                    Use Recommendation
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowIntentSelector((prev) => !prev)}
+                    className="p-1 rounded-lg text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                    title="Change Visual Intent"
+                  >
+                    <Sliders className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
+
+              {/* Intent Tabs Selector */}
+              {showIntentSelector && (
+                <div className="pt-2 border-t border-violet-500/20 space-y-1.5 animate-in fade-in-50">
+                  <span className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">
+                    Explore different visual intents for this section:
+                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {VISUAL_INTENT_LIST.map((def) => {
+                      const Icon = def.icon;
+                      const isSelected = activeIntent === def.id;
+                      return (
+                        <button
+                          key={def.id}
+                          type="button"
+                          onClick={() => handleSelectIntent(def.id)}
+                          className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-medium border transition-all cursor-pointer ${
+                            isSelected
+                              ? "bg-violet-600 text-white border-violet-600 shadow-xs"
+                              : "bg-white/60 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100"
+                          }`}
+                        >
+                          <Icon className="w-3 h-3 shrink-0" />
+                          <span>{def.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Raw Text Selection Context Pill (Requirement 1) */}
-          {sourceContext && !visualSuggestion && (
+          {/* Raw Text Selection Context Pill */}
+          {sourceContext && (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/60 text-xs text-zinc-600 dark:text-zinc-300">
-              <span className="text-zinc-400 shrink-0 font-medium">Selected text:</span>
+              <span className="text-zinc-400 shrink-0 font-medium">Context ({contextType}):</span>
               <span className="truncate italic">&ldquo;{sourceContext}&rdquo;</span>
             </div>
           )}
@@ -367,7 +618,7 @@ export function AIImageModal({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
               <label htmlFor="ai-image-prompt-input" className="font-semibold text-zinc-800 dark:text-zinc-200">
-                Prompt
+                Generation Prompt
               </label>
               <span className="text-[11px] text-zinc-400 font-mono">
                 {prompt.length} / 1000
@@ -376,7 +627,7 @@ export function AIImageModal({
             <textarea
               ref={promptInputRef}
               id="ai-image-prompt-input"
-              rows={3}
+              rows={4}
               value={prompt}
               disabled={modalState === "generating"}
               onChange={(e) => setPrompt(e.target.value.slice(0, 1000))}
@@ -387,12 +638,12 @@ export function AIImageModal({
                 }
               }}
               placeholder="Create a technical illustration of..."
-              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-800/50 px-3.5 py-2.5 text-xs text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500 transition-all resize-none disabled:opacity-60"
+              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-800/50 px-3.5 py-2.5 text-xs text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500 transition-all resize-none disabled:opacity-60 leading-relaxed font-mono sm:font-sans"
             />
 
             {/* Prompt Enhancement Chips */}
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-              <span className="text-[10px] text-zinc-400 font-medium shrink-0">Suggestions:</span>
+              <span className="text-[10px] text-zinc-400 font-medium shrink-0">Ideas:</span>
               {SUGGESTED_PROMPT_CHIPS.map((chip, idx) => (
                 <button
                   key={idx}
@@ -409,9 +660,14 @@ export function AIImageModal({
 
           {/* 2. Style Selector */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
-              Style
-            </label>
+            <div className="flex items-center justify-between text-xs">
+              <label className="font-semibold text-zinc-800 dark:text-zinc-200">
+                Style Preset
+              </label>
+              <span className="text-[10px] text-zinc-400">
+                Recommended: {VISUAL_INTENTS[activeIntent]?.defaultPreset}
+              </span>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {STYLE_PRESETS.map((preset) => {
                 const Icon = preset.icon;
@@ -469,7 +725,7 @@ export function AIImageModal({
           <div className="space-y-1.5 pt-1">
             <div className="flex items-center justify-between text-xs">
               <label className="font-semibold text-zinc-800 dark:text-zinc-200">
-                Image Preview
+                Visual Preview
               </label>
               {modalState === "preview" && (
                 <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
@@ -485,7 +741,7 @@ export function AIImageModal({
                 <div className="flex flex-col items-center justify-center p-8 text-center text-zinc-400">
                   <ImageIcon className="w-8 h-8 text-zinc-600 mb-2 opacity-60" />
                   <p className="text-xs font-medium text-zinc-400">
-                    No image generated yet
+                    No visual generated yet
                   </p>
                   <p className="text-[11px] text-zinc-500 mt-0.5">
                     Click &ldquo;Generate Image&rdquo; below to preview
@@ -507,9 +763,9 @@ export function AIImageModal({
 
                   <div className="space-y-1">
                     <p className="text-xs font-semibold text-zinc-100">
-                      {loadingStep === 0 && "Applying technical style preset..."}
-                      {loadingStep === 1 && "Synthesizing illustration architecture..."}
-                      {loadingStep >= 2 && "Rendering high-res asset..."}
+                      {loadingStep === 0 && `Applying ${currentIntentDef.label} preset...`}
+                      {loadingStep === 1 && "Synthesizing technical diagram architecture..."}
+                      {loadingStep >= 2 && "Rendering high-resolution vector visual..."}
                     </p>
                     <p className="text-[11px] text-zinc-400 max-w-sm truncate">
                       &ldquo;{prompt}&rdquo;
@@ -547,7 +803,11 @@ export function AIImageModal({
 
                   {/* Badges overlay */}
                   <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-black/70 text-white backdrop-blur-md border border-white/10">
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-black/70 text-white backdrop-blur-md border border-white/10 flex items-center gap-1">
+                      <IntentIcon className="w-3 h-3 text-violet-400" />
+                      <span>{currentIntentDef.label}</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-black/70 text-zinc-300 backdrop-blur-md border border-white/10">
                       {selectedStyle}
                     </span>
                     <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-black/70 text-zinc-300 backdrop-blur-md border border-white/10">
@@ -620,6 +880,7 @@ export function AIImageModal({
 
                 {/* Technical Meta Footer */}
                 <div className="flex items-center justify-between text-[11px] text-zinc-400 px-1 font-mono">
+                  <span>Intent: {currentIntentDef.label}</span>
                   <span>Model: {generatedAsset.model || "gemini-imagen"}</span>
                   {generatedAsset.seed && <span>Seed: {generatedAsset.seed}</span>}
                 </div>
@@ -632,7 +893,7 @@ export function AIImageModal({
         <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleRejectOrClose}
             className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             Cancel

@@ -40,15 +40,20 @@ export type {
   UsePostEditorReturn,
 } from "./types/editor.types";
 export type { AIImageModalProps, AIImageModalState } from "./components/AIImageModal";
-export { STYLE_PRESETS, ASPECT_RATIOS } from "./components/AIImageModal";
+export { STYLE_PRESETS, ASPECT_RATIOS, VISUAL_INTENTS, VISUAL_INTENT_LIST } from "./constants/aiVisualTaxonomy";
+export type { VisualIntentDefinition } from "./constants/aiVisualTaxonomy";
 
 // Utilities
 export {
   extractEditorContextForAiImage,
-  synthesizeAiImagePrompt,
+  classifyVisualIntent,
+  generateStructuredAiImagePrompt,
+  trackAiImageTelemetry,
   buildImageNodeAttributes,
   getStandardAIAssistActions,
   type EditorAiImageContext,
   type VisualSuggestionInput,
+  type ContextSourceType,
+  type VisualIntentClassificationResult,
 } from "./utils/aiAssistContext";
 

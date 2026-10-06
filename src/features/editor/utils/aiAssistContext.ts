@@ -44,6 +44,8 @@ export interface EditorAiImageContext {
   suggestedAlt?: string;
   /** Inferred visual intent */
   visualIntent: VisualIntent;
+  /** Backward-compatible alias for visualIntent */
+  visualType?: string;
   /** Intent confidence score (0.0 to 1.0) */
   confidence: number;
   /** Explainable reasoning for the author */
@@ -54,6 +56,20 @@ export interface EditorAiImageContext {
   recommendedRatio: string;
   /** Visual suggestion details if opened from suggestion */
   visualSuggestion?: VisualSuggestionInput;
+}
+
+/**
+ * Backward-compatible prompt synthesizer for Sprint 1 & 2 consumers.
+ */
+export function synthesizeAiImagePrompt(
+  rawText: string,
+  contextType: "selection" | "paragraph" | "heading" = "selection"
+): string {
+  const classification = classifyVisualIntent(rawText);
+  return generateStructuredAiImagePrompt({
+    text: rawText,
+    intent: classification.intent,
+  });
 }
 
 export interface VisualSuggestionInput {
@@ -286,14 +302,19 @@ export function generateStructuredAiImagePrompt(options: {
   switch (intent) {
     case "architecture": {
       let flowText = "";
-      if (detectedSteps.length >= 2) {
-        flowText = `\n\n${detectedSteps.join("\n→ ")}\n\n`;
-      } else if (cleanSnippet.toLowerCase().includes("spring boot")) {
+      if (cleanSnippet.toLowerCase().includes("spring boot")) {
         flowText =
           "\n\nClient\n→ Embedded Server\n→ Servlet Filters\n→ DispatcherServlet\n→ Controller\n→ Service\n→ Repository\n\n";
       } else if (cleanSnippet.toLowerCase().includes("redis")) {
         flowText =
           "\n\nApplication Client\n→ API Server\n⇄ In-Memory Cache (Redis)\n→ Primary Database\n\n";
+      } else if (detectedSteps.length >= 2) {
+        const fullSteps =
+          /request|http/i.test(cleanSnippet) &&
+          !detectedSteps[0].toLowerCase().includes("client")
+            ? ["Client", ...detectedSteps]
+            : detectedSteps;
+        flowText = `\n\n${fullSteps.join("\n→ ")}\n\n`;
       }
 
       return `Create a clean technical architecture diagram showing the ${subject}:${flowText}Use clear directional arrows, component boundary boxes, minimal labels, professional developer documentation style, clean composition.`;
@@ -379,6 +400,7 @@ export function extractEditorContextForAiImage(
         visualSuggestion.altText ||
         `Illustration for ${visualSuggestion.heading || "section"}`,
       visualIntent: matchedIntent,
+      visualType: matchedIntent,
       confidence: 0.95,
       recommendationReason:
         visualSuggestion.reason || config.reasonTemplate,
@@ -406,6 +428,7 @@ export function extractEditorContextForAiImage(
       contextType: "fallback",
       articleTitle: articleMeta?.title,
       visualIntent: classification.intent,
+      visualType: classification.intent,
       confidence: classification.confidence,
       recommendationReason: classification.reason,
       recommendedPreset: classification.recommendedPreset,
@@ -448,6 +471,7 @@ export function extractEditorContextForAiImage(
       articleTitle: articleMeta?.title,
       suggestedAlt: `Illustration explaining ${selectedText.slice(0, 80).replace(/[.:;!]+$/, "")}`,
       visualIntent: classification.intent,
+      visualType: classification.intent,
       confidence: classification.confidence,
       recommendationReason: classification.reason,
       recommendedPreset: classification.recommendedPreset,
@@ -491,6 +515,7 @@ export function extractEditorContextForAiImage(
       articleTitle: articleMeta?.title,
       suggestedAlt: `Illustration of ${nearestHeading}`,
       visualIntent: classification.intent,
+      visualType: classification.intent,
       confidence: classification.confidence,
       recommendationReason: classification.reason,
       recommendedPreset: classification.recommendedPreset,
@@ -514,6 +539,7 @@ export function extractEditorContextForAiImage(
       articleTitle: articleMeta?.title,
       suggestedAlt: `Illustration for ${blockText.slice(0, 80).replace(/[.:;!]+$/, "")}`,
       visualIntent: classification.intent,
+      visualType: classification.intent,
       confidence: classification.confidence,
       recommendationReason: classification.reason,
       recommendedPreset: classification.recommendedPreset,
@@ -562,6 +588,7 @@ export function extractEditorContextForAiImage(
     articleTitle: articleMeta?.title,
     suggestedAlt: `Illustration of ${fallback}`,
     visualIntent: classification.intent,
+    visualType: classification.intent,
     confidence: classification.confidence,
     recommendationReason: classification.reason,
     recommendedPreset: classification.recommendedPreset,

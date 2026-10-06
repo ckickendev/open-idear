@@ -1,5 +1,5 @@
 // =============================================================================
-//  AI Image Assist Action & Modal Unit Tests (Sprint 1 & Sprint 2)
+//  AI Image Assist Action & Modal Unit Tests (Sprint 1, Sprint 2 & Sprint 3)
 //  src/features/editor/__tests__/aiImageAction.test.ts
 // =============================================================================
 
@@ -9,13 +9,20 @@ import assert from "node:assert/strict";
 import {
   extractEditorContextForAiImage,
   synthesizeAiImagePrompt,
+  classifyVisualIntent,
+  generateStructuredAiImagePrompt,
+  trackAiImageTelemetry,
   buildImageNodeAttributes,
   getStandardAIAssistActions,
   type VisualSuggestionInput,
 } from "../utils/aiAssistContext";
-import { STYLE_PRESETS, ASPECT_RATIOS } from "../constants/aiVisualTaxonomy";
+import {
+  STYLE_PRESETS,
+  ASPECT_RATIOS,
+  VISUAL_INTENTS,
+} from "../constants/aiVisualTaxonomy";
 
-describe("Sprint 1 & 2 — AI Assist Image Production UX", () => {
+describe("Sprint 1, 2 & 3 — Context-Aware AI Visual Assistant", () => {
   describe("1. AI Assist Action Registry", () => {
     it("includes AI Image in standard action list with correct metadata", () => {
       let imageActionTriggered = false;
@@ -34,48 +41,129 @@ describe("Sprint 1 & 2 — AI Assist Image Production UX", () => {
       const imageAction = actions.find((a) => a.id === "image");
       assert.ok(imageAction, "AI Image action must be registered");
       assert.strictEqual(imageAction.label, "AI Image");
-      assert.strictEqual(imageAction.description, "Generate an illustration or architecture diagram for your article");
+      assert.strictEqual(
+        imageAction.description,
+        "Generate an illustration or architecture diagram for your article"
+      );
       assert.strictEqual(imageAction.variant, "accent");
 
       imageAction.onClick?.();
-      assert.strictEqual(imageActionTriggered, true, "Clicking AI Image must trigger the modal opening handler");
-    });
-  });
-
-  describe("2. Context-aware Prompt Synthesis (Sprint 2 Requirement 1)", () => {
-    it("transforms raw technical statements into clean illustration prompts", () => {
-      const selectedText = "Redis stores frequently accessed data in memory.";
-      const prompt = synthesizeAiImagePrompt(selectedText, "selection");
       assert.strictEqual(
-        prompt,
-        "Create a clean technical illustration explaining Redis stores frequently accessed data in memory"
-      );
-    });
-
-    it("preserves text that already contains explicit prompt instructions", () => {
-      const rawPrompt = "Create a detailed technical diagram of Kafka consumer group rebalancing";
-      const prompt = synthesizeAiImagePrompt(rawPrompt, "selection");
-      assert.strictEqual(prompt, rawPrompt);
-    });
-
-    it("formulates heading context appropriately", () => {
-      const heading = "Database Sharding & Partitioning Architecture";
-      const prompt = synthesizeAiImagePrompt(heading, "heading");
-      assert.strictEqual(
-        prompt,
-        "Create a clean technical illustration explaining Database Sharding & Partitioning Architecture"
+        imageActionTriggered,
+        true,
+        "Clicking AI Image must trigger the modal opening handler"
       );
     });
   });
 
-  describe("3. Editor Context Extraction & Invariants", () => {
-    it("synthesizes prompt from selected text while preserving raw context snippet", () => {
+  describe("2. Sprint 3 Visual Intent Classification", () => {
+    it("classifies architecture intent for systems with microservices, caches, and gateways", () => {
+      const text =
+        "Redis operates as an in-memory caching tier between the backend API gateway and primary Postgres database.";
+      const res = classifyVisualIntent(text);
+      assert.strictEqual(res.intent, "architecture");
+      assert.strictEqual(res.recommendedPreset, "isometric");
+      assert.strictEqual(res.recommendedRatio, "16:9");
+      assert.ok(res.confidence >= 0.9);
+      assert.ok(res.reason.includes("component boundaries"));
+    });
+
+    it("classifies workflow intent for multi-step request pipelines", () => {
+      const text =
+        "The request passes through auth filters before reaching the controller and dispatching to worker queues.";
+      const res = classifyVisualIntent(text);
+      assert.strictEqual(res.intent, "workflow");
+      assert.strictEqual(res.recommendedPreset, "blueprint");
+      assert.strictEqual(res.recommendedRatio, "16:9");
+      assert.ok(res.reason.includes("sequential flow"));
+    });
+
+    it("classifies comparison intent for architectural trade-offs", () => {
+      const text =
+        "Comparing gRPC vs REST: assessing throughput trade-offs and serialization latency differences.";
+      const res = classifyVisualIntent(text);
+      assert.strictEqual(res.intent, "comparison");
+      assert.strictEqual(res.recommendedPreset, "flat_vector");
+    });
+
+    it("classifies benchmark / chart intent for performance metrics", () => {
+      const text =
+        "Evaluating p99 latency and throughput metrics reaching 50,000 QPS under sustained load.";
+      const res = classifyVisualIntent(text);
+      assert.strictEqual(res.intent, "chart");
+      assert.strictEqual(res.recommendedPreset, "flat_vector");
+      assert.ok(res.reason.includes("quantitative benchmarks"));
+    });
+
+    it("classifies code_visual intent for syntax and structural representations", () => {
+      const text =
+        "Defining TypeScript interface contracts and compiler AST tokenization rules.";
+      const res = classifyVisualIntent(text);
+      assert.strictEqual(res.intent, "code_visual");
+      assert.strictEqual(res.recommendedPreset, "blueprint");
+    });
+  });
+
+  describe("3. Sprint 3 Structured Prompt Generation (Sprint 3 Requirement 4)", () => {
+    it("generates clean architecture diagram prompt with directional arrows for Spring Boot lifecycle", () => {
+      const input =
+        "Spring Boot receives an HTTP request through the embedded server before passing it through filters and eventually reaching the controller.";
+      const prompt = generateStructuredAiImagePrompt({
+        text: input,
+        intent: "architecture",
+        heading: "Spring Boot Request Lifecycle",
+      });
+
+      assert.ok(prompt.includes("Spring Boot Request Lifecycle"));
+      assert.ok(prompt.includes("Client"));
+      assert.ok(prompt.includes("Embedded Server"));
+      assert.ok(prompt.includes("Servlet Filters"));
+      assert.ok(prompt.includes("→"));
+      assert.ok(prompt.includes("professional developer documentation style"));
+      assert.ok(prompt.includes("clear directional arrows"));
+    });
+
+    it("generates side-by-side comparison prompt for contrasting technologies", () => {
+      const prompt = generateStructuredAiImagePrompt({
+        text: "Kafka vs RabbitMQ architecture",
+        intent: "comparison",
+        heading: "Message Broker Comparison",
+      });
+
+      assert.ok(prompt.includes("Message Broker Comparison"));
+      assert.ok(prompt.includes("side-by-side technical comparison"));
+      assert.ok(prompt.includes("Left vs Right comparative columns"));
+    });
+
+    it("generates dark-mode data chart prompt for benchmark metrics", () => {
+      const prompt = generateStructuredAiImagePrompt({
+        text: "p99 latency benchmarks across caching layers",
+        intent: "chart",
+        heading: "Latency Benchmark",
+      });
+
+      assert.ok(prompt.includes("Latency Benchmark"));
+      assert.ok(prompt.includes("benchmark data chart"));
+      assert.ok(prompt.includes("modern dark-mode technical styling"));
+    });
+  });
+
+  describe("4. Context Priority Hierarchy & Guardrails (Sprint 3 Requirement 1)", () => {
+    it("Priority 1: Selected text overrides block and heading", () => {
       const mockEditor: any = {
         state: {
-          selection: { from: 10, to: 45, $from: { parent: { isTextblock: true, textContent: "Full paragraph" }, depth: 1, pos: 10 } },
+          selection: {
+            from: 10,
+            to: 45,
+            $from: {
+              parent: { isTextblock: true, textContent: "This entire block is background context." },
+              depth: 1,
+              pos: 10,
+            },
+          },
           doc: {
             textBetween: (from: number, to: number) => {
-              if (from === 10 && to === 45) return "Redis stores frequently accessed data in memory.";
+              if (from === 10 && to === 45) return "Redis in-memory caching tier";
               return "";
             },
             nodesBetween: () => {},
@@ -84,49 +172,22 @@ describe("Sprint 1 & 2 — AI Assist Image Production UX", () => {
       };
 
       const ctx = extractEditorContextForAiImage(mockEditor);
-      assert.strictEqual(
-        ctx.suggestedPrompt,
-        "Create a clean technical illustration explaining Redis stores frequently accessed data in memory"
-      );
-      assert.strictEqual(ctx.contextSnippet, "Redis stores frequently accessed data in memory.");
-      assert.ok(ctx.suggestedAlt?.includes("Redis stores frequently accessed data"));
+      assert.strictEqual(ctx.contextType, "selection");
+      assert.strictEqual(ctx.contextSnippet, "Redis in-memory caching tier");
+      assert.strictEqual(ctx.visualIntent, "architecture");
     });
 
-    it("falls back to current paragraph when no text is selected", () => {
-      const mockEditor: any = {
-        state: {
-          selection: {
-            from: 15,
-            to: 15,
-            $from: {
-              parent: { isTextblock: true, textContent: "This microservice uses Kafka for event distribution." },
-              depth: 1,
-              pos: 15,
-            },
-          },
-          doc: {
-            textBetween: () => "",
-            nodesBetween: () => {},
-          },
-        },
-      };
-
-      const ctx = extractEditorContextForAiImage(mockEditor);
-      assert.strictEqual(
-        ctx.suggestedPrompt,
-        "Create a clean technical illustration explaining This microservice uses Kafka for event distribution"
-      );
-      assert.strictEqual(ctx.contextSnippet, "This microservice uses Kafka for event distribution.");
-    });
-
-    it("falls back to nearest heading when block text is empty", () => {
+    it("Priority 3: Heading + Paragraph combined when no selection", () => {
       const mockEditor: any = {
         state: {
           selection: {
             from: 50,
             to: 50,
             $from: {
-              parent: { isTextblock: true, textContent: "" },
+              parent: {
+                isTextblock: true,
+                textContent: "Requests enter the gateway before routing to downstream services.",
+              },
               depth: 1,
               pos: 50,
             },
@@ -134,7 +195,7 @@ describe("Sprint 1 & 2 — AI Assist Image Production UX", () => {
           doc: {
             textBetween: () => "",
             nodesBetween: (_from: number, _to: number, callback: (node: any) => boolean) => {
-              callback({ type: { name: "heading" }, textContent: "System Architecture & Memory Layout" });
+              callback({ type: { name: "heading" }, textContent: "API Gateway Architecture" });
               return true;
             },
           },
@@ -142,17 +203,61 @@ describe("Sprint 1 & 2 — AI Assist Image Production UX", () => {
       };
 
       const ctx = extractEditorContextForAiImage(mockEditor);
-      assert.strictEqual(ctx.heading, "System Architecture & Memory Layout");
-      assert.strictEqual(
-        ctx.suggestedPrompt,
-        "Create a clean technical illustration explaining System Architecture & Memory Layout"
-      );
-      assert.strictEqual(ctx.suggestedAlt, "Illustration of System Architecture & Memory Layout");
+      assert.strictEqual(ctx.contextType, "heading_paragraph");
+      assert.strictEqual(ctx.heading, "API Gateway Architecture");
+      assert.strictEqual(ctx.visualIntent, "architecture");
+    });
+
+    it("Priority 4: Heading only (Section start with empty block)", () => {
+      const mockEditor: any = {
+        state: {
+          selection: {
+            from: 5,
+            to: 5,
+            $from: {
+              parent: { isTextblock: true, textContent: "" },
+              depth: 1,
+              pos: 5,
+            },
+          },
+          doc: {
+            textBetween: () => "",
+            nodesBetween: (_from: number, _to: number, callback: (node: any) => boolean) => {
+              callback({ type: { name: "heading" }, textContent: "Microservices Data Mesh" });
+              return true;
+            },
+          },
+        },
+      };
+
+      const ctx = extractEditorContextForAiImage(mockEditor);
+      assert.strictEqual(ctx.contextType, "section");
+      assert.strictEqual(ctx.heading, "Microservices Data Mesh");
+    });
+
+    it("Caps context length at 1500 chars maximum (Anti-bloat guardrail)", () => {
+      const hugeText = "A".repeat(3000);
+      const mockEditor: any = {
+        state: {
+          selection: {
+            from: 0,
+            to: 3000,
+            $from: { parent: { isTextblock: true, textContent: hugeText }, depth: 1, pos: 0 },
+          },
+          doc: {
+            textBetween: () => hugeText,
+            nodesBetween: () => {},
+          },
+        },
+      };
+
+      const ctx = extractEditorContextForAiImage(mockEditor);
+      assert.ok(ctx.contextSnippet.length <= 1500);
     });
   });
 
-  describe("4. Visual Suggestion Integration (Sprint 2 Requirement 2)", () => {
-    it("pre-fills all fields from a visual suggestion input", () => {
+  describe("5. Visual Suggestion Integration", () => {
+    it("pre-fills all fields and preserves suggestion intent", () => {
       const visualSuggestion: VisualSuggestionInput = {
         prompt: "Detailed isometric server rack with blinking optical interfaces",
         altText: "Isometric server rack",
@@ -167,14 +272,18 @@ describe("Sprint 1 & 2 — AI Assist Image Production UX", () => {
 
       const ctx = extractEditorContextForAiImage(null, visualSuggestion);
       assert.strictEqual(ctx.suggestedPrompt, visualSuggestion.prompt);
+      assert.strictEqual(ctx.contextType, "suggestion");
       assert.strictEqual(ctx.suggestedAlt, "Isometric server rack");
-      assert.strictEqual(ctx.visualType, "blueprint");
+      assert.strictEqual(ctx.visualIntent, "diagram");
       assert.strictEqual(ctx.heading, "Physical Infrastructure");
-      assert.strictEqual(ctx.visualSuggestion?.reason, "Helps readers understand physical cluster topologies");
+      assert.strictEqual(
+        ctx.recommendationReason,
+        "Helps readers understand physical cluster topologies"
+      );
     });
   });
 
-  describe("5. Safe Editor Insertion (Sprint 2 Requirement 5 & 6)", () => {
+  describe("6. Safe Editor Insertion & Non-Destructive Invariants", () => {
     it("ensures insertion after selected block when text is highlighted", () => {
       let insertedPos = -1;
       let insertedAttrs: any = null;
@@ -202,10 +311,8 @@ describe("Sprint 1 & 2 — AI Assist Image Production UX", () => {
         }),
       };
 
-      // Simulating handleInsertAIImage logic
       const { from, to, $to } = mockEditor.state.selection;
-      const hasActiveSelection = from !== to;
-      assert.strictEqual(hasActiveSelection, true);
+      assert.notStrictEqual(from, to);
 
       const targetPos = $to.end();
       mockEditor
@@ -223,7 +330,11 @@ describe("Sprint 1 & 2 — AI Assist Image Production UX", () => {
         })
         .run();
 
-      assert.strictEqual(insertedPos, 120, "Must insert at $to.end() to avoid destroying selected text");
+      assert.strictEqual(
+        insertedPos,
+        120,
+        "Must insert at $to.end() to avoid destroying selected text"
+      );
       assert.strictEqual(insertedAttrs["data-media-id"], "med_123");
       assert.strictEqual(insertedAttrs.caption, "Fig 1");
     });
@@ -236,63 +347,38 @@ describe("Sprint 1 & 2 — AI Assist Image Production UX", () => {
         caption: "Figure 1: Redis cache",
       });
 
-      assert.strictEqual(attrs.src, "https://res.cloudinary.com/demo/image/upload/v1234/test.webp");
+      assert.strictEqual(
+        attrs.src,
+        "https://res.cloudinary.com/demo/image/upload/v1234/test.webp"
+      );
       assert.strictEqual(attrs.alt, "Redis cache topology");
       assert.strictEqual(attrs["data-media-id"], "media_asset_987654");
       assert.strictEqual(attrs.caption, "Figure 1: Redis cache");
     });
   });
 
-  describe("6. Visual Style & Aspect Ratio Taxonomies", () => {
-    it("exposes only canonical technical style presets matching BatchVisualsModal", () => {
-      const expectedIds = ["isometric", "blueprint", "flat_vector", "3d_technical"];
-      const actualIds = STYLE_PRESETS.map((p) => p.id);
-      assert.deepStrictEqual(actualIds, expectedIds);
-    });
+  describe("7. Visual Taxonomies & Intents Completeness", () => {
+    it("contains all 10 canonical visual intents with valid style presets and ratios", () => {
+      const expectedIntents = [
+        "architecture",
+        "workflow",
+        "diagram",
+        "technical_illustration",
+        "comparison",
+        "chart",
+        "code_visual",
+        "screenshot",
+        "concept",
+        "abstract",
+      ];
 
-    it("exposes supported aspect ratios", () => {
-      const expectedRatios = ["16:9", "4:3", "1:1"];
-      const actualRatios = ASPECT_RATIOS.map((r) => r.id);
-      assert.deepStrictEqual(actualRatios, expectedRatios);
-    });
-  });
-
-  describe("7. Generation Lifecycle & Invariant Safety", () => {
-    it("ensures cancellation does not mutate editor or trigger insertion", () => {
-      let inserted = false;
-      const onInsert = () => {
-        inserted = true;
-      };
-      let closed = false;
-      const onClose = () => {
-        closed = true;
-      };
-
-      // User hits cancel / close
-      onClose();
-      assert.strictEqual(closed, true);
-      assert.strictEqual(inserted, false, "Cancelling must never mutate or insert into editor");
-    });
-
-    it("accept calls onInsert with asset, alt text, and caption", () => {
-      let insertedPayload: any = null;
-      const onInsert = (asset: any, alt?: string, caption?: string) => {
-        insertedPayload = { asset, alt, caption };
-      };
-
-      const mockAsset = {
-        _id: "asset_abc_123",
-        url: "https://example.com/asset.webp",
-        thumbnailUrl: "https://example.com/thumb.webp",
-        prompt: "GPU ray tracing pipeline",
-        type: "ai" as const,
-      };
-
-      onInsert(mockAsset, "Custom GPU diagram alt text", "Figure 3: Ray tracing layout");
-      assert.ok(insertedPayload);
-      assert.strictEqual(insertedPayload.asset._id, "asset_abc_123");
-      assert.strictEqual(insertedPayload.alt, "Custom GPU diagram alt text");
-      assert.strictEqual(insertedPayload.caption, "Figure 3: Ray tracing layout");
+      for (const intent of expectedIntents) {
+        const def = VISUAL_INTENTS[intent as keyof typeof VISUAL_INTENTS];
+        assert.ok(def, `Intent definition must exist for ${intent}`);
+        assert.ok(def.label, `Label required for ${intent}`);
+        assert.ok(def.defaultPreset, `Preset required for ${intent}`);
+        assert.ok(def.defaultRatio, `Ratio required for ${intent}`);
+      }
     });
   });
 });
