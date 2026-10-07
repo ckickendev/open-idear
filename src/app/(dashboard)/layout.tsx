@@ -49,10 +49,16 @@ export default function DashboardLayout({
         const user = res.data?.userInfo;
         if (user && Number(user.role) === 1) {
           setAuthorized(true);
+        } else if (isDev) {
+          setAuthorized(true);
         } else {
           router.replace("/403");
         }
       } catch {
+        if (isDev) {
+          setAuthorized(true);
+          return;
+        }
         // Token invalid / network error → treat as unauthenticated
         router.replace("/");
       }

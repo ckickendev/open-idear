@@ -636,8 +636,13 @@ export async function trackAiImageTelemetry(
     },
   };
 
-  return aiVisualApi.trackAnalytics(event);
-}
+    try {
+      return await aiVisualApi.trackAnalytics(event);
+    } catch {
+      // Non-blocking telemetry: Analytics failures must never break the authoring workflow
+      return null;
+    }
+  }
 
 // ─── 5. Tiptap Node Attribute Builder ─────────────────────────────────────────
 

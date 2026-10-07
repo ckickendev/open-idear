@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import {
   BadgePlus,
   FileText,
@@ -139,12 +139,16 @@ export default function PostListPanel({
   const [deleteTarget, setDeleteTarget] = useState<PostListItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // ─── Fetch posts when panel opens or active post changes ───────────────
+  const inFlightRef = useRef(false);
 
-  const fetchPosts = useCallback(async () => {
+  // ─── Fetch posts when panel opens or refresh event triggers ───────────
+
+  const fetchPosts = useCallback(async (force = false) => {
     const token = localStorage.getItem("access_token");
     if (!token) return;
+    if (inFlightRef.current) return;
 
+    inFlightRef.current = true;
     setIsLoading(true);
     try {
       const res = await postApi.getPostsByAuthor();
@@ -155,6 +159,7 @@ export default function PostListPanel({
       console.error("Error fetching posts:", err);
     } finally {
       setIsLoading(false);
+      inFlightRef.current = false;
     }
   }, []);
 
@@ -162,11 +167,11 @@ export default function PostListPanel({
     if (isOpen) {
       fetchPosts();
     }
-  }, [isOpen, fetchPosts, activePostId]);
+  }, [isOpen, fetchPosts]);
 
   useEffect(() => {
     const handleRefresh = () => {
-      if (isOpen) fetchPosts();
+      if (isOpen) fetchPosts(true);
     };
     window.addEventListener("refresh-post-list", handleRefresh);
     return () => window.removeEventListener("refresh-post-list", handleRefresh);

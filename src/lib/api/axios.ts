@@ -48,13 +48,28 @@ apiClient.interceptors.request.use(
   },
 );
 
-// Response interceptor
+// Response interceptor with resilient retry for rate limits
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
   },
-  (error) => {
-    // Handle 401 Unauthorized globally if needed here
+  async (error) => {
+    const config = error?.config;
+    // Transparent retry on 429 Too Many Requests for idempotent GET requests
+    if (
+      error?.response?.status === 429 &&
+      config &&
+      (!config.method || config.method.toLowerCase() === "get") &&
+      !config._isRetry
+    ) {
+      config._isRetry = true;
+      const retryAfterHeader = error.response.headers?.["retry-after"];
+      const delayMs = retryAfterHeader
+        ? Math.min(Math.max(parseInt(retryAfterHeader, 10) * 1000, 1000), 5000)
+        : 1500;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      return apiClient(config);
+    }
     return Promise.reject(error);
   },
 );

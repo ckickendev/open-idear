@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -559,6 +559,11 @@ export default function EditorShell() {
     }
   }, [editor, isReady, loadedPost]);
 
+  // Track loaded state to avoid redundant network round-trips
+  const loadedPostIdRef = useRef<string | null>(null);
+  const categoriesLoadedRef = useRef(false);
+  const seriesLoadedRef = useRef(false);
+
   // ─── Fetch Initial Data ──────────────────────────────────────────────
 
   useEffect(() => {
@@ -573,17 +578,36 @@ export default function EditorShell() {
       try {
         const currentPostId = searchParams.get("id");
 
-        // Fetch categories + series in parallel
-        const [resCategory, resSeries] = await Promise.all([
-          categoryApi.getCategories(),
-          seriesApi.getSeriesByUser(),
-        ]);
+        // Fetch categories + series only if not already loaded
+        const fetchTasks: Promise<any>[] = [];
+        const needCategory = !categoriesLoadedRef.current;
+        const needSeries = !seriesLoadedRef.current;
 
-        if (resCategory.success) setCategories(resCategory.data.categories);
-        if (resSeries.success) setSeriesList(resSeries.data.series);
+        if (needCategory) fetchTasks.push(categoryApi.getCategories());
+        if (needSeries) fetchTasks.push(seriesApi.getSeriesByUser());
+
+        if (fetchTasks.length > 0) {
+          const results = await Promise.all(fetchTasks);
+          let idx = 0;
+          if (needCategory) {
+            const resCat = results[idx++];
+            if (resCat?.success) {
+              setCategories(resCat.data.categories);
+              categoriesLoadedRef.current = true;
+            }
+          }
+          if (needSeries) {
+            const resSer = results[idx++];
+            if (resSer?.success) {
+              setSeriesList(resSer.data.series);
+              seriesLoadedRef.current = true;
+            }
+          }
+        }
 
         setPostId(currentPostId);
         if (!currentPostId) {
+          loadedPostIdRef.current = null;
           try {
             const studioDraftRaw = sessionStorage.getItem("content_studio_draft");
             if (studioDraftRaw) {
@@ -611,23 +635,26 @@ export default function EditorShell() {
           return;
         }
 
-        const resPost = await postApi.getPostToEdit(currentPostId);
-        if (resPost.success && resPost.data?.post) {
-          const post = resPost.data.post;
-          setTitle(post.title || "");
-          setDescriptionPublic(post.description || "");
-          setCategoryPublic(
-            typeof post.category === "object" ? post.category?._id || "" : post.category || ""
-          );
-          setSeriesPublic(
-            typeof post.series === "object" ? post.series?._id || "" : post.series || ""
-          );
-          setImagePublic(
-            typeof post.image === "object" ? post.image?.url || null : post.image || null
-          );
-          setLoadedPost(post);
-          if (editor) {
-            editor.commands.setContent(post.content || "");
+        if (loadedPostIdRef.current !== currentPostId) {
+          const resPost = await postApi.getPostToEdit(currentPostId);
+          if (resPost.success && resPost.data?.post) {
+            loadedPostIdRef.current = currentPostId;
+            const post = resPost.data.post;
+            setTitle(post.title || "");
+            setDescriptionPublic(post.description || "");
+            setCategoryPublic(
+              typeof post.category === "object" ? post.category?._id || "" : post.category || ""
+            );
+            setSeriesPublic(
+              typeof post.series === "object" ? post.series?._id || "" : post.series || ""
+            );
+            setImagePublic(
+              typeof post.image === "object" ? post.image?.url || null : post.image || null
+            );
+            setLoadedPost(post);
+            if (editor) {
+              editor.commands.setContent(post.content || "");
+            }
           }
         }
       } catch (error) {
