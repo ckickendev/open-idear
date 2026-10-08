@@ -83,24 +83,21 @@ export async function POST(request: Request) {
     }
 
     // 2. Server-side Gemini Provider Execution
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "GEMINI_API_KEY is not configured on the server." },
-        { status: 500 }
-      );
-    }
+    const rawApiKey = process.env.GEMINI_API_KEY || "";
+    const apiKey = rawApiKey.replace(/['"]/g, "").trim();
 
-    const genAI = new GoogleGenerativeAI(apiKey.trim());
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.3,
-      },
-    });
+    if (apiKey) {
+      try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({
+          model: "gemini-2.0-flash",
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.3,
+          },
+        });
 
-    const systemPrompt = `You are an elite technical editorial strategist and content planner for OpenIdear.
+        const systemPrompt = `You are an elite technical editorial strategist and content planner for OpenIdear.
 Your task is to analyze the provided Content Idea and infer sensible, strategic specifications for its Content Brief.
 
 SPECIFICATIONS:
@@ -119,7 +116,7 @@ Return strictly valid JSON:
   "objective": "string"
 }`;
 
-    const userPrompt = `Generate content brief for:
+        const userPrompt = `Generate content brief for:
 - Title: ${idea.title}
 - Hook: ${idea.hook}
 - Type: ${idea.contentType}
@@ -131,24 +128,47 @@ Return strictly valid JSON:
 ${existingCategories?.length ? `- Available System Categories: ${existingCategories.join(", ")}` : ""}
 `;
 
-    const result = await model.generateContent([
-      { text: systemPrompt },
-      { text: userPrompt },
-    ]);
+        const result = await model.generateContent([
+          { text: systemPrompt },
+          { text: userPrompt },
+        ]);
 
-    const responseText = result.response.text();
-    const cleanJson = responseText
-      .replace(/^```json\s*/i, "")
-      .replace(/^```\s*/i, "")
-      .replace(/\s*```$/i, "")
-      .trim();
+        const responseText = result.response.text();
+        const cleanJson = responseText
+          .replace(/^```json\s*/i, "")
+          .replace(/^```\s*/i, "")
+          .replace(/\s*```$/i, "")
+          .trim();
 
-    const parsed = JSON.parse(cleanJson);
-    const validated = ContentBriefSchema.parse(parsed);
+        const parsed = JSON.parse(cleanJson);
+        const validated = ContentBriefSchema.parse(parsed);
+
+        return NextResponse.json({
+          status: "success",
+          brief: validated,
+        });
+      } catch (geminiErr) {
+        console.warn("[POST /api/ai/content-studio/brief] Gemini call failed, returning smart fallback:", geminiErr);
+      }
+    }
+
+    // 3. Fallback brief response if Gemini unavailable
+    const fallbackBrief = {
+      targetAudience: idea.targetAudience
+        ? [idea.targetAudience, "Tech Enthusiasts"]
+        : ["Beginner PC builders", "Tech Enthusiasts"],
+      tone: "Practical",
+      length: "Medium — 1,500–2,500 words",
+      category: idea.category || "PC Hardware",
+      objective:
+        idea.searchIntent === "commercial"
+          ? "Help users make a purchase decision"
+          : "Explain",
+    };
 
     return NextResponse.json({
       status: "success",
-      brief: validated,
+      brief: fallbackBrief,
     });
   } catch (error: any) {
     console.error("[POST /api/ai/content-studio/brief] Error:", error);

@@ -103,15 +103,13 @@ export async function POST(request: Request) {
     }
 
     // 2. Server-side Gemini Provider Execution
-    const apiKey = process.env.GEMINI_API_KEY;
+    const rawApiKey = process.env.GEMINI_API_KEY || "";
+    const apiKey = rawApiKey.replace(/['"]/g, "").trim();
     if (!apiKey) {
-      return NextResponse.json(
-        { error: "GEMINI_API_KEY is not configured on the server." },
-        { status: 500 }
-      );
+      throw new Error("GEMINI_API_KEY is not configured on the server, using structured fallback outline.");
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey.trim());
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
       model: "gemini-2.0-flash",
       generationConfig: {
