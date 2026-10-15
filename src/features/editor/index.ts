@@ -48,6 +48,9 @@ export {
   extractEditorContextForAiImage,
   classifyVisualIntent,
   generateStructuredAiImagePrompt,
+  getDynamicPromptChips,
+  sanitizeHeadingSubject,
+  extractContextSignals,
   trackAiImageTelemetry,
   buildImageNodeAttributes,
   getStandardAIAssistActions,
@@ -55,5 +58,6 @@ export {
   type VisualSuggestionInput,
   type ContextSourceType,
   type VisualIntentClassificationResult,
+  type ContextSignals,
 } from "./utils/aiAssistContext";
 

@@ -210,10 +210,17 @@ export default function DiscoverySidebar() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchSidebar = async () => {
+      const rootApi = ENV?.ROOT_API;
+      if (!rootApi) {
+        setIsLoading(false);
+        return;
+      }
       try {
-        const res = await axios.get(`${ENV.ROOT_API}/post/getDiscoverySidebar`);
-        if (res.status === 200 && res.data.success) {
+        const res = await axios.get(`${rootApi}/post/getDiscoverySidebar`, { timeout: 4000 });
+        if (!isMounted) return;
+        if (res.status === 200 && res.data?.success) {
           setData({
             trending: res.data.trending || [],
             latestPosts: res.data.latestPosts || [],
@@ -222,13 +229,19 @@ export default function DiscoverySidebar() {
           });
         }
       } catch (err) {
-        console.error("Failed to fetch discovery sidebar:", err);
+        console.warn("Failed to fetch discovery sidebar:", err);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchSidebar();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (

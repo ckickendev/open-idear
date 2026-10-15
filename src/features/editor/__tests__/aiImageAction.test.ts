@@ -40,10 +40,10 @@ describe("Sprint 1, 2 & 3 — Context-Aware AI Visual Assistant", () => {
 
       const imageAction = actions.find((a) => a.id === "image");
       assert.ok(imageAction, "AI Image action must be registered");
-      assert.strictEqual(imageAction.label, "AI Image");
+      assert.strictEqual(imageAction.label, "AI Visual Assistant");
       assert.strictEqual(
         imageAction.description,
-        "Generate an illustration or architecture diagram for your article"
+        "Generate an AI illustration or find real images from the internet"
       );
       assert.strictEqual(imageAction.variant, "accent");
 

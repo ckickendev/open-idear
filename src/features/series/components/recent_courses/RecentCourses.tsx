@@ -49,24 +49,38 @@ const RecentCourses: React.FC = () => {
   const GAP = 20;
 
   useEffect(() => {
+    let isMounted = true;
     const fetchCourses = async () => {
+      const rootApi = ENV?.ROOT_API;
+      if (!rootApi) {
+        setIsLoading(false);
+        return;
+      }
       try {
         setIsLoading(true);
         const res = await axios.get(
-          `${ENV.ROOT_API}/course?limit=10&sort=-createdAt`,
+          `${rootApi}/course?limit=10&sort=-createdAt`,
+          { timeout: 4000 }
         );
+        if (!isMounted) return;
         if (res.status === 200 && res.data?.data) {
           setCourses(res.data.data);
         } else if (res.status === 200 && res.data?.courses) {
           setCourses(res.data.courses);
         }
       } catch (error) {
-        console.error("Error fetching recent courses:", error);
+        console.warn("Could not fetch recent courses:", error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
     fetchCourses();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Auto-scroll carousel

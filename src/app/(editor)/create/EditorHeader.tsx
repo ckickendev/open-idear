@@ -66,8 +66,6 @@ interface EditorHeaderProps {
   seoOpen: boolean;
   /** Open 1-Click AI Publisher modal */
   onOpen1ClickAI?: () => void;
-  /** Open Publish by AI modal (simpler single-call pipeline) */
-  onOpenPublishByAI?: () => void;
   /** Open Generate All Visuals (Batch) modal */
   onOpenBatchVisuals?: () => void;
 }
@@ -97,7 +95,6 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   onToggleSEO,
   seoOpen,
   onOpen1ClickAI,
-  onOpenPublishByAI,
   onOpenBatchVisuals,
 }) => {
   const canSave = hasTitle;
@@ -105,11 +102,11 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
 
   return (
     <header
-      className="sticky top-0 z-40 w-full h-14 flex items-center justify-between px-4 md:px-6 border-b border-[var(--color-editor-border)]/60 bg-[var(--color-editor-bg)]/80 backdrop-blur-xl"
+      className="sticky top-0 z-40 w-full max-w-full h-14 flex items-center justify-between px-3 sm:px-4 md:px-6 border-b border-[var(--color-editor-border)]/60 bg-[var(--color-editor-bg)]/80 backdrop-blur-xl overflow-x-hidden"
       role="banner"
     >
       {/* Left section */}
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
         {/* Post list toggle */}
         <button
           onClick={onTogglePostList}
@@ -127,7 +124,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         {/* Back link */}
         <Link
           href="/"
-          className="hidden sm:flex items-center gap-1.5 text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] transition-colors duration-200"
+          className="hidden sm:flex items-center gap-1.5 text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] transition-colors duration-200 shrink-0"
           aria-label="Go home"
         >
           <ArrowLeft size={16} />
@@ -135,14 +132,14 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         </Link>
 
         {/* Gradient separator */}
-        <div className="hidden sm:block w-px h-5 bg-gradient-to-b from-transparent via-[var(--color-editor-border)] to-transparent" />
+        <div className="hidden sm:block w-px h-5 bg-gradient-to-b from-transparent via-[var(--color-editor-border)] to-transparent shrink-0" />
 
         {/* Status indicator */}
         <SaveStatusIndicator status={saveStatus} onRetry={onRetrySave} />
 
         {/* Draft / Published badge */}
         <div
-          className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider transition-colors duration-200 ${
+          className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider transition-colors duration-200 shrink-0 ${
             isPublished
               ? "bg-[var(--color-editor-success)]/12 text-[var(--color-editor-success)]"
               : "bg-[var(--color-editor-warning)]/12 text-[var(--color-editor-warning)]"
@@ -156,27 +153,9 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
       </div>
 
       {/* Right section */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 min-w-0">
         {/* ── AI Tools Cluster ── */}
-        <div className="hidden sm:flex items-center gap-1 px-1.5 py-1 rounded-xl bg-[var(--color-editor-elevated)]/50 border border-[var(--color-editor-border)]/40">
-          {/* ✨ Publish by AI — amber gradient (simpler pipeline) */}
-          {onOpenPublishByAI && (
-            <button
-              onClick={onOpenPublishByAI}
-              id="publish-by-ai-header-btn"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-white transition-all cursor-pointer active:scale-95 hover:shadow-lg"
-              style={{
-                background: "linear-gradient(135deg, #f59e0b, #ea580c)",
-                boxShadow: "0 2px 12px rgba(245,158,11,0.25)",
-              }}
-              aria-label="Open Publish by AI"
-              title="Publish by AI"
-            >
-              <Sparkles size={13} className="text-white" />
-              <span>Publish by AI</span>
-            </button>
-          )}
-
+        <div className="hidden sm:flex items-center gap-1 px-1.5 py-1 rounded-xl bg-[var(--color-editor-elevated)]/50 border border-[var(--color-editor-border)]/40 overflow-x-auto no-scrollbar max-w-full">
           {/* 1-Click AI Publisher */}
           {onOpen1ClickAI && (
             <button

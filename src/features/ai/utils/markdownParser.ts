@@ -35,6 +35,23 @@ const markedOptions: MarkedOptions = {
 marked.setOptions(markedOptions);
 
 /**
+ * Normalizes Markdown to ensure all headings (H1-H6) are separated from adjacent
+ * content with double newlines, even if they were glued to preceding text.
+ */
+export function normalizeMarkdownHeadings(markdown: string): string {
+  if (!markdown) return "";
+  return markdown
+    .replace(/\r\n/g, "\n")
+    // If 'Introduction' is glued to the first word of the paragraph
+    .replace(/^Introduction([A-ZÀ-Ỹ])/gm, "## Introduction\n\n$1")
+    .replace(/^Introduction\s*:\s*([A-ZÀ-Ỹ])/gm, "## Introduction\n\n$1")
+    // Ensure any heading preceded by non-newline characters has double newlines before it
+    .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
+    // Ensure any heading followed immediately by single newline before text has double newlines
+    .replace(/^(#{1,6}\s+[^\n]+)\n([^\n#])/gm, "$1\n\n$2");
+}
+
+/**
  * Converts a Markdown string to an HTML string compatible with Tiptap's setContent().
  *
  * This function is a drop-in replacement for the previous regex-based parser.
@@ -46,8 +63,11 @@ marked.setOptions(markedOptions);
 export function parseMarkdownToHtml(markdown: string): string {
   if (!markdown) return "";
 
+  const normalized = normalizeMarkdownHeadings(markdown);
+
   // marked.parse() returns string when async:false (which is the default).
   // The cast is safe because we are not using async extensions.
-  const result = marked.parse(markdown) as string;
+  const result = marked.parse(normalized) as string;
   return result;
 }
+

@@ -14,7 +14,7 @@ import { useImageUpload } from "@/features/media/hooks/useImageUpload";
 import { mediaLibraryApi } from "@/features/media-library/api/mediaLibrary.api";
 import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useContentMetrics } from "@/features/seo/hooks/useContentMetrics";
-import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView, ImageEnhancementReviewModal, useImageEnhancementReview, AIGenerationModal, PublishByAIModal, OneClickPublisherModal, type PipelineData, type PublisherResponse, aiApi } from "@/features/ai";
+import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView, ImageEnhancementReviewModal, useImageEnhancementReview, AIGenerationModal, OneClickPublisherModal, type PipelineData, type PublisherResponse, aiApi } from "@/features/ai";
 import { toEditorHtml } from "@/features/ai/utils/contentTransformer";
 import { LivePreviewSystem } from "@/features/preview";
 
@@ -307,48 +307,8 @@ export default function EditorShell() {
   // 1-Click AI Publisher Modal state
   const [is1ClickAIModalOpen, setIs1ClickAIModalOpen] = useState(false);
 
-  // Publish by AI Modal state
-  const [isPublishByAIOpen, setIsPublishByAIOpen] = useState(false);
-
   // Batch Visuals Modal state (Sprint 3)
   const [isBatchVisualsModalOpen, setIsBatchVisualsModalOpen] = useState(false);
-
-  const handleApplyPublishByAI = async (data: PublisherResponse) => {
-    // 1. Populate title
-    if (data.title) {
-      handleTitleChange(data.title);
-    }
-
-    // 2. Populate editor content from markdown and inject image suggestion placeholders
-    if (data.markdown && editor) {
-      const html = toEditorHtml(data.markdown, data.visualSuggestions || data.imageSuggestions);
-      editor.commands.setContent(html);
-      setGeneratedMarkdown(data.markdown);
-    }
-
-    // 3. Persist AI context (keywords, category, etc.)
-    setGeneratedAiContext({
-      plannerOutput: {
-        title: data.title,
-        keywords: data.keywords,
-        category: data.category,
-      },
-      generation: {
-        model: "PublishByAI-v1",
-        generatedAt: new Date().toISOString(),
-      },
-    });
-
-    // 4. Pre-fill publish panel fields from generated data
-    if (data.category) setCategoryPublic(data.category);
-    if (data.description) setDescriptionPublic(data.description);
-
-    // 5. Mark dirty and auto-save as Draft
-    autoSave.markDirty();
-    await autoSave.save();
-
-    toast.success("Draft created by AI and saved!", { id: "publish-by-ai-saved" });
-  };
 
   const handleApply1ClickAIPipeline = (data: PipelineData) => {
     const generatedTitle = data.planner?.title || title;
@@ -465,14 +425,33 @@ export default function EditorShell() {
     }
     if (editor) {
       const html = editor.getHTML();
-      return html
-        .replace(/<h1>(.*?)<\/h1>/gi, "# $1\n\n")
-        .replace(/<h2>(.*?)<\/h2>/gi, "## $1\n\n")
-        .replace(/<h3>(.*?)<\/h3>/gi, "### $1\n\n")
-        .replace(/<h4>(.*?)<\/h4>/gi, "#### $1\n\n")
-        .replace(/<p>(.*?)<\/p>/gi, "$1\n\n")
-        .replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, "![$2]($1)\n\n")
-        .replace(/<[^>]+>/g, "");
+      if (!html) return "";
+
+      let md = html
+        .replace(/\r\n/g, "\n")
+        .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "\n\n# $1\n\n")
+        .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "\n\n## $1\n\n")
+        .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "\n\n### $1\n\n")
+        .replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, "\n\n#### $1\n\n")
+        .replace(/<h5[^>]*>([\s\S]*?)<\/h5>/gi, "\n\n##### $1\n\n")
+        .replace(/<h6[^>]*>([\s\S]*?)<\/h6>/gi, "\n\n###### $1\n\n")
+        .replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, "\n\n![$2]($1)\n\n")
+        .replace(/<img[^>]*alt="([^"]*)"[^>]*src="([^"]*)"[^>]*>/gi, "\n\n![$1]($2)\n\n")
+        .replace(/<img[^>]*src="([^"]*)"[^>]*>/gi, "\n\n![]($1)\n\n")
+        .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "* $1\n")
+        .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<[^>]+>/g, "")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&nbsp;/g, " ")
+        .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
+        .replace(/\n{3,}/g, "\n\n");
+
+      return md.trim();
     }
     return "";
   }, [generatedMarkdown, editor]);
@@ -555,7 +534,21 @@ export default function EditorShell() {
   // Sync post content into TipTap editor whenever editor becomes ready or loadedPost updates
   useEffect(() => {
     if (editor && loadedPost?.content !== undefined) {
-      editor.commands.setContent(loadedPost.content || "");
+      let content = loadedPost.content || "";
+      // Only repair if raw unparsed markdown hashes (##, ###) are trapped inside HTML
+      if (/#{2,6}\s+/.test(content)) {
+        const restoredMd = content
+          .replace(/\r\n/g, "\n")
+          .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
+          .replace(/<[^>]+>/g, "")
+          .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim();
+        content = toEditorHtml(restoredMd);
+      } else if (loadedPost.markdown && (!content || !content.trim())) {
+        content = toEditorHtml(loadedPost.markdown);
+      }
+      editor.commands.setContent(content);
     }
   }, [editor, isReady, loadedPost]);
 
@@ -652,8 +645,25 @@ export default function EditorShell() {
               typeof post.image === "object" ? post.image?.url || null : post.image || null
             );
             setLoadedPost(post);
+            let initialHtml = post.content || "";
+            if (post.markdown) {
+              setGeneratedMarkdown(post.markdown);
+              if (/#{2,6}\s+/.test(initialHtml) || !initialHtml.includes("<h2")) {
+                initialHtml = toEditorHtml(post.markdown);
+              }
+            } else if (/#{2,6}\s+/.test(initialHtml)) {
+              const restoredMd = initialHtml
+                .replace(/\r\n/g, "\n")
+                .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
+                .replace(/<[^>]+>/g, "")
+                .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
+                .replace(/\n{3,}/g, "\n\n")
+                .trim();
+              setGeneratedMarkdown(restoredMd);
+              initialHtml = toEditorHtml(restoredMd);
+            }
             if (editor) {
-              editor.commands.setContent(post.content || "");
+              editor.commands.setContent(initialHtml);
             }
           }
         }
@@ -1276,7 +1286,7 @@ export default function EditorShell() {
 
   return (
     <EditorProvider editor={editor}>
-      <div className="min-h-screen bg-editor-bg flex flex-col h-screen overflow-hidden">
+      <div className="min-h-screen bg-editor-bg flex flex-col h-screen w-full max-w-full overflow-x-hidden">
         <Instruction />
 
         {/* Sticky header */}
@@ -1307,7 +1317,6 @@ export default function EditorShell() {
           onToggleSEO={() => togglePanel("seo")}
           seoOpen={seoOpen}
           onOpen1ClickAI={() => setIs1ClickAIModalOpen(true)}
-          onOpenPublishByAI={() => setIsPublishByAIOpen(true)}
           onOpenBatchVisuals={() => setIsBatchVisualsModalOpen(true)}
         />
 
@@ -1454,10 +1463,10 @@ export default function EditorShell() {
                               type="button"
                               onClick={handleOpenAiImageModal}
                               className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-lg hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer group"
-                              title="Generate an AI illustration based on context"
+                              title="AI Visual Assistant: Generate AI visuals or find images on internet"
                             >
-                              <ImageIcon size={12} className="text-pink-500 group-hover:scale-110 transition-transform" />
-                              <span className="font-medium text-pink-600 dark:text-pink-400">AI Image</span>
+                              <Sparkles size={12} className="text-violet-500 group-hover:scale-110 transition-transform" />
+                              <span className="font-medium text-violet-600 dark:text-violet-400">AI Visual Assistant</span>
                             </button>
                           </div>
                         )}
@@ -1841,18 +1850,6 @@ export default function EditorShell() {
             autoSave.markDirty();
             await autoSave.save();
           }}
-        />
-
-        {/* Publish by AI Modal */}
-        <PublishByAIModal
-          isOpen={isPublishByAIOpen}
-          onClose={() => setIsPublishByAIOpen(false)}
-          initialTopic={title}
-          onApply={handleApplyPublishByAI}
-          plannerData={aiPlanner.outline ? {
-            title: aiPlanner.outline.title,
-            category: aiPlanner.outline.category,
-          } : undefined}
         />
 
         {/* One Click Autonomous Publisher Modal */}
