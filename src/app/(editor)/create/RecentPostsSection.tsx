@@ -26,6 +26,7 @@ import {
   RotateCw,
 } from "lucide-react";
 import { postApi } from "@/features/ideas/api/post.api";
+import { useTranslation } from "@/app/hook/useTranslation";
 
 export interface PostItem {
   _id: string;
@@ -48,6 +49,7 @@ export function RecentPostsSection({
   onSelectPost,
   onOpenSidebar,
 }: RecentPostsSectionProps) {
+  const { t } = useTranslation();
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(!activePostId);
@@ -111,14 +113,17 @@ export function RecentPostsSection({
           </div>
           <div className="min-w-0 flex items-center gap-2">
             <h3 className="text-xs sm:text-sm font-bold text-[var(--color-editor-text)] truncate">
-              Your Previous Posts
+              {t("editor.recent_posts.title")}
             </h3>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--color-editor-elevated)] text-[var(--color-editor-secondary)] border border-[var(--color-editor-border)] shrink-0">
-              {posts.length} {posts.length === 1 ? "article" : "articles"}
+              {t("editor.recent_posts.articles_count", {
+                count: posts.length,
+                unit: posts.length === 1 ? t("editor.recent_posts.article_single") : t("editor.recent_posts.article_plural"),
+              })}
             </span>
             {activePost && !isExpanded && (
               <span className="hidden md:inline-flex items-center gap-1 text-[11px] text-[var(--color-editor-muted)] truncate max-w-xs">
-                • Editing: <strong className="text-[var(--color-editor-text)] font-semibold truncate">&ldquo;{activePost.title || "Untitled"}&rdquo;</strong>
+                • {t("editor.recent_posts.editing", { title: activePost.title || t("editor.recent_posts.untitled") })}
               </span>
             )}
           </div>
@@ -130,7 +135,7 @@ export function RecentPostsSection({
             onClick={fetchRecentPosts}
             disabled={isLoading}
             className="p-1.5 rounded-lg text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer"
-            title="Refresh posts"
+            title={t("editor.recent_posts.refresh")}
           >
             <RotateCw size={13} className={isLoading ? "animate-spin" : ""} />
           </button>
@@ -141,7 +146,7 @@ export function RecentPostsSection({
             className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-[var(--color-editor-accent)] hover:bg-[var(--color-editor-accent)]/10 transition-colors cursor-pointer"
           >
             <Layers size={13} />
-            <span>View All in Sidebar</span>
+            <span>{t("editor.recent_posts.view_all_sidebar")}</span>
           </button>
 
           <button
@@ -149,7 +154,7 @@ export function RecentPostsSection({
             onClick={() => setIsExpanded((prev) => !prev)}
             className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer"
           >
-            <span>{isExpanded ? "Hide" : "Show"}</span>
+            <span>{isExpanded ? t("editor.recent_posts.hide") : t("editor.recent_posts.show")}</span>
             {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
         </div>
@@ -159,8 +164,8 @@ export function RecentPostsSection({
       {isExpanded && (
         <div className="p-4 sm:p-5 space-y-3 animate-in fade-in-50 duration-200">
           <div className="flex items-center justify-between text-xs text-[var(--color-editor-muted)] mb-1">
-            <span>Recent Drafts & Published Articles</span>
-            <span className="text-[11px]">Click any post to resume editing</span>
+            <span>{t("editor.recent_posts.subtitle")}</span>
+            <span className="text-[11px]">{t("editor.recent_posts.hint")}</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -173,7 +178,7 @@ export function RecentPostsSection({
                     day: "numeric",
                     year: "numeric",
                   })
-                : "Recent";
+                : t("editor.recent_posts.recent");
 
               const categoryName =
                 typeof post.category === "object"
@@ -205,7 +210,7 @@ export function RecentPostsSection({
                             post.published ? "bg-emerald-500" : "bg-amber-500"
                           }`}
                         />
-                        {post.published ? "Published" : "Draft"}
+                        {post.published ? t("editor.recent_posts.published") : t("editor.recent_posts.draft")}
                       </span>
 
                       <span className="text-[10px] text-[var(--color-editor-muted)]">
@@ -215,7 +220,7 @@ export function RecentPostsSection({
 
                     {/* Title */}
                     <h4 className="text-xs font-bold text-[var(--color-editor-text)] line-clamp-2 leading-snug group-hover:text-[var(--color-editor-accent)] transition-colors">
-                      {post.title || "Untitled Article"}
+                      {post.title || t("editor.recent_posts.untitled")}
                     </h4>
 
                     {/* Description snippet */}
@@ -229,11 +234,11 @@ export function RecentPostsSection({
                   {/* Bottom Meta */}
                   <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-[var(--color-editor-border)]/40 text-[10px]">
                     <span className="text-[var(--color-editor-muted)] truncate max-w-[120px]">
-                      {categoryName || "General"}
+                      {categoryName || t("editor.recent_posts.general_category")}
                     </span>
 
                     <span className="text-[var(--color-editor-accent)] font-semibold inline-flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
-                      {isActive ? "Currently Editing" : "Open Post"}
+                      {isActive ? t("editor.recent_posts.currently_editing") : t("editor.recent_posts.open_post")}
                       <ArrowRight size={11} />
                     </span>
                   </div>
@@ -251,7 +256,7 @@ export function RecentPostsSection({
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--color-editor-text)] hover:text-[var(--color-editor-accent)] transition-colors cursor-pointer"
               >
                 <Plus size={14} />
-                <span>Start New Blank Article</span>
+                <span>{t("editor.recent_posts.start_new_blank")}</span>
               </button>
             )}
 
@@ -260,7 +265,7 @@ export function RecentPostsSection({
               onClick={onOpenSidebar}
               className="text-xs font-semibold text-[var(--color-editor-accent)] hover:underline ml-auto flex items-center gap-1 cursor-pointer"
             >
-              <span>See all {posts.length} posts & search in sidebar</span>
+              <span>{t("editor.recent_posts.see_all_in_sidebar", { count: posts.length })}</span>
               <ArrowRight size={13} />
             </button>
           </div>

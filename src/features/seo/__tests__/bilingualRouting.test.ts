@@ -12,7 +12,7 @@
 // =============================================================================
 
 import assert from "node:assert";
-import { buildPostMetadata } from "../metadata/buildPostMetadata";
+import { buildPostMetadata } from "../metadata/buildPostMetadata.ts";
 
 function runTests() {
   console.log("\n==================================================================");

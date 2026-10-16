@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
 import { AIPublisherPanel, publisherApi, type AIPublisherResult, type CoverImageResult } from "@/features/ai";
+import { useTranslation } from "@/app/hook/useTranslation";
 
 interface PublishDrawerProps {
   isOpen: boolean;
@@ -70,6 +71,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
   isPublished = false,
   onUnpublish,
 }) => {
+  const { t } = useTranslation();
   const [aiCoverImage, setAiCoverImage] = useState<CoverImageResult | null>(null);
   const [isRegeneratingCover, setIsRegeneratingCover] = useState(false);
   const [showCreateSeries, setShowCreateSeries] = useState(false);
@@ -114,9 +116,9 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
       if (cover?.url) {
         onCoverImageUploaded(cover);
       }
-      toast.success("AI Cover image generated & uploaded to Cloudinary!");
+      toast.success(t("editor.publish_drawer.cover_success"));
     } catch (err: any) {
-      toast.error(err?.message || "Failed to regenerate AI cover image.");
+      toast.error(err?.message || t("editor.publish_drawer.cover_error"));
     } finally {
       setIsRegeneratingCover(false);
     }
@@ -183,32 +185,34 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
         }`}
         role="dialog"
         aria-modal="true"
-        aria-label="Publish settings"
+        aria-label={t("editor.publish_drawer.title")}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-editor-border)]">
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-bold text-[var(--color-editor-text)]">
-                Publish
+                {t("editor.publish_drawer.title")}
               </h2>
               <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-[var(--color-editor-accent)]/15 text-[var(--color-editor-accent)]">
                 {activeLocale === "vi" ? "🇻🇳 Tiếng Việt" : "🇺🇸 English"}
               </span>
               {isPublished && (
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                  Published
+                  {t("editor.header.published")}
                 </span>
               )}
             </div>
             <p className="text-xs text-[var(--color-editor-muted)] mt-0.5">
-              Configure and publish your {activeLocale === "vi" ? "Vietnamese" : "English"} translation
+              {t("editor.publish_drawer.configure_and_publish", {
+                locale: activeLocale === "vi" ? t("editor.publish_drawer.vietnamese") : t("editor.publish_drawer.english"),
+              })}
             </p>
           </div>
           <button
             onClick={handleClose}
             className="p-2 rounded-xl text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-all duration-200 cursor-pointer"
-            aria-label="Close publish drawer"
+            aria-label={t("editor.publish_drawer.close")}
           >
             <X size={18} />
           </button>
@@ -218,9 +222,9 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
         <div className="px-6 py-3 border-b border-[var(--color-editor-border)]/50">
           <div className="flex items-center gap-2">
             {[
-              { label: "Description", done: !!description.trim() },
-              { label: "Category", done: !!selectedCategory },
-              { label: "Publish", done: false },
+              { label: t("editor.publish_drawer.step_description"), done: !!description.trim() },
+              { label: t("editor.publish_drawer.step_category"), done: !!selectedCategory },
+              { label: t("editor.publish_drawer.step_publish"), done: false },
             ].map((step, i) => (
               <React.Fragment key={step.label}>
                 <div className="flex items-center gap-1.5">
@@ -257,8 +261,8 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
           {/* Existing Publish Settings Below */}
           {/* Description Section */}
           <CollapsibleSection
-            title="Description"
-            subtitle="Recommended for SEO"
+            title={t("editor.publish_drawer.description_title")}
+            subtitle={t("editor.publish_drawer.description_subtitle")}
             expanded={expandedSections.description}
             onToggle={() => toggleSection("description")}
           >
@@ -266,16 +270,16 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
               value={description}
               onChange={(e) => onDescriptionChange(e.target.value)}
               rows={3}
-              placeholder="Write a compelling summary of your post..."
+              placeholder={t("editor.publish_drawer.description_placeholder")}
               className="w-full bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-editor-text)] placeholder:text-[var(--color-editor-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50 resize-none transition-all duration-200"
-              aria-label="Post description"
+              aria-label={t("editor.publish_drawer.description_title")}
             />
           </CollapsibleSection>
 
           {/* Cover Image Section */}
           <CollapsibleSection
-            title="Cover Image"
-            subtitle="Auto Generated"
+            title={t("editor.publish_drawer.cover_title")}
+            subtitle={t("editor.publish_drawer.cover_subtitle")}
             expanded={expandedSections.coverImage}
             onToggle={() => toggleSection("coverImage")}
           >
@@ -288,7 +292,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                     className="w-full h-44 object-cover rounded-xl"
                   />
                   <div className="absolute top-2 left-2 flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-950/80 backdrop-blur-md border border-purple-500/30 text-[10px] font-bold text-purple-200">
-                    <Sparkles className="w-3 h-3 text-purple-400" /> AI Generated
+                    <Sparkles className="w-3 h-3 text-purple-400" /> {t("editor.publish_drawer.ai_generated")}
                   </div>
 
                   <div className="p-3 bg-purple-950/40 border-t border-purple-500/20">
@@ -308,12 +312,12 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                         {isRegeneratingCover ? (
                           <>
                             <Loader2 className="w-3 h-3 animate-spin" />
-                            Regenerating...
+                            {t("editor.publish_drawer.regenerating")}
                           </>
                         ) : (
                           <>
                             <Wand2 className="w-3 h-3 text-amber-300" />
-                            Regenerate Cover
+                            {t("editor.publish_drawer.regenerate_cover")}
                           </>
                         )}
                       </button>
@@ -337,12 +341,12 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                       {isRegeneratingCover ? (
                         <>
                           <Loader2 className="w-3 h-3 animate-spin" />
-                          Generating AI Cover...
+                          {t("editor.publish_drawer.generating_ai_cover")}
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-3 h-3 text-amber-300" />
-                          Generate AI Cover Image
+                          {t("editor.publish_drawer.generate_ai_cover")}
                         </>
                       )}
                     </button>
@@ -354,8 +358,8 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
 
           {/* Category Section */}
           <CollapsibleSection
-            title="Category"
-            subtitle="Required"
+            title={t("editor.publish_drawer.category_title")}
+            subtitle={t("editor.publish_drawer.category_subtitle")}
             expanded={expandedSections.category}
             onToggle={() => toggleSection("category")}
             required
@@ -365,9 +369,9 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                 value={selectedCategory}
                 onChange={(e) => onCategoryChange(e.target.value)}
                 className="w-full bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl px-4 py-3 pr-10 text-sm text-[var(--color-editor-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50 transition-all duration-200 cursor-pointer appearance-none"
-                aria-label="Select category"
+                aria-label={t("editor.publish_drawer.select_category")}
               >
-                <option value="">Select a category</option>
+                <option value="">{t("editor.publish_drawer.select_category")}</option>
                 {categories.map((cat: any) => (
                   <option key={cat._id} value={cat._id}>
                     {cat.name}
@@ -381,8 +385,8 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
 
           {/* Series Section */}
           <CollapsibleSection
-            title="Series"
-            subtitle="Optional"
+            title={t("editor.publish_drawer.series_title")}
+            subtitle={t("editor.publish_drawer.series_subtitle")}
             expanded={expandedSections.series}
             onToggle={() => toggleSection("series")}
           >
@@ -393,9 +397,9 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                     value={selectedSeries}
                     onChange={(e) => onSeriesChange(e.target.value)}
                     className="w-full bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl px-4 py-3 pr-10 text-sm text-[var(--color-editor-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50 transition-all duration-200 cursor-pointer appearance-none"
-                    aria-label="Select series"
+                    aria-label={t("editor.publish_drawer.series_title")}
                   >
-                    <option value="">No series</option>
+                    <option value="">{t("editor.publish_drawer.no_series")}</option>
                     {seriesList.map((ser: any) => (
                       <option key={ser._id} value={ser._id}>
                         {ser.title}
@@ -408,7 +412,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                   onClick={() => setShowCreateSeries(true)}
                   className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-editor-accent)] hover:text-[var(--color-editor-accent-hover)] transition-colors cursor-pointer"
                 >
-                  <Plus size={14} /> Create new series
+                  <Plus size={14} /> {t("editor.publish_drawer.create_new_series")}
                 </button>
               </div>
             ) : (
@@ -417,9 +421,9 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                   type="text"
                   value={newSeriesName}
                   onChange={(e) => setNewSeriesName(e.target.value)}
-                  placeholder="Series name"
+                  placeholder={t("editor.publish_drawer.series_name_placeholder")}
                   className="w-full bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-editor-text)] placeholder:text-[var(--color-editor-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50 transition-all duration-200"
-                  aria-label="New series name"
+                  aria-label={t("editor.publish_drawer.series_name_placeholder")}
                   autoFocus
                 />
                 <div className="flex gap-2">
@@ -430,14 +434,14 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                     }}
                     className="flex-1 px-3 py-2 text-xs font-medium text-[var(--color-editor-secondary)] border border-[var(--color-editor-border)] rounded-lg hover:bg-[var(--color-editor-elevated)] transition-all duration-200 cursor-pointer"
                   >
-                    Cancel
+                    {t("editor.publish_drawer.cancel")}
                   </button>
                   <button
                     onClick={handleCreateSeries}
                     disabled={!newSeriesName.trim()}
                     className="flex-1 px-3 py-2 text-xs font-medium bg-[var(--color-editor-accent)] text-white rounded-lg hover:bg-[var(--color-editor-accent-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer"
                   >
-                    Create
+                    {t("editor.publish_drawer.create")}
                   </button>
                 </div>
               </div>
@@ -452,7 +456,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
               onClick={handleClose}
               className="px-3 py-2.5 text-sm font-medium text-[var(--color-editor-secondary)] border border-[var(--color-editor-border)] rounded-xl hover:bg-[var(--color-editor-elevated)] hover:text-[var(--color-editor-text)] transition-all duration-200 cursor-pointer"
             >
-              Cancel
+              {t("editor.publish_drawer.cancel")}
             </button>
             {isPublished && onUnpublish && (
               <button
@@ -461,7 +465,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                 disabled={isPublishing}
                 className="px-3 py-2.5 text-xs font-semibold text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-xl hover:bg-rose-500/10 transition-all duration-200 cursor-pointer disabled:opacity-40"
               >
-                Unpublish ({activeLocale.toUpperCase()})
+                {t("editor.publish_drawer.unpublish", { locale: activeLocale.toUpperCase() })}
               </button>
             )}
             <button
@@ -497,13 +501,15 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  <span className="relative z-10 font-bold">Publishing...</span>
+                  <span className="relative z-10 font-bold">{t("editor.publish_drawer.publishing")}</span>
                 </>
               ) : (
                 <>
                   <Send size={15} className="relative z-10 transition-transform group-hover:translate-x-0.5" />
                   <span className="relative z-10 font-bold">
-                    {isPublished ? `Update (${activeLocale.toUpperCase()})` : `Publish (${activeLocale.toUpperCase()})`}
+                    {isPublished
+                      ? t("editor.publish_drawer.update_action", { locale: activeLocale.toUpperCase() })
+                      : t("editor.publish_drawer.publish_action", { locale: activeLocale.toUpperCase() })}
                   </span>
                 </>
               )}

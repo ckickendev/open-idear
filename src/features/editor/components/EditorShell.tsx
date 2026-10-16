@@ -17,6 +17,7 @@ import { useContentMetrics } from "@/features/seo/hooks/useContentMetrics";
 import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView, ImageEnhancementReviewModal, useImageEnhancementReview, AIGenerationModal, OneClickPublisherModal, type PipelineData, type PublisherResponse, aiApi } from "@/features/ai";
 import { toEditorHtml } from "@/features/ai/utils/contentTransformer";
 import { LivePreviewSystem } from "@/features/preview";
+import { useTranslation } from "@/app/hook/useTranslation";
 
 // ─── Context ────────────────────────────────────────────────────────────────
 import { EditorProvider } from "../context/EditorContext";
@@ -144,6 +145,7 @@ export default function EditorShell() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const { t, language } = useTranslation();
 
   // ─── Local UI State ───────────────────────────────────────────────────
   const [postId, setPostId] = useState<string | null>(null);
@@ -1460,18 +1462,18 @@ export default function EditorShell() {
 
   const handleTranslateFromSource = async () => {
     if (!postId) {
-      toast.error("Please save the original post before translating.");
+      toast.error(t("editor.banner.save_original_first"));
       return;
     }
     const sourceLocale = editorLocale === "vi" ? "en" : "vi";
-    const sourceLabel = sourceLocale === "en" ? "English" : "Vietnamese";
-    const targetLabel = editorLocale === "vi" ? "Vietnamese" : "English";
+    const sourceLabel = sourceLocale === "en" ? (language === "vi" ? "Tiếng Anh" : "English") : (language === "vi" ? "Tiếng Việt" : "Vietnamese");
+    const targetLabel = editorLocale === "vi" ? (language === "vi" ? "Tiếng Việt" : "Vietnamese") : (language === "vi" ? "Tiếng Anh" : "English");
 
     // Guard: Check if editor already has content in target draft
     const currentText = (editor ? editor.getText() : "").trim();
     if (currentText.length > 0 || title.trim().length > 0) {
       const confirmed = window.confirm(
-        `Are you sure you want to generate an AI translation from ${sourceLabel}? This will replace the uncommitted draft in your ${targetLabel} editor. You will be able to review and edit the draft before saving or publishing.`
+        t("editor.banner.confirm_overwrite", { source: sourceLabel, target: targetLabel })
       );
       if (!confirmed) return;
     }
@@ -1481,7 +1483,7 @@ export default function EditorShell() {
       // 1. Fetch source translation
       const resPost = await postApi.getPostToEdit(postId, sourceLocale);
       if (!resPost.success || !resPost.data?.post) {
-        toast.error(`Could not retrieve the ${sourceLabel} version.`);
+        toast.error(t("editor.banner.could_not_retrieve", { source: sourceLabel }));
         setIsTranslating(false);
         return;
       }
@@ -1489,7 +1491,7 @@ export default function EditorShell() {
       const src = resPost.data.post;
       const sourceContent = src.markdown || src.content || "";
       if (!sourceContent.trim() && !src.title?.trim()) {
-        toast.error(`The ${sourceLabel} version has no content to translate yet.`);
+        toast.error(t("editor.banner.no_content", { source: sourceLabel }));
         setIsTranslating(false);
         return;
       }
@@ -1515,7 +1517,7 @@ export default function EditorShell() {
           editor.commands.setContent(html);
         }
         autoSave.markDirty();
-        toast.success(`✨ ${targetLabel} draft translated! Review content and save when ready.`);
+        toast.success(t("editor.banner.translated_success", { target: targetLabel }));
       }
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || "Failed to translate article.";
@@ -1621,11 +1623,11 @@ export default function EditorShell() {
                   </div>
                   <div>
                     <div className="font-semibold text-sm sm:text-base text-amber-100 flex items-center gap-2">
-                      New {editorLocale === "vi" ? "Vietnamese (VI)" : "English (EN)"} Translation Draft
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-medium">Uncreated</span>
+                      {t("editor.banner.new_translation_draft", { locale: editorLocale === "vi" ? (language === "vi" ? "Tiếng Việt (VI)" : "Vietnamese (VI)") : (language === "vi" ? "Tiếng Anh (EN)" : "English (EN)") })}
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-medium">{t("editor.banner.uncreated")}</span>
                     </div>
                     <p className="text-xs text-amber-300/80 mt-1">
-                      This translation does not exist yet. Write content below or translate from the {editorLocale === "vi" ? "English" : "Vietnamese"} version using AI.
+                      {t("editor.banner.uncreated_desc", { source: editorLocale === "vi" ? (language === "vi" ? "Tiếng Anh" : "English") : (language === "vi" ? "Tiếng Việt" : "Vietnamese") })}
                     </p>
                   </div>
                 </div>
@@ -1640,12 +1642,12 @@ export default function EditorShell() {
                     {isTranslating ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950" />
-                        <span>Translating draft...</span>
+                        <span>{t("editor.banner.translating")}</span>
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-3.5 h-3.5 text-slate-950" />
-                        <span>Translate from {editorLocale === "vi" ? "EN" : "VI"} with AI</span>
+                        <span>{t("editor.banner.translate_with_ai", { source: editorLocale === "vi" ? "EN" : "VI" })}</span>
                       </>
                     )}
                   </button>
