@@ -154,6 +154,10 @@ export const mediaLibraryApi = {
     entityId: string,
     field = "content"
   ) => {
+    // Only track persistent assets with valid 24-char MongoDB ObjectIds
+    if (!mediaId || typeof mediaId !== "string" || !/^[0-9a-fA-F]{24}$/.test(mediaId)) {
+      return Promise.resolve({ data: { status: "skipped" } });
+    }
     return api.post(`${BASE}/${mediaId}/usage`, {
       entityType,
       entityId,
@@ -167,6 +171,10 @@ export const mediaLibraryApi = {
     entityType: string,
     entityId: string
   ) => {
+    // Only track persistent assets with valid 24-char MongoDB ObjectIds
+    if (!mediaId || typeof mediaId !== "string" || !/^[0-9a-fA-F]{24}$/.test(mediaId)) {
+      return Promise.resolve({ data: { status: "skipped" } });
+    }
     return api.delete(`${BASE}/${mediaId}/usage`, {
       data: { entityType, entityId },
     });

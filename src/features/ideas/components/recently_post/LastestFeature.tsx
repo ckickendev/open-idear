@@ -21,47 +21,65 @@ const LastestFeature = () => {
   const [isLocalLoading, setIsLocalLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchRecentlyData = async () => {
+      const rootApi = ENV?.ROOT_API;
+      if (!rootApi) {
+        setIsLocalLoading(false);
+        return;
+      }
       try {
         setIsLocalLoading(true);
         const response = await axios.get(
-          `${ENV.ROOT_API}/post/getRecentlyData`,
+          `${rootApi}/post/getRecentlyData`,
+          { timeout: 4000 }
         );
-        console.log("recently data:", response.data);
 
-        if (response.status === 200) {
-          setAllCategory((old) => [
-            { name: "Tất cả", slug: "all" },
-            ...response.data.recentlyData.categories,
-          ]);
-          setAllPosts(response.data.recentlyData.posts);
+        if (!isMounted) return;
+
+        if (response.status === 200 && response.data?.recentlyData) {
+          if (Array.isArray(response.data.recentlyData.categories)) {
+            setAllCategory([
+              { name: "Tất cả", slug: "all" },
+              ...response.data.recentlyData.categories,
+            ]);
+          }
+          if (Array.isArray(response.data.recentlyData.posts)) {
+            setAllPosts(response.data.recentlyData.posts);
+          }
         }
       } catch (error: any) {
-        console.error("Error fetching recently posts:", error);
+        console.warn("Could not fetch recently posts:", error);
       } finally {
-        setIsLocalLoading(false);
+        if (isMounted) {
+          setIsLocalLoading(false);
+        }
       }
     };
     fetchRecentlyData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const onSelectFeature = async (index: number) => {
     setSelectFeature(index);
 
+    const rootApi = ENV?.ROOT_API;
+    if (!rootApi || !allCategory[index]) return;
+
     try {
       setIsLocalLoading(true);
       const response = await axios.get(
-        `${ENV.ROOT_API}/post/getRecentlyDataByFeatures?feature=${allCategory[index].slug}`,
+        `${rootApi}/post/getRecentlyDataByFeatures?feature=${allCategory[index].slug}`,
+        { timeout: 4000 }
       );
-      if (response.status === 200) {
-        console.log(
-          "recently data onSelectFeature:",
-          response.data.recentlyData.posts,
-        );
+      if (response.status === 200 && response.data?.recentlyData?.posts) {
         setAllPosts(response.data.recentlyData.posts);
       }
     } catch (error: any) {
-      console.error("Error selecting feature category:", error);
+      console.warn("Could not filter posts by feature:", error);
     } finally {
       setIsLocalLoading(false);
     }

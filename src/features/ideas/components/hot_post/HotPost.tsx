@@ -27,25 +27,37 @@ const HotPost: React.FC = () => {
   const [isLoading, setIsLoading] = React.useState(true);
 
   useEffect(() => {
-    // Fetch all posts from the server
+    let isMounted = true;
     const fetchHotPost = async () => {
+      const rootApi = ENV?.ROOT_API;
+      if (!rootApi) {
+        setIsLoading(false);
+        return;
+      }
       try {
         setIsLoading(true);
         const res = await axios.get(
-          `${ENV.ROOT_API}/post/getHotPostsWeek?limit=10&page=1`,
+          `${rootApi}/post/getHotPostsWeek?limit=10&page=1`,
+          { timeout: 4000 }
         );
+        if (!isMounted) return;
         if (res.status === 200) {
-          console.log("res.data.hotpost: ", res.data.posts);
-          setArticles(res.data.posts || []);
+          setArticles(res.data?.posts || []);
         }
       } catch (error) {
-        console.error("Error fetching posts:", error);
+        console.warn("Could not fetch hot posts:", error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchHotPost();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (

@@ -41,6 +41,7 @@ import {
   type IllustrationPreset,
 } from "@/features/ai-visual";
 import { toast } from "sonner";
+import { normalizeMarkdownHeadings } from "@/features/ai/utils/markdownParser";
 
 interface BatchVisualsModalProps {
   isOpen: boolean;
@@ -156,7 +157,8 @@ export function BatchVisualsModal({
       }
     });
 
-    onApplyResult(finalMarkdown.trim());
+    const normalizedMarkdown = normalizeMarkdownHeadings(finalMarkdown.trim());
+    onApplyResult(normalizedMarkdown);
     toast.success(`${selectedIndices.size} visuals applied to editor!`);
     onClose();
   };

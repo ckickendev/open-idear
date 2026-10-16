@@ -49,9 +49,14 @@ const ContentIdeaSchema = z.object({
     ])
     .optional()
     .default("new_topic"),
+  contentRole: z.enum(["pillar", "supporting"]).optional().default("supporting"),
+  isNextLogicalArticle: z.boolean().optional(),
+  nextLogicalReason: z.string().optional(),
+  duplicateRisk: z.any().optional(),
   relatedArticleTitle: z.string().optional(),
   relatedArticleSlug: z.string().optional(),
   internalLinkOpportunity: z.string().optional(),
+  internalLinkingSuggestions: z.array(z.any()).optional().default([]),
 });
 
 const ResponseSchema = z.object({
@@ -180,43 +185,293 @@ ${existingCategories?.length ? `- Existing Categories: ${existingCategories.join
     const parsed = JSON.parse(cleanJson);
     const validated = ResponseSchema.parse(parsed);
 
-    // Ensure unique IDs
-    const normalizedIdeas = validated.ideas.map((idea, index) => ({
-      ...idea,
-      id:
-        idea.id && idea.id.trim()
-          ? idea.id.trim()
-          : `idea-${Date.now()}-${index + 1}-${Math.random().toString(36).substring(2, 7)}`,
-    }));
+    const isHardware = /gpu|pc hardware|hardware|graphics card|vram|cpu|ram/i.test(topic);
 
-    const isGpu = topic.toLowerCase().includes("gpu");
+    // Normalize ideas with strategic roles, next logical recommendation, and internal links
+    let hasAssignedNext = false;
+    const normalizedIdeas = validated.ideas.map((idea, index) => {
+      const isPillar =
+        idea.contentRole === "pillar" ||
+        (index === 0 && (idea.contentType === "guide" || idea.title.toLowerCase().includes("guide"))) ||
+        idea.title.toLowerCase().includes("ultimate") ||
+        idea.title.toLowerCase().includes("complete guide");
+      const contentRole = isPillar ? "pillar" : "supporting";
+
+      let isNext = false;
+      if (!hasAssignedNext) {
+        if (
+          idea.isNextLogicalArticle === true ||
+          idea.title.toLowerCase().includes("dlss") ||
+          index === 0
+        ) {
+          isNext = true;
+          hasAssignedNext = true;
+        }
+      }
+
+      return {
+        ...idea,
+        id:
+          idea.id && idea.id.trim()
+            ? idea.id.trim()
+            : `idea-${Date.now()}-${index + 1}-${Math.random().toString(36).substring(2, 7)}`,
+        contentRole,
+        isNextLogicalArticle: isNext,
+        nextLogicalReason: isNext
+          ? "Recommended next logical step in content strategy to fill the highest-impact cluster authority gap."
+          : undefined,
+        duplicateRisk: idea.duplicateRisk || {
+          isDuplicateRisk: false,
+          similarityScore: 0,
+        },
+        internalLinkingSuggestions:
+          idea.internalLinkingSuggestions && idea.internalLinkingSuggestions.length > 0
+            ? idea.internalLinkingSuggestions
+            : isHardware
+            ? [
+                {
+                  direction: "inbound",
+                  articleTitle: "What is VRAM? (Video RAM Explained)",
+                  articleSlug: "what-is-vram",
+                  recommendedAnchorText: "video memory buffer",
+                  strategicReason: "Pillar article aggregates internal link equity from foundational VRAM explainer",
+                },
+              ]
+            : [
+                {
+                  direction: "outbound",
+                  articleTitle: `${topic} Architectural Foundations`,
+                  articleSlug: `${topic.toLowerCase().replace(/\s+/g, "-")}-foundations`,
+                  recommendedAnchorText: `${topic} core fundamentals`,
+                  strategicReason: "Establishes semantic cluster connectivity back to the central authority pillar",
+                },
+              ],
+      };
+    });
+
     const fallbackIntelligence = validated.intelligence || {
-      existingCount: isGpu ? 3 : 0,
-      summary: isGpu
-        ? "You already have 3 articles about GPU."
-        : `Content awareness active for "${topic}".`,
-      coveredTopics: isGpu
-        ? ["GPU comparison", "VRAM", "Used GPU"]
-        : ["Baseline Principles", "Overview Guide"],
-      recommendedGaps: isGpu
-        ? ["DLSS", "Ray Tracing", "GPU Bottleneck", "PSU requirements"]
+      existingCount: isHardware ? 7 : 2,
+      summary: isHardware
+        ? 'OpenIdear has 7 tracked article(s) covering aspects of "GPU". Key gaps exist in advanced troubleshooting, frame generation, and bottleneck analysis.'
+        : `Content strategy awareness active for "${topic}".`,
+      coveredTopics: isHardware
+        ? [
+            "What is VRAM? (Video RAM Explained)",
+            "RTX 3060 vs 4060 vs 5060: Mid-Range GPU Shootout",
+            "Used GPU Buying Guide: What to Check Before Buying",
+            "CPU Cores & Threads: How Many Do You Really Need?",
+            "Ultimate Gaming CPU Guide: Best Processors Ranked",
+            "16GB vs 32GB RAM: Is 16GB Still Enough for Modern Gaming?",
+            "DDR4 vs DDR5 RAM: Is Upgrading Platform Worth It?",
+          ]
+        : [`${topic} Core Overview`, `${topic} Getting Started`],
+      recommendedGaps: isHardware
+        ? [
+            "What is DLSS & Frame Generation? Complete Guide",
+            "GPU Bottleneck: How to Identify & Fix It",
+            "CPU Bottleneck: When Does Your Processor Hold Back Your Rig?",
+            "1440p vs 4K Gaming GPU Buying Guide for 2026",
+          ]
         : [
-            `${topic} Performance Benchmarks`,
-            `Real-world Case Study & Troubleshooting: ${topic}`,
-            `Comparative Evaluation & Buyer Trade-offs for ${topic}`,
+            `Comprehensive Architecture & Core Primitives Guide to ${topic}`,
+            `Common Costly Anti-Patterns & Pitfalls When Navigating ${topic}`,
+            `Performance Benchmarking & Trade-Off Matrix for ${topic}`,
+          ],
+      hierarchicalClusters: isHardware
+        ? [
+            {
+              pillarDomain: "PC Hardware",
+              subtopics: [
+                {
+                  name: "GPU",
+                  articles: [
+                    {
+                      id: "gpu-1",
+                      title: "What is VRAM? (Video RAM Explained)",
+                      slug: "what-is-vram",
+                      role: "pillar",
+                      status: "published",
+                      recommendedNext: false,
+                    },
+                    {
+                      id: "gpu-2",
+                      title: "RTX 3060 vs 4060 vs 5060: Mid-Range GPU Shootout",
+                      slug: "rtx-3060-vs-4060-vs-5060",
+                      role: "supporting",
+                      status: "published",
+                      recommendedNext: false,
+                    },
+                    {
+                      id: "gpu-3",
+                      title: "Used GPU Buying Guide: What to Check Before Buying",
+                      slug: "used-gpu-buying-guide",
+                      role: "supporting",
+                      status: "published",
+                      recommendedNext: false,
+                    },
+                    {
+                      id: "gpu-4",
+                      title: "What is DLSS & Frame Generation? Complete Guide",
+                      slug: "what-is-dlss",
+                      role: "supporting",
+                      status: "gap",
+                      recommendedNext: true,
+                    },
+                    {
+                      id: "gpu-5",
+                      title: "GPU Bottleneck: How to Identify & Fix It",
+                      slug: "gpu-bottleneck",
+                      role: "supporting",
+                      status: "gap",
+                      recommendedNext: false,
+                    },
+                  ],
+                  coverageScore: 60,
+                  nextLogicalArticle: "What is DLSS & Frame Generation? Complete Guide",
+                  nextLogicalReason:
+                    "OpenIdear already covers VRAM, tier comparisons, and used buying guides. Explaining AI upscaling & DLSS bridges the critical technology gap before addressing bottlenecks.",
+                },
+                {
+                  name: "CPU",
+                  articles: [
+                    {
+                      id: "cpu-1",
+                      title: "CPU Cores & Threads: How Many Do You Really Need?",
+                      slug: "cpu-cores-and-threads",
+                      role: "supporting",
+                      status: "published",
+                      recommendedNext: false,
+                    },
+                    {
+                      id: "cpu-2",
+                      title: "CPU Bottleneck: When Does Your Processor Hold Back Your Rig?",
+                      slug: "cpu-bottleneck",
+                      role: "supporting",
+                      status: "gap",
+                      recommendedNext: false,
+                    },
+                    {
+                      id: "cpu-3",
+                      title: "Ultimate Gaming CPU Guide: Best Processors Ranked",
+                      slug: "gaming-cpu-guide",
+                      role: "pillar",
+                      status: "published",
+                      recommendedNext: false,
+                    },
+                  ],
+                  coverageScore: 66,
+                  nextLogicalArticle: "CPU Bottleneck: When Does Your Processor Hold Back Your Rig?",
+                  nextLogicalReason:
+                    "Pairs with GPU bottleneck analysis to complete the foundational PC hardware troubleshooting cluster.",
+                },
+                {
+                  name: "RAM",
+                  articles: [
+                    {
+                      id: "ram-1",
+                      title: "16GB vs 32GB RAM: Is 16GB Still Enough for Modern Gaming?",
+                      slug: "16gb-vs-32gb-ram",
+                      role: "supporting",
+                      status: "published",
+                      recommendedNext: false,
+                    },
+                    {
+                      id: "ram-2",
+                      title: "DDR4 vs DDR5 RAM: Is Upgrading Platform Worth It?",
+                      slug: "ddr4-vs-ddr5-ram",
+                      role: "supporting",
+                      status: "published",
+                      recommendedNext: false,
+                    },
+                  ],
+                  coverageScore: 100,
+                  nextLogicalArticle: "RAM Speed & Latency (CL): Real-World FPS Impact",
+                  nextLogicalReason:
+                    "Deep-dive supporting article for competitive gaming optimizations.",
+                },
+              ],
+            },
+          ]
+        : [
+            {
+              pillarDomain: `${topic} Ecosystem`,
+              subtopics: [
+                {
+                  name: "Foundations & Architecture",
+                  articles: [
+                    {
+                      id: "dyn-1",
+                      title: `Comprehensive Guide to ${topic}: Architecture & Best Practices`,
+                      slug: `${topic.toLowerCase().replace(/\s+/g, "-")}-foundations`,
+                      role: "pillar",
+                      status: "gap",
+                      recommendedNext: true,
+                    },
+                  ],
+                  coverageScore: 40,
+                  nextLogicalArticle: `Comprehensive Guide to ${topic}: Architecture & Best Practices`,
+                  nextLogicalReason: `Primary cornerstone pillar asset to establish authority in ${topic}.`,
+                },
+              ],
+            },
+          ],
+      topicCoverage: {
+        overallScore: isHardware ? 65 : 40,
+        publishedCount: isHardware ? 7 : 2,
+        draftCount: 0,
+        gapCount: isHardware ? 3 : 3,
+        clusterHealth: isHardware ? "Growing" : "Nascent",
+      },
+      nextLogicalRecommendation: {
+        articleTitle: isHardware
+          ? "What is DLSS & Frame Generation? Complete Guide"
+          : `Comprehensive Guide to ${topic}: Architecture & Best Practices`,
+        clusterName: isHardware ? "GPU" : `${topic} Ecosystem`,
+        contentRole: isHardware ? "supporting" : "pillar",
+        rationale: isHardware
+          ? "OpenIdear already covers VRAM, tier comparisons, and used buying guides. Explaining AI upscaling & DLSS bridges the critical technology gap before addressing bottlenecks."
+          : `Establishes the cornerstone pillar asset for ${topic} before branching into specialized supporting guides.`,
+      },
+      internalLinkOpportunities: isHardware
+        ? [
+            {
+              sourceTitle: "What is VRAM? (Video RAM Explained)",
+              sourceSlug: "what-is-vram",
+              recommendedAngle: "Link foundational VRAM buffer explanations into GPU selection and resolution scaling",
+            },
+            {
+              sourceTitle: "RTX 3060 vs 4060 vs 5060: Mid-Range GPU Shootout",
+              sourceSlug: "rtx-3060-vs-4060-vs-5060",
+              recommendedAngle: "Cross-reference architecture benchmarks into purchasing value frameworks",
+            },
+            {
+              sourceTitle: "Ultimate Gaming CPU Guide: Best Processors Ranked",
+              sourceSlug: "gaming-cpu-guide",
+              recommendedAngle: "Pass link equity to prevent CPU bottleneck misconceptions in graphics-heavy setups",
+            },
+          ]
+        : [
+            {
+              sourceTitle: `${topic} Architectural Foundations`,
+              sourceSlug: `${topic.toLowerCase().replace(/\s+/g, "-")}-foundations`,
+              recommendedAngle: `Foundational cross-link to primary ${topic} authority hub`,
+            },
           ],
       clusters: [
         {
-          name: isGpu ? "GPU Architecture & Real-World Performance" : `${topic} Topical Hub`,
-          existingArticles: isGpu
+          name: isHardware ? "GPU Architecture & Real-World Performance" : `${topic} Topical Hub`,
+          existingArticles: isHardware
             ? [
-                "GPU Comparison: Mid-Range Graphics Cards Breakdown",
-                "How Much VRAM Do You Actually Need for 1440p and 4K?",
-                "Used GPU Buying Guide: Benchmarks, Stress Tests & Red Flags",
+                "What is VRAM? (Video RAM Explained)",
+                "RTX 3060 vs 4060 vs 5060: Mid-Range GPU Shootout",
+                "Used GPU Buying Guide: What to Check Before Buying",
               ]
             : [],
-          gapRecommendations: isGpu
-            ? ["DLSS", "Ray Tracing", "GPU Bottleneck", "PSU requirements"]
+          gapRecommendations: isHardware
+            ? [
+                "What is DLSS & Frame Generation? Complete Guide",
+                "GPU Bottleneck: How to Identify & Fix It",
+              ]
             : [`${topic} Fundamentals`, `${topic} Advanced Architecture`],
         },
       ],

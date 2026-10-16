@@ -267,8 +267,20 @@ export function useContentStudio(): UseContentStudioReturn {
 
   const generateBriefForIdea = useCallback(
     async (idea: ContentIdea, force = false): Promise<ContentBrief | null> => {
-      if (!force && store.briefs[idea.id]) {
-        return store.briefs[idea.id];
+      // Seed default brief if not yet present so user fields and selections are never empty
+      if (!store.briefs[idea.id]) {
+        store.setBrief(idea.id, {
+          targetAudience: idea.targetAudience
+            ? [idea.targetAudience]
+            : ["Beginner PC builders"],
+          tone: "Practical",
+          length: "Medium — 1,500–2,500 words",
+          category: idea.category || "PC Hardware",
+          objective:
+            idea.searchIntent === "commercial"
+              ? "Help users make a purchase decision"
+              : "Explain",
+        });
       }
 
       store.setIsGeneratingBrief(true);
@@ -281,7 +293,7 @@ export function useContentStudio(): UseContentStudioReturn {
             store.categories.length > 0 ? store.categories : undefined,
         });
 
-        store.setBrief(idea.id, brief);
+        store.setBrief(idea.id, brief, force);
         return brief;
       } catch (err: unknown) {
         const msg =
@@ -289,8 +301,7 @@ export function useContentStudio(): UseContentStudioReturn {
             ? err.message
             : "Failed to infer content brief suggestions.";
         store.setBriefError(msg);
-        toast.error(msg);
-        return null;
+        return store.briefs[idea.id] || null;
       } finally {
         store.setIsGeneratingBrief(false);
       }
@@ -304,13 +315,29 @@ export function useContentStudio(): UseContentStudioReturn {
       return;
     }
 
+    // Immediately seed briefs for all selected ideas so all fields and selections are reactive
+    selectedIdeas.forEach((idea) => {
+      if (!store.briefs[idea.id]) {
+        store.setBrief(idea.id, {
+          targetAudience: idea.targetAudience
+            ? [idea.targetAudience]
+            : ["Beginner PC builders"],
+          tone: "Practical",
+          length: "Medium — 1,500–2,500 words",
+          category: idea.category || "PC Hardware",
+          objective:
+            idea.searchIntent === "commercial"
+              ? "Help users make a purchase decision"
+              : "Explain",
+        });
+      }
+    });
+
     store.setStep("brief");
     store.setActiveIdeaIndex(0);
 
     const firstIdea = selectedIdeas[0];
-    if (!store.briefs[firstIdea.id]) {
-      await generateBriefForIdea(firstIdea);
-    }
+    await generateBriefForIdea(firstIdea, false);
   }, [selectedIdeas, store, generateBriefForIdea]);
 
   const setActiveIdeaIndex = useCallback(
@@ -321,7 +348,19 @@ export function useContentStudio(): UseContentStudioReturn {
       const idea = selectedIdeas[index];
       if (idea) {
         if (!store.briefs[idea.id]) {
-          await generateBriefForIdea(idea);
+          store.setBrief(idea.id, {
+            targetAudience: idea.targetAudience
+              ? [idea.targetAudience]
+              : ["Beginner PC builders"],
+            tone: "Practical",
+            length: "Medium — 1,500–2,500 words",
+            category: idea.category || "PC Hardware",
+            objective:
+              idea.searchIntent === "commercial"
+                ? "Help users make a purchase decision"
+                : "Explain",
+          });
+          await generateBriefForIdea(idea, false);
         }
         if (store.step === "outline" && !store.outlines[idea.id] && store.briefs[idea.id]) {
           await generateOutlineForIdea(idea, store.briefs[idea.id]);

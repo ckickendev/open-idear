@@ -76,7 +76,12 @@ export function ContentBriefEditor({
 }: ContentBriefEditorProps) {
   const [customAudienceInput, setCustomAudienceInput] = useState("");
 
-  const currentAudience = brief?.targetAudience || [];
+  const currentAudience =
+    brief?.targetAudience !== undefined
+      ? brief.targetAudience
+      : idea.targetAudience
+      ? [idea.targetAudience]
+      : [];
   const currentTone = brief?.tone || TONE_OPTIONS[0];
   const currentLength = brief?.length || LENGTH_OPTIONS[1];
   const currentCategory = brief?.category || idea.category || "General";
@@ -220,12 +225,12 @@ export function ContentBriefEditor({
                   <span>Target Audience</span>
                 </label>
 
-                {/* Selected Audience Chips */}
-                <div className="flex flex-wrap items-center gap-2 min-h-8">
+                {/* Selected Audience Chips & Tag Input in a unified interactive container */}
+                <div className="p-2 rounded-xl border border-border/80 bg-background flex flex-wrap items-center gap-2 min-h-[46px] focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary transition-all">
                   {currentAudience.map((aud, idx) => (
                     <span
                       key={`${aud}-${idx}`}
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 shadow-2xs"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 shadow-2xs"
                     >
                       <span>{aud}</span>
                       <button
@@ -239,15 +244,19 @@ export function ContentBriefEditor({
                     </span>
                   ))}
 
-                  {/* Tag Input */}
-                  <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
+                  {/* Persona Input */}
+                  <div className="flex items-center gap-1 flex-1 min-w-[200px]">
                     <input
                       type="text"
                       value={customAudienceInput}
                       onChange={(e) => setCustomAudienceInput(e.target.value)}
                       onKeyDown={handleKeyDownAudience}
-                      placeholder="Add persona (press Enter)..."
-                      className="text-xs bg-muted/30 border border-border/70 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary flex-1"
+                      placeholder={
+                        currentAudience.length === 0
+                          ? "Type target persona (e.g. Beginner PC builders) and press Add..."
+                          : "Add another persona..."
+                      }
+                      className="text-xs bg-transparent border-0 px-2 py-1 focus:outline-none flex-1 text-foreground placeholder:text-muted-foreground/60"
                     />
                     <Button
                       type="button"
@@ -255,7 +264,7 @@ export function ContentBriefEditor({
                       size="sm"
                       onClick={() => handleAddAudienceTag(customAudienceInput)}
                       disabled={!customAudienceInput.trim()}
-                      className="h-7 px-2 text-xs text-primary hover:bg-primary/10 rounded-lg cursor-pointer"
+                      className="h-7 px-2.5 text-xs text-primary hover:bg-primary/10 rounded-md cursor-pointer disabled:opacity-30"
                     >
                       <Plus size={13} className="mr-1" />
                       Add

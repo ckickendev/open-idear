@@ -26,6 +26,7 @@ const STATUS_FADE_DELAY = 4000;
 export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
   const {
     postId,
+    locale = "en",
     getContent,
     debounceMs = DEFAULT_DEBOUNCE_MS,
     enabled = true,
@@ -39,6 +40,7 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
 
   // Refs for values that callbacks need without re-creating the callback
   const postIdRef = useRef(postId);
+  const localeRef = useRef(locale);
   const getContentRef = useRef(getContent);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedHash = useRef<string>("");
@@ -50,14 +52,18 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
   }, [postId]);
 
   useEffect(() => {
+    localeRef.current = locale;
+  }, [locale]);
+
+  useEffect(() => {
     getContentRef.current = getContent;
   }, [getContent]);
 
   // ─── Content Hash ───────────────────────────────────────────────────────
 
   const computeHash = useCallback(
-    (content: { title: string; html: string }): string => {
-      return `${content.title}::${content.html}`;
+    (content: { title: string; html: string }, loc: string = "en"): string => {
+      return `${loc}::${content.title}::${content.html}`;
     },
     [],
   );
@@ -68,6 +74,7 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
     async (isAutoSave: boolean) => {
       const content = getContentRef.current();
       const currentPostId = postIdRef.current;
+      const currentLocale = localeRef.current;
 
       // Don't save empty titles
       if (!content.title.trim()) {
@@ -78,7 +85,7 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
       }
 
       // Don't save if content hasn't changed
-      const hash = computeHash(content);
+      const hash = computeHash(content, currentLocale);
       if (hash === lastSavedHash.current && currentPostId) {
         if (!isAutoSave) {
           toast.info("All changes are already saved!");
@@ -90,9 +97,10 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
 
       try {
         if (currentPostId) {
-          // Update existing post
+          // Update existing post for the specific locale
           const res = await postApi.updatePost({
             postId: currentPostId,
+            locale: currentLocale,
             title: content.title,
             text: content.text,
             content: content.html,
@@ -109,7 +117,7 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
             setStatus("saved");
             setLastSavedAt(new Date());
             if (!isAutoSave) {
-              toast.success("Post updated successfully!");
+              toast.success(`Post updated (${currentLocale.toUpperCase()}) successfully!`);
             }
           } else {
             setStatus("error");
@@ -119,6 +127,7 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
           // Create new post
           const res = await postApi.createPost({
             title: content.title,
+            locale: currentLocale,
             text: content.text,
             content: content.html,
             markdown: content.markdown,
@@ -135,9 +144,12 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
             setStatus("saved");
             setLastSavedAt(new Date());
 
-            // Update URL with new post ID (without full navigation)
+            // Update URL with new post ID and preserve active locale
             const params = new URLSearchParams();
             params.set("id", res.data.post._id);
+            if (currentLocale && currentLocale !== "en") {
+              params.set("locale", currentLocale);
+            }
             router.push(`${pathname}?${params.toString()}`);
 
             if (!isAutoSave) {
@@ -163,6 +175,22 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
       }, STATUS_FADE_DELAY);
     },
     [computeHash, router, pathname],
+  );
+
+  // ─── Reset Hash baseline (e.g. on locale switch) ───────────────────────
+
+  const resetHash = useCallback(
+    (newHash?: string) => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (newHash !== undefined) {
+        lastSavedHash.current = newHash;
+      } else {
+        const content = getContentRef.current();
+        lastSavedHash.current = computeHash(content, localeRef.current);
+      }
+      setStatus("idle");
+    },
+    [computeHash],
   );
 
   // ─── Mark Dirty (triggers debounced auto-save) ─────────────────────────
@@ -221,6 +249,7 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveReturn {
     lastSavedAt,
     save,
     retry,
+    resetHash,
     hasUnsavedChanges,
     markDirty,
   };

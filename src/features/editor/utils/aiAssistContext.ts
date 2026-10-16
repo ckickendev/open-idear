@@ -98,6 +98,109 @@ export interface VisualIntentClassificationResult {
   recommendedRatio: string;
 }
 
+export interface ContextSignals {
+  isHardwareDiagnostics: boolean;
+  isHardwareTool: boolean;
+  isBottleneck: boolean;
+  components: string[];
+  metrics: string[];
+  isBackendArchitecture: boolean;
+  isBenchmark: boolean;
+  isWorkflow: boolean;
+  isComparison: boolean;
+}
+
+/**
+ * Sanitizes and normalizes heading/subject strings by stripping common section numbering,
+ * prefixes (e.g., "Công cụ 2:", "Tool 1:", "Bước 3:", "Phần 1:"), and trailing punctuation.
+ */
+export function sanitizeHeadingSubject(raw?: string): string {
+  if (!raw) return "";
+  let cleaned = raw.trim();
+
+  // Strip wrapping quotes
+  cleaned = cleaned.replace(/^["'“”‘’]+|["'“”‘’]+$/g, "").trim();
+
+  // Strip prefixes like "Công cụ 2:", "Tool 1:", "Bước 3:", "Phần 1:", "Section 2:", "Chương 4:"
+  cleaned = cleaned.replace(
+    /^(?:công\s+cụ|tiện\s+ích|phần\s+mềm|bước|phần|mục|chương|bài|tool|step|section|part|chapter)\s*(?:[0-9ivx]+|[a-z])?[:\s\-–—.]+/i,
+    ""
+  );
+
+  // Strip leading numbers like "1.", "2:", "3 -", "1.2"
+  cleaned = cleaned.replace(/^(?:[0-9]+(?:\.[0-9]+)*|[ivx]+)[.):\s\-–—]+/i, "");
+
+  // Strip trailing punctuation
+  cleaned = cleaned.replace(/[:;.\-–—\s]+$/, "").trim();
+
+  return cleaned || raw.trim();
+}
+
+/**
+ * Analyzes text and subject to extract key domain entities, components, and metrics.
+ */
+export function extractContextSignals(text: string, subject = ""): ContextSignals {
+  const combined = `${subject} ${text}`.toLowerCase();
+
+  // Hardware components
+  const components: string[] = [];
+  if (/(?:^|[^\p{L}\p{N}])(?:cpu|vi xử lý|vi-xử-lý|processor)(?:[^\p{L}\p{N}]|$)/iu.test(combined)) components.push("CPU");
+  if (/(?:^|[^\p{L}\p{N}])(?:gpu|card đồ họa|card màn hình|graphics card|vga)(?:[^\p{L}\p{N}]|$)/iu.test(combined)) components.push("GPU");
+  if (/(?:^|[^\p{L}\p{N}])(?:ram|bộ nhớ ram|memory)(?:[^\p{L}\p{N}]|$)/iu.test(combined)) components.push("RAM");
+  if (/(?:^|[^\p{L}\p{N}])(?:bo mạch chủ|motherboard|mainboard)(?:[^\p{L}\p{N}]|$)/iu.test(combined)) components.push("Motherboard");
+  if (/(?:^|[^\p{L}\p{N}])(?:ssd|nvme|ổ cứng|storage)(?:[^\p{L}\p{N}]|$)/iu.test(combined)) components.push("Storage");
+  if (/(?:^|[^\p{L}\p{N}])(?:vram)(?:[^\p{L}\p{N}]|$)/iu.test(combined)) components.push("VRAM");
+  if (/(?:^|[^\p{L}\p{N}])(?:psu|nguồn|power supply)(?:[^\p{L}\p{N}]|$)/iu.test(combined)) components.push("PSU");
+
+  // Telemetry & Diagnostic Metrics
+  const metrics: string[] = [];
+  if (/(?:^|[^\p{L}\p{N}])(?:nhiệt độ|temperature|thermals?)(?:[^\p{L}\p{N}]|$)/iu.test(combined)) metrics.push("temperatures");
+  if (/(?:^|[^\p{L}\p{N}])(?:điện áp|voltage|vcore)(?:[^\p{L}\p{N}]|$)/iu.test(combined)) metrics.push("voltages");
+  if (/(?:^|[^\p{L}\p{N}])(?:xung nhịp|clock speed|frequency|xung)(?:[^\p{L}\p{N}]|$)/iu.test(combined)) metrics.push("clock speeds");
+  if (/(?:^|[^\p{L}\p{N}])(?:tải|load|utilization)(?:[^\p{L}\p{N}]|$)/iu.test(combined)) metrics.push("load metrics");
+  if (/(?:^|[^\p{L}\p{N}])(?:cảm biến|sensors?)(?:[^\p{L}\p{N}]|$)/iu.test(combined)) metrics.push("sensor telemetry");
+  if (/(?:^|[^\p{L}\p{N}])(?:quạt|fan|rpm)(?:[^\p{L}\p{N}]|$)/iu.test(combined)) metrics.push("fan speeds");
+  if (/(?:^|[^\p{L}\p{N}])(?:ép xung|overclock(?:ing)?)(?:[^\p{L}\p{N}]|$)/iu.test(combined)) metrics.push("overclocking status");
+
+  const isHardwareDiagnostics =
+    components.length > 0 ||
+    metrics.length > 0 ||
+    /(?:^|[^\p{L}\p{N}])(?:hwinfo|gpu-z|cpu-z|afterburner|aida64|furmark|cinebench|phần cứng|linh kiện|bottleneck|nghẽn cổ chai)(?:[^\p{L}\p{N}]|$)/iu.test(combined);
+
+  const isBottleneck =
+    /\b(?:bottleneck|nghẽn\s+cổ\s+chai|chokepoint|throttle|saturation)\b/i.test(combined);
+
+  const isHardwareTool =
+    /\b(?:hwinfo|gpu-z|cpu-z|afterburner|aida64|furmark|cinebench)\b/i.test(combined) ||
+    (/(?:^|[^\p{L}\p{N}])(?:công\s+cụ|tiện\s+ích|phần\s+mềm|giám\s+sát)(?:[^\p{L}\p{N}]|$)/iu.test(combined) && components.length > 0);
+
+  const isBackendArchitecture =
+    /(?:architecture|microservice|client[\s\S]*server|gateway|in-memory|database|cache|redis|kafka|cluster|kubernetes|docker|cloud topology|backend|load balancer)/i.test(
+      combined
+    );
+
+  const isBenchmark =
+    /(?:benchmark|latency|throughput|p99|p95|qps|rps|đo kiểm|điểm số|fps)/i.test(combined);
+
+  const isWorkflow =
+    /(?:workflow|pipeline|lifecycle|quy trình|các bước|luồng|step [0-9]|bước [0-9])/i.test(combined);
+
+  const isComparison =
+    /(?:vs|versus|so sánh|đối chiếu|comparison|trade-off|pros and cons)/i.test(combined);
+
+  return {
+    isHardwareDiagnostics,
+    isHardwareTool,
+    isBottleneck,
+    components,
+    metrics,
+    isBackendArchitecture,
+    isBenchmark,
+    isWorkflow,
+    isComparison,
+  };
+}
+
 // ─── 1. Visual Intent Classifier ──────────────────────────────────────────────
 
 /**
@@ -109,10 +212,11 @@ export function classifyVisualIntent(
   heading = ""
 ): VisualIntentClassificationResult {
   const combined = `${heading} ${text}`.toLowerCase();
+  const signals = extractContextSignals(text, heading);
 
   // 1. Architecture: System components, microservices, caches, cloud boundaries
   if (
-    /(architecture|microservice|client[\s\S]*server|gateway|in-memory|database|cache|redis|kafka|cluster|kubernetes|docker|cloud topology|backend[\s\S]*frontend|load balancer|dispatcher)/i.test(
+    /(architecture|kiến trúc|hệ thống|hạ tầng|microservice|client[\s\S]*server|gateway|in-memory|database|cache|redis|kafka|cluster|kubernetes|docker|cloud topology|backend[\s\S]*frontend|load balancer|dispatcher)/i.test(
       combined
     )
   ) {
@@ -128,7 +232,7 @@ export function classifyVisualIntent(
 
   // 2. Workflow / Lifecycle: Request flows, step-by-step pipelines, sequential stages
   if (
-    /(workflow|pipeline|lifecycle|before passing|eventually reaching|first[\s\S]*then|step [0-9]|phase [0-9]|ingestion|process flow|dispatch|ci\/cd|handshake)/i.test(
+    /(workflow|pipeline|lifecycle|quy trình|các bước|luồng|before passing|eventually reaching|first[\s\S]*then|step [0-9]|phase [0-9]|bước [0-9]|ingestion|process flow|dispatch|ci\/cd|handshake)/i.test(
       combined
     )
   ) {
@@ -144,7 +248,7 @@ export function classifyVisualIntent(
 
   // 3. Comparison / Trade-offs: Contrast between approaches
   if (
-    /(vs|versus|comparison|compared to|trade-off|pros and cons|difference between|benchmark against)/i.test(
+    /(vs|versus|so sánh|đối chiếu|ưu nhược điểm|khác biệt giữa|comparison|compared to|trade-off|pros and cons|difference between|benchmark against)/i.test(
       combined
     )
   ) {
@@ -160,7 +264,7 @@ export function classifyVisualIntent(
 
   // 4. Data Benchmark / Chart: Quantitative metrics, throughput, latency
   if (
-    /(latency|throughput|benchmark|metrics|p99|p95|qps|rps|megabytes|memory consumption|power efficiency|clock speed|fps|percentile)/i.test(
+    /(latency|throughput|benchmark|metrics|p99|p95|qps|rps|megabytes|memory consumption|power efficiency|clock speed|fps|percentile|đo kiểm|điểm số|hiệu năng|tiêu thụ điện)/i.test(
       combined
     )
   ) {
@@ -176,7 +280,7 @@ export function classifyVisualIntent(
 
   // 5. Code Architecture Visual: Syntax blocks, interfaces, classes, AST
   if (
-    /(syntax|interface|class diagram|ast|compiler|tokenization|type definition|struct|algorithm|call stack)/i.test(
+    /(syntax|interface|class diagram|ast|compiler|tokenization|type definition|struct|algorithm|call stack|mã nguồn|cú pháp|thuật toán)/i.test(
       combined
     )
   ) {
@@ -190,17 +294,18 @@ export function classifyVisualIntent(
     };
   }
 
-  // 6. UI / Screenshot / CLI Console
+  // 6. UI / Screenshot / Tool Console / Dashboard
   if (
-    /(dashboard|ui|console|terminal|command line|screen|gui|settings panel|devtools|inspector)/i.test(
+    /(dashboard|ui|console|terminal|command line|screen|gui|settings panel|devtools|inspector|hwinfo|gpu-z|cpu-z|afterburner|task manager|giao diện|bảng điều khiển|màn hình|phần mềm|tiện ích|công cụ|giám sát)/i.test(
       combined
     )
   ) {
     return {
       intent: "screenshot",
-      confidence: 0.85,
-      reason:
-        "Describes developer interface configurations or interactive console views.",
+      confidence: 0.91,
+      reason: signals.isHardwareDiagnostics
+        ? "Illustrates the hardware diagnostic tool interface, real-time telemetry dashboard, and sensor monitoring panel."
+        : "Describes developer interface configurations or interactive console views.",
       recommendedPreset: "flat_vector",
       recommendedRatio: "16:9",
     };
@@ -208,7 +313,7 @@ export function classifyVisualIntent(
 
   // 7. General Technical Diagram: Connected nodes, protocol handshakes
   if (
-    /(diagram|protocol|connection|packet|network|node|channel|socket|endpoint)/i.test(
+    /(diagram|protocol|connection|packet|network|node|channel|socket|endpoint|sơ đồ|kết nối)/i.test(
       combined
     )
   ) {
@@ -225,9 +330,10 @@ export function classifyVisualIntent(
   // 8. Technical Illustration: Default high-craft technical mental model
   return {
     intent: "technical_illustration",
-    confidence: 0.84,
-    reason:
-      "Visualizes modular technical systems and mental models in 30° isometric view.",
+    confidence: signals.isHardwareDiagnostics ? 0.88 : 0.84,
+    reason: signals.isHardwareDiagnostics
+      ? "Visualizes PC hardware components, thermal sensors, and telemetry diagnostics in 30° isometric view."
+      : "Visualizes modular technical systems and mental models in 30° isometric view.",
     recommendedPreset: "isometric",
     recommendedRatio: "16:9",
   };
@@ -278,14 +384,15 @@ export function generateStructuredAiImagePrompt(options: {
   const { text, heading, intent, articleTitle } = options;
   const cleanSnippet = text.trim().replace(/^["'“”‘’]|["'“”‘’]$/g, "").replace(/\s+/g, " ");
 
-  // Subject title derived from heading, snippet or article title
+  // Subject title derived from sanitized heading, snippet or article title
+  const cleanHeading = sanitizeHeadingSubject(heading);
   const rawSubject =
-    heading?.trim() ||
-    cleanSnippet.slice(0, 75).replace(/[.:;!]+$/, "") ||
-    articleTitle?.trim() ||
+    cleanHeading ||
+    sanitizeHeadingSubject(cleanSnippet.slice(0, 75).replace(/[.:;!]+$/, "")) ||
+    sanitizeHeadingSubject(articleTitle) ||
     "Technical Architecture";
 
-  const subject = rawSubject.replace(/[.:;!]+$/, "");
+  const subject = rawSubject.replace(/[.:;!]+$/, "").trim();
 
   // If already formulated as an explicit custom diagram prompt by author, preserve it
   if (
@@ -298,6 +405,7 @@ export function generateStructuredAiImagePrompt(options: {
   }
 
   const detectedSteps = extractSequentialComponents(cleanSnippet);
+  const contextSignals = extractContextSignals(cleanSnippet, subject);
 
   switch (intent) {
     case "architecture": {
@@ -329,6 +437,9 @@ export function generateStructuredAiImagePrompt(options: {
     }
 
     case "diagram": {
+      if (contextSignals.isHardwareDiagnostics) {
+        return `Create a detailed technical diagram explaining ${subject} telemetry data flow:\n\nPC hardware sensor bus to diagnostic software pipeline, labeled connector lines, clean modular topology, professional developer documentation style.`;
+      }
       return `Create a detailed technical diagram explaining ${subject}:\n\nOrthographic schematic layout, labeled connector lines, clean modular topology, professional developer documentation style.`;
     }
 
@@ -337,6 +448,9 @@ export function generateStructuredAiImagePrompt(options: {
     }
 
     case "chart": {
+      if (contextSignals.isHardwareDiagnostics) {
+        return `Create a clean technical benchmark data chart illustrating ${subject} telemetry metrics:\n\nComparative horizontal benchmark metric bars, temperature curves, voltage stability, and clock frequency indicators, modern dark-mode technical styling.`;
+      }
       return `Create a clean technical benchmark data chart illustrating ${subject}:\n\nComparative horizontal benchmark metric bars, throughput and latency indicators, modern dark-mode technical styling.`;
     }
 
@@ -345,6 +459,13 @@ export function generateStructuredAiImagePrompt(options: {
     }
 
     case "screenshot": {
+      if (contextSignals.isHardwareDiagnostics) {
+        const compList =
+          contextSignals.components.length > 0
+            ? contextSignals.components.join(", ")
+            : "CPU, GPU, RAM";
+        return `Create a clean technical UI dashboard mockup for ${subject} hardware diagnostics:\n\nDisplaying real-time telemetry sensor readouts for ${compList}, core clock frequencies, voltage meters, and thermal curves. Modern dark-mode hardware monitoring console, crisp data hierarchy, professional enthusiast utility layout.`;
+      }
       return `Create a clean technical UI dashboard mockup illustrating ${subject}:\n\nModern developer console window, wireframe controls, high-craft dark mode UI.`;
     }
 
@@ -358,7 +479,136 @@ export function generateStructuredAiImagePrompt(options: {
 
     case "technical_illustration":
     default: {
+      if (contextSignals.isBottleneck) {
+        const compList =
+          contextSignals.components.length > 0
+            ? contextSignals.components.join(", ")
+            : "CPU, GPU";
+        return `Create a clean technical isometric illustration explaining ${subject}:\n\nIsometric 30-degree orthographic view, modular PC hardware architecture (${compList}) visualizing data throughput pipeline, PCIe bus communication, processor utilization, and hardware balance, soft volumetric technical matte style, clean high-tech composition.`;
+      }
+      if (contextSignals.isHardwareTool) {
+        const compList =
+          contextSignals.components.length > 0
+            ? contextSignals.components.join(", ")
+            : "CPU, GPU, RAM";
+        const metricList =
+          contextSignals.metrics.length > 0
+            ? contextSignals.metrics.join(", ")
+            : "temperature, voltage, and clock speed";
+        return `Create a clean technical isometric illustration explaining ${subject} hardware diagnostics:\n\nIsometric 30-degree orthographic view, modular PC hardware components (${compList}) with glowing real-time telemetry sensor streams, ${metricList} indicators, soft volumetric technical matte style, clean high-tech composition.`;
+      }
+      if (contextSignals.isHardwareDiagnostics) {
+        const compList =
+          contextSignals.components.length > 0
+            ? contextSignals.components.join(", ")
+            : "CPU, GPU, RAM";
+        return `Create a clean technical isometric illustration explaining ${subject}:\n\nIsometric 30-degree orthographic view, modular PC hardware components (${compList}) with glowing real-time telemetry sensor streams, soft volumetric technical matte style, clean high-tech composition.`;
+      }
       return `Create a clean technical isometric illustration explaining ${subject}:\n\nIsometric 30-degree orthographic view, modular layered architecture, soft volumetric technical matte style.`;
+    }
+  }
+}
+
+/**
+ * Returns dynamic, context-aware prompt idea chips based on subject, intent, and text context.
+ */
+export function getDynamicPromptChips(options: {
+  heading?: string;
+  text?: string;
+  intent: VisualIntent;
+  articleTitle?: string;
+}): string[] {
+  const { heading, text = "", intent, articleTitle } = options;
+  const cleanSubject =
+    sanitizeHeadingSubject(heading) ||
+    sanitizeHeadingSubject(articleTitle) ||
+    "Technical System";
+
+  const signals = extractContextSignals(text, cleanSubject);
+
+  if (signals.isBottleneck) {
+    return [
+      `3D isometric ${cleanSubject} data throughput & PCIe communication pipeline`,
+      `CPU vs GPU utilization and frame time balance diagram`,
+      `Hardware workload saturation and bottleneck indicator architecture`,
+      `Balanced PC gaming component topology with throughput telemetry`,
+    ];
+  }
+
+  if (signals.isHardwareDiagnostics) {
+    return [
+      `${cleanSubject} real-time sensor telemetry dashboard with CPU & GPU thermals`,
+      `Hardware diagnostic monitoring panel showing voltages, clock speeds, and fan RPM`,
+      `3D isometric PC component sensor architecture with live data streams`,
+      `Minimalist dark-mode hardware status gauge HUD`,
+    ];
+  }
+
+  switch (intent) {
+    case "architecture": {
+      if (/redis|cache|database/i.test(text)) {
+        return [
+          "In-memory Redis caching topology with primary database read-replica",
+          "High-concurrency API gateway load-balancing topology",
+          `${cleanSubject} distributed caching cluster data flow`,
+          "Multi-region database replication and failover architecture",
+        ];
+      }
+      return [
+        `${cleanSubject} system component architecture with directional data flow`,
+        `Microservices event-driven communication topology for ${cleanSubject}`,
+        "High-concurrency service boundary and load balancer topology",
+        "End-to-end distributed infrastructure architecture diagram",
+      ];
+    }
+    case "workflow": {
+      return [
+        `Step-by-step execution pipeline for ${cleanSubject}`,
+        `Sequential data processing flow with directional stages`,
+        `Interactive walkthrough with state transition indicators`,
+        `Lifecycle stage progression flowchart for ${cleanSubject}`,
+      ];
+    }
+    case "comparison": {
+      return [
+        `Side-by-side technical trade-off matrix for ${cleanSubject}`,
+        `Performance throughput and latency benchmark comparison`,
+        `Feature matrix and architectural differences breakdown`,
+        `Dual-column comparative schematic layout`,
+      ];
+    }
+    case "chart": {
+      return [
+        `Quantitative benchmark comparison chart for ${cleanSubject}`,
+        `Latency and throughput distribution metrics chart`,
+        `Hardware power efficiency and performance curve`,
+        `Comparative horizontal bar chart with telemetry indicators`,
+      ];
+    }
+    case "screenshot": {
+      return [
+        `${cleanSubject} modern dark-mode application dashboard UI`,
+        `Interactive developer console and configuration inspector`,
+        `Real-time telemetry HUD with telemetry graphs and meters`,
+        `Minimalist desktop utility window layout for ${cleanSubject}`,
+      ];
+    }
+    case "code_visual": {
+      return [
+        `${cleanSubject} interface contracts and type definitions`,
+        `Abstract syntax tree (AST) tokenization flowchart`,
+        `Data structure memory layout blueprint for ${cleanSubject}`,
+        `Function call hierarchy and recursion stack diagram`,
+      ];
+    }
+    case "technical_illustration":
+    default: {
+      return [
+        `3D isometric orthographic view of ${cleanSubject} internal mechanisms`,
+        `Modular layered technical illustration of ${cleanSubject}`,
+        `High-craft soft volumetric matte 3D schematic`,
+        `Exploded isometric view showing system component interactions`,
+      ];
     }
   }
 }
@@ -513,7 +763,7 @@ export function extractEditorContextForAiImage(
       contextType: "heading_paragraph",
       heading: nearestHeading,
       articleTitle: articleMeta?.title,
-      suggestedAlt: `Illustration of ${nearestHeading}`,
+      suggestedAlt: `Illustration of ${sanitizeHeadingSubject(nearestHeading) || nearestHeading}`,
       visualIntent: classification.intent,
       visualType: classification.intent,
       confidence: classification.confidence,
@@ -537,7 +787,7 @@ export function extractEditorContextForAiImage(
       contextSnippet: blockText,
       contextType: "paragraph",
       articleTitle: articleMeta?.title,
-      suggestedAlt: `Illustration for ${blockText.slice(0, 80).replace(/[.:;!]+$/, "")}`,
+      suggestedAlt: `Illustration for ${sanitizeHeadingSubject(blockText.slice(0, 80).replace(/[.:;!]+$/, "")) || blockText.slice(0, 80)}`,
       visualIntent: classification.intent,
       visualType: classification.intent,
       confidence: classification.confidence,
@@ -563,7 +813,7 @@ export function extractEditorContextForAiImage(
       contextType: "section",
       heading: nearestHeading,
       articleTitle: articleMeta?.title,
-      suggestedAlt: `Illustration of ${nearestHeading}`,
+      suggestedAlt: `Illustration of ${sanitizeHeadingSubject(nearestHeading) || nearestHeading}`,
       visualIntent: classification.intent,
       confidence: classification.confidence,
       recommendationReason: classification.reason,
@@ -636,8 +886,13 @@ export async function trackAiImageTelemetry(
     },
   };
 
-  return aiVisualApi.trackAnalytics(event);
-}
+    try {
+      return await aiVisualApi.trackAnalytics(event);
+    } catch {
+      // Non-blocking telemetry: Analytics failures must never break the authoring workflow
+      return null;
+    }
+  }
 
 // ─── 5. Tiptap Node Attribute Builder ─────────────────────────────────────────
 
@@ -715,9 +970,9 @@ export function getStandardAIAssistActions(
     },
     {
       id: "image",
-      label: "AI Image",
-      description: "Generate an illustration or architecture diagram for your article",
-      icon: ImageIcon,
+      label: "AI Visual Assistant",
+      description: "Generate an AI illustration or find real images from the internet",
+      icon: Sparkles,
       onClick: handlers.onImage,
       variant: "accent",
     },

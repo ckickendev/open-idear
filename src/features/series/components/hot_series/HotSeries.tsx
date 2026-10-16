@@ -14,22 +14,36 @@ const HotSeries: React.FC = () => {
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
+    let isMounted = true;
     const fetchSeriesData = async () => {
+      const rootApi = ENV?.ROOT_API;
+      if (!rootApi) {
+        setIsLoading(false);
+        return;
+      }
       try {
         setIsLoading(true);
         const res = await axios.get(
-          `${ENV.ROOT_API}/series/getHotSeries`,
+          `${rootApi}/series/getHotSeries`,
+          { timeout: 4000 }
         );
+        if (!isMounted) return;
         if (res.status === 200) {
-          setSeries(res.data.series || []);
+          setSeries(res.data?.series || []);
         }
       } catch (error) {
-        console.error("Error fetching series:", error);
+        console.warn("Could not fetch hot series:", error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
     fetchSeriesData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const scrollLeft = () => {

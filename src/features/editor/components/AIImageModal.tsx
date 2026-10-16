@@ -13,7 +13,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   Sparkles,
   Image as ImageIcon,
@@ -27,13 +27,18 @@ import {
   AlignLeft,
   Command,
   ArrowRight,
+  Globe,
+  Link as LinkIcon,
+  Camera,
 } from "lucide-react";
 import {
   aiVisualApi,
   type IllustrationPreset,
   type GeneratedIllustrationAsset,
   type VisualIntent,
+  type ImageSearchResult,
 } from "@/features/ai-visual";
+import { InternetImageSearchTab } from "./InternetImageSearchTab";
 import {
   STYLE_PRESETS,
   ASPECT_RATIOS,
@@ -43,6 +48,8 @@ import {
 import {
   classifyVisualIntent,
   generateStructuredAiImagePrompt,
+  getDynamicPromptChips,
+  sanitizeHeadingSubject,
   trackAiImageTelemetry,
   type VisualSuggestionInput,
   type ContextSourceType,
@@ -50,13 +57,6 @@ import {
 import { toast } from "sonner";
 
 export { STYLE_PRESETS, ASPECT_RATIOS };
-
-const SUGGESTED_PROMPT_CHIPS = [
-  "High-performance in-memory caching architecture",
-  "Microservices event-driven communication topology",
-  "Hardware power efficiency comparison chart",
-  "Database read-replica indexing data flow",
-];
 
 export type AIImageModalState = "idle" | "generating" | "preview" | "error" | "accepted";
 
@@ -112,6 +112,14 @@ export function AIImageModal({
   });
   const [showIntentSelector, setShowIntentSelector] = useState(false);
 
+  // Mode & Tabs State (Sprint 4: AI Generation vs Internet Search)
+  const [activeTab, setActiveTab] = useState<"ai_generate" | "internet_search">("ai_generate");
+  const [internetSubMode, setInternetSubMode] = useState<"search" | "direct_url">("search");
+  const [selectedInternetAsset, setSelectedInternetAsset] = useState<ImageSearchResult | null>(null);
+  const [internetAltText, setInternetAltText] = useState("");
+  const [internetCaption, setInternetCaption] = useState("");
+  const [directUrl, setDirectUrl] = useState("");
+
   // Form State
   const [prompt, setPrompt] = useState(initialPrompt);
   const [selectedStyle, setSelectedStyle] = useState<IllustrationPreset>(initialStyle);
@@ -165,7 +173,7 @@ export function AIImageModal({
         setPrompt(structuredPrompt);
         setSelectedStyle(initialStyle || intentDef.defaultPreset);
         setSelectedRatio(initialAspectRatio || intentDef.defaultRatio);
-        setAltText(`Illustration of ${heading || articleTitle || "system architecture"}`);
+        setAltText(`Illustration of ${sanitizeHeadingSubject(heading) || sanitizeHeadingSubject(articleTitle) || "system architecture"}`);
         setCaption("");
       }
 
@@ -273,6 +281,16 @@ export function AIImageModal({
     },
     [sourceContext, initialPrompt, heading, articleTitle]
   );
+
+  // Dynamic context-aware prompt idea chips
+  const dynamicChips = useMemo(() => {
+    return getDynamicPromptChips({
+      heading,
+      text: sourceContext || initialPrompt,
+      intent: activeIntent,
+      articleTitle,
+    });
+  }, [heading, sourceContext, initialPrompt, activeIntent, articleTitle]);
 
   // ─── Actions ────────────────────────────────────────────────────────────────
 
@@ -424,6 +442,75 @@ export function AIImageModal({
     onClose,
   ]);
 
+  const handleAcceptInternetImage = useCallback(() => {
+    if (internetSubMode === "search") {
+      if (!selectedInternetAsset) {
+        toast.error("Please select an image from the results first.");
+        return;
+      }
+
+      // Background cache/import into Asset Library for persistence
+      if (selectedInternetAsset.source === "stock") {
+        aiVisualApi.importStockImage(selectedInternetAsset, internetAltText).catch(() => {});
+      }
+
+      const assetToInsert: GeneratedIllustrationAsset = {
+        _id: selectedInternetAsset.id,
+        url: selectedInternetAsset.url,
+        thumbnailUrl: selectedInternetAsset.thumbnailUrl || selectedInternetAsset.url,
+        prompt: selectedInternetAsset.title,
+        alt: internetAltText.trim() || selectedInternetAsset.alt || selectedInternetAsset.title,
+        style: "stock",
+        type: "ai",
+        model: selectedInternetAsset.sourceProvider || "internet-stock",
+        width: selectedInternetAsset.width,
+        height: selectedInternetAsset.height,
+      };
+
+      onInsert(
+        assetToInsert,
+        internetAltText.trim() || selectedInternetAsset.alt || selectedInternetAsset.title,
+        internetCaption.trim() || undefined
+      );
+      toast.success("Image from internet inserted into editor!");
+      onClose();
+    } else {
+      // Direct URL mode
+      const cleanUrl = directUrl.trim();
+      if (!cleanUrl) {
+        toast.error("Please enter a valid image URL.");
+        return;
+      }
+
+      const assetToInsert: GeneratedIllustrationAsset = {
+        _id: `url_${Date.now()}`,
+        url: cleanUrl,
+        thumbnailUrl: cleanUrl,
+        prompt: internetAltText.trim() || "Web Image",
+        alt: internetAltText.trim() || "Web Image",
+        style: "direct_url",
+        type: "ai",
+        model: "direct-web-url",
+      };
+
+      onInsert(
+        assetToInsert,
+        internetAltText.trim() || "Web Image",
+        internetCaption.trim() || undefined
+      );
+      toast.success("Web image inserted into editor!");
+      onClose();
+    }
+  }, [
+    internetSubMode,
+    selectedInternetAsset,
+    internetAltText,
+    internetCaption,
+    directUrl,
+    onInsert,
+    onClose,
+  ]);
+
   const handleRejectOrClose = useCallback(() => {
     if (modalState === "preview") {
       trackAiImageTelemetry("ai_image_rejected", {
@@ -455,7 +542,9 @@ export function AIImageModal({
       // Cmd/Ctrl + Enter
       if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
         e.preventDefault();
-        if (modalState === "preview") {
+        if (activeTab === "internet_search") {
+          handleAcceptInternetImage();
+        } else if (modalState === "preview") {
           handleAccept();
         } else if (modalState === "idle" || modalState === "error") {
           handleGenerate(false);
@@ -465,7 +554,7 @@ export function AIImageModal({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, modalState, handleAccept, handleGenerate, handleRejectOrClose]);
+  }, [isOpen, activeTab, modalState, handleAccept, handleAcceptInternetImage, handleGenerate, handleRejectOrClose]);
 
   if (!isOpen) return null;
 
@@ -489,7 +578,7 @@ export function AIImageModal({
       <div
         ref={modalContainerRef}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col max-h-[90vh]"
+        className="relative w-full max-w-3xl overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col max-h-[92vh]"
       >
         {/* ── Modal Header ────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
@@ -503,14 +592,14 @@ export function AIImageModal({
                   id="ai-image-modal-title"
                   className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100"
                 >
-                  AI Image
-                </h2>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-md bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
                   AI Visual Assistant
+                </h2>
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
+                  Smart Visuals
                 </span>
               </div>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-                Context-aware visual recommendations and structured diagram synthesis
+                Generate AI technical visuals or discover high-resolution images from the internet
               </p>
             </div>
           </div>
@@ -525,8 +614,62 @@ export function AIImageModal({
           </button>
         </div>
 
+        {/* ── Mode Switcher Tab Bar ────────────────────────────────────────── */}
+        <div className="flex items-center gap-2 px-5 sm:px-6 pt-2 pb-0 border-b border-zinc-200/90 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveTab("ai_generate")}
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+              activeTab === "ai_generate"
+                ? "border-violet-600 text-violet-600 dark:text-violet-400 font-bold"
+                : "border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Generate with AI</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("internet_search")}
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+              activeTab === "internet_search"
+                ? "border-violet-600 text-violet-600 dark:text-violet-400 font-bold"
+                : "border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Find on Internet</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-semibold border border-emerald-200/60 dark:border-emerald-800/60">
+              Web & Stock
+            </span>
+          </button>
+        </div>
+
         {/* ── Modal Body (Single Scrollable View) ─────────────────────────────── */}
         <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4 text-sm">
+          {/* TAB 2: INTERNET IMAGE SEARCH & DIRECT URL */}
+          {activeTab === "internet_search" && (
+            <InternetImageSearchTab
+              initialQuery={heading || articleTitle || prompt}
+              heading={heading}
+              articleTitle={articleTitle}
+              selectedAsset={selectedInternetAsset}
+              onSelectAsset={setSelectedInternetAsset}
+              altText={internetAltText}
+              onAltTextChange={setInternetAltText}
+              caption={internetCaption}
+              onCaptionChange={setInternetCaption}
+              directUrl={directUrl}
+              onDirectUrlChange={setDirectUrl}
+              subMode={internetSubMode}
+              onSubModeChange={setInternetSubMode}
+            />
+          )}
+
+          {/* TAB 1: AI GENERATION FLOW */}
+          {activeTab === "ai_generate" && (
+            <>
           {/* ── Sprint 3 Lightweight Recommendation Card ──────────────────────── */}
           {recommendation && (
             <div className="rounded-xl border border-violet-500/30 bg-gradient-to-br from-violet-500/10 via-indigo-500/5 to-transparent p-3.5 space-y-2.5">
@@ -644,10 +787,11 @@ export function AIImageModal({
             {/* Prompt Enhancement Chips */}
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[10px] text-zinc-400 font-medium shrink-0">Ideas:</span>
-              {SUGGESTED_PROMPT_CHIPS.map((chip, idx) => (
+              {dynamicChips.map((chip, idx) => (
                 <button
                   key={idx}
                   type="button"
+                  title={chip}
                   disabled={modalState === "generating"}
                   onClick={() => setPrompt(chip)}
                   className="text-[10px] px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 hover:bg-violet-50 dark:hover:bg-violet-950/40 text-zinc-600 dark:text-zinc-400 hover:text-violet-600 dark:hover:text-violet-300 border border-zinc-200/80 dark:border-zinc-700/60 transition-colors cursor-pointer truncate max-w-[210px] disabled:opacity-50"
@@ -887,6 +1031,8 @@ export function AIImageModal({
               </div>
             )}
           </div>
+          </>
+          )}
         </div>
 
         {/* ── Modal Footer ────────────────────────────────────────────────────── */}
@@ -900,58 +1046,89 @@ export function AIImageModal({
           </button>
 
           <div className="flex items-center gap-2">
-            {/* When Generating: Show disabled loading button */}
-            {modalState === "generating" && (
+            {/* FOOTER ACTIONS FOR TAB 2: INTERNET SEARCH & DIRECT URL */}
+            {activeTab === "internet_search" && (
               <button
                 type="button"
-                disabled
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-violet-600/70 cursor-not-allowed"
+                onClick={handleAcceptInternetImage}
+                disabled={
+                  internetSubMode === "search"
+                    ? !selectedInternetAsset
+                    : !directUrl.trim()
+                }
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-violet-500/20 active:scale-98 transition-all cursor-pointer"
               >
-                <RotateCw className="w-3.5 h-3.5 animate-spin" />
-                <span>Generating...</span>
-              </button>
-            )}
-
-            {/* When in Preview: Allow Regenerate or Accept Image */}
-            {modalState === "preview" && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => handleGenerate(true)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Regenerate</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleAccept}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-md shadow-violet-500/20 active:scale-98 transition-all cursor-pointer"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Accept Image</span>
-                  <span className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-normal opacity-80 ml-1">
-                    <Command className="w-2.5 h-2.5" />↵
-                  </span>
-                </button>
-              </>
-            )}
-
-            {/* When in Idle or Error: Primary CTA */}
-            {(modalState === "idle" || modalState === "error") && (
-              <button
-                type="button"
-                onClick={() => handleGenerate(false)}
-                disabled={!prompt.trim()}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-violet-500/20 active:scale-98 transition-all cursor-pointer"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                <span>Generate Image</span>
+                <Check className="w-3.5 h-3.5" />
+                <span>
+                  {internetSubMode === "search"
+                    ? selectedInternetAsset
+                      ? "Insert Selected Image"
+                      : "Select an Image"
+                    : "Insert Web Image"}
+                </span>
                 <span className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-normal opacity-80 ml-1">
                   <Command className="w-2.5 h-2.5" />↵
                 </span>
               </button>
+            )}
+
+            {/* FOOTER ACTIONS FOR TAB 1: AI GENERATION */}
+            {activeTab === "ai_generate" && (
+              <>
+                {/* When Generating: Show disabled loading button */}
+                {modalState === "generating" && (
+                  <button
+                    type="button"
+                    disabled
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-violet-600/70 cursor-not-allowed"
+                  >
+                    <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Generating...</span>
+                  </button>
+                )}
+
+                {/* When in Preview: Allow Regenerate or Accept Image */}
+                {modalState === "preview" && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleGenerate(true)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Regenerate</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleAccept}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-md shadow-violet-500/20 active:scale-98 transition-all cursor-pointer"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Accept Image</span>
+                      <span className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-normal opacity-80 ml-1">
+                        <Command className="w-2.5 h-2.5" />↵
+                      </span>
+                    </button>
+                  </>
+                )}
+
+                {/* When in Idle or Error: Primary CTA */}
+                {(modalState === "idle" || modalState === "error") && (
+                  <button
+                    type="button"
+                    onClick={() => handleGenerate(false)}
+                    disabled={!prompt.trim()}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-violet-500/20 active:scale-98 transition-all cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Generate Image</span>
+                    <span className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-normal opacity-80 ml-1">
+                      <Command className="w-2.5 h-2.5" />↵
+                    </span>
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>

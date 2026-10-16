@@ -1,8 +1,8 @@
 import { api } from "@/lib/api/axios";
 
 export const postApi = {
-  getPostToEdit: async (postId: string) => {
-    return await api.get(`/post/getPostToEdit?postId=${postId}`);
+  getPostToEdit: async (postId: string, locale?: string) => {
+    return await api.get(`/post/getPostToEdit?postId=${postId}${locale ? `&locale=${locale}` : ""}`);
   },
   createPost: async (data: any) => {
     return await api.post("/post/create", data);
@@ -42,9 +42,10 @@ export const postApi = {
   restorePost: async (postId: string) => {
     return await api.post("/post/restorePost", { postId });
   },
-  changePublicManager: async (postId: string, published: boolean) => {
-    return await api.patch(`/post/changePublicManager?id=${postId}`, {
+  changePublicManager: async (postId: string, published: boolean, locale?: string) => {
+    return await api.patch(`/post/changePublicManager?id=${postId}${locale ? `&locale=${locale}` : ""}`, {
       published,
+      locale,
     });
   },
 };

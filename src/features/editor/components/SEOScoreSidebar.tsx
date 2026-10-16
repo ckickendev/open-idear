@@ -33,6 +33,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import type { ContentMetrics } from "@/features/seo/types/seo.types";
+import { useTranslation } from "@/app/hook/useTranslation";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -58,6 +59,7 @@ function computeChecks(
   metrics: ContentMetrics,
   title: string,
   description: string,
+  t: (key: string, params?: Record<string, string | number>) => string,
 ): { checks: SEOCheck[]; score: number } {
   const checks: SEOCheck[] = [];
   let totalWeight = 0;
@@ -80,13 +82,13 @@ function computeChecks(
   addCheck(
     {
       id: "word-count",
-      label: "Word count",
+      label: t("editor.seo_sidebar.word_count"),
       message:
         metrics.wordCount >= 600
-          ? `${metrics.wordCount} words — great length`
+          ? t("editor.seo_sidebar.words_great", { count: metrics.wordCount })
           : metrics.wordCount >= 300
-          ? `${metrics.wordCount} words — good, aim for 600+`
-          : `${metrics.wordCount} words — too short (min 300)`,
+          ? t("editor.seo_sidebar.words_good", { count: metrics.wordCount })
+          : t("editor.seo_sidebar.words_short", { count: metrics.wordCount }),
       icon: Type,
     },
     20,
@@ -98,15 +100,15 @@ function computeChecks(
   addCheck(
     {
       id: "h2-count",
-      label: "H2 headings",
+      label: t("editor.seo_sidebar.h2_headings"),
       message:
         metrics.headingCount.h2 >= 3
-          ? `${metrics.headingCount.h2} H2s — well-structured`
+          ? t("editor.seo_sidebar.h2_great", { count: metrics.headingCount.h2 })
           : metrics.headingCount.h2 >= 2
-          ? `${metrics.headingCount.h2} H2s — good structure`
+          ? t("editor.seo_sidebar.h2_good", { count: metrics.headingCount.h2 })
           : metrics.headingCount.h2 === 1
-          ? `Only 1 H2 — add at least 2`
-          : `No H2 headings — add section headings`,
+          ? t("editor.seo_sidebar.h2_one")
+          : t("editor.seo_sidebar.h2_none"),
       icon: Heading2,
     },
     15,
@@ -118,11 +120,11 @@ function computeChecks(
   addCheck(
     {
       id: "reading-time",
-      label: "Reading time",
+      label: t("editor.seo_sidebar.reading_time"),
       message:
         metrics.readingTime <= 10
-          ? `${metrics.readingTime} min — ideal length`
-          : `${metrics.readingTime} min — consider breaking into series`,
+          ? t("editor.seo_sidebar.reading_ideal", { time: metrics.readingTime })
+          : t("editor.seo_sidebar.reading_long", { time: metrics.readingTime }),
       icon: Clock,
     },
     10,
@@ -134,13 +136,13 @@ function computeChecks(
   addCheck(
     {
       id: "images",
-      label: "Images",
+      label: t("editor.seo_sidebar.images"),
       message:
         metrics.imageCount >= 2
-          ? `${metrics.imageCount} images — good visual content`
+          ? t("editor.seo_sidebar.images_good", { count: metrics.imageCount })
           : metrics.imageCount === 1
-          ? `1 image — add more for better engagement`
-          : "No images — add at least 1",
+          ? t("editor.seo_sidebar.images_one")
+          : t("editor.seo_sidebar.images_none"),
       icon: Image,
     },
     15,
@@ -153,13 +155,13 @@ function computeChecks(
   addCheck(
     {
       id: "meta-description",
-      label: "Meta description",
+      label: t("editor.seo_sidebar.meta_description"),
       message:
         descLen >= 120 && descLen <= 160
-          ? `${descLen} chars — perfect length`
+          ? t("editor.seo_sidebar.desc_perfect", { count: descLen })
           : descLen > 0
-          ? `${descLen} chars — aim for 120–160`
-          : "No description set — add one in Publish settings",
+          ? t("editor.seo_sidebar.desc_length", { count: descLen })
+          : t("editor.seo_sidebar.desc_none"),
       icon: FileText,
     },
     20,
@@ -171,8 +173,8 @@ function computeChecks(
   addCheck(
     {
       id: "title",
-      label: "Article title",
-      message: title.trim() ? `"${title.slice(0, 40)}${title.length > 40 ? "…" : ""}"` : "No title set",
+      label: t("editor.seo_sidebar.article_title"),
+      message: title.trim() ? `"${title.slice(0, 40)}${title.length > 40 ? "…" : ""}"` : t("editor.seo_sidebar.title_none"),
       icon: Type,
     },
     10,
@@ -184,13 +186,13 @@ function computeChecks(
   addCheck(
     {
       id: "internal-links",
-      label: "Internal links",
+      label: t("editor.seo_sidebar.internal_links"),
       message:
         metrics.linkCount.internal >= 2
-          ? `${metrics.linkCount.internal} internal links`
+          ? t("editor.seo_sidebar.links_good", { count: metrics.linkCount.internal })
           : metrics.linkCount.internal === 1
-          ? "1 internal link — add more for SEO"
-          : "No internal links — link to related articles",
+          ? t("editor.seo_sidebar.links_one")
+          : t("editor.seo_sidebar.links_none"),
       icon: Link2,
     },
     10,
@@ -204,7 +206,13 @@ function computeChecks(
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function ScoreGauge({ score }: { score: number }) {
+function ScoreGauge({
+  score,
+  t,
+}: {
+  score: number;
+  t: (key: string, params?: Record<string, string | number>) => string;
+}) {
   // SVG arc gauge
   const radius = 38;
   const circumference = 2 * Math.PI * radius;
@@ -220,7 +228,13 @@ function ScoreGauge({ score }: { score: number }) {
       : "hsl(0, 75%, 55%)";   // red
 
   const label =
-    score >= 80 ? "Excellent" : score >= 60 ? "Good" : score >= 40 ? "Fair" : "Needs Work";
+    score >= 80
+      ? t("editor.seo_sidebar.score_excellent")
+      : score >= 60
+      ? t("editor.seo_sidebar.score_good")
+      : score >= 40
+      ? t("editor.seo_sidebar.score_fair")
+      : t("editor.seo_sidebar.score_needs_work");
 
   return (
     <div className="flex flex-col items-center gap-2 py-4">
@@ -314,9 +328,10 @@ export const SEOScoreSidebar: React.FC<SEOScoreSidebarProps> = ({
   title,
   description,
 }) => {
+  const { t } = useTranslation();
   const { checks, score } = useMemo(
-    () => computeChecks(metrics, title, description),
-    [metrics, title, description],
+    () => computeChecks(metrics, title, description, t),
+    [metrics, title, description, t],
   );
 
   const passCount = checks.filter((c) => c.status === "pass").length;
@@ -328,27 +343,27 @@ export const SEOScoreSidebar: React.FC<SEOScoreSidebarProps> = ({
       <div className="flex items-center gap-2 px-5 py-4 border-b border-[var(--color-editor-border)] shrink-0">
         <TrendingUp size={16} className="text-[var(--color-editor-accent)] shrink-0" />
         <div>
-          <h2 className="text-sm font-bold text-[var(--color-editor-text)]">SEO Score</h2>
-          <p className="text-[10px] text-[var(--color-editor-muted)]">Live analysis</p>
+          <h2 className="text-sm font-bold text-[var(--color-editor-text)]">{t("editor.seo_sidebar.title")}</h2>
+          <p className="text-[10px] text-[var(--color-editor-muted)]">{t("editor.seo_sidebar.subtitle")}</p>
         </div>
       </div>
 
       <div className="flex-1 px-4 pb-6 overflow-y-auto">
         {/* Gauge */}
-        <ScoreGauge score={score} />
+        <ScoreGauge score={score} t={t} />
 
         {/* Pass/fail summary */}
         <div className="flex gap-3 mb-4 text-center">
           <div className="flex-1 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
             <div className="text-lg font-extrabold text-emerald-500">{passCount}</div>
             <div className="text-[9px] uppercase tracking-wider text-emerald-600 font-semibold">
-              Passed
+              {t("editor.seo_sidebar.passed")}
             </div>
           </div>
           <div className="flex-1 py-2 rounded-xl bg-red-500/10 border border-red-500/20">
             <div className="text-lg font-extrabold text-red-500">{failCount}</div>
             <div className="text-[9px] uppercase tracking-wider text-red-600 font-semibold">
-              Issues
+              {t("editor.seo_sidebar.issues")}
             </div>
           </div>
         </div>
@@ -356,7 +371,7 @@ export const SEOScoreSidebar: React.FC<SEOScoreSidebarProps> = ({
         {/* Checks list */}
         <div className="flex flex-col gap-0.5">
           <p className="text-[9px] uppercase font-bold tracking-wider text-[var(--color-editor-muted)] mb-1 px-1">
-            Content checks
+            {t("editor.seo_sidebar.content_checks")}
           </p>
           {checks.map((check) => (
             <CheckRow key={check.id} check={check} />
@@ -365,12 +380,12 @@ export const SEOScoreSidebar: React.FC<SEOScoreSidebarProps> = ({
 
         {/* Stats grid */}
         <div className="mt-5 grid grid-cols-2 gap-2">
-          <StatTile label="Words" value={metrics.wordCount.toLocaleString()} />
-          <StatTile label="Reading" value={`${metrics.readingTime} min`} />
-          <StatTile label="H2s" value={String(metrics.headingCount.h2)} />
-          <StatTile label="Images" value={String(metrics.imageCount)} />
-          <StatTile label="Int. links" value={String(metrics.linkCount.internal)} />
-          <StatTile label="Ext. links" value={String(metrics.linkCount.external)} />
+          <StatTile label={t("editor.seo_sidebar.stat_words")} value={metrics.wordCount.toLocaleString()} />
+          <StatTile label={t("editor.seo_sidebar.stat_reading")} value={`${metrics.readingTime} ${t("editor.seo_sidebar.stat_min")}`} />
+          <StatTile label={t("editor.seo_sidebar.stat_h2s")} value={String(metrics.headingCount.h2)} />
+          <StatTile label={t("editor.seo_sidebar.stat_images")} value={String(metrics.imageCount)} />
+          <StatTile label={t("editor.seo_sidebar.stat_int_links")} value={String(metrics.linkCount.internal)} />
+          <StatTile label={t("editor.seo_sidebar.stat_ext_links")} value={String(metrics.linkCount.external)} />
         </div>
       </div>
     </div>

@@ -61,6 +61,10 @@ export interface PostSEOInput {
   status?: string;
   createdAt?: string | null;
   updatedAt?: string | null;
+  activeLocale?: "en" | "vi" | string;
+  availableLocales?: string[];
+  alternateUrls?: Record<string, string>;
+  isFallback?: boolean;
   seo?: {
     metaTitle?: string | null;
     metaDescription?: string | null;
@@ -87,12 +91,18 @@ function extractCategoryName(category: PostSEOInput["category"]): string | undef
 
 /**
  * Builds Next.js Metadata for an article page.
+ * Supports bilingual routing, canonical URLs, hreflang, and fallback noindex rules.
  *
  * @param post - Canonical post data from backend.
  * @returns Complete Next.js Metadata object.
  */
 export function buildPostMetadata(post: PostSEOInput): Metadata {
   const siteUrl = getSiteUrl();
+
+  // Active locale determines URL prefix and OG locale
+  const activeLocale = post.activeLocale === "vi" ? "vi" : "en";
+  const ogLocale = activeLocale === "vi" ? "vi_VN" : "en_US";
+  const ogAlternateLocales = activeLocale === "vi" ? ["en_US"] : ["vi_VN"];
 
   // Title fallback
   const metaTitle = post.seo?.metaTitle?.trim() || post.title.trim();
@@ -104,19 +114,58 @@ export function buildPostMetadata(post: PostSEOInput): Metadata {
     `Read "${post.title}" on OpenIdear — technology knowledge-sharing platform.`;
 
   // Canonical URL construction
-  const canonicalUrl =
-    post.seo?.canonicalUrl?.trim() || `${siteUrl}/post/${cleanSlug(post.slug)}`;
+  let canonicalUrl: string;
+  if (post.seo?.canonicalUrl?.trim()) {
+    canonicalUrl = post.seo.canonicalUrl.trim();
+  } else if (post.isFallback) {
+    // If showing fallback English content on a Vietnamese route, canonical MUST point to English original
+    canonicalUrl = `${siteUrl}/post/${cleanSlug(post.slug)}`;
+  } else if (activeLocale === "vi") {
+    canonicalUrl = `${siteUrl}/vi/post/${cleanSlug(post.slug)}`;
+  } else {
+    canonicalUrl = `${siteUrl}/post/${cleanSlug(post.slug)}`;
+  }
 
-  // Robots indexing rules: published must be explicitly true or not draft/private
+  // Robots indexing rules:
+  // - If draft/unpublished/private: noindex, nofollow
+  // - If fallback content (untranslated): noindex, follow (safe canonical/noindex behavior)
+  // - Otherwise: index, follow
   const isDraft =
     post.published === false ||
     post.status === "draft" ||
     post.status === "private" ||
     post.status === "unpublished";
 
-  const robots = isDraft
-    ? { index: false, follow: false }
-    : { index: true, follow: true };
+  let robots: Metadata["robots"];
+  if (isDraft) {
+    robots = { index: false, follow: false };
+  } else if (post.isFallback) {
+    robots = { index: false, follow: true };
+  } else {
+    robots = { index: true, follow: true };
+  }
+
+  // Language alternates (hreflang)
+  const languages: Record<string, string> = {};
+  if (post.alternateUrls && !post.isFallback) {
+    if (post.alternateUrls.en) {
+      languages.en = `${siteUrl}${post.alternateUrls.en}`;
+    }
+    if (post.alternateUrls.vi) {
+      languages.vi = `${siteUrl}${post.alternateUrls.vi}`;
+    }
+    // x-default should point to default locale (English)
+    if (post.alternateUrls.en) {
+      languages["x-default"] = `${siteUrl}${post.alternateUrls.en}`;
+    } else {
+      languages["x-default"] = `${siteUrl}/post/${cleanSlug(post.slug)}`;
+    }
+  } else if (!post.isFallback) {
+    languages[activeLocale] = canonicalUrl;
+    if (activeLocale === "en") {
+      languages["x-default"] = canonicalUrl;
+    }
+  }
 
   // Metadata details
   const authorName = extractAuthorName(post.author);
@@ -149,6 +198,7 @@ export function buildPostMetadata(post: PostSEOInput): Metadata {
     description: metaDescription,
     alternates: {
       canonical: canonicalUrl,
+      ...(Object.keys(languages).length > 0 ? { languages } : {}),
     },
     robots,
     openGraph: {
@@ -157,6 +207,8 @@ export function buildPostMetadata(post: PostSEOInput): Metadata {
       url: canonicalUrl,
       siteName: "OpenIdear",
       type: "article",
+      locale: ogLocale,
+      alternateLocale: ogAlternateLocales,
       publishedTime,
       modifiedTime,
       authors: authorName ? [authorName] : undefined,

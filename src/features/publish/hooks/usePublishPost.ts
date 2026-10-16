@@ -18,7 +18,7 @@ import { toast } from "sonner";
 export function usePublishPost(
   options: UsePublishPostOptions,
 ): UsePublishPostReturn {
-  const { postId, isPublished: initialPublished } = options;
+  const { postId, isPublished: initialPublished, locale = "en" } = options;
 
   const [isPublishing, setIsPublishing] = useState(false);
   const [isPublished, setIsPublished] = useState(initialPublished);
@@ -35,6 +35,9 @@ export function usePublishPost(
     if (!config.category) {
       errors.push("Category is required.");
     }
+    if (config.title !== undefined && !config.title.trim()) {
+      errors.push("Title is required for this translation.");
+    }
 
     return errors;
   }, []);
@@ -43,6 +46,7 @@ export function usePublishPost(
 
   const publish = useCallback(
     async (config: PublishConfig): Promise<boolean> => {
+      const targetLocale = config.locale || locale;
       const errors = validate(config);
       setValidationErrors(errors);
 
@@ -55,8 +59,10 @@ export function usePublishPost(
 
       try {
         const res = await postApi.publishPost({
+          locale: targetLocale,
           publicInfo: {
             postId: config.postId,
+            locale: targetLocale,
             description: config.description,
             image: config.image,
             series: config.series,
@@ -65,7 +71,7 @@ export function usePublishPost(
         });
 
         if (res.success) {
-          toast.success("Post published successfully!");
+          toast.success(`Post published (${targetLocale.toUpperCase()}) successfully!`);
           setIsPublished(true);
           return true;
         } else {
@@ -79,27 +85,31 @@ export function usePublishPost(
         setIsPublishing(false);
       }
     },
-    [validate],
+    [validate, locale],
   );
 
   // ─── Unpublish ────────────────────────────────────────────────────────
 
-  const unpublish = useCallback(async (): Promise<boolean> => {
-    if (!postId) return false;
+  const unpublish = useCallback(
+    async (targetLocale?: "en" | "vi"): Promise<boolean> => {
+      if (!postId) return false;
+      const loc = targetLocale || locale;
 
-    try {
-      const res = await postApi.changePublicManager(postId, false);
-      if (res.success) {
-        setIsPublished(false);
-        toast.success("Post unpublished");
-        return true;
+      try {
+        const res = await postApi.changePublicManager(postId, false, loc);
+        if (res.success) {
+          setIsPublished(false);
+          toast.success(`Post unpublished (${loc.toUpperCase()})`);
+          return true;
+        }
+        return false;
+      } catch {
+        toast.error("Failed to unpublish");
+        return false;
       }
-      return false;
-    } catch {
-      toast.error("Failed to unpublish");
-      return false;
-    }
-  }, [postId]);
+    },
+    [postId, locale],
+  );
 
   // ─── Computed ─────────────────────────────────────────────────────────
 
@@ -112,5 +122,6 @@ export function usePublishPost(
     validationErrors,
     publish,
     unpublish,
+    setIsPublished,
   };
 }

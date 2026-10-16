@@ -87,7 +87,7 @@ interface ContentStudioState {
 
   // Step 2: Content Briefs (keyed by idea.id)
   briefs: Record<string, ContentBrief>;
-  setBrief: (ideaId: string, brief: ContentBrief) => void;
+  setBrief: (ideaId: string, brief: ContentBrief, overwrite?: boolean) => void;
   updateBriefField: <K extends keyof ContentBrief>(
     ideaId: string,
     field: K,
@@ -182,14 +182,39 @@ export const useContentStudioStore = create<ContentStudioState>((set, get) => ({
   setIsAnalyzingIntelligence: (isAnalyzingIntelligence) => set({ isAnalyzingIntelligence }),
 
   briefs: {},
-  setBrief: (ideaId, brief) =>
-    set((state) => ({
-      briefs: { ...state.briefs, [ideaId]: brief },
-    })),
+  setBrief: (ideaId, brief, overwrite = false) =>
+    set((state) => {
+      const existing = state.briefs[ideaId];
+      if (!existing || overwrite) {
+        return {
+          briefs: { ...state.briefs, [ideaId]: brief },
+        };
+      }
+      return {
+        briefs: {
+          ...state.briefs,
+          [ideaId]: {
+            ...brief,
+            targetAudience: Array.from(
+              new Set([
+                ...(existing.targetAudience || []),
+                ...(brief.targetAudience || []),
+              ])
+            ),
+          },
+        },
+      };
+    }),
   updateBriefField: (ideaId, field, value) =>
     set((state) => {
-      const current = state.briefs[ideaId];
-      if (!current) return state;
+      const idea = state.ideas.find((i) => i.id === ideaId);
+      const current: ContentBrief = state.briefs[ideaId] || {
+        targetAudience: idea?.targetAudience ? [idea.targetAudience] : ["Beginner PC builders"],
+        tone: "Practical",
+        length: "Medium — 1,500–2,500 words",
+        category: idea?.category || "Technology",
+        objective: "Explain",
+      };
       return {
         briefs: {
           ...state.briefs,

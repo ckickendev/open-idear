@@ -27,26 +27,73 @@ export default function Banner() {
 
   // Fetch dynamic statistics from the backend
   useEffect(() => {
+    let isMounted = true;
+
     const fetchStats = async () => {
+      const rootApi = ENV?.ROOT_API;
+      if (!rootApi) return;
+
       try {
-        const [postsRes, coursesRes] = await Promise.all([
-          axios.get(`${ENV.ROOT_API}/post/getAllPosts?limit=1`),
-          axios.get(`${ENV.ROOT_API}/course`),
+        const [postsResult, coursesResult] = await Promise.allSettled([
+          axios.get(`${rootApi}/post/getAllPosts?limit=1`, { timeout: 4000 }),
+          axios.get(`${rootApi}/course?limit=1`, { timeout: 4000 }),
         ]);
 
-        const totalPosts = postsRes.data?.countData;
-        const totalCourses = coursesRes.data?.data?.length;
+        if (!isMounted) return;
 
-        setStats((prev) => ({
-          ...prev,
-          articles: totalPosts ? `${totalPosts}+` : prev.articles,
-          series: totalCourses ? `${totalCourses * 3}+` : prev.series, // Estimating series count based on courses
-        }));
+        let totalPosts: number | undefined;
+        let totalCourses: number | undefined;
+
+        if (postsResult.status === "fulfilled") {
+          const postData = postsResult.value?.data;
+          totalPosts =
+            typeof postData?.countData === "number"
+              ? postData.countData
+              : typeof postData?.total === "number"
+                ? postData.total
+                : Array.isArray(postData?.posts)
+                  ? postData.posts.length
+                  : undefined;
+        }
+
+        if (coursesResult.status === "fulfilled") {
+          const courseData = coursesResult.value?.data;
+          totalCourses =
+            typeof courseData?.pagination?.totalItems === "number"
+              ? courseData.pagination.totalItems
+              : typeof courseData?.total === "number"
+                ? courseData.total
+                : Array.isArray(courseData?.courses)
+                  ? courseData.courses.length
+                  : Array.isArray(courseData?.data)
+                    ? courseData.data.length
+                    : undefined;
+        }
+
+        if (totalPosts !== undefined || totalCourses !== undefined) {
+          setStats((prev) => ({
+            ...prev,
+            articles:
+              totalPosts !== undefined
+                ? `${totalPosts.toLocaleString()}+`
+                : prev.articles,
+            series:
+              totalCourses !== undefined
+                ? `${(totalCourses * 3).toLocaleString()}+`
+                : prev.series,
+          }));
+        }
       } catch (error) {
-        console.error("Failed to fetch homepage hero counts:", error);
+        // Use console.warn instead of console.error to avoid triggering Next.js dev error overlay
+        console.warn("Could not fetch banner stats:", error);
       }
     };
+
     fetchStats();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Safe translation fallbacks with correct component namespace

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import {
   BadgePlus,
   FileText,
@@ -18,6 +18,7 @@ import {
 import Logo from "@/components/common/Logo";
 import { postApi } from "@/features/ideas/api/post.api";
 import { toast } from "sonner";
+import { useTranslation } from "@/app/hook/useTranslation";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -68,6 +69,7 @@ function DeleteConfirmDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
       <div
@@ -81,7 +83,7 @@ function DeleteConfirmDialog({
           </div>
           <div>
             <h3 className="text-sm font-bold text-[var(--color-editor-text)]">
-              Delete Post?
+              {t("editor.post_list.delete_dialog_title")}
             </h3>
             <p className="text-[11px] text-[var(--color-editor-muted)] mt-0.5 line-clamp-1">
               {postTitle || "Untitled"}
@@ -89,7 +91,7 @@ function DeleteConfirmDialog({
           </div>
         </div>
         <p className="text-xs text-[var(--color-editor-secondary)] mb-4">
-          This action will move the post to trash. You can restore it later.
+          {t("editor.post_list.delete_dialog_description")}
         </p>
         <div className="flex gap-2">
           <button
@@ -97,7 +99,7 @@ function DeleteConfirmDialog({
             disabled={isDeleting}
             className="flex-1 px-3 py-2 text-xs font-medium text-[var(--color-editor-secondary)] border border-[var(--color-editor-border)] rounded-lg hover:bg-[var(--color-editor-elevated)] transition-all duration-150 cursor-pointer disabled:opacity-40"
           >
-            Cancel
+            {t("editor.post_list.cancel")}
           </button>
           <button
             onClick={onConfirm}
@@ -107,12 +109,12 @@ function DeleteConfirmDialog({
             {isDeleting ? (
               <>
                 <Loader2 size={12} className="animate-spin" />
-                Deleting...
+                {t("editor.post_list.deleting")}
               </>
             ) : (
               <>
                 <Trash2 size={12} />
-                Delete
+                {t("editor.post_list.delete")}
               </>
             )}
           </button>
@@ -132,6 +134,7 @@ export default function PostListPanel({
   activePostId,
   onSelectPost,
 }: PostListPanelProps) {
+  const { t } = useTranslation();
   const [allPosts, setAllPosts] = useState<PostListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -139,12 +142,16 @@ export default function PostListPanel({
   const [deleteTarget, setDeleteTarget] = useState<PostListItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // ─── Fetch posts when panel opens or active post changes ───────────────
+  const inFlightRef = useRef(false);
 
-  const fetchPosts = useCallback(async () => {
+  // ─── Fetch posts when panel opens or refresh event triggers ───────────
+
+  const fetchPosts = useCallback(async (force = false) => {
     const token = localStorage.getItem("access_token");
     if (!token) return;
+    if (inFlightRef.current) return;
 
+    inFlightRef.current = true;
     setIsLoading(true);
     try {
       const res = await postApi.getPostsByAuthor();
@@ -155,6 +162,7 @@ export default function PostListPanel({
       console.error("Error fetching posts:", err);
     } finally {
       setIsLoading(false);
+      inFlightRef.current = false;
     }
   }, []);
 
@@ -162,11 +170,11 @@ export default function PostListPanel({
     if (isOpen) {
       fetchPosts();
     }
-  }, [isOpen, fetchPosts, activePostId]);
+  }, [isOpen, fetchPosts]);
 
   useEffect(() => {
     const handleRefresh = () => {
-      if (isOpen) fetchPosts();
+      if (isOpen) fetchPosts(true);
     };
     window.addEventListener("refresh-post-list", handleRefresh);
     return () => window.removeEventListener("refresh-post-list", handleRefresh);
@@ -229,17 +237,17 @@ export default function PostListPanel({
       const res = await postApi.deletePost(deleteTarget._id);
       if (res.success) {
         setAllPosts((prev) => prev.filter((p) => p._id !== deleteTarget._id));
-        toast.success("Post deleted successfully!");
+        toast.success(t("editor.post_list.delete_success"));
 
         // If deleting the active post, navigate to blank editor
         if (activePostId === deleteTarget._id) {
           onSelectPost(null);
         }
       } else {
-        toast.error(res.message || "Failed to delete post");
+        toast.error(res.message || t("editor.post_list.delete_error"));
       }
     } catch {
-      toast.error("Failed to delete post");
+      toast.error(t("editor.post_list.delete_error"));
     } finally {
       setIsDeleting(false);
       setDeleteTarget(null);
@@ -267,9 +275,9 @@ export default function PostListPanel({
   // ─── Filter tabs config ───────────────────────────────────────────────
 
   const tabs: { key: StatusFilter; label: string; count: number }[] = [
-    { key: "all", label: "All", count: counts.all },
-    { key: "draft", label: "Drafts", count: counts.drafts },
-    { key: "published", label: "Published", count: counts.published },
+    { key: "all", label: t("editor.post_list.tab_all"), count: counts.all },
+    { key: "draft", label: t("editor.post_list.tab_drafts"), count: counts.drafts },
+    { key: "published", label: t("editor.post_list.tab_published"), count: counts.published },
   ];
 
   return (
@@ -298,11 +306,13 @@ export default function PostListPanel({
             </div>
             <div className="min-w-0">
               <h2 className="text-sm font-bold text-[var(--color-editor-text)] truncate">
-                My Posts
+                {t("editor.post_list.my_posts")}
               </h2>
               <p className="text-[11px] text-[var(--color-editor-muted)]">
-                {counts.all}{" "}
-                {counts.all === 1 ? "document" : "documents"}
+                {t("editor.post_list.documents_count", {
+                  count: counts.all,
+                  unit: counts.all === 1 ? t("editor.post_list.document_single") : t("editor.post_list.document_plural"),
+                })}
               </p>
             </div>
           </div>
@@ -311,16 +321,16 @@ export default function PostListPanel({
               onClick={() => fetchPosts()}
               disabled={isLoading}
               className="p-1.5 rounded-lg text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-all duration-150 cursor-pointer disabled:opacity-40"
-              aria-label="Refresh posts"
-              title="Refresh post list"
+              aria-label={t("editor.post_list.refresh_list")}
+              title={t("editor.post_list.refresh_list")}
             >
               <RotateCw size={14} className={isLoading ? "animate-spin" : ""} />
             </button>
             <button
               onClick={onClose}
               className="p-1.5 rounded-lg text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-all duration-150 cursor-pointer"
-              aria-label="Collapse post menu"
-              title="Collapse sidebar (⌘\)"
+              aria-label={t("editor.post_list.collapse_sidebar")}
+              title={t("editor.post_list.collapse_sidebar")}
             >
               <PanelLeftClose size={16} className="hidden lg:block" />
               <X size={16} className="lg:hidden" />
@@ -337,7 +347,7 @@ export default function PostListPanel({
             {/* Shimmer overlay */}
             <span className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-transparent via-white/15 to-transparent animate-shimmer transition-opacity duration-300" />
             <BadgePlus size={16} className="relative z-10" />
-            <span className="relative z-10">Create New Post</span>
+            <span className="relative z-10">{t("editor.post_list.create_new")}</span>
           </button>
         </div>
 
@@ -352,7 +362,7 @@ export default function PostListPanel({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search posts..."
+              placeholder={t("editor.post_list.search_placeholder")}
               className="w-full pl-9 pr-3 py-2 text-xs bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl text-[var(--color-editor-text)] placeholder:text-[var(--color-editor-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/30 focus:border-[var(--color-editor-accent)]/50 transition-all duration-200"
             />
             {searchQuery && (
@@ -400,10 +410,10 @@ export default function PostListPanel({
             <Clock size={12} className="text-[var(--color-editor-muted)]" />
             <span className="text-[10px] font-semibold text-[var(--color-editor-muted)] uppercase tracking-wider">
               {statusFilter === "all"
-                ? "Recent"
+                ? t("editor.post_list.recent_section")
                 : statusFilter === "draft"
-                  ? "Drafts"
-                  : "Published"}
+                  ? t("editor.post_list.tab_drafts")
+                  : t("editor.post_list.tab_published")}
             </span>
           </div>
 
@@ -425,10 +435,10 @@ export default function PostListPanel({
                 />
                 <p className="text-xs text-[var(--color-editor-muted)]">
                   {searchQuery
-                    ? "No posts match your search."
+                    ? t("editor.post_list.no_posts_search")
                     : statusFilter !== "all"
-                      ? `No ${statusFilter} posts yet.`
-                      : "No posts yet. Start writing!"}
+                      ? t("editor.post_list.no_posts_status", { status: statusFilter })
+                      : t("editor.post_list.no_posts_empty")}
                 </p>
               </div>
             ) : (
@@ -477,7 +487,7 @@ export default function PostListPanel({
                           ) : (
                             <Circle size={8} />
                           )}
-                          {item.published ? "Live" : "Draft"}
+                          {item.published ? t("editor.recent_posts.published") : t("editor.recent_posts.draft")}
                         </span>
                       </div>
 
@@ -491,7 +501,7 @@ export default function PostListPanel({
                       {/* Date */}
                       <p className="text-[10px] text-[var(--color-editor-muted)] mt-1.5 flex items-center gap-1">
                         <Clock size={9} />
-                        {new Date(displayDate).toLocaleDateString("en-US", {
+                        {new Date(displayDate).toLocaleDateString(undefined, {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
@@ -511,7 +521,7 @@ export default function PostListPanel({
                         setDeleteTarget(item);
                       }}
                       className="absolute top-3 right-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 text-[var(--color-editor-muted)] hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 cursor-pointer"
-                      aria-label={`Delete "${item.title || "Untitled"}"`}
+                      aria-label={t("editor.post_list.delete_post_btn")}
                     >
                       <Trash2 size={12} />
                     </button>

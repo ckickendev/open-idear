@@ -13,6 +13,8 @@ export type SaveStatus =
 export interface UseAutoSaveOptions {
   /** Current post ID. Null = new post (no auto-save until first manual save). */
   postId: string | null;
+  /** Active translation locale. Default: "en" */
+  locale?: "en" | "vi";
   /** Callback to get current editor content snapshot. */
   getContent: () => {
     title: string;
@@ -38,6 +40,8 @@ export interface UseAutoSaveReturn {
   save: () => Promise<void>;
   /** Retry the last failed save. */
   retry: () => Promise<void>;
+  /** Reset saved hash baseline (useful when switching locales). */
+  resetHash: (newHash?: string) => void;
   /** Whether there are unsaved changes. */
   hasUnsavedChanges: boolean;
   /** Mark content as changed (triggers debounced auto-save). */

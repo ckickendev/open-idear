@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -14,9 +14,10 @@ import { useImageUpload } from "@/features/media/hooks/useImageUpload";
 import { mediaLibraryApi } from "@/features/media-library/api/mediaLibrary.api";
 import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useContentMetrics } from "@/features/seo/hooks/useContentMetrics";
-import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView, ImageEnhancementReviewModal, useImageEnhancementReview, AIGenerationModal, PublishByAIModal, OneClickPublisherModal, type PipelineData, type PublisherResponse, aiApi } from "@/features/ai";
+import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView, ImageEnhancementReviewModal, useImageEnhancementReview, AIGenerationModal, OneClickPublisherModal, type PipelineData, type PublisherResponse, aiApi } from "@/features/ai";
 import { toEditorHtml } from "@/features/ai/utils/contentTransformer";
 import { LivePreviewSystem } from "@/features/preview";
+import { useTranslation } from "@/app/hook/useTranslation";
 
 // ─── Context ────────────────────────────────────────────────────────────────
 import { EditorProvider } from "../context/EditorContext";
@@ -27,6 +28,7 @@ import Toolbar from "@/app/(editor)/create/ToolBar";
 import HtmlEditor from "@/app/(editor)/create/HtmlEditor";
 import BlockInsertButton from "@/app/(editor)/create/FloatingToolbar";
 import PostListPanel from "@/app/(editor)/create/PostLists";
+import { RecentPostsSection } from "@/app/(editor)/create/RecentPostsSection";
 import EditorHeader from "@/app/(editor)/create/EditorHeader";
 import EditorTitle from "@/app/(editor)/create/EditorTitle";
 import PublishDrawer from "@/app/(editor)/create/PublishDrawer";
@@ -71,6 +73,7 @@ import {
   X,
   Loader2,
   Image as ImageIcon,
+  Languages,
 } from "lucide-react";
 import { BubbleMenu } from "@tiptap/react/menus";
 
@@ -130,6 +133,10 @@ function formatHtml(html: string): string {
   return formatted;
 }
 
+function isMongoObjectId(id?: string | null): boolean {
+  return typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // EditorShell — Main editor orchestrator
 // ═══════════════════════════════════════════════════════════════════════════
@@ -138,6 +145,7 @@ export default function EditorShell() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const { t, language } = useTranslation();
 
   // ─── Local UI State ───────────────────────────────────────────────────
   const [postId, setPostId] = useState<string | null>(null);
@@ -145,6 +153,21 @@ export default function EditorShell() {
   const [mode, setMode] = useState<EditorMode>("visual");
   const [rawHtml, setRawHtml] = useState("");
   const [pageLoading, setPageLoading] = useState(true);
+
+  // ─── Locale & Bilingual Editing State (Sprint 3) ──────────────────────
+  const [editorLocale, setEditorLocale] = useState<"en" | "vi">(() => {
+    const param = searchParams.get("locale");
+    return param === "vi" ? "vi" : "en";
+  });
+  const [localesStatus, setLocalesStatus] = useState<{
+    en?: { exists: boolean; published: boolean };
+    vi?: { exists: boolean; published: boolean };
+  }>({});
+  const [isNewTranslationDraft, setIsNewTranslationDraft] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const loadSeqRef = useRef(0);
+  const switchingLocaleRef = useRef(false);
+  const loadedLocaleRef = useRef<{ id: string; locale: string } | null>(null);
 
   // Panel states
   const [postListOpen, setPostListOpen] = useState(true);
@@ -277,8 +300,8 @@ export default function EditorShell() {
     }
 
     // Track media library usage (only for existing library assets)
-    if (postId && asset.source === "asset_library" && asset.id && !asset.id.startsWith("stock_")) {
-      mediaLibraryApi.addUsage(asset.id, "post", postId, "content");
+    if (postId && asset.source === "asset_library" && isMongoObjectId(asset.id)) {
+      mediaLibraryApi.addUsage(asset.id, "post", postId, "content").catch(() => {});
     }
 
     // Telemetry: visual_search_selected
@@ -307,48 +330,8 @@ export default function EditorShell() {
   // 1-Click AI Publisher Modal state
   const [is1ClickAIModalOpen, setIs1ClickAIModalOpen] = useState(false);
 
-  // Publish by AI Modal state
-  const [isPublishByAIOpen, setIsPublishByAIOpen] = useState(false);
-
   // Batch Visuals Modal state (Sprint 3)
   const [isBatchVisualsModalOpen, setIsBatchVisualsModalOpen] = useState(false);
-
-  const handleApplyPublishByAI = async (data: PublisherResponse) => {
-    // 1. Populate title
-    if (data.title) {
-      handleTitleChange(data.title);
-    }
-
-    // 2. Populate editor content from markdown and inject image suggestion placeholders
-    if (data.markdown && editor) {
-      const html = toEditorHtml(data.markdown, data.visualSuggestions || data.imageSuggestions);
-      editor.commands.setContent(html);
-      setGeneratedMarkdown(data.markdown);
-    }
-
-    // 3. Persist AI context (keywords, category, etc.)
-    setGeneratedAiContext({
-      plannerOutput: {
-        title: data.title,
-        keywords: data.keywords,
-        category: data.category,
-      },
-      generation: {
-        model: "PublishByAI-v1",
-        generatedAt: new Date().toISOString(),
-      },
-    });
-
-    // 4. Pre-fill publish panel fields from generated data
-    if (data.category) setCategoryPublic(data.category);
-    if (data.description) setDescriptionPublic(data.description);
-
-    // 5. Mark dirty and auto-save as Draft
-    autoSave.markDirty();
-    await autoSave.save();
-
-    toast.success("Draft created by AI and saved!", { id: "publish-by-ai-saved" });
-  };
 
   const handleApply1ClickAIPipeline = (data: PipelineData) => {
     const generatedTitle = data.planner?.title || title;
@@ -465,14 +448,33 @@ export default function EditorShell() {
     }
     if (editor) {
       const html = editor.getHTML();
-      return html
-        .replace(/<h1>(.*?)<\/h1>/gi, "# $1\n\n")
-        .replace(/<h2>(.*?)<\/h2>/gi, "## $1\n\n")
-        .replace(/<h3>(.*?)<\/h3>/gi, "### $1\n\n")
-        .replace(/<h4>(.*?)<\/h4>/gi, "#### $1\n\n")
-        .replace(/<p>(.*?)<\/p>/gi, "$1\n\n")
-        .replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, "![$2]($1)\n\n")
-        .replace(/<[^>]+>/g, "");
+      if (!html) return "";
+
+      let md = html
+        .replace(/\r\n/g, "\n")
+        .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "\n\n# $1\n\n")
+        .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "\n\n## $1\n\n")
+        .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "\n\n### $1\n\n")
+        .replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, "\n\n#### $1\n\n")
+        .replace(/<h5[^>]*>([\s\S]*?)<\/h5>/gi, "\n\n##### $1\n\n")
+        .replace(/<h6[^>]*>([\s\S]*?)<\/h6>/gi, "\n\n###### $1\n\n")
+        .replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, "\n\n![$2]($1)\n\n")
+        .replace(/<img[^>]*alt="([^"]*)"[^>]*src="([^"]*)"[^>]*>/gi, "\n\n![$1]($2)\n\n")
+        .replace(/<img[^>]*src="([^"]*)"[^>]*>/gi, "\n\n![]($1)\n\n")
+        .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "* $1\n")
+        .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<[^>]+>/g, "")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&nbsp;/g, " ")
+        .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
+        .replace(/\n{3,}/g, "\n\n");
+
+      return md.trim();
     }
     return "";
   }, [generatedMarkdown, editor]);
@@ -481,6 +483,7 @@ export default function EditorShell() {
 
   const autoSave = useAutoSave({
     postId,
+    locale: editorLocale,
     getContent: () => ({
       title,
       html: getHTML(),
@@ -498,6 +501,7 @@ export default function EditorShell() {
 
   const publishHook = usePublishPost({
     postId,
+    locale: editorLocale,
     isPublished: false, // Will be updated on load
   });
 
@@ -555,9 +559,182 @@ export default function EditorShell() {
   // Sync post content into TipTap editor whenever editor becomes ready or loadedPost updates
   useEffect(() => {
     if (editor && loadedPost?.content !== undefined) {
-      editor.commands.setContent(loadedPost.content || "");
+      let content = loadedPost.content || "";
+      // Only repair if raw unparsed markdown hashes (##, ###) are trapped inside HTML
+      if (/#{2,6}\s+/.test(content)) {
+        const restoredMd = content
+          .replace(/\r\n/g, "\n")
+          .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
+          .replace(/<[^>]+>/g, "")
+          .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim();
+        content = toEditorHtml(restoredMd);
+      } else if (loadedPost.markdown && (!content || !content.trim())) {
+        content = toEditorHtml(loadedPost.markdown);
+      }
+      editor.commands.setContent(content);
     }
   }, [editor, isReady, loadedPost]);
+
+  // ─── Locale-Aware Post Data Loader (Sprint 3) ────────────────────────
+  const loadPostLocaleData = useCallback(
+    async (targetPostId: string, targetLocale: "en" | "vi") => {
+      const seq = ++loadSeqRef.current;
+      setPageLoading(true);
+
+      try {
+        const resPost = await postApi.getPostToEdit(targetPostId, targetLocale);
+        if (seq !== loadSeqRef.current) {
+          // Stale network response: author already switched to another tab
+          return;
+        }
+
+        if (resPost.success && resPost.data?.post) {
+          const post = resPost.data.post;
+          loadedLocaleRef.current = { id: targetPostId, locale: targetLocale };
+
+          // Shared parent Post fields
+          setCategoryPublic(
+            typeof post.category === "object" ? post.category?._id || "" : post.category || ""
+          );
+          setSeriesPublic(
+            typeof post.series === "object" ? post.series?._id || "" : post.series || ""
+          );
+          setImagePublic(
+            typeof post.image === "object" ? post.image?.url || null : post.image || null
+          );
+
+          // Update available locales status
+          const translations: any[] = post.translations || [];
+          const enTrans = translations.find((t) => t.locale === "en");
+          const viTrans = translations.find((t) => t.locale === "vi");
+          const defLoc = post.defaultLocale || "en";
+
+          const enExists = !!enTrans || defLoc === "en" || (!post.isNewTranslation && targetLocale === "en");
+          const viExists = !!viTrans || defLoc === "vi" || (!post.isNewTranslation && targetLocale === "vi");
+
+          setLocalesStatus({
+            en: {
+              exists: enExists,
+              published: enTrans ? !!enTrans.published : (defLoc === "en" && !post.isNewTranslation ? !!post.published : false),
+            },
+            vi: {
+              exists: viExists,
+              published: viTrans ? !!viTrans.published : (defLoc === "vi" && !post.isNewTranslation ? !!post.published : false),
+            },
+          });
+
+          // Check if this locale translation is new / uncreated
+          const isNew = !!post.isNewTranslation;
+          setIsNewTranslationDraft(isNew);
+
+          if (isNew) {
+            setTitle("");
+            setDescriptionPublic("");
+            setGeneratedMarkdown("");
+            publishHook.setIsPublished(false);
+            if (editor) {
+              editor.commands.setContent("");
+            }
+            autoSave.resetHash(`${targetLocale}::::`);
+          } else {
+            setTitle(post.title || "");
+            setDescriptionPublic(post.description || "");
+            publishHook.setIsPublished(!!post.published);
+
+            let initialHtml = post.content || "";
+            if (post.markdown) {
+              setGeneratedMarkdown(post.markdown);
+              if (/#{2,6}\s+/.test(initialHtml) || !initialHtml.includes("<h2")) {
+                initialHtml = toEditorHtml(post.markdown);
+              }
+            } else if (/#{2,6}\s+/.test(initialHtml)) {
+              const restoredMd = initialHtml
+                .replace(/\r\n/g, "\n")
+                .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
+                .replace(/<[^>]+>/g, "")
+                .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
+                .replace(/\n{3,}/g, "\n\n")
+                .trim();
+              setGeneratedMarkdown(restoredMd);
+              initialHtml = toEditorHtml(restoredMd);
+            } else {
+              setGeneratedMarkdown("");
+            }
+
+            if (editor) {
+              editor.commands.setContent(initialHtml);
+            }
+            autoSave.resetHash(`${targetLocale}::${post.title || ""}::${initialHtml}`);
+          }
+
+          setLoadedPost(post);
+        }
+      } catch (err) {
+        console.error("Error loading post translation:", err);
+        toast.error("Failed to load translation data");
+      } finally {
+        if (seq === loadSeqRef.current) {
+          setPageLoading(false);
+        }
+      }
+    },
+    [editor, publishHook, autoSave]
+  );
+
+  // ─── Locale Tab Switcher Handler (Sprint 3) ───────────────────────────
+  const handleSelectLocale = useCallback(
+    async (newLocale: "en" | "vi") => {
+      if (newLocale === editorLocale || switchingLocaleRef.current) return;
+      switchingLocaleRef.current = true;
+
+      try {
+        // 1. Flush any pending debounced autosave before switching
+        if (autoSave.hasUnsavedChanges) {
+          toast.info("Saving pending changes before switching language...");
+          await autoSave.save();
+        }
+
+        // 2. Clear editor content temporarily to prevent stale content flash
+        setTitle("");
+        if (editor) {
+          editor.commands.setContent("");
+        }
+
+        // 3. Switch locale state
+        setEditorLocale(newLocale);
+
+        // 4. Update URL query params without full reload
+        const currentParams = new URLSearchParams(window.location.search);
+        currentParams.set("locale", newLocale);
+        router.replace(`${pathname}?${currentParams.toString()}`, { scroll: false });
+
+        // 5. If we have an active post ID, load the target locale
+        const currentPostId = searchParams.get("id") || postId;
+        if (currentPostId) {
+          await loadPostLocaleData(currentPostId, newLocale);
+        }
+      } finally {
+        switchingLocaleRef.current = false;
+      }
+    },
+    [editorLocale, autoSave, editor, router, pathname, searchParams, postId, loadPostLocaleData]
+  );
+
+  // Sync isNewTranslationDraft when an autosave completes
+  useEffect(() => {
+    if (autoSave.status === "saved" && isNewTranslationDraft) {
+      setIsNewTranslationDraft(false);
+      setLocalesStatus((prev) => ({
+        ...prev,
+        [editorLocale]: { exists: true, published: publishHook.isPublished },
+      }));
+    }
+  }, [autoSave.status, isNewTranslationDraft, editorLocale, publishHook.isPublished]);
+
+  const categoriesLoadedRef = useRef(false);
+  const seriesLoadedRef = useRef(false);
 
   // ─── Fetch Initial Data ──────────────────────────────────────────────
 
@@ -572,18 +749,41 @@ export default function EditorShell() {
 
       try {
         const currentPostId = searchParams.get("id");
+        const currentLocale = (searchParams.get("locale") as "en" | "vi") || "en";
+        if (currentLocale !== editorLocale) {
+          setEditorLocale(currentLocale);
+        }
 
-        // Fetch categories + series in parallel
-        const [resCategory, resSeries] = await Promise.all([
-          categoryApi.getCategories(),
-          seriesApi.getSeriesByUser(),
-        ]);
+        // Fetch categories + series only if not already loaded
+        const fetchTasks: Promise<any>[] = [];
+        const needCategory = !categoriesLoadedRef.current;
+        const needSeries = !seriesLoadedRef.current;
 
-        if (resCategory.success) setCategories(resCategory.data.categories);
-        if (resSeries.success) setSeriesList(resSeries.data.series);
+        if (needCategory) fetchTasks.push(categoryApi.getCategories());
+        if (needSeries) fetchTasks.push(seriesApi.getSeriesByUser());
+
+        if (fetchTasks.length > 0) {
+          const results = await Promise.all(fetchTasks);
+          let idx = 0;
+          if (needCategory) {
+            const resCat = results[idx++];
+            if (resCat?.success) {
+              setCategories(resCat.data.categories);
+              categoriesLoadedRef.current = true;
+            }
+          }
+          if (needSeries) {
+            const resSer = results[idx++];
+            if (resSer?.success) {
+              setSeriesList(resSer.data.series);
+              seriesLoadedRef.current = true;
+            }
+          }
+        }
 
         setPostId(currentPostId);
         if (!currentPostId) {
+          loadedLocaleRef.current = null;
           try {
             const studioDraftRaw = sessionStorage.getItem("content_studio_draft");
             if (studioDraftRaw) {
@@ -605,30 +805,23 @@ export default function EditorShell() {
           }
 
           setTitle("");
+          setDescriptionPublic("");
+          setCategoryPublic("");
+          setSeriesPublic("");
+          setImagePublic(null);
           setLoadedPost(null);
+          setIsNewTranslationDraft(false);
+          setLocalesStatus({});
           if (editor) setContent("");
           setPageLoading(false);
           return;
         }
 
-        const resPost = await postApi.getPostToEdit(currentPostId);
-        if (resPost.success && resPost.data?.post) {
-          const post = resPost.data.post;
-          setTitle(post.title || "");
-          setDescriptionPublic(post.description || "");
-          setCategoryPublic(
-            typeof post.category === "object" ? post.category?._id || "" : post.category || ""
-          );
-          setSeriesPublic(
-            typeof post.series === "object" ? post.series?._id || "" : post.series || ""
-          );
-          setImagePublic(
-            typeof post.image === "object" ? post.image?.url || null : post.image || null
-          );
-          setLoadedPost(post);
-          if (editor) {
-            editor.commands.setContent(post.content || "");
-          }
+        if (
+          loadedLocaleRef.current?.id !== currentPostId ||
+          loadedLocaleRef.current?.locale !== currentLocale
+        ) {
+          await loadPostLocaleData(currentPostId, currentLocale);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -656,8 +849,8 @@ export default function EditorShell() {
       })
       .run();
 
-    if (postId && media._id) {
-      mediaLibraryApi.addUsage(media._id, "post", postId, "content");
+    if (postId && isMongoObjectId(media._id)) {
+      mediaLibraryApi.addUsage(media._id, "post", postId, "content").catch(() => {});
     }
     setActiveSidePanel(null);
   };
@@ -676,8 +869,8 @@ export default function EditorShell() {
       })
       .run();
 
-    if (postId && media._id) {
-      mediaLibraryApi.addUsage(media._id, "post", postId, "content");
+    if (postId && isMongoObjectId(media._id)) {
+      mediaLibraryApi.addUsage(media._id, "post", postId, "content").catch(() => {});
     }
     setActiveSidePanel(null);
     setSourceAssetToEdit(null);
@@ -715,11 +908,14 @@ export default function EditorShell() {
       const textBefore = editor.getText().slice(-2000);
       const res = await api.post("/api/editor/action", {
         action: "continue",
+        locale: editorLocale,
         context: {
           surroundingContext: textBefore,
           articleTitle: title,
           audience: categoryPublic || "Developers",
           tone: "informative",
+          locale: editorLocale,
+          targetLanguage: editorLocale,
         },
       });
 
@@ -752,11 +948,14 @@ export default function EditorShell() {
     try {
       const res = await api.post("/api/editor/action", {
         action: "improve",
+        locale: editorLocale,
         context: {
           selectedText: selected,
           instruction: improvePrompt,
           audience: categoryPublic || "Developers",
           tone: "professional",
+          locale: editorLocale,
+          targetLanguage: editorLocale,
         },
       });
 
@@ -784,10 +983,13 @@ export default function EditorShell() {
     try {
       const res = await api.post("/api/editor/action", {
         action: "example",
+        locale: editorLocale,
         context: {
           selectedText: selected || "",
           additionalInstructions: examplePrompt,
           language: "typescript",
+          locale: editorLocale,
+          targetLanguage: editorLocale,
         },
       });
 
@@ -811,11 +1013,14 @@ export default function EditorShell() {
     try {
       const res = await api.post("/api/editor/action", {
         action: "review",
+        locale: editorLocale,
         context: {
           currentArticle: editor.getText(),
           articleTitle: title || "Untitled",
           audience: categoryPublic || "Developers",
           tone: "professional",
+          locale: editorLocale,
+          targetLanguage: editorLocale,
         },
       });
 
@@ -861,6 +1066,7 @@ export default function EditorShell() {
       const imgUrl = asset.url;
       const imgAlt = customAlt || asset.alt || asset.prompt || "AI generated illustration";
       const mediaId = asset._id;
+      const isPersistentMedia = isMongoObjectId(mediaId);
 
       const { from, to, $to } = editor.state.selection;
       const hasActiveSelection = from !== to;
@@ -877,7 +1083,7 @@ export default function EditorShell() {
             attrs: {
               src: imgUrl,
               alt: imgAlt,
-              ...(mediaId ? { "data-media-id": mediaId } : {}),
+              ...(isPersistentMedia ? { "data-media-id": mediaId } : {}),
               ...(customCaption ? { caption: customCaption, title: customCaption } : {}),
             },
           })
@@ -892,15 +1098,15 @@ export default function EditorShell() {
             attrs: {
               src: imgUrl,
               alt: imgAlt,
-              ...(mediaId ? { "data-media-id": mediaId } : {}),
+              ...(isPersistentMedia ? { "data-media-id": mediaId } : {}),
               ...(customCaption ? { caption: customCaption, title: customCaption } : {}),
             },
           })
           .run();
       }
 
-      if (postId && mediaId) {
-        mediaLibraryApi.addUsage(mediaId, "post", postId, "content");
+      if (postId && isPersistentMedia) {
+        mediaLibraryApi.addUsage(mediaId, "post", postId, "content").catch(() => {});
       }
 
       // Telemetry: ai_image_inserted
@@ -1102,8 +1308,8 @@ export default function EditorShell() {
         .run();
 
       // Track usage
-      if (postId && media._id) {
-        mediaLibraryApi.addUsage(media._id, "post", postId, "content");
+      if (postId && isMongoObjectId(media._id)) {
+        mediaLibraryApi.addUsage(media._id, "post", postId, "content").catch(() => {});
       }
     }
     setShowImageUpload(false);
@@ -1133,6 +1339,9 @@ export default function EditorShell() {
   const onPublishHandle = async () => {
     const success = await publishHook.publish({
       postId: postId!,
+      locale: editorLocale,
+      title: title,
+      content: getHTML(),
       description: descriptionPublic,
       image: imagePublic,
       series: seriesPublic,
@@ -1141,6 +1350,25 @@ export default function EditorShell() {
 
     if (success) {
       setPublishDrawerOpen(false);
+      setLocalesStatus((prev) => ({
+        ...prev,
+        [editorLocale]: { exists: true, published: true },
+      }));
+      setIsNewTranslationDraft(false);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("refresh-post-list"));
+      }
+    }
+  };
+
+  const handleUnpublish = async () => {
+    if (!postId) return;
+    const success = await publishHook.unpublish(editorLocale);
+    if (success) {
+      setLocalesStatus((prev) => ({
+        ...prev,
+        [editorLocale]: { ...prev[editorLocale], exists: true, published: false },
+      }));
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("refresh-post-list"));
       }
@@ -1173,12 +1401,12 @@ export default function EditorShell() {
   const handleSelectPost = useCallback(
     (selectedPostId: string | null) => {
       if (selectedPostId) {
-        router.push(`/create?id=${selectedPostId}`);
+        router.push(`/create?id=${selectedPostId}&locale=${editorLocale}`);
       } else {
-        router.push("/create");
+        router.push(`/create?locale=${editorLocale}`);
       }
     },
-    [router],
+    [router, editorLocale],
   );
 
   // ─── AI Writer Stream Integration ────────────────────────────────────
@@ -1202,7 +1430,7 @@ export default function EditorShell() {
     await aiPlanner.writeStream(
       {
         additionalInstructions: instructions,
-        language: "en",
+        language: editorLocale,
         userPreference: "",
       },
       (chunk) => {
@@ -1230,6 +1458,75 @@ export default function EditorShell() {
     );
   };
 
+  // ─── AI-Assisted Translation Integration (Sprint 4) ──────────────────
+
+  const handleTranslateFromSource = async () => {
+    if (!postId) {
+      toast.error(t("editor.banner.save_original_first"));
+      return;
+    }
+    const sourceLocale = editorLocale === "vi" ? "en" : "vi";
+    const sourceLabel = sourceLocale === "en" ? (language === "vi" ? "Tiếng Anh" : "English") : (language === "vi" ? "Tiếng Việt" : "Vietnamese");
+    const targetLabel = editorLocale === "vi" ? (language === "vi" ? "Tiếng Việt" : "Vietnamese") : (language === "vi" ? "Tiếng Anh" : "English");
+
+    // Guard: Check if editor already has content in target draft
+    const currentText = (editor ? editor.getText() : "").trim();
+    if (currentText.length > 0 || title.trim().length > 0) {
+      const confirmed = window.confirm(
+        t("editor.banner.confirm_overwrite", { source: sourceLabel, target: targetLabel })
+      );
+      if (!confirmed) return;
+    }
+
+    setIsTranslating(true);
+    try {
+      // 1. Fetch source translation
+      const resPost = await postApi.getPostToEdit(postId, sourceLocale);
+      if (!resPost.success || !resPost.data?.post) {
+        toast.error(t("editor.banner.could_not_retrieve", { source: sourceLabel }));
+        setIsTranslating(false);
+        return;
+      }
+
+      const src = resPost.data.post;
+      const sourceContent = src.markdown || src.content || "";
+      if (!sourceContent.trim() && !src.title?.trim()) {
+        toast.error(t("editor.banner.no_content", { source: sourceLabel }));
+        setIsTranslating(false);
+        return;
+      }
+
+      // 2. Call AI translation endpoint
+      const res = await aiApi.translateArticle({
+        title: src.title || "",
+        content: sourceContent,
+        description: src.description || "",
+        sourceLocale,
+        targetLocale: editorLocale,
+      });
+
+      if (res.data) {
+        const { title: transTitle, description: transDesc, content: transContent } = res.data;
+        handleTitleChange(transTitle);
+        if (transDesc) {
+          setDescriptionPublic(transDesc);
+        }
+        setGeneratedMarkdown(transContent);
+        if (editor) {
+          const html = toEditorHtml(transContent);
+          editor.commands.setContent(html);
+        }
+        autoSave.markDirty();
+        toast.success(t("editor.banner.translated_success", { target: targetLabel }));
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || "Failed to translate article.";
+      toast.error(msg);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   // ─── Loading State ───────────────────────────────────────────────────
 
   if (pageLoading) {
@@ -1249,7 +1546,7 @@ export default function EditorShell() {
 
   return (
     <EditorProvider editor={editor}>
-      <div className="min-h-screen bg-editor-bg flex flex-col h-screen overflow-hidden">
+      <div className="min-h-screen bg-editor-bg flex flex-col h-screen w-full max-w-full overflow-x-hidden">
         <Instruction />
 
         {/* Sticky header */}
@@ -1280,8 +1577,12 @@ export default function EditorShell() {
           onToggleSEO={() => togglePanel("seo")}
           seoOpen={seoOpen}
           onOpen1ClickAI={() => setIs1ClickAIModalOpen(true)}
-          onOpenPublishByAI={() => setIsPublishByAIOpen(true)}
           onOpenBatchVisuals={() => setIsBatchVisualsModalOpen(true)}
+          activeLocale={editorLocale}
+          onSelectLocale={handleSelectLocale}
+          localesStatus={localesStatus}
+          onTranslateFromSource={postId && localesStatus[editorLocale === "vi" ? "en" : "vi"]?.exists ? handleTranslateFromSource : undefined}
+          isTranslating={isTranslating}
         />
 
         {/* Main Editor Wrapper with side-by-side post menu, outline, editor & AI planning */}
@@ -1306,6 +1607,54 @@ export default function EditorShell() {
 
           {/* Main editor area */}
           <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-8 py-8 sm:py-10 overflow-y-auto custom-scrollbar">
+            {/* Quick access shelf to author's previous posts & drafts */}
+            <RecentPostsSection
+              activePostId={postId}
+              onSelectPost={handleSelectPost}
+              onOpenSidebar={() => setPostListOpen(true)}
+            />
+
+            {/* Translation Creation Notice Banner (Sprint 3 & 4) */}
+            {isNewTranslationDraft && (
+              <div className="mb-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-[fade-in_0.2s_ease-out]">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-amber-500/20 text-amber-300 shrink-0 mt-0.5">
+                    <Languages className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm sm:text-base text-amber-100 flex items-center gap-2">
+                      {t("editor.banner.new_translation_draft", { locale: editorLocale === "vi" ? (language === "vi" ? "Tiếng Việt (VI)" : "Vietnamese (VI)") : (language === "vi" ? "Tiếng Anh (EN)" : "English (EN)") })}
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-medium">{t("editor.banner.uncreated")}</span>
+                    </div>
+                    <p className="text-xs text-amber-300/80 mt-1">
+                      {t("editor.banner.uncreated_desc", { source: editorLocale === "vi" ? (language === "vi" ? "Tiếng Anh" : "English") : (language === "vi" ? "Tiếng Việt" : "Vietnamese") })}
+                    </p>
+                  </div>
+                </div>
+
+                {postId && localesStatus[editorLocale === "vi" ? "en" : "vi"]?.exists && (
+                  <button
+                    type="button"
+                    onClick={handleTranslateFromSource}
+                    disabled={isTranslating}
+                    className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-slate-950 font-semibold text-xs transition-all shadow-md cursor-pointer disabled:opacity-50 shrink-0"
+                  >
+                    {isTranslating ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950" />
+                        <span>{t("editor.banner.translating")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                        <span>{t("editor.banner.translate_with_ai", { source: editorLocale === "vi" ? "EN" : "VI" })}</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Title */}
             <EditorTitle
               value={title}
@@ -1427,10 +1776,10 @@ export default function EditorShell() {
                               type="button"
                               onClick={handleOpenAiImageModal}
                               className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-lg hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer group"
-                              title="Generate an AI illustration based on context"
+                              title="AI Visual Assistant: Generate AI visuals or find images on internet"
                             >
-                              <ImageIcon size={12} className="text-pink-500 group-hover:scale-110 transition-transform" />
-                              <span className="font-medium text-pink-600 dark:text-pink-400">AI Image</span>
+                              <Sparkles size={12} className="text-violet-500 group-hover:scale-110 transition-transform" />
+                              <span className="font-medium text-violet-600 dark:text-violet-400">AI Visual Assistant</span>
                             </button>
                           </div>
                         )}
@@ -1673,6 +2022,7 @@ export default function EditorShell() {
                 onApplyTitle={(t) => handleTitleChange(t)}
                 onStartWriting={handleStartWriting}
                 initialTopic={title}
+                language={editorLocale}
               />
             </aside>
           )}
@@ -1743,6 +2093,9 @@ export default function EditorShell() {
           isOpen={publishDrawerOpen}
           onClose={() => setPublishDrawerOpen(false)}
           onPublish={onPublishHandle}
+          onUnpublish={handleUnpublish}
+          activeLocale={editorLocale}
+          isPublished={publishHook.isPublished}
           categories={categories}
           selectedCategory={categoryPublic}
           onCategoryChange={setCategoryPublic}
@@ -1814,18 +2167,6 @@ export default function EditorShell() {
             autoSave.markDirty();
             await autoSave.save();
           }}
-        />
-
-        {/* Publish by AI Modal */}
-        <PublishByAIModal
-          isOpen={isPublishByAIOpen}
-          onClose={() => setIsPublishByAIOpen(false)}
-          initialTopic={title}
-          onApply={handleApplyPublishByAI}
-          plannerData={aiPlanner.outline ? {
-            title: aiPlanner.outline.title,
-            category: aiPlanner.outline.category,
-          } : undefined}
         />
 
         {/* One Click Autonomous Publisher Modal */}

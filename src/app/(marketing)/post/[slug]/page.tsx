@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { ENV } from "@/api/const";
 import HotPost from "@/features/ideas/components/hot_post/HotPost";
 import CommentSection from "./CommentSection";
 import PostSidebarActions from "./PostSideBarActions";
+import ArticleLocaleSync from "@/components/ArticleLocaleSync";
 import {
   ArticleRenderer,
   EditorialLayout,
@@ -21,7 +23,7 @@ import "@/styles/editorial.css";
 
 async function getPost(slug: string) {
   try {
-    const res = await fetch(`${ENV.ROOT_API}/post/getPostBySlug/${slug}`, {
+    const res = await fetch(`${ENV.ROOT_API}/post/getPostBySlug/${slug}?locale=en`, {
       next: { revalidate: 3600 },
     });
 
@@ -88,8 +90,8 @@ export default async function PostLists({
   const postData = await getPost(slug);
   const randomTopic = await getRandomTopic();
 
-  if (!postData) {
-    return <div>Post not found</div>;
+  if (!postData || postData.published === false) {
+    notFound();
   }
 
   // Build TOC items server-side from structured blocks.
@@ -114,6 +116,9 @@ export default async function PostLists({
 
   return (
     <>
+      {/* ── Synchronize active locale and alternate URLs to client state ── */}
+      <ArticleLocaleSync activeLocale="en" alternateUrls={postData.alternateUrls} />
+
       {/* ── Schema.org Structured Data (JSON-LD) ── */}
       <JsonLd data={structuredData.article} />
       <JsonLd data={structuredData.breadcrumb} />
