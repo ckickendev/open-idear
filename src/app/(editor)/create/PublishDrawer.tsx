@@ -41,6 +41,12 @@ interface PublishDrawerProps {
   initialTopic?: string;
   /** Auto fill handler callback */
   onAutoFillAI?: (result: AIPublisherResult) => void;
+  /** Active editing locale being published */
+  activeLocale?: "en" | "vi";
+  /** Whether the active locale translation is currently published */
+  isPublished?: boolean;
+  /** Unpublish callback for active locale */
+  onUnpublish?: () => void;
 }
 
 const PublishDrawer: React.FC<PublishDrawerProps> = ({
@@ -60,6 +66,9 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
   isPublishing = false,
   initialTopic = "",
   onAutoFillAI,
+  activeLocale = "en",
+  isPublished = false,
+  onUnpublish,
 }) => {
   const [aiCoverImage, setAiCoverImage] = useState<CoverImageResult | null>(null);
   const [isRegeneratingCover, setIsRegeneratingCover] = useState(false);
@@ -179,11 +188,21 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-editor-border)]">
           <div>
-            <h2 className="text-lg font-bold text-[var(--color-editor-text)]">
-              Publish
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold text-[var(--color-editor-text)]">
+                Publish
+              </h2>
+              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-[var(--color-editor-accent)]/15 text-[var(--color-editor-accent)]">
+                {activeLocale === "vi" ? "🇻🇳 Tiếng Việt" : "🇺🇸 English"}
+              </span>
+              {isPublished && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                  Published
+                </span>
+              )}
+            </div>
             <p className="text-xs text-[var(--color-editor-muted)] mt-0.5">
-              Configure your post before publishing
+              Configure and publish your {activeLocale === "vi" ? "Vietnamese" : "English"} translation
             </p>
           </div>
           <button
@@ -428,13 +447,23 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
 
         {/* Footer — sticky at bottom */}
         <div className="px-6 py-4 border-t border-[var(--color-editor-border)] bg-[var(--color-editor-surface)]">
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={handleClose}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-[var(--color-editor-secondary)] border border-[var(--color-editor-border)] rounded-xl hover:bg-[var(--color-editor-elevated)] hover:text-[var(--color-editor-text)] transition-all duration-200 cursor-pointer"
+              className="px-3 py-2.5 text-sm font-medium text-[var(--color-editor-secondary)] border border-[var(--color-editor-border)] rounded-xl hover:bg-[var(--color-editor-elevated)] hover:text-[var(--color-editor-text)] transition-all duration-200 cursor-pointer"
             >
               Cancel
             </button>
+            {isPublished && onUnpublish && (
+              <button
+                type="button"
+                onClick={onUnpublish}
+                disabled={isPublishing}
+                className="px-3 py-2.5 text-xs font-semibold text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-xl hover:bg-rose-500/10 transition-all duration-200 cursor-pointer disabled:opacity-40"
+              >
+                Unpublish ({activeLocale.toUpperCase()})
+              </button>
+            )}
             <button
               onClick={onPublish}
               disabled={isPublishing || !selectedCategory}
@@ -468,12 +497,14 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  <span className="relative z-10">Publishing...</span>
+                  <span className="relative z-10 font-bold">Publishing...</span>
                 </>
               ) : (
                 <>
-                  <Send size={14} className="relative z-10" />
-                  <span className="relative z-10">Publish Now</span>
+                  <Send size={15} className="relative z-10 transition-transform group-hover:translate-x-0.5" />
+                  <span className="relative z-10 font-bold">
+                    {isPublished ? `Update (${activeLocale.toUpperCase()})` : `Publish (${activeLocale.toUpperCase()})`}
+                  </span>
                 </>
               )}
             </button>

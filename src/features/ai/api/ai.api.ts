@@ -154,6 +154,13 @@ export const aiApi = {
   },
 
   /**
+   * Translates article content from sourceLocale to targetLocale (AI-assisted translation).
+   */
+  translateArticle: (payload: TranslationRequest) => {
+    return api.post<TranslationResponse>("/ai/v1/translate", payload);
+  },
+
+  /**
    * Converts Markdown and Growth Results into structured ArticleBlock[].
    */
   structureArticle: (payload: { markdown: string; growthResults?: Record<string, unknown> }) => {
@@ -163,6 +170,31 @@ export const aiApi = {
     }>("/ai/v1/structure", payload);
   },
 };
+
+// ─── Translation Types ────────────────────────────────────────────────────────
+
+export interface TranslationRequest {
+  readonly title: string;
+  readonly content: string;
+  readonly description?: string;
+  readonly sourceLocale: "en" | "vi";
+  readonly targetLocale: "en" | "vi";
+  readonly additionalInstructions?: string;
+}
+
+export interface TranslationResponse {
+  readonly title: string;
+  readonly description: string;
+  readonly content: string;
+  readonly slug: string;
+  readonly seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    keywords?: string[];
+  };
+  readonly sourceLocale: string;
+  readonly targetLocale: string;
+}
 
 export interface ResolvedImage {
   id: string;

@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:bilingual": "node --experimental-strip-types src/features/seo/__tests__/bilingualRouting.test.ts",
+    "test:editor": "node --experimental-strip-types src/features/editor/__tests__/bilingualEditor.test.ts",
+    "test:multilingual-ai": "node --experimental-strip-types src/features/ai/__tests__/multilingualAI.test.ts"
   },
   "dependencies": {
     "@cloudflare/stream-react": "^1.9.3",

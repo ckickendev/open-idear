@@ -16,6 +16,8 @@ import {
   Network,
   TrendingUp,
   Gauge,
+  FileText,
+  Loader2,
 } from "lucide-react";
 import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
 import Link from "next/link";
@@ -68,6 +70,19 @@ interface EditorHeaderProps {
   onOpen1ClickAI?: () => void;
   /** Open Generate All Visuals (Batch) modal */
   onOpenBatchVisuals?: () => void;
+  /** Active editing locale */
+  activeLocale?: "en" | "vi";
+  /** Callback when switching editing locale */
+  onSelectLocale?: (locale: "en" | "vi") => void;
+  /** Locales status (whether translated, published) */
+  localesStatus?: {
+    en?: { exists: boolean; published: boolean };
+    vi?: { exists: boolean; published: boolean };
+  };
+  /** Trigger AI translation from alternate language */
+  onTranslateFromSource?: () => void;
+  /** Translation in progress */
+  isTranslating?: boolean;
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -96,6 +111,11 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   seoOpen,
   onOpen1ClickAI,
   onOpenBatchVisuals,
+  activeLocale = "en",
+  onSelectLocale,
+  localesStatus,
+  onTranslateFromSource,
+  isTranslating = false,
 }) => {
   const canSave = hasTitle;
   const canPublish = isEditMode && !isPublished;
@@ -110,15 +130,17 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         {/* Post list toggle */}
         <button
           onClick={onTogglePostList}
-          className={`p-2 rounded-xl transition-all duration-200 cursor-pointer hover:shadow-sm ${
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer shadow-xs ${
             postListOpen
-              ? "text-[var(--color-editor-accent)] bg-[var(--color-editor-accent)]/10 ring-1 ring-[var(--color-editor-accent)]/20 shadow-xs"
-              : "text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]"
+              ? "bg-[var(--color-editor-accent)] text-white"
+              : "text-[var(--color-editor-text)] bg-[var(--color-editor-elevated)] hover:bg-[var(--color-editor-border)]/50 border border-[var(--color-editor-border)]"
           }`}
-          aria-label={postListOpen ? "Hide posts menu (⌘\\)" : "Show posts menu (⌘\\)"}
-          title={postListOpen ? "Hide posts menu (⌘\\)" : "Show posts menu (⌘\\)"}
+          aria-label={postListOpen ? "Hide My Posts sidebar (⌘\\)" : "Open My Posts sidebar (⌘\\)"}
+          title={postListOpen ? "Hide My Posts sidebar (⌘\\)" : "Open My Posts sidebar (⌘\\)"}
         >
-          {postListOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+          <FileText size={14} className={postListOpen ? "text-white" : "text-violet-500"} />
+          <span className="font-semibold">My Posts</span>
+          {postListOpen ? <PanelLeftClose size={14} /> : <PanelLeftOpen size={14} />}
         </button>
 
         {/* Back link */}
@@ -136,6 +158,71 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
 
         {/* Status indicator */}
         <SaveStatusIndicator status={saveStatus} onRetry={onRetrySave} />
+
+        {/* ── Locale Tabs (EN / VI) ── */}
+        {onSelectLocale && (
+          <div className="flex items-center bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl p-0.5 shadow-xs">
+            <button
+              type="button"
+              onClick={() => onSelectLocale("en")}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+                activeLocale === "en"
+                  ? "bg-[var(--color-editor-accent)] text-white shadow-xs"
+                  : "text-[var(--color-editor-muted)] hover:text-[var(--color-editor-text)]"
+              }`}
+              aria-label="Edit English translation"
+              title="English translation"
+            >
+              <span>🇺🇸 EN</span>
+              {localesStatus?.en?.published ? (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Published" />
+              ) : localesStatus?.en?.exists ? (
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Draft" />
+              ) : null}
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectLocale("vi")}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+                activeLocale === "vi"
+                  ? "bg-[var(--color-editor-accent)] text-white shadow-xs"
+                  : "text-[var(--color-editor-muted)] hover:text-[var(--color-editor-text)]"
+              }`}
+              aria-label="Edit Vietnamese translation"
+              title="Vietnamese translation"
+            >
+              <span>🇻🇳 VI</span>
+              {localesStatus?.vi?.exists ? (
+                localesStatus.vi.published ? (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Published" />
+                ) : (
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Draft" />
+                )
+              ) : (
+                <span className="text-[10px] opacity-70 font-normal">+new</span>
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* AI Translate draft button */}
+        {onTranslateFromSource && (
+          <button
+            type="button"
+            onClick={onTranslateFromSource}
+            disabled={isTranslating}
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-500 dark:text-amber-300 border border-amber-500/30 transition-all cursor-pointer disabled:opacity-50 shadow-2xs"
+            title={`Translate draft from ${activeLocale === "vi" ? "English (EN)" : "Vietnamese (VI)"} using AI`}
+          >
+            {isTranslating ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <Sparkles size={13} />
+            )}
+            <span className="hidden xl:inline">Translate from {activeLocale === "vi" ? "EN" : "VI"}</span>
+            <span className="inline xl:hidden">Translate</span>
+          </button>
+        )}
 
         {/* Draft / Published badge */}
         <div

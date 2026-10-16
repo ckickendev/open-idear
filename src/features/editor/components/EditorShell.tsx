@@ -27,6 +27,7 @@ import Toolbar from "@/app/(editor)/create/ToolBar";
 import HtmlEditor from "@/app/(editor)/create/HtmlEditor";
 import BlockInsertButton from "@/app/(editor)/create/FloatingToolbar";
 import PostListPanel from "@/app/(editor)/create/PostLists";
+import { RecentPostsSection } from "@/app/(editor)/create/RecentPostsSection";
 import EditorHeader from "@/app/(editor)/create/EditorHeader";
 import EditorTitle from "@/app/(editor)/create/EditorTitle";
 import PublishDrawer from "@/app/(editor)/create/PublishDrawer";
@@ -71,6 +72,7 @@ import {
   X,
   Loader2,
   Image as ImageIcon,
+  Languages,
 } from "lucide-react";
 import { BubbleMenu } from "@tiptap/react/menus";
 
@@ -130,6 +132,10 @@ function formatHtml(html: string): string {
   return formatted;
 }
 
+function isMongoObjectId(id?: string | null): boolean {
+  return typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // EditorShell — Main editor orchestrator
 // ═══════════════════════════════════════════════════════════════════════════
@@ -145,6 +151,21 @@ export default function EditorShell() {
   const [mode, setMode] = useState<EditorMode>("visual");
   const [rawHtml, setRawHtml] = useState("");
   const [pageLoading, setPageLoading] = useState(true);
+
+  // ─── Locale & Bilingual Editing State (Sprint 3) ──────────────────────
+  const [editorLocale, setEditorLocale] = useState<"en" | "vi">(() => {
+    const param = searchParams.get("locale");
+    return param === "vi" ? "vi" : "en";
+  });
+  const [localesStatus, setLocalesStatus] = useState<{
+    en?: { exists: boolean; published: boolean };
+    vi?: { exists: boolean; published: boolean };
+  }>({});
+  const [isNewTranslationDraft, setIsNewTranslationDraft] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const loadSeqRef = useRef(0);
+  const switchingLocaleRef = useRef(false);
+  const loadedLocaleRef = useRef<{ id: string; locale: string } | null>(null);
 
   // Panel states
   const [postListOpen, setPostListOpen] = useState(true);
@@ -277,8 +298,8 @@ export default function EditorShell() {
     }
 
     // Track media library usage (only for existing library assets)
-    if (postId && asset.source === "asset_library" && asset.id && !asset.id.startsWith("stock_")) {
-      mediaLibraryApi.addUsage(asset.id, "post", postId, "content");
+    if (postId && asset.source === "asset_library" && isMongoObjectId(asset.id)) {
+      mediaLibraryApi.addUsage(asset.id, "post", postId, "content").catch(() => {});
     }
 
     // Telemetry: visual_search_selected
@@ -460,6 +481,7 @@ export default function EditorShell() {
 
   const autoSave = useAutoSave({
     postId,
+    locale: editorLocale,
     getContent: () => ({
       title,
       html: getHTML(),
@@ -477,6 +499,7 @@ export default function EditorShell() {
 
   const publishHook = usePublishPost({
     postId,
+    locale: editorLocale,
     isPublished: false, // Will be updated on load
   });
 
@@ -552,8 +575,162 @@ export default function EditorShell() {
     }
   }, [editor, isReady, loadedPost]);
 
-  // Track loaded state to avoid redundant network round-trips
-  const loadedPostIdRef = useRef<string | null>(null);
+  // ─── Locale-Aware Post Data Loader (Sprint 3) ────────────────────────
+  const loadPostLocaleData = useCallback(
+    async (targetPostId: string, targetLocale: "en" | "vi") => {
+      const seq = ++loadSeqRef.current;
+      setPageLoading(true);
+
+      try {
+        const resPost = await postApi.getPostToEdit(targetPostId, targetLocale);
+        if (seq !== loadSeqRef.current) {
+          // Stale network response: author already switched to another tab
+          return;
+        }
+
+        if (resPost.success && resPost.data?.post) {
+          const post = resPost.data.post;
+          loadedLocaleRef.current = { id: targetPostId, locale: targetLocale };
+
+          // Shared parent Post fields
+          setCategoryPublic(
+            typeof post.category === "object" ? post.category?._id || "" : post.category || ""
+          );
+          setSeriesPublic(
+            typeof post.series === "object" ? post.series?._id || "" : post.series || ""
+          );
+          setImagePublic(
+            typeof post.image === "object" ? post.image?.url || null : post.image || null
+          );
+
+          // Update available locales status
+          const translations: any[] = post.translations || [];
+          const enTrans = translations.find((t) => t.locale === "en");
+          const viTrans = translations.find((t) => t.locale === "vi");
+          const defLoc = post.defaultLocale || "en";
+
+          const enExists = !!enTrans || defLoc === "en" || (!post.isNewTranslation && targetLocale === "en");
+          const viExists = !!viTrans || defLoc === "vi" || (!post.isNewTranslation && targetLocale === "vi");
+
+          setLocalesStatus({
+            en: {
+              exists: enExists,
+              published: enTrans ? !!enTrans.published : (defLoc === "en" && !post.isNewTranslation ? !!post.published : false),
+            },
+            vi: {
+              exists: viExists,
+              published: viTrans ? !!viTrans.published : (defLoc === "vi" && !post.isNewTranslation ? !!post.published : false),
+            },
+          });
+
+          // Check if this locale translation is new / uncreated
+          const isNew = !!post.isNewTranslation;
+          setIsNewTranslationDraft(isNew);
+
+          if (isNew) {
+            setTitle("");
+            setDescriptionPublic("");
+            setGeneratedMarkdown("");
+            publishHook.setIsPublished(false);
+            if (editor) {
+              editor.commands.setContent("");
+            }
+            autoSave.resetHash(`${targetLocale}::::`);
+          } else {
+            setTitle(post.title || "");
+            setDescriptionPublic(post.description || "");
+            publishHook.setIsPublished(!!post.published);
+
+            let initialHtml = post.content || "";
+            if (post.markdown) {
+              setGeneratedMarkdown(post.markdown);
+              if (/#{2,6}\s+/.test(initialHtml) || !initialHtml.includes("<h2")) {
+                initialHtml = toEditorHtml(post.markdown);
+              }
+            } else if (/#{2,6}\s+/.test(initialHtml)) {
+              const restoredMd = initialHtml
+                .replace(/\r\n/g, "\n")
+                .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
+                .replace(/<[^>]+>/g, "")
+                .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
+                .replace(/\n{3,}/g, "\n\n")
+                .trim();
+              setGeneratedMarkdown(restoredMd);
+              initialHtml = toEditorHtml(restoredMd);
+            } else {
+              setGeneratedMarkdown("");
+            }
+
+            if (editor) {
+              editor.commands.setContent(initialHtml);
+            }
+            autoSave.resetHash(`${targetLocale}::${post.title || ""}::${initialHtml}`);
+          }
+
+          setLoadedPost(post);
+        }
+      } catch (err) {
+        console.error("Error loading post translation:", err);
+        toast.error("Failed to load translation data");
+      } finally {
+        if (seq === loadSeqRef.current) {
+          setPageLoading(false);
+        }
+      }
+    },
+    [editor, publishHook, autoSave]
+  );
+
+  // ─── Locale Tab Switcher Handler (Sprint 3) ───────────────────────────
+  const handleSelectLocale = useCallback(
+    async (newLocale: "en" | "vi") => {
+      if (newLocale === editorLocale || switchingLocaleRef.current) return;
+      switchingLocaleRef.current = true;
+
+      try {
+        // 1. Flush any pending debounced autosave before switching
+        if (autoSave.hasUnsavedChanges) {
+          toast.info("Saving pending changes before switching language...");
+          await autoSave.save();
+        }
+
+        // 2. Clear editor content temporarily to prevent stale content flash
+        setTitle("");
+        if (editor) {
+          editor.commands.setContent("");
+        }
+
+        // 3. Switch locale state
+        setEditorLocale(newLocale);
+
+        // 4. Update URL query params without full reload
+        const currentParams = new URLSearchParams(window.location.search);
+        currentParams.set("locale", newLocale);
+        router.replace(`${pathname}?${currentParams.toString()}`, { scroll: false });
+
+        // 5. If we have an active post ID, load the target locale
+        const currentPostId = searchParams.get("id") || postId;
+        if (currentPostId) {
+          await loadPostLocaleData(currentPostId, newLocale);
+        }
+      } finally {
+        switchingLocaleRef.current = false;
+      }
+    },
+    [editorLocale, autoSave, editor, router, pathname, searchParams, postId, loadPostLocaleData]
+  );
+
+  // Sync isNewTranslationDraft when an autosave completes
+  useEffect(() => {
+    if (autoSave.status === "saved" && isNewTranslationDraft) {
+      setIsNewTranslationDraft(false);
+      setLocalesStatus((prev) => ({
+        ...prev,
+        [editorLocale]: { exists: true, published: publishHook.isPublished },
+      }));
+    }
+  }, [autoSave.status, isNewTranslationDraft, editorLocale, publishHook.isPublished]);
+
   const categoriesLoadedRef = useRef(false);
   const seriesLoadedRef = useRef(false);
 
@@ -570,6 +747,10 @@ export default function EditorShell() {
 
       try {
         const currentPostId = searchParams.get("id");
+        const currentLocale = (searchParams.get("locale") as "en" | "vi") || "en";
+        if (currentLocale !== editorLocale) {
+          setEditorLocale(currentLocale);
+        }
 
         // Fetch categories + series only if not already loaded
         const fetchTasks: Promise<any>[] = [];
@@ -600,7 +781,7 @@ export default function EditorShell() {
 
         setPostId(currentPostId);
         if (!currentPostId) {
-          loadedPostIdRef.current = null;
+          loadedLocaleRef.current = null;
           try {
             const studioDraftRaw = sessionStorage.getItem("content_studio_draft");
             if (studioDraftRaw) {
@@ -622,50 +803,23 @@ export default function EditorShell() {
           }
 
           setTitle("");
+          setDescriptionPublic("");
+          setCategoryPublic("");
+          setSeriesPublic("");
+          setImagePublic(null);
           setLoadedPost(null);
+          setIsNewTranslationDraft(false);
+          setLocalesStatus({});
           if (editor) setContent("");
           setPageLoading(false);
           return;
         }
 
-        if (loadedPostIdRef.current !== currentPostId) {
-          const resPost = await postApi.getPostToEdit(currentPostId);
-          if (resPost.success && resPost.data?.post) {
-            loadedPostIdRef.current = currentPostId;
-            const post = resPost.data.post;
-            setTitle(post.title || "");
-            setDescriptionPublic(post.description || "");
-            setCategoryPublic(
-              typeof post.category === "object" ? post.category?._id || "" : post.category || ""
-            );
-            setSeriesPublic(
-              typeof post.series === "object" ? post.series?._id || "" : post.series || ""
-            );
-            setImagePublic(
-              typeof post.image === "object" ? post.image?.url || null : post.image || null
-            );
-            setLoadedPost(post);
-            let initialHtml = post.content || "";
-            if (post.markdown) {
-              setGeneratedMarkdown(post.markdown);
-              if (/#{2,6}\s+/.test(initialHtml) || !initialHtml.includes("<h2")) {
-                initialHtml = toEditorHtml(post.markdown);
-              }
-            } else if (/#{2,6}\s+/.test(initialHtml)) {
-              const restoredMd = initialHtml
-                .replace(/\r\n/g, "\n")
-                .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
-                .replace(/<[^>]+>/g, "")
-                .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
-                .replace(/\n{3,}/g, "\n\n")
-                .trim();
-              setGeneratedMarkdown(restoredMd);
-              initialHtml = toEditorHtml(restoredMd);
-            }
-            if (editor) {
-              editor.commands.setContent(initialHtml);
-            }
-          }
+        if (
+          loadedLocaleRef.current?.id !== currentPostId ||
+          loadedLocaleRef.current?.locale !== currentLocale
+        ) {
+          await loadPostLocaleData(currentPostId, currentLocale);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -693,8 +847,8 @@ export default function EditorShell() {
       })
       .run();
 
-    if (postId && media._id) {
-      mediaLibraryApi.addUsage(media._id, "post", postId, "content");
+    if (postId && isMongoObjectId(media._id)) {
+      mediaLibraryApi.addUsage(media._id, "post", postId, "content").catch(() => {});
     }
     setActiveSidePanel(null);
   };
@@ -713,8 +867,8 @@ export default function EditorShell() {
       })
       .run();
 
-    if (postId && media._id) {
-      mediaLibraryApi.addUsage(media._id, "post", postId, "content");
+    if (postId && isMongoObjectId(media._id)) {
+      mediaLibraryApi.addUsage(media._id, "post", postId, "content").catch(() => {});
     }
     setActiveSidePanel(null);
     setSourceAssetToEdit(null);
@@ -752,11 +906,14 @@ export default function EditorShell() {
       const textBefore = editor.getText().slice(-2000);
       const res = await api.post("/api/editor/action", {
         action: "continue",
+        locale: editorLocale,
         context: {
           surroundingContext: textBefore,
           articleTitle: title,
           audience: categoryPublic || "Developers",
           tone: "informative",
+          locale: editorLocale,
+          targetLanguage: editorLocale,
         },
       });
 
@@ -789,11 +946,14 @@ export default function EditorShell() {
     try {
       const res = await api.post("/api/editor/action", {
         action: "improve",
+        locale: editorLocale,
         context: {
           selectedText: selected,
           instruction: improvePrompt,
           audience: categoryPublic || "Developers",
           tone: "professional",
+          locale: editorLocale,
+          targetLanguage: editorLocale,
         },
       });
 
@@ -821,10 +981,13 @@ export default function EditorShell() {
     try {
       const res = await api.post("/api/editor/action", {
         action: "example",
+        locale: editorLocale,
         context: {
           selectedText: selected || "",
           additionalInstructions: examplePrompt,
           language: "typescript",
+          locale: editorLocale,
+          targetLanguage: editorLocale,
         },
       });
 
@@ -848,11 +1011,14 @@ export default function EditorShell() {
     try {
       const res = await api.post("/api/editor/action", {
         action: "review",
+        locale: editorLocale,
         context: {
           currentArticle: editor.getText(),
           articleTitle: title || "Untitled",
           audience: categoryPublic || "Developers",
           tone: "professional",
+          locale: editorLocale,
+          targetLanguage: editorLocale,
         },
       });
 
@@ -898,6 +1064,7 @@ export default function EditorShell() {
       const imgUrl = asset.url;
       const imgAlt = customAlt || asset.alt || asset.prompt || "AI generated illustration";
       const mediaId = asset._id;
+      const isPersistentMedia = isMongoObjectId(mediaId);
 
       const { from, to, $to } = editor.state.selection;
       const hasActiveSelection = from !== to;
@@ -914,7 +1081,7 @@ export default function EditorShell() {
             attrs: {
               src: imgUrl,
               alt: imgAlt,
-              ...(mediaId ? { "data-media-id": mediaId } : {}),
+              ...(isPersistentMedia ? { "data-media-id": mediaId } : {}),
               ...(customCaption ? { caption: customCaption, title: customCaption } : {}),
             },
           })
@@ -929,15 +1096,15 @@ export default function EditorShell() {
             attrs: {
               src: imgUrl,
               alt: imgAlt,
-              ...(mediaId ? { "data-media-id": mediaId } : {}),
+              ...(isPersistentMedia ? { "data-media-id": mediaId } : {}),
               ...(customCaption ? { caption: customCaption, title: customCaption } : {}),
             },
           })
           .run();
       }
 
-      if (postId && mediaId) {
-        mediaLibraryApi.addUsage(mediaId, "post", postId, "content");
+      if (postId && isPersistentMedia) {
+        mediaLibraryApi.addUsage(mediaId, "post", postId, "content").catch(() => {});
       }
 
       // Telemetry: ai_image_inserted
@@ -1139,8 +1306,8 @@ export default function EditorShell() {
         .run();
 
       // Track usage
-      if (postId && media._id) {
-        mediaLibraryApi.addUsage(media._id, "post", postId, "content");
+      if (postId && isMongoObjectId(media._id)) {
+        mediaLibraryApi.addUsage(media._id, "post", postId, "content").catch(() => {});
       }
     }
     setShowImageUpload(false);
@@ -1170,6 +1337,9 @@ export default function EditorShell() {
   const onPublishHandle = async () => {
     const success = await publishHook.publish({
       postId: postId!,
+      locale: editorLocale,
+      title: title,
+      content: getHTML(),
       description: descriptionPublic,
       image: imagePublic,
       series: seriesPublic,
@@ -1178,6 +1348,25 @@ export default function EditorShell() {
 
     if (success) {
       setPublishDrawerOpen(false);
+      setLocalesStatus((prev) => ({
+        ...prev,
+        [editorLocale]: { exists: true, published: true },
+      }));
+      setIsNewTranslationDraft(false);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("refresh-post-list"));
+      }
+    }
+  };
+
+  const handleUnpublish = async () => {
+    if (!postId) return;
+    const success = await publishHook.unpublish(editorLocale);
+    if (success) {
+      setLocalesStatus((prev) => ({
+        ...prev,
+        [editorLocale]: { ...prev[editorLocale], exists: true, published: false },
+      }));
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("refresh-post-list"));
       }
@@ -1210,12 +1399,12 @@ export default function EditorShell() {
   const handleSelectPost = useCallback(
     (selectedPostId: string | null) => {
       if (selectedPostId) {
-        router.push(`/create?id=${selectedPostId}`);
+        router.push(`/create?id=${selectedPostId}&locale=${editorLocale}`);
       } else {
-        router.push("/create");
+        router.push(`/create?locale=${editorLocale}`);
       }
     },
-    [router],
+    [router, editorLocale],
   );
 
   // ─── AI Writer Stream Integration ────────────────────────────────────
@@ -1239,7 +1428,7 @@ export default function EditorShell() {
     await aiPlanner.writeStream(
       {
         additionalInstructions: instructions,
-        language: "en",
+        language: editorLocale,
         userPreference: "",
       },
       (chunk) => {
@@ -1265,6 +1454,75 @@ export default function EditorShell() {
         autoSave.markDirty();
       }
     );
+  };
+
+  // ─── AI-Assisted Translation Integration (Sprint 4) ──────────────────
+
+  const handleTranslateFromSource = async () => {
+    if (!postId) {
+      toast.error("Please save the original post before translating.");
+      return;
+    }
+    const sourceLocale = editorLocale === "vi" ? "en" : "vi";
+    const sourceLabel = sourceLocale === "en" ? "English" : "Vietnamese";
+    const targetLabel = editorLocale === "vi" ? "Vietnamese" : "English";
+
+    // Guard: Check if editor already has content in target draft
+    const currentText = (editor ? editor.getText() : "").trim();
+    if (currentText.length > 0 || title.trim().length > 0) {
+      const confirmed = window.confirm(
+        `Are you sure you want to generate an AI translation from ${sourceLabel}? This will replace the uncommitted draft in your ${targetLabel} editor. You will be able to review and edit the draft before saving or publishing.`
+      );
+      if (!confirmed) return;
+    }
+
+    setIsTranslating(true);
+    try {
+      // 1. Fetch source translation
+      const resPost = await postApi.getPostToEdit(postId, sourceLocale);
+      if (!resPost.success || !resPost.data?.post) {
+        toast.error(`Could not retrieve the ${sourceLabel} version.`);
+        setIsTranslating(false);
+        return;
+      }
+
+      const src = resPost.data.post;
+      const sourceContent = src.markdown || src.content || "";
+      if (!sourceContent.trim() && !src.title?.trim()) {
+        toast.error(`The ${sourceLabel} version has no content to translate yet.`);
+        setIsTranslating(false);
+        return;
+      }
+
+      // 2. Call AI translation endpoint
+      const res = await aiApi.translateArticle({
+        title: src.title || "",
+        content: sourceContent,
+        description: src.description || "",
+        sourceLocale,
+        targetLocale: editorLocale,
+      });
+
+      if (res.data) {
+        const { title: transTitle, description: transDesc, content: transContent } = res.data;
+        handleTitleChange(transTitle);
+        if (transDesc) {
+          setDescriptionPublic(transDesc);
+        }
+        setGeneratedMarkdown(transContent);
+        if (editor) {
+          const html = toEditorHtml(transContent);
+          editor.commands.setContent(html);
+        }
+        autoSave.markDirty();
+        toast.success(`✨ ${targetLabel} draft translated! Review content and save when ready.`);
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || "Failed to translate article.";
+      toast.error(msg);
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   // ─── Loading State ───────────────────────────────────────────────────
@@ -1318,6 +1576,11 @@ export default function EditorShell() {
           seoOpen={seoOpen}
           onOpen1ClickAI={() => setIs1ClickAIModalOpen(true)}
           onOpenBatchVisuals={() => setIsBatchVisualsModalOpen(true)}
+          activeLocale={editorLocale}
+          onSelectLocale={handleSelectLocale}
+          localesStatus={localesStatus}
+          onTranslateFromSource={postId && localesStatus[editorLocale === "vi" ? "en" : "vi"]?.exists ? handleTranslateFromSource : undefined}
+          isTranslating={isTranslating}
         />
 
         {/* Main Editor Wrapper with side-by-side post menu, outline, editor & AI planning */}
@@ -1342,6 +1605,54 @@ export default function EditorShell() {
 
           {/* Main editor area */}
           <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-8 py-8 sm:py-10 overflow-y-auto custom-scrollbar">
+            {/* Quick access shelf to author's previous posts & drafts */}
+            <RecentPostsSection
+              activePostId={postId}
+              onSelectPost={handleSelectPost}
+              onOpenSidebar={() => setPostListOpen(true)}
+            />
+
+            {/* Translation Creation Notice Banner (Sprint 3 & 4) */}
+            {isNewTranslationDraft && (
+              <div className="mb-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-[fade-in_0.2s_ease-out]">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-amber-500/20 text-amber-300 shrink-0 mt-0.5">
+                    <Languages className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm sm:text-base text-amber-100 flex items-center gap-2">
+                      New {editorLocale === "vi" ? "Vietnamese (VI)" : "English (EN)"} Translation Draft
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-medium">Uncreated</span>
+                    </div>
+                    <p className="text-xs text-amber-300/80 mt-1">
+                      This translation does not exist yet. Write content below or translate from the {editorLocale === "vi" ? "English" : "Vietnamese"} version using AI.
+                    </p>
+                  </div>
+                </div>
+
+                {postId && localesStatus[editorLocale === "vi" ? "en" : "vi"]?.exists && (
+                  <button
+                    type="button"
+                    onClick={handleTranslateFromSource}
+                    disabled={isTranslating}
+                    className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-slate-950 font-semibold text-xs transition-all shadow-md cursor-pointer disabled:opacity-50 shrink-0"
+                  >
+                    {isTranslating ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950" />
+                        <span>Translating draft...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                        <span>Translate from {editorLocale === "vi" ? "EN" : "VI"} with AI</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Title */}
             <EditorTitle
               value={title}
@@ -1709,6 +2020,7 @@ export default function EditorShell() {
                 onApplyTitle={(t) => handleTitleChange(t)}
                 onStartWriting={handleStartWriting}
                 initialTopic={title}
+                language={editorLocale}
               />
             </aside>
           )}
@@ -1779,6 +2091,9 @@ export default function EditorShell() {
           isOpen={publishDrawerOpen}
           onClose={() => setPublishDrawerOpen(false)}
           onPublish={onPublishHandle}
+          onUnpublish={handleUnpublish}
+          activeLocale={editorLocale}
+          isPublished={publishHook.isPublished}
           categories={categories}
           selectedCategory={categoryPublic}
           onCategoryChange={setCategoryPublic}

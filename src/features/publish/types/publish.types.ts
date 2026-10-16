@@ -17,6 +17,9 @@ export interface PublishConfig {
   image: string | null;
   series: string;
   category: string;
+  locale?: "en" | "vi";
+  title?: string;
+  content?: string;
 }
 
 // ─── Hook Return ────────────────────────────────────────────────────────────
@@ -24,6 +27,7 @@ export interface PublishConfig {
 export interface UsePublishPostOptions {
   postId: string | null;
   isPublished: boolean;
+  locale?: "en" | "vi";
 }
 
 export interface UsePublishPostReturn {
@@ -32,7 +36,8 @@ export interface UsePublishPostReturn {
   canPublish: boolean;
   validationErrors: string[];
   publish: (config: PublishConfig) => Promise<boolean>;
-  unpublish: () => Promise<boolean>;
+  unpublish: (targetLocale?: "en" | "vi") => Promise<boolean>;
+  setIsPublished: (published: boolean) => void;
 }
 
 // ─── Publish Drawer Props ───────────────────────────────────────────────────

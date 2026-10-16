@@ -7,15 +7,36 @@ import DiscoverySidebar from "@/components/DiscoverySidebar";
 import { ContinueReadingSection } from "@/features/reading";
 import { Metadata } from "next";
 import HomePageClient from "./HomePageClient";
+import ArticleLocaleSync from "@/components/ArticleLocaleSync";
+import { getSiteUrl } from "@/features/seo/metadata/buildPostMetadata";
 
-export const metadata: Metadata = {
-  title: "OpenIdeaR",
-  description: "openidear - a platform to share and explore ideas",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = getSiteUrl();
+  return {
+    title: "OpenIdeaR",
+    description: "openidear - a platform to share and explore ideas",
+    alternates: {
+      canonical: siteUrl,
+      languages: {
+        en: siteUrl,
+        vi: `${siteUrl}/vi`,
+        "x-default": siteUrl,
+      },
+    },
+    openGraph: {
+      title: "OpenIdeaR",
+      description: "openidear - a platform to share and explore ideas",
+      url: siteUrl,
+      locale: "en_US",
+      alternateLocale: ["vi_VN"],
+    },
+  };
+}
 
 export default function Home() {
   return (
     <HomePageClient>
+      <ArticleLocaleSync activeLocale="en" />
       <Banner />
       <div className="max-w-screen-xl mx-auto w-full px-4 py-6">
         <div className="flex gap-8 items-start">

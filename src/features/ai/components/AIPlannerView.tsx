@@ -18,6 +18,7 @@ interface AIPlannerViewProps {
   readonly onApplyTitle: (title: string) => void;
   readonly onStartWriting: (instructions: string) => void;
   readonly initialTopic?: string;
+  readonly language?: "en" | "vi";
 }
 
 export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
@@ -32,6 +33,7 @@ export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
   onApplyTitle,
   onStartWriting,
   initialTopic = "",
+  language = "en",
 }) => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [lastPayload, setLastPayload] = useState<any>(null);
@@ -106,7 +108,7 @@ export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!topic.trim()) return;
-    const payload = { topic, audience, tone, length, goal, category };
+    const payload = { topic, audience, tone, length, goal, category, language };
     setLastPayload(payload);
     if (typeof window !== "undefined") {
       try {
@@ -149,6 +151,9 @@ export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-[var(--color-editor-accent)]" />
           <h2 className="text-base font-semibold">AI Article Planner</h2>
+          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] text-[var(--color-editor-secondary)] flex items-center gap-1">
+            {language === "vi" ? "🇻🇳 Tiếng Việt" : "🇺🇸 English"}
+          </span>
         </div>
         {(outline || error || isRunning || isWriting) && (
           <button

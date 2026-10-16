@@ -2,13 +2,17 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, Globe } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { useLanguageStore } from "@/store/useLanguage";
 
 const LanguageSelector = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const router = useRouter();
 
   const lang = useLanguageStore((store) => store.lang) as "vi" | "en";
+  const alternateUrls = useLanguageStore((store) => store.alternateUrls);
   const setLang = useLanguageStore((store) => store.setLang);
 
   const languages = {
@@ -41,11 +45,35 @@ const LanguageSelector = () => {
   const handleLanguageSelect = (langKey: "vi" | "en") => {
     setLang(langKey);
     setIsOpen(false);
-    // Here you would typically trigger a language change event
-    console.log(`Language changed to: ${languages[langKey].name}`);
+
+    // 1. If an explicit alternate URL exists for this article, navigate directly
+    if (alternateUrls && alternateUrls[langKey]) {
+      router.push(alternateUrls[langKey]);
+      return;
+    }
+
+    // 2. Otherwise navigate to corresponding localized route
+    if (langKey === "vi") {
+      if (pathname === "/") {
+        router.push("/vi");
+      } else if (!pathname.startsWith("/vi")) {
+        if (pathname.startsWith("/post/")) {
+          router.push(`/vi${pathname}`);
+        } else {
+          router.push("/vi");
+        }
+      }
+    } else {
+      if (pathname === "/vi") {
+        router.push("/");
+      } else if (pathname.startsWith("/vi/")) {
+        const enPath = pathname.replace(/^\/vi/, "");
+        router.push(enPath || "/");
+      }
+    }
   };
 
-  const currentLang = languages[lang];
+  const currentLang = languages[lang] || languages.en;
 
   return (
     <div className="relative" ref={dropdownRef}>
