@@ -105,7 +105,7 @@ const Courses = () => {
               c._id === formData._id ? response.data.data : c,
             ),
           );
-          toast.success("Cập nhật khóa học thành công");
+          toast.success("Course updated successfully");
         } else throw new Error(response.message);
       } else {
         const response = await courseApi.createCourse({
@@ -115,7 +115,7 @@ const Courses = () => {
           setCourses((prev) =>
             prev ? [...prev, response.data.data] : [response.data.data],
           );
-          toast.success("Thêm khóa học thành công");
+          toast.success("Course added successfully");
         } else throw new Error(response.message);
       }
       setShowModal(false);
@@ -132,7 +132,7 @@ const Courses = () => {
       const response = await courseApi.deleteCourse(id);
       if (response.success) {
         setCourses(courses.filter((c) => c._id !== id));
-        toast.success("Xóa khóa học thành công");
+        toast.success("Course deleted successfully");
       } else throw new Error(response.message);
     } catch (error: any) {
       toast.error(error?.message);
@@ -147,7 +147,7 @@ const Courses = () => {
       const response = await courseApi.restoreCourse(id);
       if (response.success) {
         setCourses(courses.filter((c) => c._id !== id));
-        toast.success("Khôi phục khóa học thành công");
+        toast.success("Course restored successfully");
       } else throw new Error(response.message);
     } catch (error: any) {
       toast.error(error?.message);
@@ -165,17 +165,17 @@ const Courses = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-foreground">
-            Quản lý Khóa học
+            Course Management
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Tạo và quản lý các khóa học
+            Create and manage courses
           </p>
         </div>
         <button
           onClick={() => openModal()}
           className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors"
         >
-          <Plus size={16} /> Thêm khóa học
+          <Plus size={16} /> Add Course
         </button>
       </div>
 
@@ -188,7 +188,7 @@ const Courses = () => {
               : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
           }`}
         >
-          Tất cả
+          All
         </button>
         <button
           onClick={() => setListStatus("trash")}
@@ -198,7 +198,7 @@ const Courses = () => {
               : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
           }`}
         >
-          Thùng rác
+          Trash
         </button>
       </div>
 
@@ -208,9 +208,9 @@ const Courses = () => {
         ) : !courses || courses.length === 0 ? (
           <EmptyState
             icon={BookOpen}
-            title="Chưa có khóa học nào"
-            description="Bắt đầu bằng cách tạo khóa học đầu tiên"
-            actionLabel="Thêm khóa học"
+            title="No courses yet"
+            description="Start by creating your first course"
+            actionLabel="Add Course"
             onAction={() => openModal()}
           />
         ) : (
@@ -220,16 +220,16 @@ const Courses = () => {
                 <thead>
                   <tr className="bg-muted/30/80 border-b border-border">
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Khóa học
+                      Course
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Giá
+                      Price
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Trạng thái
+                      Status
                     </th>
                     <th className="px-6 py-3.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Hành động
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -251,15 +251,15 @@ const Courses = () => {
                         {course.discountPrice && course.discountPrice > 0 ? (
                           <div>
                             <span className="text-foreground font-semibold">
-                              {course.discountPrice.toLocaleString()} VNĐ
+                              {course.discountPrice.toLocaleString()} VND
                             </span>
                             <div className="text-xs line-through text-muted-foreground">
-                              {course.price.toLocaleString()} VNĐ
+                              {course.price.toLocaleString()} VND
                             </div>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">
-                            {course.price.toLocaleString()} VNĐ
+                            {course.price.toLocaleString()} VND
                           </span>
                         )}
                       </td>
@@ -284,11 +284,11 @@ const Courses = () => {
                               onClick={() => handleRestoreCourse(course._id)}
                               className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap"
                             >
-                              Khôi phục
+                              Restore
                             </button>
                           ) : (
                             <>
-                              <HoverNote note="Chỉnh sửa thông tin">
+                              <HoverNote note="Edit information">
                                 <button
                                   onClick={() => openModal(course)}
                                   className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light transition-colors"
@@ -296,7 +296,7 @@ const Courses = () => {
                                   <Edit size={16} />
                                 </button>
                               </HoverNote>
-                              <HoverNote note="Chỉnh sửa chi tiết">
+                              <HoverNote note="Manage curriculum">
                                 <Link
                                   href={`/management/course/${course._id}/curriculum`}
                                   className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors inline-flex"
@@ -304,7 +304,7 @@ const Courses = () => {
                                   <BookOpen size={16} />
                                 </Link>
                               </HoverNote>
-                              <HoverNote note="Xóa khóa học">
+                              <HoverNote note="Delete course">
                                 <button
                                   onClick={() => handleDeleteCourse(course._id)}
                                   className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors inline-flex"
@@ -333,7 +333,7 @@ const Courses = () => {
                         {course.title}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {course.price.toLocaleString()} VNĐ
+                        {course.price.toLocaleString()} VND
                       </div>
                       <div className="mt-2">
                         <StatusBadge
@@ -355,9 +355,9 @@ const Courses = () => {
                         <button
                           onClick={() => handleRestoreCourse(course._id)}
                           className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap"
-                          title="Khôi phục"
+                          title="Restore"
                         >
-                          Khôi phục
+                          Restore
                         </button>
                       ) : (
                         <>
@@ -399,7 +399,7 @@ const Courses = () => {
           <div className="relative bg-background rounded-xl shadow-xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-background rounded-t-xl z-10">
               <h3 className="text-lg font-semibold text-foreground">
-                {selectedItem ? "Chỉnh sửa khóa học" : "Thêm khóa học mới"}
+                {selectedItem ? "Edit course" : "Add new course"}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
@@ -411,7 +411,7 @@ const Courses = () => {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground/80 mb-1.5">
-                  Tiêu đề <span className="text-red-500">*</span>
+                  Title <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -427,7 +427,7 @@ const Courses = () => {
                 <>
                   <div>
                     <label className="block text-sm font-medium text-foreground/80 mb-1.5">
-                      Mô tả
+                      Description
                     </label>
                     <textarea
                       value={formData.description}
@@ -443,7 +443,7 @@ const Courses = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-foreground/80 mb-1.5">
-                      Giá (VNĐ)
+                      Price (VND)
                     </label>
                     <input
                       type="number"
@@ -459,7 +459,7 @@ const Courses = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-foreground/80 mb-1.5">
-                      Giá khuyến mãi (VNĐ)
+                      Discount Price (VND)
                     </label>
                     <input
                       type="number"
@@ -481,13 +481,13 @@ const Courses = () => {
                 onClick={() => setShowModal(false)}
                 className="px-4 py-2 text-sm font-medium text-foreground/80 bg-background border border-border rounded-lg hover:bg-muted/30 transition-colors"
               >
-                Hủy
+                Cancel
               </button>
               <button
                 onClick={handleSave}
                 className="px-4 py-2 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors"
               >
-                {selectedItem ? "Lưu thay đổi" : "Tạo khóa học"}
+                {selectedItem ? "Save changes" : "Create course"}
               </button>
             </div>
           </div>

@@ -9,14 +9,14 @@ const Report = () => {
   const [reports, setReports] = useState([
     {
       id: 1,
-      postTitle: "Ứng dụng AI hỗ trợ học tập",
-      reason: "Nội dung không phù hợp",
+      postTitle: "AI Study Assistant Application",
+      reason: "Inappropriate content",
       reportCount: 3,
       createdAt: "2024-02-01",
     },
     {
       id: 2,
-      postTitle: "Nền tảng kết nối startup",
+      postTitle: "Startup Networking Platform",
       reason: "Spam",
       reportCount: 1,
       createdAt: "2024-02-02",
@@ -32,10 +32,10 @@ const Report = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-semibold text-foreground">
-          Báo cáo Vi phạm
+          Violation Reports
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Xem xét và xử lý các báo cáo vi phạm
+          Review and manage violation reports
         </p>
       </div>
 
@@ -43,8 +43,8 @@ const Report = () => {
         {reports.length === 0 ? (
           <EmptyState
             icon={AlertTriangle}
-            title="Không có báo cáo nào"
-            description="Hiện tại chưa có báo cáo vi phạm nào cần xử lý"
+            title="No violation reports"
+            description="There are currently no reports to review."
           />
         ) : (
           <>
@@ -53,19 +53,19 @@ const Report = () => {
                 <thead>
                   <tr className="bg-muted/30/80 border-b border-border">
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Tiêu đề bài viết
+                      Post Title
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Lý do báo cáo
+                      Report Reason
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Số lượt báo
+                      Report Count
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Ngày báo cáo
+                      Report Date
                     </th>
                     <th className="px-6 py-3.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Hành động
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -85,7 +85,7 @@ const Report = () => {
                       </td>
                       <td className="px-6 py-4">
                         <StatusBadge variant="danger">
-                          {report.reportCount} lượt
+                          {report.reportCount} reports
                         </StatusBadge>
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
@@ -95,20 +95,20 @@ const Report = () => {
                         <div className="flex items-center justify-end gap-1">
                           <button
                             className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
-                            title="Đã xử lý"
+                            title="Mark as resolved"
                           >
                             <Check size={16} />
                           </button>
                           <button
                             onClick={() => setConfirmDelete(report.id)}
                             className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                            title="Xóa"
+                            title="Delete"
                           >
                             <Trash2 size={16} />
                           </button>
                           <button
                             className="p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-muted-foreground transition-colors"
-                            title="Thêm"
+                            title="More"
                           >
                             <MoreHorizontal size={16} />
                           </button>
@@ -136,7 +136,7 @@ const Report = () => {
                       </div>
                       <div className="flex items-center gap-2 mt-2">
                         <StatusBadge variant="danger">
-                          {report.reportCount} lượt
+                          {report.reportCount} reports
                         </StatusBadge>
                         <span className="text-xs text-muted-foreground">
                           {report.createdAt}
@@ -166,9 +166,9 @@ const Report = () => {
         isOpen={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => confirmDelete && handleDelete(confirmDelete)}
-        title="Xóa báo cáo"
-        message="Bạn có chắc chắn muốn xóa báo cáo này?"
-        confirmText="Xóa"
+        title="Delete Report"
+        message="Are you sure you want to delete this report?"
+        confirmText="Delete"
         variant="danger"
       />
     </div>

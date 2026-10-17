@@ -586,10 +586,7 @@ export const contentStudioApi = {
    * Leverages backend `/ai/v1/content-studio/outline` with automatic fallback to `/api/ai/content-studio/outline`.
    */
   async generateOutline(
-    payload: {
-      idea: ContentIdea;
-      contentBrief: ContentBrief;
-    }
+    payload: import("../types/contentStudio.types").GenerateOutlineRequest
   ): Promise<import("../types/contentStudio.types").ContentOutline> {
     try {
       // 1. Primary: Direct backend route

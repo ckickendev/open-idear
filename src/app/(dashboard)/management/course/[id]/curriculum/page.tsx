@@ -27,7 +27,11 @@ import {
   AlertTriangle,
   CheckCircle,
   Sparkles,
+  Play,
+  Maximize2,
+  RefreshCw,
 } from "lucide-react";
+import { Stream } from "@cloudflare/stream-react";
 import { courseApi } from "@/features/series/api/course.api";
 import VideoUpload from "@/app/(editor)/create/VideoUpload";
 import ImageUpload from "@/app/(editor)/create/ImageUpload";
@@ -46,6 +50,60 @@ const LESSON_TYPE_ICONS: Record<string, React.ReactNode> = {
   text: <FileText size={14} className="text-emerald-500" />,
   file: <FileText size={14} className="text-orange-500" />,
 };
+
+// ─── Video player preview component ──────────────────────────────────────────
+
+function VideoPlayerPreview({
+  src,
+  className = "",
+  autoplay = false,
+}: {
+  src?: string;
+  className?: string;
+  autoplay?: boolean;
+}) {
+  if (!src) {
+    return (
+      <div className="w-full h-full min-h-[200px] flex flex-col items-center justify-center p-8 text-muted-foreground bg-zinc-950">
+        <Video size={36} className="mb-2 opacity-50 text-muted-foreground" />
+        <p className="text-xs">No video stream source found</p>
+      </div>
+    );
+  }
+
+  // Cloudflare Stream UIDs are alphanumeric/hex strings or customer cloudflare stream URLs
+  const isCloudflare =
+    !src.includes("/") ||
+    src.includes("cloudflarestream.com") ||
+    src.includes("videodelivery.net");
+
+  if (isCloudflare) {
+    return (
+      <div
+        className={`relative w-full h-full [&>div]:!absolute [&>div]:!inset-0 [&>div]:!p-0 [& iframe]:!absolute [& iframe]:!inset-0 [& iframe]:!w-full [& iframe]:!h-full ${className}`}
+      >
+        <Stream
+          src={src}
+          controls
+          autoplay={autoplay}
+          responsive={false}
+          width="100%"
+          height="100%"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <video
+      src={src}
+      controls
+      autoPlay={autoplay}
+      className={`w-full h-full object-contain bg-black ${className}`}
+      playsInline
+    />
+  );
+}
 
 // ─── Inline editable text ─────────────────────────────────────────────────────
 
@@ -132,6 +190,7 @@ function LessonRow({
   onUpdate,
   onDelete,
   onVideoAttach,
+  onVideoDelete,
   onMoveLesson,
   onOpenAI,
 }: {
@@ -141,15 +200,23 @@ function LessonRow({
   totalLessons: number;
   onUpdate: (lessonId: string, data: Partial<Lesson>) => Promise<void>;
   onDelete: (lessonId: string, chapterId: string) => Promise<void>;
-  onVideoAttach: (lessonId: string, mediaId: string) => void;
+  onVideoAttach: (lessonId: string, mediaId: string, title?: string) => void;
+  onVideoDelete: (lessonId: string) => Promise<void>;
   onMoveLesson: (chapterId: string, fromIndex: number, toIndex: number) => Promise<void>;
   onOpenAI: (lesson: Lesson) => void;
 }) {
   const [showVideoUpload, setShowVideoUpload] = useState(false);
+  const [showInlinePreview, setShowInlinePreview] = useState(false);
+  const [showModalPreview, setShowModalPreview] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deletingVideo, setDeletingVideo] = useState(false);
 
   const hasVideo = lesson.media != null;
+  const videoSrc =
+    typeof lesson.media === "string"
+      ? lesson.media
+      : lesson.media?.cloudflareId || lesson.media?.url || "";
 
   const handleRename = async (title: string) => {
     setSaving(true);
@@ -166,9 +233,27 @@ function LessonRow({
     await onDelete(lesson._id, chapterId);
   };
 
-  const handleVideoUploaded = (mediaId: string) => {
+  const handleDeleteVideo = async () => {
+    if (
+      !confirm(
+        `Delete video for lesson "${lesson.title}"? This will delete the video file from Cloudinary and remove it from the database.`
+      )
+    ) {
+      return;
+    }
+    setDeletingVideo(true);
+    try {
+      await onVideoDelete(lesson._id);
+      setShowInlinePreview(false);
+      setShowModalPreview(false);
+    } finally {
+      setDeletingVideo(false);
+    }
+  };
+
+  const handleVideoUploaded = (mediaId: string, title?: string) => {
     setShowVideoUpload(false);
-    onVideoAttach(lesson._id, mediaId);
+    onVideoAttach(lesson._id, mediaId, title);
     toast.success("Video attached to lesson!");
   };
 
@@ -238,19 +323,58 @@ function LessonRow({
         </button>
 
         {lesson.type === "video" && (
-          <button
-            type="button"
-            onClick={() => setShowVideoUpload(true)}
-            title={hasVideo ? "Replace video" : "Attach video"}
-            className={`flex-shrink-0 flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${
-              hasVideo
-                ? "border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100"
-                : "border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary"
-            }`}
-          >
-            <Video size={11} />
-            {hasVideo ? "Video ✓" : "Add video"}
-          </button>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {hasVideo ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowInlinePreview((v) => !v)}
+                  title={showInlinePreview ? "Hide preview" : "Preview uploaded video"}
+                  className={`flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border transition-all cursor-pointer ${
+                    showInlinePreview
+                      ? "border-primary text-primary bg-primary/10 shadow-sm"
+                      : "border-blue-200 text-blue-700 bg-blue-50/80 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300"
+                  }`}
+                >
+                  <Play size={10} className={showInlinePreview ? "fill-primary" : "fill-current"} />
+                  {showInlinePreview ? "Hide preview" : "Preview video"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowVideoUpload(true)}
+                  title="Replace uploaded video"
+                  className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted px-2 py-0.5 rounded-full border border-border transition-colors cursor-pointer"
+                >
+                  <Upload size={10} />
+                  Replace
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteVideo}
+                  disabled={deletingVideo}
+                  title="Delete video from Cloudinary and database"
+                  className="flex items-center gap-1 text-[11px] text-destructive hover:bg-destructive/10 px-2 py-0.5 rounded-full border border-destructive/30 transition-colors cursor-pointer"
+                >
+                  {deletingVideo ? (
+                    <Loader2 size={10} className="animate-spin" />
+                  ) : (
+                    <Trash2 size={10} />
+                  )}
+                  Delete video
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowVideoUpload(true)}
+                title="Attach video"
+                className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer"
+              >
+                <Video size={11} />
+                Add video
+              </button>
+            )}
+          </div>
         )}
 
         {saving && (
@@ -275,9 +399,149 @@ function LessonRow({
         </button>
       </div>
 
+      {/* ── Inline Video Preview Section ── */}
+      {showInlinePreview && hasVideo && (
+        <div className="ml-6 mr-1 my-2 p-3.5 bg-card/95 border border-border rounded-xl shadow-md space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="flex items-center justify-between gap-3 pb-2 border-b border-border/60">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <Video size={15} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-foreground truncate">
+                  {lesson.title || "Lesson Video Preview"}
+                </p>
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 truncate">
+                  <span>Cloudflare Stream</span>
+                  {videoSrc && (
+                    <span className="font-mono text-[10px] bg-muted px-1.5 py-0.2 rounded truncate max-w-[220px]">
+                      {videoSrc}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowModalPreview(true)}
+                title="Open full size preview"
+                className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground px-2 py-1 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+              >
+                <Maximize2 size={12} />
+                Full modal
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowVideoUpload(true)}
+                title="Replace video"
+                className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-primary px-2 py-1 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+              >
+                <RefreshCw size={12} />
+                Replace
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteVideo}
+                disabled={deletingVideo}
+                title="Delete video from Cloudinary and database"
+                className="flex items-center gap-1 text-[11px] font-medium text-destructive hover:bg-destructive/10 px-2 py-1 rounded-lg transition-colors cursor-pointer"
+              >
+                {deletingVideo ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
+                  <Trash2 size={12} />
+                )}
+                Delete video
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowInlinePreview(false)}
+                className="p-1 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                title="Close preview"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+
+          {/* Video Player */}
+          <div className="relative w-full aspect-video max-w-2xl mx-auto bg-black rounded-lg overflow-hidden shadow-inner border border-border/40">
+            <VideoPlayerPreview src={videoSrc} />
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal Video Preview ── */}
+      {showModalPreview && hasVideo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-4xl bg-background rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-card">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600">
+                  <Play size={15} className="fill-current" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-foreground truncate">
+                    {lesson.title || "Lesson Video Preview"}
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-2">
+                    <span>Cloudflare Stream</span>
+                    {videoSrc && (
+                      <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded truncate max-w-[260px]">
+                        {videoSrc}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModalPreview(false);
+                    setShowVideoUpload(true);
+                  }}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors cursor-pointer"
+                >
+                  <Upload size={13} />
+                  Replace Video
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteVideo}
+                  disabled={deletingVideo}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                >
+                  {deletingVideo ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <Trash2 size={13} />
+                  )}
+                  Delete Video
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowModalPreview(false)}
+                  className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                  title="Close preview"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div className="relative w-full aspect-video bg-black flex-1 min-h-[300px]">
+              <VideoPlayerPreview src={videoSrc} autoplay={true} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {showVideoUpload && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <VideoUpload
+            initialTitle={lesson.title}
             onVideoUploaded={handleVideoUploaded}
             onClose={() => setShowVideoUpload(false)}
             isTitleDisplay={true}
@@ -300,6 +564,7 @@ function ChapterCard({
   onUpdateLesson,
   onDeleteLesson,
   onVideoAttach,
+  onVideoDelete,
   onMoveChapter,
   onMoveLesson,
   onOpenAI,
@@ -312,7 +577,8 @@ function ChapterCard({
   onAddLesson: (chapterId: string, type: Lesson["type"]) => Promise<void>;
   onUpdateLesson: (lessonId: string, data: Partial<Lesson>) => Promise<void>;
   onDeleteLesson: (lessonId: string, chapterId: string) => Promise<void>;
-  onVideoAttach: (lessonId: string, mediaId: string) => void;
+  onVideoAttach: (lessonId: string, mediaId: string, title?: string) => void;
+  onVideoDelete: (lessonId: string) => Promise<void>;
   onMoveChapter: (fromIndex: number, toIndex: number) => Promise<void>;
   onMoveLesson: (chapterId: string, fromIndex: number, toIndex: number) => Promise<void>;
   onOpenAI: (lesson: Lesson) => void;
@@ -416,6 +682,7 @@ function ChapterCard({
               onUpdate={onUpdateLesson}
               onDelete={onDeleteLesson}
               onVideoAttach={onVideoAttach}
+              onVideoDelete={onVideoDelete}
               onMoveLesson={onMoveLesson}
               onOpenAI={onOpenAI}
             />
@@ -724,8 +991,35 @@ export default function CourseBuilderPage() {
     }
   };
 
-  const handleVideoAttach = (lessonId: string, mediaId: string) => {
-    handleUpdateLesson(lessonId, { media: mediaId as any, type: "video" });
+  const handleVideoAttach = (lessonId: string, mediaId: string, title?: string) => {
+    const updateData: Partial<Lesson> = { media: mediaId as any, type: "video" };
+    if (title && title.trim()) {
+      updateData.title = title.trim();
+    }
+    handleUpdateLesson(lessonId, updateData);
+  };
+
+  const handleVideoDelete = async (lessonId: string) => {
+    try {
+      const res = await courseApi.deleteLessonVideo(lessonId);
+      if (!res.success) throw new Error(res.message);
+      setCourse((prev) =>
+        prev
+          ? {
+              ...prev,
+              chapters: prev.chapters.map((ch) => ({
+                ...ch,
+                lessons: ch.lessons.map((l) =>
+                  l._id === lessonId ? { ...l, media: undefined } : l
+                ),
+              })),
+            }
+          : prev
+      );
+      toast.success("Video deleted from Cloudinary and database successfully!");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to delete video");
+    }
   };
 
   // ── Settings ───────────────────────────────────────────────────────────────
@@ -993,6 +1287,7 @@ export default function CourseBuilderPage() {
                   onUpdateLesson={handleUpdateLesson}
                   onDeleteLesson={handleDeleteLesson}
                   onVideoAttach={handleVideoAttach}
+                  onVideoDelete={handleVideoDelete}
                   onMoveChapter={handleMoveChapter}
                   onMoveLesson={handleMoveLesson}
                   onOpenAI={setSelectedAILesson}
@@ -1130,7 +1425,7 @@ export default function CourseBuilderPage() {
                   htmlFor="course-price"
                   className="block text-sm font-semibold text-foreground mb-1.5"
                 >
-                  Price (VNĐ)
+                  Price (VND)
                 </label>
                 <input
                   id="course-price"
@@ -1154,7 +1449,7 @@ export default function CourseBuilderPage() {
                   htmlFor="course-discount"
                   className="block text-sm font-semibold text-foreground mb-1.5"
                 >
-                  Discount Price (VNĐ)
+                  Discount Price (VND)
                 </label>
                 <input
                   id="course-discount"

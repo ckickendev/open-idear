@@ -17,7 +17,7 @@ interface StickyOutlineNavProps {
 export const StickyOutlineNav: React.FC<StickyOutlineNavProps> = ({
   html = "",
   outlinePlan,
-  title = "Xem nhanh",
+  title = "Table of Contents",
   className = "",
   onHeadingClick,
   defaultCollapsed = false,
@@ -56,7 +56,7 @@ export const StickyOutlineNav: React.FC<StickyOutlineNavProps> = ({
               type="button"
               onClick={() => setIsCollapsed(!isCollapsed)}
               className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800"
-              title={isCollapsed ? "Mở rộng mục lục" : "Thu gọn mục lục"}
+              title={isCollapsed ? "Expand table of contents" : "Collapse table of contents"}
             >
               {isCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
             </button>

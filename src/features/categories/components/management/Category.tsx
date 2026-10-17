@@ -103,7 +103,7 @@ const Category = () => {
 
   const handleAddCategory = async () => {
     if (!formData.name.trim()) {
-      toast.error(t("management.category.no_name_empty") || "Tên danh mục không được để trống");
+      toast.error(t("management.category.no_name_empty") || "Category name cannot be empty");
       return;
     }
 
@@ -121,10 +121,10 @@ const Category = () => {
         toast.success(t("management.category.add_success"));
         setShowModal(false);
       } else {
-        throw new Error(response.message || "Không thể thêm danh mục");
+        throw new Error(response.message || "Failed to add category");
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || error?.message || "Lỗi khi thêm danh mục");
+      toast.error(error?.response?.data?.message || error?.message || "Error adding category");
     } finally {
       changeLoad();
     }
@@ -132,7 +132,7 @@ const Category = () => {
 
   const handleEditCategory = async () => {
     if (!formData.name.trim()) {
-      toast.error(t("management.category.no_name_empty") || "Tên danh mục không được để trống");
+      toast.error(t("management.category.no_name_empty") || "Category name cannot be empty");
       return;
     }
     if (!selectedItem?._id) return;
@@ -154,10 +154,10 @@ const Category = () => {
         toast.success(t("management.category.update_success"));
         setShowModal(false);
       } else {
-        throw new Error(response.message || "Không thể cập nhật danh mục");
+        throw new Error(response.message || "Failed to update category");
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || error?.message || "Lỗi khi cập nhật danh mục");
+      toast.error(error?.response?.data?.message || error?.message || "Error updating category");
     } finally {
       changeLoad();
     }
@@ -169,12 +169,12 @@ const Category = () => {
       const response = await categoryApi.deleteCategory(id);
       if (response.success) {
         setCategories((prev) => prev.filter((cat) => cat._id !== id));
-        toast.success("Xóa danh mục thành công");
+        toast.success("Category deleted successfully");
       } else {
-        throw new Error(response.message || "Không thể xóa danh mục");
+        throw new Error(response.message || "Failed to delete category");
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || error?.message || "Lỗi khi xóa danh mục");
+      toast.error(error?.response?.data?.message || error?.message || "Error deleting category");
     } finally {
       changeLoad();
       setConfirmDelete(null);
@@ -187,12 +187,12 @@ const Category = () => {
       const response = await categoryApi.restoreCategory(id);
       if (response.success) {
         setCategories((prev) => prev.filter((cat) => cat._id !== id));
-        toast.success("Khôi phục danh mục thành công");
+        toast.success("Category restored successfully");
       } else {
-        throw new Error(response.message || "Không thể khôi phục danh mục");
+        throw new Error(response.message || "Failed to restore category");
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || error?.message || "Lỗi khi khôi phục danh mục");
+      toast.error(error?.response?.data?.message || error?.message || "Error restoring category");
     } finally {
       changeLoad();
     }
@@ -207,7 +207,7 @@ const Category = () => {
             {t("management.category.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Quản lý các danh mục của hệ thống
+            Manage system categories
           </p>
         </div>
         <button
@@ -229,7 +229,7 @@ const Category = () => {
               : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
           }`}
         >
-          Tất cả
+          All
         </button>
         <button
           onClick={() => setListStatus("trash")}
@@ -239,7 +239,7 @@ const Category = () => {
               : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
           }`}
         >
-          Thùng rác
+          Trash
         </button>
       </div>
 
@@ -256,7 +256,7 @@ const Category = () => {
         {searchTerm && (
           <span className="text-muted-foreground">
             {" "}
-            (lọc từ {categories.length} tổng cộng)
+            (filtered from {categories.length} total)
           </span>
         )}
       </p>
@@ -269,12 +269,12 @@ const Category = () => {
           <EmptyState
             icon={Folder}
             title={
-              searchTerm ? "Không tìm thấy danh mục" : "Chưa có danh mục nào"
+              searchTerm ? "No categories found" : "No categories yet"
             }
             description={
               searchTerm
-                ? "Thử thay đổi từ khóa tìm kiếm"
-                : "Bắt đầu bằng cách thêm danh mục đầu tiên"
+                ? "Try changing your search terms"
+                : "Get started by adding your first category"
             }
             actionLabel={!searchTerm ? t("management.category.add") : undefined}
             onAction={!searchTerm ? () => openModal("add") : undefined}
@@ -341,12 +341,12 @@ const Category = () => {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-admin-primary hover:underline text-sm"
                         >
-                          <Eye size={14} /> Xem
+                          <Eye size={14} /> View
                         </a>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
-                          {category.postCount ?? 0} bài viết
+                          {category.postCount ?? 0} articles
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground hidden lg:table-cell whitespace-nowrap">
@@ -360,23 +360,23 @@ const Category = () => {
                                 handleRestoreCategory(category._id)
                               }
                               className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap"
-                              title="Khôi phục"
+                              title="Restore"
                             >
-                              Khôi phục
+                              Restore
                             </button>
                           ) : (
                             <>
                               <button
                                 onClick={() => openModal("edit", category)}
                                 className="p-2 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors cursor-pointer"
-                                title="Chỉnh sửa"
+                                title="Edit"
                               >
                                 <Edit size={16} />
                               </button>
                               <button
                                 onClick={() => setConfirmDelete(category._id)}
                                 className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/60 transition-colors cursor-pointer"
-                                title="Xóa"
+                                title="Delete"
                               >
                                 <Trash2 size={16} />
                               </button>
@@ -407,7 +407,7 @@ const Category = () => {
                       </p>
                       <div className="flex items-center gap-2 mt-1.5">
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-primary/10 text-primary">
-                          {category.postCount ?? 0} bài viết
+                          {category.postCount ?? 0} articles
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {convertDate(category.createdAt)}
@@ -420,21 +420,21 @@ const Category = () => {
                           onClick={() => handleRestoreCategory(category._id)}
                           className="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors font-medium text-xs whitespace-nowrap cursor-pointer"
                         >
-                          Khôi phục
+                          Restore
                         </button>
                       ) : (
                         <>
                           <button
                             onClick={() => openModal("edit", category)}
                             className="p-2 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors cursor-pointer"
-                            title="Chỉnh sửa"
+                            title="Edit"
                           >
                             <Edit size={16} />
                           </button>
                           <button
                             onClick={() => setConfirmDelete(category._id)}
                             className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/60 transition-colors cursor-pointer"
-                            title="Xóa"
+                            title="Delete"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -459,9 +459,9 @@ const Category = () => {
         isOpen={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => confirmDelete && handleDeleteCategory(confirmDelete)}
-        title="Xóa danh mục"
-        message="Bạn có chắc chắn muốn xóa danh mục này? Hành động này không thể hoàn tác."
-        confirmText="Xóa"
+        title="Delete category"
+        message="Are you sure you want to delete this category? This action cannot be undone."
+        confirmText="Delete"
         variant="danger"
       />
 
@@ -476,8 +476,8 @@ const Category = () => {
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <h3 className="text-lg font-semibold text-foreground">
                 {modalType === "add"
-                  ? "Thêm danh mục mới"
-                  : "Chỉnh sửa danh mục"}
+                  ? "Add new category"
+                  : "Edit category"}
               </h3>
               <button
                 onClick={closeModal}
@@ -525,7 +525,7 @@ const Category = () => {
                   type="text"
                   value={formData.slug}
                   className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-muted/30 text-muted-foreground"
-                  placeholder="Slug sẽ được tạo tự động"
+                  placeholder="Slug will be generated automatically"
                 />
               </div>
             </div>
@@ -542,7 +542,7 @@ const Category = () => {
                 }
                 className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition-all shadow-sm rounded-lg cursor-pointer"
               >
-                {modalType === "add" ? "Thêm mới" : "Cập nhật"}
+                {modalType === "add" ? "Add new" : "Update"}
               </button>
             </div>
           </div>

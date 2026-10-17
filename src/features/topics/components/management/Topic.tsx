@@ -101,7 +101,7 @@ const Topic = () => {
 
   const handleAddTopic = async () => {
     if (!formData.name.trim()) {
-      toast.success("Tên chủ đề không được để trống");
+      toast.error("Topic name cannot be empty");
       return;
     }
     changeLoad();
@@ -112,10 +112,10 @@ const Topic = () => {
       });
       if (newTopic.success) {
         setTopics([...topics, newTopic.data?.data || newTopic.data]);
-        toast.success("Thêm chủ đề thành công");
+        toast.success("Topic added successfully");
       } else throw new Error(newTopic.message);
     } catch (error: any) {
-      toast.error(error?.message || "Có lỗi xảy ra");
+      toast.error(error?.message || "An error occurred");
     } finally {
       setShowModal(false);
       changeLoad();
@@ -124,7 +124,7 @@ const Topic = () => {
 
   const handleEditTopic = () => {
     if (!formData.name.trim()) {
-      toast.success("Tên chủ đề không được để trống");
+      toast.error("Topic name cannot be empty");
       return;
     }
     changeLoad();
@@ -146,11 +146,11 @@ const Topic = () => {
                 : t,
             ),
           );
-          toast.success("Cập nhật chủ đề thành công");
+          toast.success("Topic updated successfully");
         } else throw new Error(response.message);
       })
       .catch((error) => {
-        toast.error(error?.message || "Có lỗi xảy ra");
+        toast.error(error?.message || "An error occurred");
       })
       .finally(() => {
         setShowModal(false);
@@ -164,11 +164,11 @@ const Topic = () => {
       .deleteTopic(id)
       .then((response) => {
         if (response.success) {
-          toast.success("Xóa chủ đề thành công");
+          toast.success("Topic deleted successfully");
         } else throw new Error(response.message);
       })
       .catch((error) => {
-        toast.error(error?.message || "Có lỗi xảy ra");
+        toast.error(error?.message || "An error occurred");
       })
       .finally(() => changeLoad());
     setTopics(topics.filter((t) => t._id !== id));
@@ -179,30 +179,30 @@ const Topic = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-foreground">
-            Quản lý Chủ đề
+            Topic Management
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Quản lý các chủ đề phân loại nội dung
+            Manage content classification topics
           </p>
         </div>
         <button
           onClick={() => openModal("add")}
           className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors focus:outline-none focus:ring-2 focus:ring-admin-primary-ring"
         >
-          <Plus size={16} /> Thêm chủ đề
+          <Plus size={16} /> Add Topic
         </button>
       </div>
 
       <AdminSearchInput
         value={searchTerm}
         onChange={setSearchTerm}
-        placeholder="Tìm kiếm chủ đề..."
+        placeholder="Search topics..."
       />
       <p className="text-sm text-muted-foreground">
-        {filteredTopics.length} chủ đề{" "}
+        {filteredTopics.length} topics{" "}
         {searchTerm && (
           <span className="text-muted-foreground">
-            (lọc từ {topics.length} tổng cộng)
+            (filtered from {topics.length} total)
           </span>
         )}
       </p>
@@ -213,13 +213,13 @@ const Topic = () => {
         ) : currentTopics.length === 0 ? (
           <EmptyState
             icon={Hash}
-            title={searchTerm ? "Không tìm thấy chủ đề" : "Chưa có chủ đề nào"}
+            title={searchTerm ? "No topics found" : "No topics yet"}
             description={
               searchTerm
-                ? "Thử thay đổi từ khóa tìm kiếm"
-                : "Bắt đầu bằng cách thêm chủ đề đầu tiên"
+                ? "Try changing your search terms"
+                : "Start by adding the first topic"
             }
-            actionLabel={!searchTerm ? "Thêm chủ đề" : undefined}
+            actionLabel={!searchTerm ? "Add Topic" : undefined}
             onAction={!searchTerm ? () => openModal("add") : undefined}
           />
         ) : (
@@ -232,16 +232,16 @@ const Topic = () => {
                       #
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Tên Chủ đề
+                      Topic Name
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                      Mô tả
+                      Description
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                      Ngày tạo
+                      Created Date
                     </th>
                     <th className="px-6 py-3.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Hành động
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -340,9 +340,9 @@ const Topic = () => {
         isOpen={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => confirmDelete && handleDeleteTopic(confirmDelete)}
-        title="Xóa chủ đề"
-        message="Bạn có chắc chắn muốn xóa chủ đề này? Hành động này không thể hoàn tác."
-        confirmText="Xóa"
+        title="Delete topic"
+        message="Are you sure you want to delete this topic? This action cannot be undone."
+        confirmText="Delete"
         variant="danger"
       />
 
@@ -355,7 +355,7 @@ const Topic = () => {
           <div className="relative bg-background rounded-xl shadow-xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <h3 className="text-lg font-semibold text-foreground">
-                {modalType === "add" ? "Thêm chủ đề mới" : "Chỉnh sửa chủ đề"}
+                {modalType === "add" ? "Add new topic" : "Edit topic"}
               </h3>
               <button
                 onClick={closeModal}
@@ -367,7 +367,7 @@ const Topic = () => {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground/80 mb-1.5">
-                  Tên Chủ đề <span className="text-red-500">*</span>
+                  Topic Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -376,12 +376,12 @@ const Topic = () => {
                     setFormData({ ...formData, name: e.target.value })
                   }
                   className="w-full px-3 py-2.5 text-sm border border-border rounded-lg focus:outline-none focus:border-admin-primary focus:ring-2 focus:ring-admin-primary-ring transition-all"
-                  placeholder="Nhập tên chủ đề"
+                  placeholder="Enter topic name"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground/80 mb-1.5">
-                  Mô tả
+                  Description
                 </label>
                 <TextAreaCustom
                   id="description"
@@ -390,7 +390,7 @@ const Topic = () => {
                     setFormData({ ...formData, description: e.target.value })
                   }
                   rows={5}
-                  placeholder="Nhập mô tả chủ đề"
+                  placeholder="Enter topic description"
                 />
               </div>
             </div>
@@ -399,13 +399,13 @@ const Topic = () => {
                 onClick={closeModal}
                 className="px-4 py-2 text-sm font-medium text-foreground/80 bg-background border border-border rounded-lg hover:bg-muted/30 transition-colors"
               >
-                Hủy
+                Cancel
               </button>
               <button
                 onClick={modalType === "add" ? handleAddTopic : handleEditTopic}
                 className="px-4 py-2 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors"
               >
-                {modalType === "add" ? "Thêm mới" : "Cập nhật"}
+                {modalType === "add" ? "Add new" : "Update"}
               </button>
             </div>
           </div>

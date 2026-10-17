@@ -115,7 +115,7 @@ const Post = () => {
           p._id === id ? { ...p, published: newPublished } : p,
         ),
       );
-      toast.success(`Đã ${newPublished ? "duyệt" : "ẩn"} bài viết thành công`);
+      toast.success(newPublished ? "Post approved successfully" : "Post hidden successfully");
     } catch (error: any) {
       toast.error(error?.message);
     } finally {
@@ -129,7 +129,7 @@ const Post = () => {
       .deletePost(id)
       .then((response) => {
         if (response.success) {
-          toast.success("Xóa bài viết thành công");
+          toast.success("Post deleted successfully");
           const newPosts = posts.filter((post) => post._id !== id);
           setPosts(newPosts);
         } else throw new Error(response.message);
@@ -146,7 +146,7 @@ const Post = () => {
       .restorePost(id)
       .then((response) => {
         if (response.success) {
-          toast.success("Khôi phục bài viết thành công");
+          toast.success("Post restored successfully");
           const newPosts = posts.filter((post) => post._id !== id);
           setPosts(newPosts);
         } else throw new Error(response.message);
@@ -158,13 +158,13 @@ const Post = () => {
   };
 
   const statusOptions = [
-    { value: "all", label: "Tất cả trạng thái" },
-    { value: "true", label: "Đã duyệt" },
-    { value: "false", label: "Chờ duyệt" },
+    { value: "all", label: "All Statuses" },
+    { value: "true", label: "Approved" },
+    { value: "false", label: "Pending" },
   ];
 
   const categoryOptions = [
-    { value: "all", label: "Tất cả danh mục" },
+    { value: "all", label: "All Categories" },
     ...allCategories.map((c) => ({ value: c._id, label: c.name })),
   ];
 
@@ -173,10 +173,10 @@ const Post = () => {
       {/* Header */}
       <div>
         <h1 className="text-xl font-semibold text-foreground">
-          Quản lý Ý tưởng/Bài viết
+          Post Management
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Duyệt, quản lý và theo dõi tất cả bài viết
+          Review, manage, and monitor all posts
         </p>
       </div>
 
@@ -189,7 +189,7 @@ const Post = () => {
               : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
           }`}
         >
-          Tất cả
+          All
         </button>
         <button
           onClick={() => setListStatus("trash")}
@@ -199,7 +199,7 @@ const Post = () => {
               : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
           }`}
         >
-          Thùng rác
+          Trash
         </button>
       </div>
 
@@ -208,7 +208,7 @@ const Post = () => {
         <AdminSearchInput
           value={searchTerm}
           onChange={setSearchTerm}
-          placeholder="Tìm kiếm bài viết..."
+          placeholder="Search posts..."
         />
         <div className="flex gap-3">
           <AdminFilterSelect
@@ -227,11 +227,11 @@ const Post = () => {
       {/* Active filters info */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {filteredPosts.length} bài viết
+          {filteredPosts.length} posts
           {hasActiveFilters && (
             <span className="text-muted-foreground">
               {" "}
-              (lọc từ {posts.length} tổng cộng)
+              (filtered from {posts.length} total)
             </span>
           )}
         </p>
@@ -240,7 +240,7 @@ const Post = () => {
             onClick={resetFilters}
             className="text-sm text-admin-primary hover:underline font-medium"
           >
-            Xóa bộ lọc
+            Clear filters
           </button>
         )}
       </div>
@@ -254,12 +254,12 @@ const Post = () => {
             icon={FileText}
             title={
               hasActiveFilters
-                ? "Không tìm thấy bài viết"
-                : "Chưa có bài viết nào"
+                ? "No posts found"
+                : "No posts yet"
             }
             description={
               hasActiveFilters
-                ? "Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm"
+                ? "Try changing your filters or search terms"
                 : undefined
             }
           />
@@ -274,22 +274,22 @@ const Post = () => {
                       #
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Tiêu đề
+                      Title
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                      Tác giả
+                      Author
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                      Danh mục
+                      Category
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Trạng thái
+                      Status
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                      Ngày tạo
+                      Created Date
                     </th>
                     <th className="px-6 py-3.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Hành động
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -329,7 +329,7 @@ const Post = () => {
                           variant={post.published ? "success" : "warning"}
                           dot
                         >
-                          {post.published ? "Đã duyệt" : "Chờ duyệt"}
+                          {post.published ? "Approved" : "Pending"}
                         </StatusBadge>
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground hidden lg:table-cell whitespace-nowrap">
@@ -341,9 +341,9 @@ const Post = () => {
                             <button
                               onClick={() => handleRestorePost(post._id)}
                               className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap"
-                              title="Khôi phục bài viết"
+                              title="Restore post"
                             >
-                              Khôi phục
+                              Restore
                             </button>
                           ) : (
                             <>
@@ -356,8 +356,8 @@ const Post = () => {
                                 }`}
                                 title={
                                   post.published
-                                    ? "Ẩn bài viết"
-                                    : "Duyệt bài viết"
+                                    ? "Hide post"
+                                    : "Approve post"
                                 }
                               >
                                 {post.published ? (
@@ -369,7 +369,7 @@ const Post = () => {
                               <button
                                 onClick={() => setConfirmDelete(post._id)}
                                 className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                                title="Xóa bài viết"
+                                title="Delete post"
                               >
                                 <Trash2 size={16} />
                               </button>
@@ -412,7 +412,7 @@ const Post = () => {
                           variant={post.published ? "success" : "warning"}
                           dot
                         >
-                          {post.published ? "Đã duyệt" : "Chờ duyệt"}
+                          {post.published ? "Approved" : "Pending"}
                         </StatusBadge>
                       </div>
                     </div>
@@ -422,7 +422,7 @@ const Post = () => {
                           onClick={() => handleRestorePost(post._id)}
                           className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap"
                         >
-                          Khôi phục
+                          Restore
                         </button>
                       ) : (
                         <>
@@ -463,9 +463,9 @@ const Post = () => {
         isOpen={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => confirmDelete && handleDeletePost(confirmDelete)}
-        title="Xóa bài viết"
-        message="Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác."
-        confirmText="Xóa"
+        title="Delete post"
+        message="Are you sure you want to delete this post? This action cannot be undone."
+        confirmText="Delete"
         variant="danger"
       />
     </div>

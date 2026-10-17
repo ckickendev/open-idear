@@ -32,12 +32,13 @@ type Course = {
   enrolledUsers?: string[];
 };
 
-const formatPrice = (price: number) => {
-  if (price === 0) return "Miễn phí";
+const formatPrice = (price: number, freeText: string = "Free") => {
+  if (price === 0) return freeText;
   return `₫${price.toLocaleString()}`;
 };
 
 const RecentCourses: React.FC = () => {
+  const { t } = useTranslation();
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -144,21 +145,21 @@ const RecentCourses: React.FC = () => {
                 <Sparkles size={16} className="text-primary" />
               </div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
-                Mới cập nhật
+                {t("home.courses.newlyUpdated") || "Newly Updated"}
               </span>
             </div>
             <h2 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mb-1">
-              Khóa học mới nhất
+              {t("home.courses.title") || "Latest Courses"}
             </h2>
             <p className="text-xs text-muted-foreground">
-              Những khóa học vừa được thêm vào — bắt đầu học ngay hôm nay
+              {t("home.courses.subtitle") || "Courses just added — start learning today"}
             </p>
           </div>
           <Link
             href="/courses/search?q="
             className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover transition-colors group"
           >
-            Xem tất cả
+            {t("home.courses.viewAll") || "View All"}
             <ArrowRight
               size={14}
               className="group-hover:translate-x-0.5 transition-transform"
@@ -235,7 +236,7 @@ const RecentCourses: React.FC = () => {
                         {/* NEW badge */}
                         <div className="absolute top-2 left-2">
                           <span className="bg-primary text-primary-foreground text-[8px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shadow-sm">
-                            Mới
+                            {t("home.courses.new") || "New"}
                           </span>
                         </div>
 
@@ -295,11 +296,11 @@ const RecentCourses: React.FC = () => {
                       <div className="flex items-center gap-3 text-[10px] text-muted-foreground/80 mb-2.5">
                         <span className="flex items-center gap-1">
                           <Clock size={10} />
-                          {totalHours} giờ
+                          {totalHours} {t("home.courses.hours") || "hours"}
                         </span>
                         <span className="flex items-center gap-1">
                           <Users size={10} />
-                          {students} học viên
+                          {students} {t("home.courses.students") || "students"}
                         </span>
                       </div>
 
@@ -308,15 +309,15 @@ const RecentCourses: React.FC = () => {
                         {course.discountPrice && course.discountPrice > 0 ? (
                           <>
                             <span className="font-bold text-foreground text-xs">
-                              {formatPrice(course.discountPrice)}
+                              {formatPrice(course.discountPrice, t("home.courses.free") || "Free")}
                             </span>
                             <span className="text-[10px] text-muted-foreground line-through">
-                              {formatPrice(course.price)}
+                              {formatPrice(course.price, t("home.courses.free") || "Free")}
                             </span>
                           </>
                         ) : (
                           <span className="font-bold text-foreground text-xs">
-                            {formatPrice(course.price)}
+                            {formatPrice(course.price, t("home.courses.free") || "Free")}
                           </span>
                         )}
                       </div>
@@ -359,7 +360,7 @@ const RecentCourses: React.FC = () => {
             href="/courses/search?q="
             className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
           >
-            Xem tất cả khóa học <ArrowRight size={14} />
+            {t("home.courses.viewAllCourses") || "View all courses"} <ArrowRight size={14} />
           </Link>
         </div>
       </div>

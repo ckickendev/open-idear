@@ -19,6 +19,7 @@ interface VideoUploadProps {
   onClose: () => void;
   /** Whether to show the modal header with a close button (default: true) */
   isTitleDisplay?: boolean;
+  initialTitle?: string;
 }
 
 type UploadState = "idle" | "uploading" | "saving" | "done" | "error";
@@ -36,9 +37,10 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
   onVideoUploaded,
   onClose,
   isTitleDisplay = true,
+  initialTitle = "",
 }) => {
   const [file, setFile] = useState<File | null>(null);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(initialTitle);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [progress, setProgress] = useState(0);
@@ -60,7 +62,10 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
       return;
     }
     setFile(selectedFile);
-    if (!title) setTitle(selectedFile.name.replace(/\.[^/.]+$/, ""));
+    const fileNameWithoutExt = selectedFile.name.replace(/\.[^/.]+$/, "");
+    if (!title || title === initialTitle || /^Lesson\s+\d+$/i.test(title.trim())) {
+      setTitle(fileNameWithoutExt);
+    }
     setError("");
     setUploadState("idle");
     setProgress(0);
@@ -79,7 +84,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
 
   const clearFile = () => {
     setFile(null);
-    setTitle("");
+    setTitle(initialTitle || "");
     setError("");
     setUploadState("idle");
     setProgress(0);

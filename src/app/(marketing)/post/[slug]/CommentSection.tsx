@@ -208,18 +208,18 @@ function CommentSection({ postId }: { postId: string }) {
     <div className="comment-section">
       {/* Sort controls */}
       <div className="comment-controls flex gap-4 mb-4">
-        <span className="font-semibold">Sắp xếp theo:</span>
+        <span className="font-semibold">Sort by:</span>
         <button
           onClick={() => setSortBy("hot")}
           className={`px-3 cursor-pointer py-1 rounded ${sortBy === "hot" ? "bg-blue-500 text-white" : "bg-muted"}`}
         >
-          Hot nhất
+          Top
         </button>
         <button
           onClick={() => setSortBy("new")}
           className={`px-3 cursor-pointer py-1 rounded ${sortBy === "new" ? "bg-blue-500 text-white" : "bg-muted"}`}
         >
-          Mới nhất
+          Newest
         </button>
       </div>
 
@@ -254,7 +254,7 @@ function CommentSection({ postId }: { postId: string }) {
           disabled={loading}
           className="load-more-btn mt-4 px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
         >
-          {loading ? "Đang tải..." : "Tải thêm bình luận"}
+          {loading ? "Loading..." : "Load more comments"}
         </button>
       )}
     </div>
@@ -308,7 +308,7 @@ function CommentItem({
         </span>
         <span className="text-muted-foreground text-sm">{comment.timeAgo}</span>
         {comment.isEdited && (
-          <span className="text-muted-foreground text-xs">(đã chỉnh sửa)</span>
+          <span className="text-muted-foreground text-xs">(edited)</span>
         )}
       </div>
 
@@ -337,13 +337,13 @@ function CommentItem({
             onClick={() => setShowReplyForm(!showReplyForm)}
             className="text-blue-500 hover:text-blue-600"
           >
-            Trả lời
+            Reply
           </button>
         )}
 
         {/* Report button */}
         <button className="text-muted-foreground hover:text-muted-foreground">
-          Báo cáo
+          Report
         </button>
       </div>
 
@@ -356,7 +356,7 @@ function CommentItem({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onChange={(e: any) => setReplyContent(e.target.value)}
             rows={3}
-            placeholder="Viết phản hồi của bạn..."
+            placeholder="Write your reply..."
           />
           <div className="flex gap-2 mt-2">
             <button
@@ -364,7 +364,7 @@ function CommentItem({
               disabled={!replyContent.trim()}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
             >
-              Gửi
+              Send
             </button>
             <button
               onClick={() => {
@@ -373,7 +373,7 @@ function CommentItem({
               }}
               className="px-4 py-2 border border-border rounded hover:bg-muted/30"
             >
-              Hủy
+              Cancel
             </button>
           </div>
         </div>
@@ -400,7 +400,7 @@ function CommentItem({
               }
               className="load-more-replies mt-2 text-blue-500 hover:text-blue-600 text-sm"
             >
-              Xem thêm {comment.totalReplies - comment.replies.length} phản hồi
+              View {comment.totalReplies - comment.replies.length} more replies
             </button>
           )}
         </div>
@@ -412,7 +412,7 @@ function CommentItem({
 // Comment form component
 function CommentForm({
   onSubmit,
-  placeholder = "Viết bình luận của bạn...",
+  placeholder = "Write a comment...",
 }: {
   onSubmit: (content: string) => Promise<void> | void;
   placeholder?: string;
@@ -448,14 +448,14 @@ function CommentForm({
         />
         <div className="flex justify-between items-center mt-2">
           <span className="text-sm text-muted-foreground">
-            {content.length}/2000 ký tự
+            {content.length}/2000 characters
           </span>
           <button
             type="submit"
             disabled={!content.trim() || isSubmitting}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? "Đang gửi..." : "Gửi bình luận"}
+            {isSubmitting ? "Submitting..." : "Post Comment"}
           </button>
         </div>
       </div>

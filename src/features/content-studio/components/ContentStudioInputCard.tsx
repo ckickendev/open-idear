@@ -24,6 +24,8 @@ import type { ContentGoal } from "../types/contentStudio.types";
 interface ContentStudioInputCardProps {
   topic: string;
   setTopic: (topic: string) => void;
+  language: "en" | "vi";
+  setLanguage: (lang: "en" | "vi") => void;
   contentGoal: ContentGoal;
   setContentGoal: (goal: ContentGoal) => void;
   numberOfIdeas: number;
@@ -83,6 +85,8 @@ const INSPIRATION_CHIPS = [
 export function ContentStudioInputCard({
   topic,
   setTopic,
+  language,
+  setLanguage,
   contentGoal,
   setContentGoal,
   numberOfIdeas,
@@ -149,7 +153,7 @@ export function ContentStudioInputCard({
         {/* Controls Grid */}
         <div className="pt-2 border-t border-border/60 grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
           {/* Content Goal Selector */}
-          <div className="md:col-span-8 space-y-2">
+          <div className="md:col-span-6 space-y-2">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
               <SlidersHorizontal size={13} />
               Content Goal
@@ -180,7 +184,7 @@ export function ContentStudioInputCard({
           </div>
 
           {/* Number of Ideas Selector */}
-          <div className="md:col-span-4 space-y-2">
+          <div className="md:col-span-3 space-y-2">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Number of ideas
             </span>
@@ -203,6 +207,41 @@ export function ContentStudioInputCard({
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Target Language Selector */}
+          <div className="md:col-span-3 space-y-2">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Article Language
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setLanguage("en")}
+                disabled={isGenerating}
+                className={`py-2 px-2 rounded-xl border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  language === "en"
+                    ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                    : "bg-background text-muted-foreground hover:text-foreground hover:bg-muted/50 border-border/80"
+                }`}
+              >
+                <span>🇬🇧</span>
+                <span>English</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage("vi")}
+                disabled={isGenerating}
+                className={`py-2 px-2 rounded-xl border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  language === "vi"
+                    ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                    : "bg-background text-muted-foreground hover:text-foreground hover:bg-muted/50 border-border/80"
+                }`}
+              >
+                <span>🇻🇳</span>
+                <span>Tiếng Việt</span>
+              </button>
             </div>
           </div>
         </div>

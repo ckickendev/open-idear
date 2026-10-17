@@ -15,7 +15,7 @@ const LoadingComponent = ({ isLoading, isFullScreen }: any) => {
         </div>
         {/* Text */}
         <p className="mt-6 text-sm font-extrabold text-[var(--color-admin-primary)] animate-pulse tracking-widest uppercase shadow-sm">
-          Đang tải...
+          Loading...
         </p>
       </div>
     </div>

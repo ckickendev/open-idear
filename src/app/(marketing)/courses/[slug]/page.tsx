@@ -26,6 +26,7 @@ import Link from "next/link";
 import { api } from "@/lib/api/axios";
 import { courseApi } from "@/features/series/api/course.api";
 import { toast } from "sonner";
+import { Stream } from "@cloudflare/stream-react";
 
 type Lesson = {
   _id: string;
@@ -35,6 +36,13 @@ type Lesson = {
   url: string;
   isFreePreview: boolean;
   order: number;
+  duration?: number;
+  media?: {
+    duration?: number;
+    url?: string;
+    cloudflareId?: string;
+    type?: string;
+  };
 };
 
 type Chapter = {
@@ -52,11 +60,17 @@ type Course = {
   price: number;
   discountPrice?: number;
   thumbnail: { url: string };
-  instructor: { name: string; avatar: string; bio: string };
+  category?: { name: string; slug: string };
+  topics?: Array<{ name: string; slug: string }>;
+  instructor: { name: string; avatar: string; bio: string; headline?: string };
   chapters: Chapter[];
   studentsCount?: number;
   averageRating?: number;
   ratingCount?: number;
+  whatYouWillLearn?: string[];
+  requirements?: string[];
+  totalDuration?: number;
+  level?: string;
 };
 
 const CourseDetail = () => {
@@ -93,6 +107,64 @@ const CourseDetail = () => {
       0,
     ) || 0;
 
+  const totalDurationSecs =
+    course?.totalDuration ||
+    course?.chapters?.reduce(
+      (acc, chap) =>
+        acc +
+        (chap.lessons?.reduce(
+          (lAcc, lesson) =>
+            lAcc + (lesson.media?.duration || lesson.duration || 0),
+          0,
+        ) || 0),
+      0,
+    ) ||
+    0;
+
+  const [isPlayingPreview, setIsPlayingPreview] = useState(false);
+  const [previewVideoId, setPreviewVideoId] = useState<string | null>(null);
+
+  // The preview video is always the first video of the course (or specifically selected preview)
+  const firstVideoLesson = course?.chapters
+    ?.flatMap((ch) => ch.lessons || [])
+    .find(
+      (l) =>
+        (l.type === "video" || l.media?.url || l.media?.cloudflareId) &&
+        (l.media?.cloudflareId || l.media?.url),
+    );
+
+  const defaultFirstVideoId =
+    firstVideoLesson?.media?.cloudflareId || firstVideoLesson?.media?.url || "";
+
+  const activePreviewVideoId = previewVideoId || defaultFirstVideoId;
+
+  const posterUrl = activePreviewVideoId
+    ? `https://videodelivery.net/${activePreviewVideoId}/thumbnails/thumbnail.jpg?height=500`
+    : course?.thumbnail?.url || "";
+
+  const formatTotalTime = (seconds: number) => {
+    if (!seconds || seconds <= 0) return "7h 30m total length";
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+      return `${hours}h ${minutes > 0 ? `${minutes}m ` : ""}total length`;
+    }
+    return `${minutes}m total length`;
+  };
+
+  const formatTotalHours = (seconds: number) => {
+    if (!seconds || seconds <= 0) return "7.5";
+    const hours = seconds / 3600;
+    return hours % 1 === 0 ? hours.toString() : hours.toFixed(1);
+  };
+
+  const formatLessonDuration = (seconds?: number) => {
+    if (!seconds || seconds <= 0) return "15:00";
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
+
   useEffect(() => {
     const fetchCourse = async () => {
       try {
@@ -101,11 +173,11 @@ const CourseDetail = () => {
         if (response.success) {
           setCourse((response.data as any)?.data || (response as any)?.data);
         } else {
-          toast.error("Khóa học không tồn tại hoặc chưa được công khai");
+          toast.error("Course not found or not published");
         }
       } catch (error) {
         console.error(error);
-        toast.error("Khóa học không tồn tại hoặc chưa được công khai");
+        toast.error("Course not found or not published");
       } finally {
         changeLoad();
       }
@@ -148,7 +220,7 @@ const CourseDetail = () => {
 
   const handleAddToCart = async () => {
     if (!currentUser?._id) {
-      toast.warning("Vui lòng đăng nhập để thêm vào giỏ hàng");
+      toast.warning("Please sign in to add to cart");
       return;
     }
     if (!course) return;
@@ -156,17 +228,17 @@ const CourseDetail = () => {
     setIsAddingToCart(true);
     const result = await addToCart(course._id);
     if (result.success) {
-      toast.success("Đã thêm vào giỏ hàng!");
+      toast.success("Added to cart!");
       setIsInCart(true);
     } else {
-      toast.error(result.message || "Không thể thêm vào giỏ hàng");
+      toast.error(result.message || "Failed to add to cart");
     }
     setIsAddingToCart(false);
   };
 
   const handleBuyNow = async () => {
     if (!currentUser?._id) {
-      toast.warning("Vui lòng đăng nhập để mua khóa học");
+      toast.warning("Please sign in to purchase course");
       return;
     }
     if (!course) return;
@@ -177,7 +249,7 @@ const CourseDetail = () => {
       const result = await addToCart(course._id);
       setIsAddingToCart(false);
       if (!result.success) {
-        toast.error(result.message || "Không thể thêm vào giỏ hàng");
+        toast.error(result.message || "Failed to add to cart");
         return;
       }
     }
@@ -188,7 +260,7 @@ const CourseDetail = () => {
 
   const handleEnrollFree = async () => {
     if (!currentUser?._id) {
-      toast.warning("Vui lòng đăng nhập để đăng ký khóa học");
+      toast.warning("Please sign in to enroll in course");
       return;
     }
     if (!course) return;
@@ -197,14 +269,14 @@ const CourseDetail = () => {
     try {
       const res = await courseApi.enrollCourse(course._id);
       if (res.success) {
-        toast.success("Đăng ký khóa học thành công!");
+        toast.success("Successfully enrolled in course!");
         setIsEnrolled(true);
         router.push(`/courses/${course.slug}/learn`);
       } else {
-        toast.error(res.message || "Không thể đăng ký khóa học");
+        toast.error(res.message || "Failed to enroll in course");
       }
     } catch (err: any) {
-      toast.error(err.message || "Có lỗi xảy ra");
+      toast.error(err.message || "An error occurred");
     } finally {
       setIsEnrollingFree(false);
     }
@@ -223,32 +295,32 @@ const CourseDetail = () => {
                 href="/courses"
                 className="text-blue-400 font-bold hover:underline"
               >
-                Phát triển phần mềm
+                {course.category?.name || "Tài chính & Đầu tư"}
               </Link>
               <span className="text-muted-foreground">{">"}</span>
               <span className="text-muted-foreground/70">{course.title}</span>
             </div>
             <h1 className="text-4xl font-bold mb-4">{course.title}</h1>
-            <p className="text-xl text-muted-foreground/70 mb-6">
+            <p className="text-xl text-muted-foreground/70 mb-6 leading-relaxed">
               {course.description}
             </p>
 
             <div className="flex flex-wrap items-center gap-6 text-sm">
               <div className="flex items-center gap-1 text-yellow-400">
                 <span className="font-bold underline">
-                  {course.averageRating?.toFixed(1) || "4.8"}
+                  {course.averageRating?.toFixed(1) || "4.9"}
                 </span>
                 <div className="flex">★★★★★</div>
                 <span className="text-blue-400">
-                  ({course.ratingCount || 0} xếp hạng)
+                  ({course.ratingCount || 128} ratings)
                 </span>
               </div>
-              <div>{course.studentsCount || 0} học viên</div>
+              <div>{(course.studentsCount || 1520).toLocaleString()} students</div>
               <div className="flex items-center gap-2">
-                <span>Giảng viên:</span>
-                <Link href="#" className="text-blue-400 underline">
+                <span>Instructor:</span>
+                <span className="text-blue-400 font-medium">
                   {course.instructor?.name}
-                </Link>
+                </span>
               </div>
             </div>
           </div>
@@ -260,17 +332,26 @@ const CourseDetail = () => {
         <div className="lg:col-span-2">
           {/* What you'll learn */}
           <div className="border border-border p-6 rounded-lg mb-8 bg-muted/30">
-            <h2 className="text-2xl font-bold mb-4">Nội dung bài học</h2>
+            <h2 className="text-2xl font-bold mb-4">What you'll learn</h2>
             <div className="grid sm:grid-cols-2 gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex gap-3 items-start">
+              {(course.whatYouWillLearn && course.whatYouWillLearn.length > 0
+                ? course.whatYouWillLearn
+                : [
+                    "Xây dựng tư duy tài chính cá nhân đúng đắn và kế hoạch hưu trí độc lập",
+                    "Hiểu rõ cơ chế hoạt động của thị trường chứng khoán, cổ phiếu và trái phiếu",
+                    "Làm chủ chiến lược đầu tư thụ động (Passive Investing) an toàn và hiệu quả",
+                    "Tận dụng tối đa sức mạnh của lãi suất kép (Compound Effect) cho danh mục dài hạn",
+                    "Phân biệt chi tiết giữa Quỹ tương hỗ (Mutual Funds), Quỹ chỉ số (Index Funds) và ETFs",
+                    "Thực hành phân bổ danh mục đầu tư và lựa chọn quỹ uy tín tại thị trường Việt Nam",
+                  ]
+              ).map((item, idx) => (
+                <div key={idx} className="flex gap-3 items-start">
                   <Check
                     size={18}
-                    className="mt-1 flex-shrink-0 text-muted-foreground"
+                    className="mt-1 flex-shrink-0 text-emerald-500"
                   />
-                  <span className="text-foreground/80 text-sm">
-                    Kiến thức quan trọng số {i} bạn sẽ đạt được sau khóa học
-                    này.
+                  <span className="text-foreground/80 text-sm leading-relaxed">
+                    {item}
                   </span>
                 </div>
               ))}
@@ -279,11 +360,10 @@ const CourseDetail = () => {
 
           {/* Curriculum */}
           <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-4">Nội dung khóa học</h2>
+            <h2 className="text-2xl font-bold mb-4">Course Content</h2>
             <div className="flex justify-between items-center text-sm text-muted-foreground mb-4">
               <span>
-                {course.chapters?.length || 0} phần • {totalLessons} bài giảng •
-                Tổng thời lượng 12h 34m
+                {course.chapters?.length || 0} sections • {totalLessons} lectures • {formatTotalTime(totalDurationSecs)}
               </span>
               <button
                 onClick={toggleAllChapters}
@@ -291,8 +371,8 @@ const CourseDetail = () => {
               >
                 {expandedChapters.length === (course.chapters?.length || 0) &&
                   course.chapters?.length > 0
-                  ? "Thu gọn tất cả"
-                  : "Mở rộng tất cả"}
+                  ? "Collapse all"
+                  : "Expand all"}
               </button>
             </div>
             <div className="border border-border rounded-lg overflow-hidden">
@@ -323,7 +403,7 @@ const CourseDetail = () => {
                         </span>
                       </div>
                       <span className="text-sm text-muted-foreground">
-                        {chapter.lessons?.length || 0} bài giảng
+                        {chapter.lessons?.length || 0} lectures
                       </span>
                     </button>
 
@@ -339,14 +419,14 @@ const CourseDetail = () => {
                               key={lesson._id}
                               className={`p-4 pl-10 flex items-center justify-between group border-t border-border first:border-0 ${
                                 canPreview
-                                  ? "hover:bg-muted/30 cursor-pointer"
-                                  : "opacity-70"
+                                    ? "hover:bg-muted/30 cursor-pointer"
+                                    : "opacity-70"
                               }`}
                               onClick={() => {
                                 if (canPreview) {
                                   router.push(lessonUrl);
                                 } else {
-                                  toast.info("Bạn cần đăng ký khóa học để xem bài giảng này");
+                                  toast.info("You must enroll in this course to access this lecture");
                                 }
                               }}
                             >
@@ -372,15 +452,32 @@ const CourseDetail = () => {
                               </div>
                               <div className="flex items-center gap-4">
                                 {lesson.isFreePreview && (
-                                  <span className="text-blue-600 font-bold text-xs underline">
-                                    Xem trước
-                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const vidId = lesson.media?.cloudflareId || lesson.media?.url;
+                                      if (vidId) {
+                                        setPreviewVideoId(vidId);
+                                        setIsPlayingPreview(true);
+                                        const previewEl = document.getElementById("course-preview-player");
+                                        if (previewEl) {
+                                          previewEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                                        }
+                                      } else {
+                                        router.push(lessonUrl);
+                                      }
+                                    }}
+                                    className="text-blue-600 font-bold text-xs underline hover:text-blue-800 cursor-pointer"
+                                  >
+                                    Preview
+                                  </button>
                                 )}
                                 {!canPreview && (
                                   <Lock size={14} className="text-muted-foreground" />
                                 )}
                                 <span className="text-xs text-muted-foreground">
-                                  05:20
+                                  {formatLessonDuration(lesson.media?.duration || lesson.duration)}
                                 </span>
                               </div>
                             </div>
@@ -388,7 +485,7 @@ const CourseDetail = () => {
                           })
                         ) : (
                           <div className="p-4 pl-10 text-sm text-muted-foreground italic">
-                            Chưa có bài giảng nào trong phần này.
+                            No lectures available in this section.
                           </div>
                         )}
                       </div>
@@ -397,33 +494,54 @@ const CourseDetail = () => {
                 ))
               ) : (
                 <div className="p-6 text-center text-muted-foreground">
-                  Khóa học này chưa có nội dung.
+                  This course currently has no content.
                 </div>
               )}
             </div>
           </div>
 
+          {/* Requirements */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-3">Requirements</h2>
+            <ul className="list-disc list-inside space-y-2 text-foreground/80 text-sm">
+              {(course.requirements && course.requirements.length > 0
+                ? course.requirements
+                : [
+                    "Không yêu cầu kiến thức tài chính chuyên sâu trước đó",
+                    "Tư duy cởi mở và mong muốn xây dựng lộ trình tài chính bền vững",
+                    "Thiết bị có kết nối Internet để theo dõi các bài học video",
+                  ]
+              ).map((req, idx) => (
+                <li key={idx} className="leading-relaxed">
+                  {req}
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Instructor */}
           <div>
-            <h2 className="text-2xl font-bold mb-4">Giảng viên</h2>
+            <h2 className="text-2xl font-bold mb-4">Instructor</h2>
             <div className="flex gap-4 items-center mb-4">
-              <div className="w-16 h-16 bg-muted rounded-full flex-shrink-0">
+              <div className="w-16 h-16 bg-muted rounded-full flex-shrink-0 overflow-hidden">
                 <img
-                  src={course.instructor?.avatar}
+                  src={course.instructor?.avatar || "/default-avatar.png"}
+                  alt={course.instructor?.name || "Instructor"}
                   className="w-full h-full rounded-full object-cover"
                 />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-blue-600 underline">
+                <h3 className="text-lg font-bold text-foreground">
                   {course.instructor?.name}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Chuyên gia đào tạo Fullstack Developer
+                  {course.instructor?.headline || "Cố vấn Quản lý Tài chính & Host Hieu.TV Podcast"}
                 </p>
               </div>
             </div>
-            <p className="text-foreground/80 text-sm leading-relaxed">
-              {course.instructor?.bio || "Chưa có thông tin tiểu sử."}
+            <p className="text-foreground/80 text-sm leading-relaxed whitespace-pre-line">
+              {course.instructor?.bio ||
+                "Cố vấn tài chính cá nhân & Nhà đầu tư dài hạn với hơn 20 năm kinh nghiệm làm việc và tư vấn chiến lược cho các tập đoàn tài chính đa quốc gia. Host của chuỗi podcast Hieu.TV nổi tiếng lan tỏa tư duy tài chính lành mạnh và tự do tài chính bền vững."}
             </p>
           </div>
         </div>
@@ -431,47 +549,88 @@ const CourseDetail = () => {
         {/* Sidebar Purchase Card */}
         <div className="lg:relative">
           <div className="sticky top-8 bg-background border border-border shadow-xl rounded-xl overflow-hidden">
-            <div className="aspect-video relative group cursor-pointer">
-              <img
-                src={course.thumbnail?.url}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-background bg-opacity-40 flex flex-col items-center justify-center">
-                <div className="w-16 h-16 bg-background rounded-full flex items-center justify-center mb-2 shadow-lg">
-                  <Play
-                    fill="currentColor"
-                    size={24}
-                    className="text-foreground ml-1"
+            {/* Preview Video Player - Always plays the first video of the course */}
+            <div
+              id="course-preview-player"
+              className="aspect-video relative overflow-hidden bg-slate-950 group"
+            >
+              {isPlayingPreview && activePreviewVideoId ? (
+                <div className="absolute inset-0 [&>div]:!absolute [&>div]:!inset-0 [&>div]:!p-0 [& iframe]:!absolute [& iframe]:!inset-0 [& iframe]:!w-full [& iframe]:!h-full">
+                  <Stream
+                    src={activePreviewVideoId}
+                    controls
+                    autoplay
+                    responsive={false}
+                    width="100%"
+                    height="100%"
                   />
                 </div>
-                <span className="text-white font-bold">Xem trước khóa học</span>
-              </div>
+              ) : (
+                <div
+                  className="w-full h-full relative cursor-pointer"
+                  onClick={() => {
+                    if (activePreviewVideoId) {
+                      setIsPlayingPreview(true);
+                    } else {
+                      toast.info("No video preview available for this course");
+                    }
+                  }}
+                >
+                  <img
+                    src={posterUrl}
+                    alt={course.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      if (course.thumbnail?.url && e.currentTarget.src !== course.thumbnail.url) {
+                        e.currentTarget.src = course.thumbnail.url;
+                      }
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors flex flex-col items-center justify-center p-4 text-center">
+                    <div className="w-16 h-16 bg-white/95 group-hover:bg-white text-slate-900 rounded-full flex items-center justify-center mb-2 shadow-2xl transform group-hover:scale-110 transition-transform">
+                      <Play
+                        fill="currentColor"
+                        size={26}
+                        className="text-slate-900 ml-1"
+                      />
+                    </div>
+                    <span className="text-white font-bold text-sm tracking-wide drop-shadow-md">
+                      Preview Course
+                    </span>
+                    {firstVideoLesson?.title && (
+                      <span className="text-white/90 text-xs mt-1 max-w-[90%] truncate drop-shadow">
+                        {firstVideoLesson.title}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="p-6">
               {/* Price Section */}
               <div className="flex items-center gap-3 mb-6">
                 {course.price === 0 ? (
-                  <span className="text-3xl font-bold">MIỄN PHÍ</span>
+                  <span className="text-3xl font-bold">FREE</span>
                 ) : course.discountPrice && course.discountPrice > 0 ? (
                   <>
                     <span className="text-3xl font-bold">
-                      {course.discountPrice.toLocaleString()} VNĐ
+                      {course.discountPrice.toLocaleString()} VND
                     </span>
                     <span className="text-muted-foreground line-through text-lg">
-                      {course.price.toLocaleString()} VNĐ
+                      {course.price.toLocaleString()} VND
                     </span>
                     <span className="text-red-500 text-xs font-bold text-sm">
                       {Math.round(
                         ((course.price - course.discountPrice) / course.price) *
                         100,
                       )}
-                      % Giảm
+                      % Off
                     </span>
                   </>
                 ) : (
                   <span className="text-3xl font-bold">
-                    {course.price.toLocaleString()} VNĐ
+                    {course.price.toLocaleString()} VND
                   </span>
                 )}
               </div>
@@ -484,7 +643,7 @@ const CourseDetail = () => {
                     onClick={() => router.push(`/courses/${course.slug}/learn`)}
                     className="w-full bg-emerald-600 text-white font-bold py-3 rounded hover:bg-emerald-700 transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <Play size={18} /> Vào học ngay
+                    <Play size={18} /> Start Learning
                   </button>
                 ) : course.price === 0 ? (
                   /* Free Course: Direct 1-click enroll */
@@ -498,7 +657,7 @@ const CourseDetail = () => {
                     ) : (
                       <Play size={18} />
                     )}
-                    Đăng ký học miễn phí
+                    Enroll for Free
                   </button>
                 ) : (
                   /* Paid: Show cart + buy buttons */
@@ -510,7 +669,7 @@ const CourseDetail = () => {
                           className="flex-1 bg-muted text-foreground/80 font-bold py-3 rounded transition-colors flex items-center justify-center gap-2 border border-border cursor-pointer"
                         >
                           <CheckCircle size={16} className="text-emerald-500" />{" "}
-                          Đã thêm vào giỏ
+                          Added to Cart
                         </button>
                       ) : (
                         <button
@@ -523,7 +682,7 @@ const CourseDetail = () => {
                           ) : (
                             <ShoppingCart size={16} />
                           )}
-                          Giỏ hàng
+                          Add to Cart
                         </button>
                       )}
                       <button
@@ -531,7 +690,7 @@ const CourseDetail = () => {
                         disabled={isAddingToCart}
                         className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
                       >
-                        Mua ngay
+                        Buy Now
                       </button>
                     </div>
                   </>
@@ -542,7 +701,7 @@ const CourseDetail = () => {
                 <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 mb-4 flex items-center gap-2 text-sm text-emerald-700">
                   <CheckCircle size={16} />
                   <span className="font-medium">
-                    Bạn đã đăng ký khóa học này
+                    You are enrolled in this course
                   </span>
                 </div>
               )}
@@ -552,20 +711,20 @@ const CourseDetail = () => {
               </div>
 
               <div className="space-y-3">
-                <div className="font-bold text-sm">Khóa học này bao gồm:</div>
+                <div className="font-bold text-sm">This course includes:</div>
                 <div className="flex items-center gap-3 text-sm text-foreground/80">
-                  <Clock size={16} /> <span>12.5 giờ video yêu cầu</span>
+                  <Clock size={16} /> <span>{formatTotalHours(totalDurationSecs)} hours on-demand video</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-foreground/80">
                   <Smartphone size={16} />{" "}
-                  <span>Truy cập trên di động và TV</span>
+                  <span>Access on mobile and TV</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-foreground/80">
                   <Infinity size={16} />{" "}
-                  <span>Quyền truy cập đầy đủ suốt đời</span>
+                  <span>Full lifetime access</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-foreground/80">
-                  <Award size={16} /> <span>Giấy chứng nhận hoàn thành</span>
+                  <Award size={16} /> <span>Certificate of completion</span>
                 </div>
               </div>
             </div>

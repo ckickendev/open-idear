@@ -1,3 +1,4 @@
+"use client";
 import Image from "next/image";
 import {
   PostLinkCustom,
@@ -5,6 +6,7 @@ import {
 } from "@/components/common/LinkCustom";
 import { PaginationComponent } from "./common/PaginationComponent";
 import Link from "next/link";
+import { useTranslation } from "@/app/hook/useTranslation";
 
 const PostDisplayPageElement = ({
   data,
@@ -13,6 +15,7 @@ const PostDisplayPageElement = ({
   data: any[];
   totalPage: number;
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="space-y-8 flex flex-col justify-between md:flex-row md:space-y-0 md:space-x-8">
       <div className="w-full md:w-4/5 space-y-4">
@@ -63,7 +66,7 @@ const PostDisplayPageElement = ({
                       <span className="mx-1.5 text-muted-foreground/50">•</span>
                     </>
                   )}
-                  <span>{minutesRead} phút đọc</span>
+                  <span>{minutesRead} {t("component.lastest_feature.minRead") || "min read"}</span>
                 </div>
               </div>
             </div>

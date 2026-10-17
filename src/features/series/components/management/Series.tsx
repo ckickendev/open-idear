@@ -117,7 +117,7 @@ const Series = () => {
         });
         if (newSeries.success) {
           setSeries([...series, newSeries.data.series]);
-          toast.success("Thêm series thành công");
+          toast.success("Series added successfully");
         } else throw new Error(newSeries.message);
       } catch (error: any) {
         toast.error(error?.message);
@@ -131,7 +131,7 @@ const Series = () => {
   const handleEditSeries = () => {
     changeLoad();
     if (!formData.title.trim()) {
-      toast.success("Tiêu đề không được để trống");
+      toast.error("Title cannot be empty");
       changeLoad();
       return;
     }
@@ -150,7 +150,7 @@ const Series = () => {
               i._id === selectedItem?._id ? response.data.series : i,
             ),
           );
-          toast.success("Cập nhật series thành công");
+          toast.success("Series updated successfully");
         } else throw new Error(response.message);
       })
       .catch((error) => {
@@ -168,7 +168,7 @@ const Series = () => {
       .deleteSeries(id)
       .then((response) => {
         if (response.success) {
-          toast.success("Xóa series thành công");
+          toast.success("Series deleted successfully");
         } else throw new Error(response.message);
       })
       .catch((error) => {
@@ -183,30 +183,30 @@ const Series = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-foreground">
-            Quản lý Series
+            Series Management
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Quản lý các series nội dung
+            Manage content series
           </p>
         </div>
         <button
           onClick={() => openModal("add")}
           className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors"
         >
-          <Plus size={16} /> Thêm Series
+          <Plus size={16} /> Add Series
         </button>
       </div>
 
       <AdminSearchInput
         value={searchTerm}
         onChange={setSearchTerm}
-        placeholder="Tìm kiếm series..."
+        placeholder="Search series..."
       />
       <p className="text-sm text-muted-foreground">
         {filteredSeries.length} series{" "}
         {searchTerm && (
           <span className="text-muted-foreground">
-            (lọc từ {series.length} tổng cộng)
+            (filtered from {series.length} total)
           </span>
         )}
       </p>
@@ -217,13 +217,13 @@ const Series = () => {
         ) : currentSeries.length === 0 ? (
           <EmptyState
             icon={BookText}
-            title={searchTerm ? "Không tìm thấy series" : "Chưa có series nào"}
+            title={searchTerm ? "No series found" : "No series yet"}
             description={
               searchTerm
-                ? "Thử thay đổi từ khóa tìm kiếm"
-                : "Bắt đầu bằng cách thêm series đầu tiên"
+                ? "Try changing your search terms"
+                : "Start by adding the first series"
             }
-            actionLabel={!searchTerm ? "Thêm Series" : undefined}
+            actionLabel={!searchTerm ? "Add Series" : undefined}
             onAction={!searchTerm ? () => openModal("add") : undefined}
           />
         ) : (
@@ -236,19 +236,19 @@ const Series = () => {
                       #
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Tiêu đề
+                      Title
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                      Mô tả
+                      Description
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                      Tác giả
+                      Author
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                      Ngày tạo
+                      Created Date
                     </th>
                     <th className="px-6 py-3.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Hành động
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -289,21 +289,21 @@ const Series = () => {
                           <button
                             onClick={() => openModal("edit", item)}
                             className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light transition-colors"
-                            title="Chỉnh sửa"
+                            title="Edit"
                           >
                             <Edit size={16} />
                           </button>
                           <Link
                             href={`/management/series/${item._id}/lessons`}
                             className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
-                            title="Quản lý bài học"
+                            title="Manage lessons"
                           >
                             <BookOpen size={16} />
                           </Link>
                           <button
                             onClick={() => setConfirmDelete(item._id)}
                             className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                            title="Xóa"
+                            title="Delete"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -367,9 +367,9 @@ const Series = () => {
         isOpen={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => confirmDelete && handleDeleteSeries(confirmDelete)}
-        title="Xóa series"
-        message="Bạn có chắc chắn muốn xóa series này? Hành động này không thể hoàn tác."
-        confirmText="Xóa"
+        title="Delete series"
+        message="Are you sure you want to delete this series? This action cannot be undone."
+        confirmText="Delete"
         variant="danger"
       />
 
@@ -382,7 +382,7 @@ const Series = () => {
           <div className="relative bg-background rounded-xl shadow-xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <h3 className="text-lg font-semibold text-foreground">
-                {modalType === "add" ? "Thêm series mới" : "Chỉnh sửa series"}
+                {modalType === "add" ? "Add new series" : "Edit series"}
               </h3>
               <button
                 onClick={closeModal}
@@ -394,7 +394,7 @@ const Series = () => {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground/80 mb-1.5">
-                  Tiêu đề <span className="text-red-500">*</span>
+                  Title <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -403,12 +403,12 @@ const Series = () => {
                     setFormData({ ...formData, title: e.target.value })
                   }
                   className="w-full px-3 py-2.5 text-sm border border-border rounded-lg focus:outline-none focus:border-admin-primary focus:ring-2 focus:ring-admin-primary-ring transition-all"
-                  placeholder="Nhập tiêu đề series"
+                  placeholder="Enter series title"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground/80 mb-1.5">
-                  Mô tả
+                  Description
                 </label>
                 <TextAreaCustom
                   id="description"
@@ -417,12 +417,12 @@ const Series = () => {
                     setFormData({ ...formData, description: e.target.value })
                   }
                   rows={3}
-                  placeholder="Nhập mô tả series"
+                  placeholder="Enter series description"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground/80 mb-1.5">
-                  Giá (VNĐ)
+                  Price (VND)
                 </label>
                 <input
                   type="number"
@@ -434,7 +434,7 @@ const Series = () => {
                     })
                   }
                   className="w-full px-3 py-2.5 text-sm border border-border rounded-lg focus:outline-none focus:border-admin-primary focus:ring-2 focus:ring-admin-primary-ring transition-all"
-                  placeholder="0 nếu miễn phí"
+                  placeholder="0 if free"
                 />
               </div>
               <div>
@@ -446,7 +446,7 @@ const Series = () => {
                   type="text"
                   value={formData.slug}
                   className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-muted/30 text-muted-foreground"
-                  placeholder="Slug sẽ được tạo tự động"
+                  placeholder="Slug will be generated automatically"
                 />
               </div>
             </div>
@@ -455,7 +455,7 @@ const Series = () => {
                 onClick={closeModal}
                 className="px-4 py-2 text-sm font-medium text-foreground/80 bg-background border border-border rounded-lg hover:bg-muted/30 transition-colors"
               >
-                Hủy
+                Cancel
               </button>
               <button
                 onClick={
@@ -463,7 +463,7 @@ const Series = () => {
                 }
                 className="px-4 py-2 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors"
               >
-                {modalType === "add" ? "Thêm mới" : "Cập nhật"}
+                {modalType === "add" ? "Add new" : "Update"}
               </button>
             </div>
           </div>

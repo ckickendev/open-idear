@@ -113,7 +113,7 @@ const PostElement = ({ post }: { post: PostInterface }) => {
             )}
             <span className="text-xs text-muted-foreground/50">•</span>
             <span className="text-xs text-muted-foreground font-medium">
-              {minutesRead} phút đọc
+              {minutesRead} min read
             </span>
           </div>
 

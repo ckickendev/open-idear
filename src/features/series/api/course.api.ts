@@ -40,6 +40,9 @@ export const courseApi = {
   deleteLesson: async (data: any) => {
     return await api.delete("/course/lesson/delete", { data });
   },
+  deleteLessonVideo: async (lessonId: string) => {
+    return await api.delete("/course/lesson/video/delete", { data: { lessonId } });
+  },
   getCloudflareUploadUrl: async () => {
     return await api.post("/media/cloudflare/upload-url");
   },

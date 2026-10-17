@@ -18,6 +18,7 @@ import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, A
 import { toEditorHtml } from "@/features/ai/utils/contentTransformer";
 import { LivePreviewSystem } from "@/features/preview";
 import { useTranslation } from "@/app/hook/useTranslation";
+import { useLanguageStore } from "@/store/useLanguage";
 
 // ─── Context ────────────────────────────────────────────────────────────────
 import { EditorProvider } from "../context/EditorContext";
@@ -157,7 +158,9 @@ export default function EditorShell() {
   // ─── Locale & Bilingual Editing State (Sprint 3) ──────────────────────
   const [editorLocale, setEditorLocale] = useState<"en" | "vi">(() => {
     const param = searchParams.get("locale");
-    return param === "vi" ? "vi" : "en";
+    if (param === "vi" || param === "en") return param;
+    const storeLang = useLanguageStore.getState().lang;
+    return storeLang === "vi" ? "vi" : "en";
   });
   const [localesStatus, setLocalesStatus] = useState<{
     en?: { exists: boolean; published: boolean };
@@ -579,7 +582,7 @@ export default function EditorShell() {
 
   // ─── Locale-Aware Post Data Loader (Sprint 3) ────────────────────────
   const loadPostLocaleData = useCallback(
-    async (targetPostId: string, targetLocale: "en" | "vi") => {
+    async (targetPostId: string, targetLocale?: "en" | "vi") => {
       const seq = ++loadSeqRef.current;
       setPageLoading(true);
 
@@ -592,7 +595,11 @@ export default function EditorShell() {
 
         if (resPost.success && resPost.data?.post) {
           const post = resPost.data.post;
-          loadedLocaleRef.current = { id: targetPostId, locale: targetLocale };
+          const resolvedLocale = (post.activeLocale || post.defaultLocale || targetLocale || "en") as "en" | "vi";
+          if (editorLocale !== resolvedLocale) {
+            setEditorLocale(resolvedLocale);
+          }
+          loadedLocaleRef.current = { id: targetPostId, locale: resolvedLocale };
 
           // Shared parent Post fields
           setCategoryPublic(
@@ -611,8 +618,8 @@ export default function EditorShell() {
           const viTrans = translations.find((t) => t.locale === "vi");
           const defLoc = post.defaultLocale || "en";
 
-          const enExists = !!enTrans || defLoc === "en" || (!post.isNewTranslation && targetLocale === "en");
-          const viExists = !!viTrans || defLoc === "vi" || (!post.isNewTranslation && targetLocale === "vi");
+          const enExists = !!enTrans || defLoc === "en" || (!post.isNewTranslation && resolvedLocale === "en");
+          const viExists = !!viTrans || defLoc === "vi" || (!post.isNewTranslation && resolvedLocale === "vi");
 
           setLocalesStatus({
             en: {
@@ -637,7 +644,7 @@ export default function EditorShell() {
             if (editor) {
               editor.commands.setContent("");
             }
-            autoSave.resetHash(`${targetLocale}::::`);
+            autoSave.resetHash(`${resolvedLocale}::::`);
           } else {
             setTitle(post.title || "");
             setDescriptionPublic(post.description || "");
@@ -666,7 +673,11 @@ export default function EditorShell() {
             if (editor) {
               editor.commands.setContent(initialHtml);
             }
-            autoSave.resetHash(`${targetLocale}::${post.title || ""}::${initialHtml}`);
+            autoSave.resetHash(`${resolvedLocale}::${post.title || ""}::${initialHtml}`);
+
+            try {
+              sessionStorage.removeItem("content_studio_draft");
+            } catch {}
           }
 
           setLoadedPost(post);
@@ -749,9 +760,11 @@ export default function EditorShell() {
 
       try {
         const currentPostId = searchParams.get("id");
-        const currentLocale = (searchParams.get("locale") as "en" | "vi") || "en";
-        if (currentLocale !== editorLocale) {
-          setEditorLocale(currentLocale);
+        const localeParam = searchParams.get("locale") as "en" | "vi" | null;
+        if (localeParam && (localeParam === "en" || localeParam === "vi")) {
+          if (localeParam !== editorLocale) {
+            setEditorLocale(localeParam);
+          }
         }
 
         // Fetch categories + series only if not already loaded
@@ -819,9 +832,10 @@ export default function EditorShell() {
 
         if (
           loadedLocaleRef.current?.id !== currentPostId ||
-          loadedLocaleRef.current?.locale !== currentLocale
+          (localeParam && loadedLocaleRef.current?.locale !== localeParam) ||
+          (!localeParam && !loadedLocaleRef.current)
         ) {
-          await loadPostLocaleData(currentPostId, currentLocale);
+          await loadPostLocaleData(currentPostId, localeParam || undefined);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -1401,12 +1415,12 @@ export default function EditorShell() {
   const handleSelectPost = useCallback(
     (selectedPostId: string | null) => {
       if (selectedPostId) {
-        router.push(`/create?id=${selectedPostId}&locale=${editorLocale}`);
+        router.push(`/create?id=${selectedPostId}`);
       } else {
-        router.push(`/create?locale=${editorLocale}`);
+        router.push(`/create`);
       }
     },
-    [router, editorLocale],
+    [router],
   );
 
   // ─── AI Writer Stream Integration ────────────────────────────────────

@@ -263,7 +263,7 @@ const WatchPage = () => {
     const messageToSend = (customMessage || tutorInput).trim();
     if (!messageToSend || !currentLesson?._id) return;
     if (!currentUser?._id) {
-      toast.error("Vui lòng đăng nhập để sử dụng Trợ lý Học tập AI");
+      toast.error("Please sign in to use the AI Learning Companion");
       return;
     }
 
@@ -299,7 +299,7 @@ const WatchPage = () => {
         throw new Error(res.message || "Failed to get tutor response");
       }
     } catch (err: any) {
-      toast.error(err.message || "Trợ lý AI tạm thời không phản hồi");
+      toast.error(err.message || "AI Companion is currently unavailable");
     } finally {
       setSendingTutor(false);
     }
@@ -307,7 +307,7 @@ const WatchPage = () => {
 
   const handleAskAboutObjective = (objectiveText: string) => {
     setActiveTab("tutor");
-    handleSendTutorMessage(`Hãy giải thích chi tiết và cho ví dụ về mục tiêu học tập: "${objectiveText}"`);
+    handleSendTutorMessage(`Please explain in detail with examples for the learning objective: "${objectiveText}"`);
   };
 
   const handleSelectOption = (questionId: string, optionId: string) => {
@@ -318,7 +318,7 @@ const WatchPage = () => {
   const handleSubmitQuiz = async () => {
     if (!currentLesson?._id || !quizData) return;
     if (Object.keys(selectedAnswers).length < quizData.questions.length) {
-      toast.error("Vui lòng trả lời đầy đủ tất cả câu hỏi trước khi nộp bài!");
+      toast.error("Please answer all questions before submitting!");
       return;
     }
 
@@ -334,9 +334,9 @@ const WatchPage = () => {
         const result: KnowledgeCheckAttemptResult = (res.data as any).data;
         setQuizResult(result);
         if (result.passed) {
-          toast.success(`🎉 Chúc mừng! Bạn đã đạt ${result.score}% điểm kiểm tra!`);
+          toast.success(`🎉 Congratulations! You scored ${result.score}% on the check!`);
         } else {
-          toast.info(`Bạn đạt ${result.score}%. Hãy xem lại giải thích hoặc hỏi Trợ lý AI nhé!`);
+          toast.info(`You scored ${result.score}%. Review explanations or ask the AI Companion!`);
         }
         // Refresh mastery after quiz attempt
         if (currentLesson?._id) loadMastery(currentLesson._id);
@@ -344,7 +344,7 @@ const WatchPage = () => {
         throw new Error(res.message || "Failed to submit attempt");
       }
     } catch (err: any) {
-      toast.error(err.message || "Không thể nộp bài kiểm tra");
+      toast.error(err.message || "Unable to submit knowledge check");
     } finally {
       setSubmittingQuiz(false);
     }
@@ -368,7 +368,7 @@ const WatchPage = () => {
         console.log("Seek error:", e);
       }
     }
-    toast.info(`Đang chuyển tới ${Math.floor(seconds / 60)}:${(Math.floor(seconds % 60)).toString().padStart(2, "0")}`);
+    toast.info(`Seeking to ${Math.floor(seconds / 60)}:${(Math.floor(seconds % 60)).toString().padStart(2, "0")}`);
   };
 
   const videoChapters =
@@ -420,7 +420,7 @@ const WatchPage = () => {
 
   const goToLesson = (lesson: Lesson) => {
     if (!isEnrolled && !lesson.isFreePreview) {
-      toast.error("Vui lòng đăng ký khóa học để học bài này");
+      toast.error("Please enroll in the course to access this lesson");
       return;
     }
     router.push(`/courses/${slug}/learn/${lesson.slug}`);
@@ -437,22 +437,22 @@ const WatchPage = () => {
   const getMasteryBadge = (level: MasteryLevel) => {
     switch (level) {
       case "mastered":
-        return { label: "Làm chủ", color: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30", icon: "🌟" };
+        return { label: "Mastered", color: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30", icon: "🌟" };
       case "proficient":
-        return { label: "Thành thạo", color: "bg-indigo-500/15 text-indigo-600 border-indigo-500/30", icon: "🟢" };
+        return { label: "Proficient", color: "bg-indigo-500/15 text-indigo-600 border-indigo-500/30", icon: "🟢" };
       case "developing":
-        return { label: "Đang phát triển", color: "bg-amber-500/15 text-amber-600 border-amber-500/30", icon: "🟡" };
+        return { label: "Developing", color: "bg-amber-500/15 text-amber-600 border-amber-500/30", icon: "🟡" };
       case "introduced":
-        return { label: "Đã tiếp cận", color: "bg-blue-500/15 text-blue-600 border-blue-500/30", icon: "🔵" };
+        return { label: "Introduced", color: "bg-blue-500/15 text-blue-600 border-blue-500/30", icon: "🔵" };
       default:
-        return { label: "Chưa bắt đầu", color: "bg-muted text-muted-foreground border-border", icon: "⚪" };
+        return { label: "Not Started", color: "bg-muted text-muted-foreground border-border", icon: "⚪" };
     }
   };
 
   if (!course || !currentLesson) {
     return (
       <div className="flex h-screen items-center justify-center bg-background text-foreground">
-        Đang tải bài học...
+        Loading lesson...
       </div>
     );
   }
@@ -469,7 +469,7 @@ const WatchPage = () => {
             className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm font-semibold transition-colors cursor-pointer"
           >
             <ChevronLeft size={18} />
-            <span className="hidden sm:inline">Khóa học</span>
+            <span className="hidden sm:inline">Course</span>
           </button>
           <div className="h-4 w-px bg-border" />
           <h1 className="font-bold text-sm text-foreground truncate max-w-[200px] sm:max-w-md">
@@ -500,14 +500,14 @@ const WatchPage = () => {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-colors cursor-pointer border border-primary/20"
           >
             <Sparkles size={13} />
-            <span className="hidden sm:inline">Trợ lý AI</span>
+            <span className="hidden sm:inline">AI Companion</span>
           </button>
 
           {/* Toggle Sidebar */}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-            title="Nội dung khóa học"
+            title="Course Curriculum"
           >
             <Menu size={20} />
           </button>
@@ -528,15 +528,15 @@ const WatchPage = () => {
             {isLocked ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 text-white p-8 text-center">
                 <Lock size={48} className="text-muted-foreground mb-4" />
-                <h2 className="text-xl font-bold mb-2">Bài học này bị khóa</h2>
+                <h2 className="text-xl font-bold mb-2">This Lesson is Locked</h2>
                 <p className="text-muted-foreground text-sm max-w-md mb-6">
-                  Đăng ký khóa học ngay hôm nay để truy cập toàn bộ video và tài liệu bài giảng.
+                  Enroll in the course today to access full lecture videos and materials.
                 </p>
                 <button
                   onClick={() => router.push(`/checkout?courseId=${course._id}`)}
                   className="bg-primary text-primary-foreground font-bold px-6 py-2.5 rounded-xl hover:bg-primary/90 transition-all shadow-lg cursor-pointer"
                 >
-                  Đăng ký khóa học
+                  Enroll in Course
                 </button>
               </div>
             ) : (
@@ -578,15 +578,15 @@ const WatchPage = () => {
                     <FileText size={64} className="text-muted-foreground mb-4" />
                     <h2 className="text-2xl font-bold mb-2">{currentLesson.title}</h2>
                     <p className="text-muted-foreground mb-6">
-                      Tài liệu đính kèm:{" "}
-                      {currentLesson.media?.url?.split("/").pop() || "Tài liệu"}
+                      Attached Material:{" "}
+                      {currentLesson.media?.url?.split("/").pop() || "Document"}
                     </p>
                     <a
                       href={currentLesson.media?.url}
                       download
                       className="bg-primary text-primary-foreground px-6 py-3 rounded-xl flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-lg font-bold"
                     >
-                      <Download size={20} /> Tải xuống tài liệu
+                      <Download size={20} /> Download Document
                     </a>
                   </div>
                 )}
@@ -640,7 +640,7 @@ const WatchPage = () => {
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Tổng quan
+                Overview
               </button>
               {videoChapters.length > 0 && (
                 <button
@@ -652,7 +652,7 @@ const WatchPage = () => {
                   }`}
                 >
                   <Clock size={14} />
-                  Mục lục Video ({videoChapters.length})
+                  Video Chapters ({videoChapters.length})
                 </button>
               )}
               <button
@@ -664,7 +664,7 @@ const WatchPage = () => {
                 }`}
               >
                 <HelpCircle size={14} />
-                Kiểm tra kiến thức {quizData ? `(${quizData.questions.length})` : ""}
+                Knowledge Check {quizData ? `(${quizData.questions.length})` : ""}
               </button>
               <button
                 onClick={() => setActiveTab("mastery")}
@@ -675,7 +675,7 @@ const WatchPage = () => {
                 }`}
               >
                 <Target size={14} className="text-emerald-500" />
-                Tiến độ Năng lực {lessonMastery ? `(${lessonMastery.overallScore}%)` : ""}
+                Competency Mastery {lessonMastery ? `(${lessonMastery.overallScore}%)` : ""}
               </button>
               <button
                 onClick={() => setActiveTab("tutor")}
@@ -686,7 +686,7 @@ const WatchPage = () => {
                 }`}
               >
                 <Sparkles size={14} className="text-indigo-500" />
-                Trợ lý AI Learning
+                AI Learning Companion
               </button>
             </div>
 
@@ -696,7 +696,7 @@ const WatchPage = () => {
                 <div>
                   <h1 className="text-2xl font-bold mb-3">{currentLesson.title}</h1>
                   <div className="text-foreground/80 leading-relaxed text-sm max-w-3xl">
-                    {currentLesson.summary || currentLesson.description || "Không có mô tả cho bài học này."}
+                    {currentLesson.summary || currentLesson.description || "No description available for this lesson."}
                   </div>
                 </div>
 
@@ -707,7 +707,7 @@ const WatchPage = () => {
                       <span className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-xs">
                         🎯
                       </span>
-                      Mục tiêu bài học
+                      Learning Objectives
                     </h3>
                     <ul className="space-y-2">
                       {currentLesson.learningObjectives.map((obj: string, i: number) => (
@@ -727,7 +727,7 @@ const WatchPage = () => {
                       <span className="w-6 h-6 rounded-lg bg-indigo-500/10 text-indigo-600 flex items-center justify-center text-xs">
                         💡
                       </span>
-                      Điểm trọng tâm cần ghi nhớ
+                      Key Takeaways
                     </h3>
                     <ul className="space-y-2">
                       {currentLesson.keyPoints.map((point: string, i: number) => (
@@ -745,7 +745,7 @@ const WatchPage = () => {
                   (currentLesson.keywords && currentLesson.keywords.length > 0)) && (
                   <div className="max-w-3xl pt-2">
                     <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                      Khái niệm & Từ khóa
+                      Concepts & Keywords
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {currentLesson.concepts?.map((concept: string, i: number) => (
@@ -774,7 +774,7 @@ const WatchPage = () => {
             {activeTab === "chapters" && (
               <div className="space-y-4 max-w-3xl">
                 <h3 className="text-sm font-bold text-foreground">
-                  Mục lục phân đoạn bài giảng:
+                  Lecture Chapters:
                 </h3>
                 <div className="divide-y divide-border border border-border rounded-xl overflow-hidden">
                   {videoChapters.map((ch, idx) => (
@@ -811,13 +811,13 @@ const WatchPage = () => {
               <div className="max-w-3xl space-y-6">
                 {loadingQuiz ? (
                   <div className="p-8 text-center text-xs text-muted-foreground">
-                    Đang tải bài kiểm tra kiến thức…
+                    Loading knowledge check…
                   </div>
                 ) : !quizData ? (
                   <div className="p-8 text-center border border-dashed border-border rounded-xl">
                     <HelpCircle size={32} className="mx-auto text-muted-foreground mb-2 opacity-60" />
                     <p className="text-xs text-muted-foreground">
-                      Bài học này chưa có câu hỏi kiểm tra kiến thức được phê duyệt.
+                      No approved knowledge check questions for this lesson yet.
                     </p>
                   </div>
                 ) : (
@@ -835,10 +835,10 @@ const WatchPage = () => {
                           <Award size={28} className={quizResult.passed ? "text-emerald-600" : "text-amber-600"} />
                           <div>
                             <h4 className="text-sm font-bold">
-                              {quizResult.passed ? "Đạt yêu cầu xuất sắc!" : "Chưa đạt điểm tối đa"}
+                              {quizResult.passed ? "Passed with distinction!" : "Keep practicing"}
                             </h4>
                             <p className="text-xs opacity-90">
-                              Kết quả: <strong>{quizResult.correctCount} / {quizResult.totalQuestions}</strong> câu đúng ({quizResult.score}%)
+                              Result: <strong>{quizResult.correctCount} / {quizResult.totalQuestions}</strong> correct answers ({quizResult.score}%)
                             </p>
                           </div>
                         </div>
@@ -848,7 +848,7 @@ const WatchPage = () => {
                           className="px-3.5 py-1.5 bg-background border border-border rounded-xl text-xs font-semibold hover:bg-muted transition-colors flex items-center gap-1.5 cursor-pointer flex-shrink-0"
                         >
                           <RotateCw size={12} />
-                          Làm lại
+                          Retake Quiz
                         </button>
                       </div>
                     )}
@@ -870,7 +870,7 @@ const WatchPage = () => {
                           >
                             <div className="flex items-start justify-between gap-2 mb-3">
                               <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary">
-                                Câu {qIdx + 1}
+                                Question {qIdx + 1}
                               </span>
                               {resultForQ && (
                                 <span
@@ -880,11 +880,11 @@ const WatchPage = () => {
                                 >
                                   {resultForQ.isCorrect ? (
                                     <>
-                                      <Check size={14} /> Chính xác
+                                      <Check size={14} /> Correct
                                     </>
                                   ) : (
                                     <>
-                                      <X size={14} /> Chưa đúng
+                                      <X size={14} /> Incorrect
                                     </>
                                   )}
                                 </span>
@@ -935,7 +935,7 @@ const WatchPage = () => {
                             {resultForQ && (
                               <div className="mt-4 pt-3 border-t border-border/80 text-xs text-foreground/90 leading-relaxed bg-muted/30 p-3 rounded-lg">
                                 <span className="font-bold text-primary block mb-1">
-                                  💡 Giải thích chi tiết:
+                                  💡 Detailed Explanation:
                                 </span>
                                 {resultForQ.explanation}
                               </div>
@@ -953,7 +953,7 @@ const WatchPage = () => {
                           disabled={submittingQuiz || Object.keys(selectedAnswers).length === 0}
                           className="px-6 py-2.5 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary/90 transition-all shadow-md cursor-pointer disabled:opacity-50"
                         >
-                          {submittingQuiz ? "Đang chấm bài…" : "Nộp bài kiểm tra"}
+                          {submittingQuiz ? "Grading…" : "Submit Quiz"}
                         </button>
                       </div>
                     )}
@@ -968,13 +968,13 @@ const WatchPage = () => {
                 {loadingMastery ? (
                   <div className="p-8 text-center text-xs text-muted-foreground">
                     <Loader2 size={24} className="animate-spin text-primary mx-auto mb-2" />
-                    Đang tính toán ma trận năng lực bài học…
+                    Calculating competency mastery…
                   </div>
                 ) : !lessonMastery ? (
                   <div className="p-8 text-center border border-dashed border-border rounded-xl">
                     <Target size={32} className="mx-auto text-muted-foreground mb-2 opacity-60" />
                     <p className="text-xs text-muted-foreground">
-                      Chưa có dữ liệu năng lực được ghi nhận cho bài học này.
+                      No competency data recorded for this lesson yet.
                     </p>
                   </div>
                 ) : (
@@ -984,7 +984,7 @@ const WatchPage = () => {
                       <div className="space-y-1 text-center sm:text-left">
                         <div className="flex items-center justify-center sm:justify-start gap-2">
                           <h3 className="text-base font-bold text-foreground">
-                            Độ Thấu Hiểu Bài Học
+                            Lesson Comprehension Score
                           </h3>
                           {(() => {
                             const badge = getMasteryBadge(lessonMastery.overallLevel);
@@ -996,7 +996,7 @@ const WatchPage = () => {
                           })()}
                         </div>
                         <p className="text-xs text-muted-foreground max-w-md">
-                          Mô hình đánh giá năng lực dựa trên bằng chứng hoàn thành video, kết quả kiểm tra trắc nghiệm và thảo luận cùng Trợ lý AI.
+                          Evidence-based competency model calculated from video progress, quiz results, and AI tutor discussions.
                         </p>
                       </div>
 
@@ -1007,7 +1007,7 @@ const WatchPage = () => {
                             {lessonMastery.overallScore}%
                           </span>
                           <span className="text-[11px] block text-muted-foreground font-semibold">
-                            {lessonMastery.totalObjectives} Mục tiêu
+                            {lessonMastery.totalObjectives} Objectives
                           </span>
                         </div>
                         <div className="w-16 h-16 rounded-full bg-primary/10 border-4 border-primary/30 flex items-center justify-center text-primary font-bold text-sm">
@@ -1019,7 +1019,7 @@ const WatchPage = () => {
                     {/* Objectives Breakdown List */}
                     <div className="space-y-4">
                       <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                        Chi tiết từng mục tiêu năng lực
+                        Competency Objective Breakdown
                       </h4>
 
                       {lessonMastery.objectives.map((obj, idx) => {
@@ -1043,7 +1043,7 @@ const WatchPage = () => {
                                       {badge.icon} {badge.label}
                                     </span>
                                     <span className="text-[11px] font-mono text-muted-foreground font-semibold">
-                                      Điểm năng lực: {obj.score}%
+                                      Mastery Score: {obj.score}%
                                     </span>
                                   </div>
                                 </div>
@@ -1053,10 +1053,10 @@ const WatchPage = () => {
                                 type="button"
                                 onClick={() => handleAskAboutObjective(obj.objective)}
                                 className="px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer flex-shrink-0 border border-primary/20"
-                                title="Hỏi Trợ lý AI về mục tiêu này"
+                                title="Ask AI Tutor about this objective"
                               >
                                 <Sparkles size={12} />
-                                <span>Củng cố</span>
+                                <span>Reinforce</span>
                               </button>
                             </div>
 
@@ -1080,7 +1080,7 @@ const WatchPage = () => {
                             {obj.explanation && obj.explanation.length > 0 && (
                               <div className="bg-muted/30 border border-border/60 rounded-xl p-3 space-y-1">
                                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-                                  Bằng chứng học tập:
+                                  Learning Evidence:
                                 </span>
                                 {obj.explanation.map((exp, eIdx) => (
                                   <p key={eIdx} className="text-[11px] text-foreground/80 leading-relaxed">
@@ -1109,10 +1109,10 @@ const WatchPage = () => {
                     </div>
                     <div>
                       <h3 className="text-xs font-bold text-foreground">
-                        Trợ lý Học tập Thông minh OpenIdear
+                        OpenIdear Intelligent Learning Companion
                       </h3>
                       <p className="text-[11px] text-muted-foreground">
-                        Được neo trực tiếp vào học liệu bài học & ma trận năng lực
+                        Grounded directly in lesson materials & competency matrix
                       </p>
                     </div>
                   </div>
@@ -1125,7 +1125,7 @@ const WatchPage = () => {
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/10">
                   {loadingTutor ? (
                     <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
-                      <Loader2 size={24} className="animate-spin text-primary mr-2" /> Đang tải lịch sử trợ lý...
+                      <Loader2 size={24} className="animate-spin text-primary mr-2" /> Loading tutor history...
                     </div>
                   ) : tutorMessages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center p-6 text-center">
@@ -1133,45 +1133,45 @@ const WatchPage = () => {
                         <Bot size={24} />
                       </div>
                       <h4 className="text-sm font-bold text-foreground mb-1">
-                        Chào bạn! Tôi có thể giúp gì cho bài học này?
+                        Hello! How can I help you with this lesson?
                       </h4>
                       <p className="text-xs text-muted-foreground max-w-sm mb-5">
-                        Đặt bất kỳ câu hỏi nào về khái niệm, ví dụ hoặc giải thích nội dung trong video.
+                        Ask any question about concepts, examples, or lecture explanations.
                       </p>
 
                       {/* Quick Prompts */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md">
                         <button
                           type="button"
-                          onClick={() => handleSendTutorMessage("Giải thích đơn giản hơn nội dung cốt lõi của bài học này")}
+                          onClick={() => handleSendTutorMessage("Simplify the core concepts of this lesson")}
                           className="p-2.5 text-left text-xs bg-card hover:bg-card/80 border border-border rounded-xl transition-all font-medium text-foreground hover:border-primary/50 cursor-pointer shadow-sm flex items-center gap-2"
                         >
                           <span>💡</span>
-                          <span className="truncate">Giải thích đơn giản hơn</span>
+                          <span className="truncate">Simplify core concepts</span>
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleSendTutorMessage("Cho tôi một ví dụ thực tế liên quan đến bài học này")}
+                          onClick={() => handleSendTutorMessage("Give me a real-world example related to this lesson")}
                           className="p-2.5 text-left text-xs bg-card hover:bg-card/80 border border-border rounded-xl transition-all font-medium text-foreground hover:border-primary/50 cursor-pointer shadow-sm flex items-center gap-2"
                         >
                           <span>🔍</span>
-                          <span className="truncate">Cho ví dụ thực tế</span>
+                          <span className="truncate">Real-world example</span>
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleSendTutorMessage(`Giải thích nội dung đoạn video tôi đang xem tại phút ${Math.floor(currentTime / 60)}:${(Math.floor(currentTime % 60)).toString().padStart(2, "0")}`, true)}
+                          onClick={() => handleSendTutorMessage(`Explain the video clip I am currently watching at minute ${Math.floor(currentTime / 60)}:${(Math.floor(currentTime % 60)).toString().padStart(2, "0")}`, true)}
                           className="p-2.5 text-left text-xs bg-card hover:bg-card/80 border border-border rounded-xl transition-all font-medium text-foreground hover:border-primary/50 cursor-pointer shadow-sm flex items-center gap-2"
                         >
                           <span>⏱️</span>
-                          <span className="truncate">Giải thích đoạn video vừa xem</span>
+                          <span className="truncate">Explain current clip</span>
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleSendTutorMessage("Các điểm lưu ý và lỗi phổ biến khi thực hành bài này là gì?")}
+                          onClick={() => handleSendTutorMessage("What are common pitfalls and best practices for this lesson?")}
                           className="p-2.5 text-left text-xs bg-card hover:bg-card/80 border border-border rounded-xl transition-all font-medium text-foreground hover:border-primary/50 cursor-pointer shadow-sm flex items-center gap-2"
                         >
                           <span>🎯</span>
-                          <span className="truncate">Các lỗi phổ biến cần tránh</span>
+                          <span className="truncate">Common pitfalls to avoid</span>
                         </button>
                       </div>
                     </div>
@@ -1260,7 +1260,7 @@ const WatchPage = () => {
                       </div>
                       <div className="p-3 bg-card border border-border rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2">
                         <Loader2 size={13} className="animate-spin text-primary" />
-                        <span>Trợ lý đang suy nghĩ và tra cứu học liệu…</span>
+                        <span>Assistant is thinking and reviewing lesson material…</span>
                       </div>
                     </div>
                   )}
@@ -1278,7 +1278,7 @@ const WatchPage = () => {
                 >
                   <input
                     type="text"
-                    placeholder="Hỏi trợ lý về bài học này…"
+                    placeholder="Ask tutor about this lesson…"
                     value={tutorInput}
                     onChange={(e) => setTutorInput(e.target.value)}
                     disabled={sendingTutor}
@@ -1307,7 +1307,7 @@ const WatchPage = () => {
                   : "border-border text-foreground"
               }`}
             >
-              <ChevronLeft size={18} /> Bài trước
+              <ChevronLeft size={18} /> Previous Lesson
             </button>
             <button
               onClick={goToNext}
@@ -1318,7 +1318,7 @@ const WatchPage = () => {
                   : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
               }`}
             >
-              Bài tiếp theo <ChevronRight size={18} />
+              Next Lesson <ChevronRight size={18} />
             </button>
           </footer>
         </main>
@@ -1330,7 +1330,7 @@ const WatchPage = () => {
         } border-l border-border flex-shrink-0 flex flex-col transition-all duration-300 overflow-hidden bg-background z-20`}
       >
         <div className="p-4 border-b border-border flex items-center justify-between text-foreground flex-shrink-0">
-          <span className="font-bold text-base">Nội dung khóa học</span>
+          <span className="font-bold text-base">Course Curriculum</span>
           <button
             onClick={() => setSidebarOpen(false)}
             className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
@@ -1354,10 +1354,10 @@ const WatchPage = () => {
                 >
                   <div className="flex-1">
                     <h3 className="font-bold text-foreground text-xs">
-                      Phần {chapterIdx + 1}: {chapter.title}
+                      Section {chapterIdx + 1}: {chapter.title}
                     </h3>
                     <div className="text-[11px] text-muted-foreground mt-0.5">
-                      {chapterCompletedCount} / {chapter.lessons?.length || 0} bài học
+                      {chapterCompletedCount} / {chapter.lessons?.length || 0} lessons
                     </div>
                   </div>
                   {expandedChapters.includes(chapter._id) ? (
@@ -1402,7 +1402,7 @@ const WatchPage = () => {
 
                           {lesson.isFreePreview && !isEnrolled && (
                             <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 flex-shrink-0">
-                              Học thử
+                              Free Preview
                             </span>
                           )}
                         </button>

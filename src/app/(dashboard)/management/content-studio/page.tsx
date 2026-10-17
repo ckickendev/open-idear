@@ -53,6 +53,8 @@ export default function ContentStudioPage() {
     step,
     topic,
     setTopic,
+    language,
+    setLanguage,
     contentGoal,
     setContentGoal,
     numberOfIdeas,
@@ -107,9 +109,9 @@ export default function ContentStudioPage() {
 
   // Management Sidebar items conforming to OpenIdear dashboard navigation
   const menuItems = [
-    { id: "categories", label: "Danh mục", icon: Folder, href: "/management" },
-    { id: "topics", label: "Chủ đề", icon: Lightbulb, href: "/management" },
-    { id: "posts", label: "Ý tưởng/Bài viết", icon: FileText, href: "/management" },
+    { id: "categories", label: "Categories", icon: Folder, href: "/management" },
+    { id: "topics", label: "Topics", icon: Lightbulb, href: "/management" },
+    { id: "posts", label: "Ideas & Posts", icon: FileText, href: "/management" },
     {
       id: "content-studio",
       label: "AI Content Studio",
@@ -118,14 +120,14 @@ export default function ContentStudioPage() {
       isCurrent: true,
       badge: "AI",
     },
-    { id: "users", label: "Người dùng", icon: Users, href: "/management" },
+    { id: "users", label: "Users", icon: Users, href: "/management" },
     { id: "series", label: "Series", icon: BookText, href: "/management" },
-    { id: "courses", label: "Khóa học", icon: BookOpen, href: "/management/my-courses" },
-    { id: "course-categories", label: "Danh mục khoá học", icon: Folder, href: "/management" },
-    { id: "reports", label: "Báo cáo vi phạm", icon: AlertTriangle, href: "/management" },
-    { id: "support", label: "Hộp thư hỗ trợ", icon: Mail, href: "/management" },
-    { id: "contributions", label: "Đóng góp ý kiến", icon: MessageSquare, href: "/management" },
-    { id: "settings", label: "Cài đặt", icon: Settings, href: "/management" },
+    { id: "courses", label: "Courses", icon: BookOpen, href: "/management/my-courses" },
+    { id: "course-categories", label: "Course Categories", icon: Folder, href: "/management" },
+    { id: "reports", label: "Violation Reports", icon: AlertTriangle, href: "/management" },
+    { id: "support", label: "Support Inbox", icon: Mail, href: "/management" },
+    { id: "contributions", label: "Contributions", icon: MessageSquare, href: "/management" },
+    { id: "settings", label: "Settings", icon: Settings, href: "/management" },
   ];
 
   return (
@@ -207,14 +209,14 @@ export default function ContentStudioPage() {
             type="button"
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors text-[13.5px] font-medium cursor-pointer"
-            title={sidebarOpen ? "Thu gọn sidebar" : "Mở rộng sidebar"}
+            title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarOpen ? (
               <PanelLeftClose size={18} />
             ) : (
               <PanelLeft size={18} />
             )}
-            {sidebarOpen && <span>Thu gọn</span>}
+            {sidebarOpen && <span>Collapse</span>}
           </button>
         </div>
       </aside>
@@ -248,7 +250,7 @@ export default function ContentStudioPage() {
                 </span>
               </h2>
               <p className="text-xs text-muted-foreground hidden sm:block">
-                Lên ý tưởng, phân tích cụm nội dung và hoạch định chiến lược dài hạn bằng AI
+                Brainstorm ideas, analyze content clusters, and plan long-term content strategy with AI
               </p>
             </div>
           </div>
@@ -303,6 +305,8 @@ export default function ContentStudioPage() {
                 <ContentStudioInputCard
                   topic={topic}
                   setTopic={setTopic}
+                  language={language}
+                  setLanguage={setLanguage}
                   contentGoal={contentGoal}
                   setContentGoal={setContentGoal}
                   numberOfIdeas={numberOfIdeas}

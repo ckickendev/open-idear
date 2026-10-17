@@ -53,19 +53,19 @@ const TOPICS = [
 const FEATURED_TOPICS = [
   {
     icon: Code,
-    label: "Lập trình Web",
+    label: "Web Development",
     count: "1,200+",
     color: "text-blue-600",
   },
   {
     icon: Brain,
-    label: "Trí tuệ nhân tạo",
+    label: "Artificial Intelligence",
     count: "800+",
     color: "text-purple-600",
   },
   {
     icon: Database,
-    label: "Khoa học dữ liệu",
+    label: "Data Science",
     count: "650+",
     color: "text-green-600",
   },
@@ -80,67 +80,67 @@ const FEATURED_TOPICS = [
 const DUMMY_COURSES: Course[] = [
   {
     _id: "1",
-    title: "Khóa học lập trình Python từ cơ bản đến nâng cao",
+    title: "Python Programming: Beginner to Advanced",
     slug: "python-co-ban-nang-cao",
-    description: "Nắm vững Python với hơn 100 bài tập thực hành",
+    description: "Master Python with 100+ practical coding exercises",
     price: 1499000,
     discountPrice: 399000,
     thumbnail: {
       url: "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?auto=format&fit=crop&w=400&q=80",
     },
-    instructor: { name: "Nguyễn Văn A", avatar: "" },
+    instructor: { name: "Alex Johnson", avatar: "" },
     status: "published",
   },
   {
     _id: "2",
-    title: "React & Next.js - Xây dựng ứng dụng Web hiện đại",
+    title: "React & Next.js - Build Modern Web Applications",
     slug: "react-nextjs",
-    description: "Học React từ số 0 đến dự án thực tế",
+    description: "Learn React from scratch to real-world production projects",
     price: 1899000,
     discountPrice: 499000,
     thumbnail: {
       url: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=400&q=80",
     },
-    instructor: { name: "Trần Minh B", avatar: "" },
+    instructor: { name: "Sarah Miller", avatar: "" },
     status: "published",
   },
   {
     _id: "3",
-    title: "Machine Learning A-Z: Trí tuệ nhân tạo với Python",
+    title: "Machine Learning A-Z: Artificial Intelligence with Python",
     slug: "machine-learning-az",
-    description: "Khám phá AI, Machine Learning & Deep Learning",
+    description: "Explore AI, Machine Learning & Deep Learning architectures",
     price: 2199000,
     discountPrice: 599000,
     thumbnail: {
       url: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?auto=format&fit=crop&w=400&q=80",
     },
-    instructor: { name: "Lê Hồng C", avatar: "" },
+    instructor: { name: "David Chen", avatar: "" },
     status: "published",
   },
   {
     _id: "4",
-    title: "Node.js & Express - Backend cho người mới bắt đầu",
+    title: "Node.js & Express - Backend for Beginners",
     slug: "nodejs-express",
-    description: "API RESTful, MongoDB, Authentication & Deployment",
+    description: "RESTful APIs, MongoDB, Authentication & Deployment",
     price: 1299000,
     discountPrice: 349000,
     thumbnail: {
       url: "https://images.unsplash.com/photo-1627398242454-45a1465c2479?auto=format&fit=crop&w=400&q=80",
     },
-    instructor: { name: "Phạm Đức D", avatar: "" },
+    instructor: { name: "Michael Roberts", avatar: "" },
     status: "published",
   },
   {
     _id: "5",
-    title: "Docker & Kubernetes cho DevOps Engineers",
+    title: "Docker & Kubernetes for DevOps Engineers",
     slug: "docker-kubernetes",
-    description: "Containerization, CI/CD, Orchestration",
+    description: "Containerization, CI/CD, Orchestration & Production Scaling",
     price: 1699000,
     discountPrice: 449000,
     thumbnail: {
       url: "https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?auto=format&fit=crop&w=400&q=80",
     },
-    instructor: { name: "Hoàng Minh E", avatar: "" },
+    instructor: { name: "Emily Watson", avatar: "" },
     status: "published",
   },
 ];
@@ -207,10 +207,10 @@ const CourseCard = ({ course }: { course: Course }) => {
         </div>
         <div className="flex items-center gap-3 text-[11px] text-muted-foreground mb-3 font-medium">
           <span className="flex items-center gap-1">
-            <Clock size={12} className="text-indigo-400" /> {totalHours} giờ
+            <Clock size={12} className="text-indigo-400" /> {totalHours} hrs
           </span>
           <span className="flex items-center gap-1">
-            <BookOpen size={12} className="text-blue-400" /> {totalLectures} bài
+            <BookOpen size={12} className="text-blue-400" /> {totalLectures} lectures
           </span>
         </div>
         <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
@@ -226,7 +226,7 @@ const CourseCard = ({ course }: { course: Course }) => {
               </>
             ) : course.price === 0 ? (
               <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-md">
-                Miễn phí
+                Free
               </span>
             ) : (
               <span className="font-extrabold text-foreground text-lg">
@@ -328,15 +328,14 @@ const CourseListing = () => {
         <div className="relative max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center">
           <div className="flex-1 py-16 lg:py-24 lg:pr-12">
             <h1 className="text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-6">
-              Học kỹ năng mới.
+              Learn New Skills.
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-indigo-200">
-                Xây dựng tương lai.
+                Build Your Future.
               </span>
             </h1>
             <p className="text-indigo-100 text-lg mb-10 max-w-lg leading-relaxed font-medium">
-              Kiến thức mới mỗi ngày — từ lập trình, dữ liệu, tới AI. Học từ các
-              chuyên gia hàng đầu Việt Nam.
+              Fresh knowledge every day — from coding and data to AI. Learn from leading global industry experts.
             </p>
             <div className="flex max-w-xl bg-background rounded-full p-1.5 shadow-2xl shadow-indigo-900/50 backdrop-blur-sm border border-white/20">
               <div className="flex-1 flex items-center pl-4">
@@ -346,7 +345,7 @@ const CourseListing = () => {
                 />
                 <input
                   type="text"
-                  placeholder="Bạn muốn học gì hôm nay?"
+                  placeholder="What do you want to learn today?"
                   className="w-full py-3 px-3 text-foreground focus:outline-none text-base bg-transparent placeholder-gray-400"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -357,7 +356,7 @@ const CourseListing = () => {
                 onClick={handleSearch}
                 className="bg-[var(--color-admin-primary)] text-white px-8 font-bold rounded-full hover:bg-[var(--color-admin-primary-hover)] transition-all duration-300 flex-shrink-0 shadow-lg hover:shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] hover:-translate-y-0.5"
               >
-                Tìm kiếm
+                Search
               </button>
             </div>
           </div>
@@ -381,7 +380,7 @@ const CourseListing = () => {
               <div>
                 <p className="text-sm font-bold text-foreground">4.8/5</p>
                 <p className="text-xs text-muted-foreground">
-                  Đánh giá học viên
+                  Student Rating
                 </p>
               </div>
             </div>
@@ -393,7 +392,7 @@ const CourseListing = () => {
       <section className="bg-muted/30 border-b border-border relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-center gap-8 relative z-10">
           <span className="text-sm text-muted-foreground font-bold whitespace-nowrap uppercase tracking-wider">
-            Được tin tưởng bởi
+            Trusted by
           </span>
           {/* Gradient mask for smooth edge fading */}
           <div className="flex-1 w-full relative">
@@ -429,15 +428,14 @@ const CourseListing = () => {
       <section className="bg-background border-b border-border">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <p className="text-sm text-foreground/80">
-            <span className="font-bold">Bạn là giảng viên?</span> Quản lý và tạo
-            khóa học mới dễ dàng từ bảng điều khiển.
+            <span className="font-bold">Are you an instructor?</span> Effortlessly create and manage your courses from your dashboard.
           </p>
           <Link
             href="/management/my-courses"
             className="inline-flex items-center gap-2 text-sm font-bold text-[#5624d0] hover:text-[#401b9c] transition-colors"
           >
             <LayoutDashboard size={16} />
-            Bảng điều khiển giảng viên
+            Instructor Dashboard
           </Link>
         </div>
       </section>
@@ -447,10 +445,10 @@ const CourseListing = () => {
       {/* ═══════ Topic Tabs + Course Carousel ═══════ */}
       <section className="py-12 max-w-7xl mx-auto px-6">
         <h2 className="text-3xl font-bold mb-2">
-          Khóa học phổ biến theo chủ đề
+          Popular Courses by Topic
         </h2>
         <p className="text-muted-foreground mb-6">
-          Khám phá các khóa học từ hàng trăm chủ đề được yêu thích nhất.
+          Explore curated courses across the most popular and trending tech topics.
         </p>
 
         {/* Tabs */}
@@ -471,10 +469,9 @@ const CourseListing = () => {
 
         {/* Content for active tab */}
         <div className="mb-4">
-          <h3 className="text-xl font-bold mb-1">Khám phá {activeTab}</h3>
+          <h3 className="text-xl font-bold mb-1">Explore {activeTab}</h3>
           <p className="text-sm text-muted-foreground mb-6">
-            {TOPICS.find((t) => t.label === activeTab)?.learners || "10M+"} học
-            viên đang theo học chủ đề này trên toàn thế giới.
+            {TOPICS.find((t) => t.label === activeTab)?.learners || "10M+"} learners are currently studying this topic worldwide.
           </p>
         </div>
 
@@ -493,10 +490,10 @@ const CourseListing = () => {
       <section className="bg-[#f7f9fa] py-16">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-3xl font-bold mb-2">
-            Chủ đề nổi bật theo danh mục
+            Featured Topics by Category
           </h2>
           <p className="text-muted-foreground mb-10">
-            Những lĩnh vực được săn đón nhất trong thị trường công nghệ.
+            The most in-demand skills in today's technology ecosystem.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {FEATURED_TOPICS.map((topic) => (
@@ -516,7 +513,7 @@ const CourseListing = () => {
                   {topic.label}
                 </h3>
                 <p className="text-sm text-muted-foreground font-medium relative z-10">
-                  {topic.count} khóa học
+                  {topic.count} courses
                 </p>
               </div>
             ))}
@@ -531,7 +528,7 @@ const CourseListing = () => {
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <h2 className="text-3xl font-extrabold mb-16 text-center">
-            Tại sao nên học tại OpenIdear?
+            Why Learn with OpenIdear?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div className="text-center group">
@@ -539,11 +536,10 @@ const CourseListing = () => {
                 <PlayCircle size={32} className="text-indigo-400" />
               </div>
               <h3 className="font-bold text-xl mb-3 text-white">
-                Học theo tốc độ của bạn
+                Learn at Your Own Pace
               </h3>
               <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                Truy cập mọi lúc mọi nơi. Học trên di động hay máy tính, phù hợp
-                với lịch trình của bạn.
+                Lifetime access anytime, anywhere. Learn on mobile or desktop at your convenience.
               </p>
             </div>
             <div className="text-center group">
@@ -551,11 +547,10 @@ const CourseListing = () => {
                 <Award size={32} className="text-purple-400" />
               </div>
               <h3 className="font-bold text-xl mb-3 text-white">
-                Chứng chỉ chuyên nghiệp
+                Professional Certificates
               </h3>
               <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                Nhận chứng chỉ hoàn thành khóa học được công nhận bởi cộng đồng
-                và doanh nghiệp.
+                Earn verifiable certificates of completion recognized by industry leaders.
               </p>
             </div>
             <div className="text-center group">
@@ -563,11 +558,10 @@ const CourseListing = () => {
                 <Users size={32} className="text-amber-400" />
               </div>
               <h3 className="font-bold text-xl mb-3 text-white">
-                Cộng đồng hỗ trợ
+                Collaborative Community
               </h3>
               <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                Kết nối, thảo luận và nhận hỗ trợ từ giảng viên cùng hàng ngàn
-                học viên khác.
+                Connect, discuss, and receive 1-on-1 feedback from instructors and peers.
               </p>
             </div>
           </div>
@@ -589,18 +583,16 @@ const CourseListing = () => {
           </div>
           <div className="flex-1">
             <h2 className="text-3xl lg:text-4xl font-extrabold mb-6 text-foreground">
-              Trở thành giảng viên
+              Become an Instructor
             </h2>
             <p className="text-muted-foreground mb-8 text-lg leading-relaxed font-medium">
-              Chia sẻ kiến thức của bạn với hàng triệu học viên trên nền tảng.
-              Tạo khóa học video, tiếp cận cộng đồng toàn cầu, và nhận thu nhập
-              khi giảng dạy những gì bạn yêu thích.
+              Share your knowledge with millions of learners worldwide. Create high-impact video courses and earn while doing what you love.
             </p>
             <Link
               href="/management/my-courses"
               className="inline-block bg-[var(--color-admin-primary)] text-white font-bold px-8 py-4 rounded-xl hover:bg-[var(--color-admin-primary-hover)] hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
             >
-              Bắt đầu giảng dạy ngay
+              Start Teaching Today
             </Link>
           </div>
         </div>
@@ -610,7 +602,7 @@ const CourseListing = () => {
       <section className="bg-muted/30 py-16 border-t border-border">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-2xl font-bold mb-8 text-foreground">
-            Chủ đề hàng đầu
+            Top Trending Topics
           </h2>
           <div className="flex flex-wrap gap-3">
             {TOPICS.map((t) => (

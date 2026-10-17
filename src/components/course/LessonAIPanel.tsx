@@ -231,15 +231,15 @@ export default function LessonAIPanel({
   const handleAddQuestion = () => {
     const newQ: KnowledgeCheckQuestion = {
       id: `q_${draftQuizQuestions.length + 1}`,
-      question: "Câu hỏi mới?",
+      question: "New question?",
       options: [
-        { id: "opt_1", text: "Phương án A" },
-        { id: "opt_2", text: "Phương án B" },
-        { id: "opt_3", text: "Phương án C" },
-        { id: "opt_4", text: "Phương án D" },
+        { id: "opt_1", text: "Option A" },
+        { id: "opt_2", text: "Option B" },
+        { id: "opt_3", text: "Option C" },
+        { id: "opt_4", text: "Option D" },
       ],
       correctOptionId: "opt_1",
-      explanation: "Giải thích đáp án chính xác.",
+      explanation: "Explanation of the correct answer.",
       cognitiveLevel: "understand",
     };
     setDraftQuizQuestions([...draftQuizQuestions, newQ]);
@@ -643,7 +643,7 @@ export default function LessonAIPanel({
                   <div className="flex gap-2 mt-2">
                     <input
                       type="text"
-                      placeholder="Add learning objective (e.g. Giải thích được nguyên lý…)"
+                      placeholder="Add learning objective (e.g. Explain core principles…)"
                       value={newObjective}
                       onChange={(e) => setNewObjective(e.target.value)}
                       onKeyDown={(e) => {

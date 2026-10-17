@@ -13,7 +13,7 @@ interface AdminSearchInputProps {
 const AdminSearchInput = ({
   value,
   onChange,
-  placeholder = "Tìm kiếm...",
+  placeholder = "Search...",
   debounceMs = 300,
   className = "",
 }: AdminSearchInputProps) => {

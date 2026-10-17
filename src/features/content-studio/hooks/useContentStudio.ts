@@ -20,6 +20,7 @@ import { aiApi, type PlannerResponse } from "@/features/ai/api/ai.api";
 import { postApi } from "@/features/ideas/api/post.api";
 import { categoryApi } from "@/features/categories/api/category.api";
 import { toEditorHtml } from "@/features/ai/utils/contentTransformer";
+import { useLanguageStore } from "@/store/useLanguage";
 import {
   useContentStudioStore,
   type ContentStudioStep,
@@ -41,6 +42,8 @@ export interface UseContentStudioReturn {
   // Step 1: Inputs
   topic: string;
   setTopic: (topic: string) => void;
+  language: "en" | "vi";
+  setLanguage: (lang: "en" | "vi") => void;
   contentGoal: ContentGoal;
   setContentGoal: (goal: ContentGoal) => void;
   numberOfIdeas: number;
@@ -208,6 +211,7 @@ export function useContentStudio(): UseContentStudioReturn {
           numberOfIdeas: store.numberOfIdeas,
           existingCategories:
             store.categories.length > 0 ? store.categories : undefined,
+          language: store.language,
         });
 
         const generatedIdeas = result.ideas;
@@ -291,6 +295,7 @@ export function useContentStudio(): UseContentStudioReturn {
           idea,
           existingCategories:
             store.categories.length > 0 ? store.categories : undefined,
+          language: store.language,
         });
 
         store.setBrief(idea.id, brief, force);
@@ -409,6 +414,7 @@ export function useContentStudio(): UseContentStudioReturn {
         const outline = await contentStudioApi.generateOutline({
           idea,
           contentBrief: brief,
+          language: store.language,
         });
 
         store.setOutline(idea.id, outline);
@@ -626,6 +632,7 @@ export function useContentStudio(): UseContentStudioReturn {
         ],
       };
 
+      const langLabel = store.language === "vi" ? "Vietnamese (Tiếng Việt)" : "English";
       const additionalInstructions = `
 Target Audience: ${currentBrief.targetAudience.join(", ")}
 Tone: ${currentBrief.tone}
@@ -634,6 +641,7 @@ Category: ${currentBrief.category}
 Objective: ${currentBrief.objective}
 Search Intent: ${currentIdea.searchIntent}
 Editorial Angle: ${currentIdea.hook || currentIdea.title}
+Target Language: ${langLabel} (Write 100% of the article strictly in ${langLabel}. Do NOT mix languages).
 `.trim();
 
       await new Promise((r) => setTimeout(r, 600));
@@ -650,6 +658,7 @@ Editorial Angle: ${currentIdea.hook || currentIdea.title}
           {
             plan: plannerPlan,
             additionalInstructions,
+            language: store.language,
           },
           controller.signal
         );
@@ -756,7 +765,11 @@ ${
         .replace(/[#*`_]/g, "")
         .trim();
 
+      // Determine content locale directly from author's chosen language
+      const determinedLocale: "en" | "vi" = store.language;
+
       let createdPostId: string | null = null;
+      let finalLocale: "en" | "vi" = determinedLocale;
 
       try {
         const draftRes = await postApi.createPost({
@@ -770,10 +783,14 @@ ${
           category: currentBrief.category,
           tags: currentIdea.keywords || ["technology"],
           published: false, // AI-generated content must NEVER automatically publish
+          locale: determinedLocale,
         });
 
         if (draftRes.success && draftRes.data?.post?._id) {
           createdPostId = draftRes.data.post._id;
+          if (draftRes.data.post.defaultLocale) {
+            finalLocale = draftRes.data.post.defaultLocale as "en" | "vi";
+          }
         }
       } catch (saveDraftErr) {
         console.warn(
@@ -792,6 +809,7 @@ ${
         blocks: articleBlocks,
         contentVersion: "blocks-v1",
         published: false,
+        locale: finalLocale,
       };
 
       try {
@@ -810,11 +828,11 @@ ${
         "Article successfully compiled! Opening OpenIdear Editor for manual review."
       );
 
-      // Navigate to Editor with generated draft loaded
+      // Navigate to Editor with generated draft loaded and matching locale
       if (createdPostId) {
-        router.push(`/create?id=${createdPostId}`);
+        router.push(`/create?id=${createdPostId}&locale=${finalLocale}`);
       } else {
-        router.push("/create");
+        router.push(`/create?locale=${finalLocale}`);
       }
     } catch (pipelineErr: unknown) {
       const errorMsg =
@@ -841,6 +859,8 @@ ${
 
     topic: store.topic,
     setTopic: store.setTopic,
+    language: store.language,
+    setLanguage: store.setLanguage,
     contentGoal: store.contentGoal,
     setContentGoal: store.setContentGoal,
     numberOfIdeas: store.numberOfIdeas,
