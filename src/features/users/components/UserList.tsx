@@ -543,10 +543,10 @@ const UserList = () => {
               </table>
             </div>
             <div className="sm:hidden divide-y divide-border">
-              {currentUsers.map((user, index) => (
+              {currentUsers.map((user) => (
                 <div
                   key={user._id}
-                  className="p-4 hover:bg-muted/30/50 transition-colors"
+                  className="p-4 hover:bg-muted/30 transition-colors"
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0">

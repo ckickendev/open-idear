@@ -101,8 +101,13 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
       setProgress(0);
 
       const uploadUrlRes = await courseApi.getCloudflareUploadUrl();
-      if (uploadUrlRes.data.status !== "success") {
-        throw new Error("Could not get upload URL from server.");
+      if (!uploadUrlRes.success || uploadUrlRes.data?.status !== "success" || !uploadUrlRes.data?.data?.uploadURL) {
+        throw new Error(
+          uploadUrlRes.message ||
+          (uploadUrlRes.data as any)?.details ||
+          (uploadUrlRes.data as any)?.error ||
+          "Could not get upload URL from server."
+        );
       }
       const { uploadURL, uid: videoId } = uploadUrlRes.data.data;
 
@@ -137,8 +142,13 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
       console.log("videoId", videoId);
       console.log("title", title);
       const saveRes = await courseApi.saveCloudflareVideo({ videoId, title });
-      if (saveRes.data.status !== "success") {
-        throw new Error("Could not save video metadata.");
+      if (!saveRes.success || saveRes.data?.status !== "success" || !saveRes.data?.data?._id) {
+        throw new Error(
+          saveRes.message ||
+          (saveRes.data as any)?.details ||
+          (saveRes.data as any)?.error ||
+          "Could not save video metadata."
+        );
       }
       console.log("saveRes", saveRes);
       const mediaId: string = saveRes.data.data._id;

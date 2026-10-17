@@ -11,7 +11,6 @@ import {
   ArrowLeft,
   Sun,
   Monitor,
-  Check,
   ShieldAlert,
   BadgeCheck,
   Mail,

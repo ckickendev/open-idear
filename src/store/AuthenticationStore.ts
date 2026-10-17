@@ -1,12 +1,12 @@
 import { create } from "zustand";
 
 interface UserData {
-  _id: String;
-  username: String;
+  _id: string;
+  username: string;
   name: string;
-  email: String;
-  role: Number;
-  activate: Boolean;
+  email: string;
+  role: number;
+  activate: boolean;
   createdAt: Date;
   bio: string;
   background: string;
@@ -17,7 +17,7 @@ interface AuthenState {
   currentUserID: string;
   setCurrentUserID: (userID: string) => void;
   currentUser: UserData;
-  setCurrentUser: (user: any) => void;
+  setCurrentUser: (user: UserData) => void;
   updateCurrentUser: (data: Partial<UserData>) => void;
   isAuthenFormDisplay: boolean;
   setIsAuthenFromDisplay: (visible: boolean) => void;
@@ -39,34 +39,14 @@ const authenticationStore = create<AuthenState>((set) => ({
     avatar: "",
   },
   currentUserID: "",
-  setCurrentUserID: (userID: string) =>
-    set(() => {
-      console.log("User ID set to:", userID);
-      return { currentUserID: userID };
-    }),
+  setCurrentUserID: (currentUserID: string) => set({ currentUserID }),
   updateCurrentUser: (data: Partial<UserData>) =>
-    set((state) => {
-      const updatedUser = { ...state.currentUser, ...data };
-      console.log("Updated currentUser:", updatedUser);
-      return { currentUser: updatedUser };
-    }),
-  setCurrentUser: (user: UserData) =>
-    set(() => {
-      console.log("User set to:", user);
-      return { currentUser: user };
-    }),
+    set((state) => ({ currentUser: { ...state.currentUser, ...data } })),
+  setCurrentUser: (currentUser: UserData) => set({ currentUser }),
   isAuthenFormDisplay: false,
-  setIsAuthenFromDisplay: (visible: boolean) =>
-    set(() => {
-      console.log("isAuthenFormDisplay set to:", visible);
-      return { isAuthenFormDisplay: visible };
-    }),
+  setIsAuthenFromDisplay: (isAuthenFormDisplay: boolean) => set({ isAuthenFormDisplay }),
   state: 1,
-  setState: (state: number) =>
-    set(() => {
-      console.log("state set to:", state);
-      return { state: state };
-    }),
+  setState: (state: number) => set({ state }),
 }));
 
 export default authenticationStore;

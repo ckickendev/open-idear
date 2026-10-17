@@ -3,7 +3,7 @@
 import { ENV } from "@/api/const";
 // ProfilePage.tsx
 import React, { useEffect, useState } from "react";
-import { Edit, Upload, X } from "lucide-react";
+import { Edit, X } from "lucide-react";
 import authenticationStore from "@/store/AuthenticationStore";
 import { CldUploadWidget } from "next-cloudinary";
 import axios from "axios";
@@ -13,7 +13,6 @@ import loadingStore from "@/store/LoadingStore";
 import { getHeadersToken } from "@/lib/api/axios";
 
 const ProfileInfo = ({ userInfor }: any) => {
-  console.log("render profile infor");
   const [showAvatarUpload, setShowAvatarUpload] = useState(false);
   const [showBackgroundUpload, setShowBackgroundUpload] = useState(false);
   const [isFollowed, setIsFollowed] = useState(userInfor?.isFollowed);
@@ -47,13 +46,6 @@ const ProfileInfo = ({ userInfor }: any) => {
     }
   };
 
-  const handleUploadClick = () => {
-    // Handle the actual upload logic here
-    console.log(`Uploading image`);
-    // You can integrate with your UploadImage component here
-    // For example: trigger file input or open upload modal
-  };
-
   const handleFollowUser = async () => {
     try {
       // Using native fetch with Next.js optimizations
@@ -73,7 +65,7 @@ const ProfileInfo = ({ userInfor }: any) => {
       }
       setUnfollowBtn(false);
       setIsFollowed(isFollowed);
-    } catch (error) {
+    } catch {
       toast.error("Error when follow user");
     }
   };

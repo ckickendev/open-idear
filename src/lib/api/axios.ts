@@ -81,6 +81,20 @@ export interface ApiResponse<T = any> {
   message?: string;
 }
 
+const extractErrorMessage = (error: any): string => {
+  const data = error?.response?.data;
+  if (data?.details && data?.error) {
+    return `${data.error}: ${data.details}`;
+  }
+  return (
+    data?.details ||
+    data?.error ||
+    data?.message ||
+    error?.message ||
+    "An error occurred"
+  );
+};
+
 export const api = {
   get: async <T = any>(
     url: string,
@@ -98,11 +112,7 @@ export const api = {
         success: false,
         data: null as any,
         status: error?.response?.status || 500,
-        message:
-          error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          error?.message ||
-          "An error occurred",
+        message: extractErrorMessage(error),
       };
     }
   },
@@ -135,11 +145,7 @@ export const api = {
         success: false,
         data: null as any,
         status: error?.response?.status || 500,
-        message:
-          error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          error?.message ||
-          "An error occurred",
+        message: extractErrorMessage(error),
       };
     }
   },
@@ -160,11 +166,7 @@ export const api = {
         success: false,
         data: null as any,
         status: error?.response?.status || 500,
-        message:
-          error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          error?.message ||
-          "An error occurred",
+        message: extractErrorMessage(error),
       };
     }
   },
@@ -185,11 +187,7 @@ export const api = {
         success: false,
         data: null as any,
         status: error?.response?.status || 500,
-        message:
-          error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          error?.message ||
-          "An error occurred",
+        message: extractErrorMessage(error),
       };
     }
   },
@@ -209,11 +207,7 @@ export const api = {
         success: false,
         data: null as any,
         status: error?.response?.status || 500,
-        message:
-          error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          error?.message ||
-          "An error occurred",
+        message: extractErrorMessage(error),
       };
     }
   },
