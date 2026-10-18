@@ -22,4 +22,5 @@ const nextConfig: NextConfig = {
   },
 };
 
+// Reload config
 export default nextConfig;

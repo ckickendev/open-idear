@@ -385,5 +385,18 @@
       "no_content": "The {source} version has no content to translate yet.",
       "translated_success": "✨ {target} draft translated! Review content and save when ready."
     }
+  },
+  "home": {
+    "courses": {
+      "newlyUpdated": "Newly Updated",
+      "title": "Latest Courses",
+      "subtitle": "Courses just added — start learning today",
+      "viewAll": "View All",
+      "viewAllCourses": "View all courses",
+      "new": "New",
+      "hours": "hours",
+      "students": "students",
+      "free": "Free"
+    }
   }
 }

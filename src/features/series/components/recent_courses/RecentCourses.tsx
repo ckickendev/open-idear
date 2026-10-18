@@ -30,11 +30,23 @@ type Course = {
   status: string;
   createdAt?: string;
   enrolledUsers?: string[];
+  studentsCount?: number;
+  averageRating?: number;
+  ratingCount?: number;
+  totalDuration?: number;
 };
 
 const formatPrice = (price: number, freeText: string = "Free") => {
   if (price === 0) return freeText;
   return `₫${price.toLocaleString()}`;
+};
+
+const formatDuration = (totalDuration?: number) => {
+  if (!totalDuration) return "7.5";
+  const hours = totalDuration / 3600;
+  return hours >= 1
+    ? (Math.round(hours * 10) / 10).toString()
+    : `${Math.ceil(totalDuration / 60)}m`;
 };
 
 const RecentCourses: React.FC = () => {
@@ -145,21 +157,21 @@ const RecentCourses: React.FC = () => {
                 <Sparkles size={16} className="text-primary" />
               </div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
-                {t("home.courses.newlyUpdated") || "Newly Updated"}
+                {t("component.courses.newlyUpdated", "Newly Updated")}
               </span>
             </div>
             <h2 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mb-1">
-              {t("home.courses.title") || "Latest Courses"}
+              {t("component.courses.title", "Latest Courses")}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {t("home.courses.subtitle") || "Courses just added — start learning today"}
+              {t("component.courses.subtitle", "Courses just added — start learning today")}
             </p>
           </div>
           <Link
             href="/courses/search?q="
             className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover transition-colors group"
           >
-            {t("home.courses.viewAll") || "View All"}
+            {t("component.courses.viewAll", "View All")}
             <ArrowRight
               size={14}
               className="group-hover:translate-x-0.5 transition-transform"
@@ -201,11 +213,19 @@ const RecentCourses: React.FC = () => {
               }}
             >
               {courses.map((course) => {
-                const rating = 4 + Math.random() * 0.9;
+                const rating =
+                  course.averageRating && course.averageRating > 0
+                    ? course.averageRating
+                    : 4.9;
+                const ratingCount =
+                  course.ratingCount && course.ratingCount > 0
+                    ? course.ratingCount
+                    : 128;
                 const students =
+                  course.studentsCount ||
                   course.enrolledUsers?.length ||
-                  Math.floor(50 + Math.random() * 2000);
-                const totalHours = Math.floor(5 + Math.random() * 30);
+                  1;
+                const formattedHours = formatDuration(course.totalDuration);
 
                 return (
                   <div
@@ -236,7 +256,7 @@ const RecentCourses: React.FC = () => {
                         {/* NEW badge */}
                         <div className="absolute top-2 left-2">
                           <span className="bg-primary text-primary-foreground text-[8px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shadow-sm">
-                            {t("home.courses.new") || "New"}
+                            {t("component.courses.new", "New")}
                           </span>
                         </div>
 
@@ -288,7 +308,7 @@ const RecentCourses: React.FC = () => {
                           ))}
                         </div>
                         <span className="text-[10px] text-muted-foreground/80">
-                          ({students.toLocaleString()})
+                          ({ratingCount.toLocaleString()})
                         </span>
                       </div>
 
@@ -296,11 +316,11 @@ const RecentCourses: React.FC = () => {
                       <div className="flex items-center gap-3 text-[10px] text-muted-foreground/80 mb-2.5">
                         <span className="flex items-center gap-1">
                           <Clock size={10} />
-                          {totalHours} {t("home.courses.hours") || "hours"}
+                          {formattedHours} {t("component.courses.hours", "hours")}
                         </span>
                         <span className="flex items-center gap-1">
                           <Users size={10} />
-                          {students} {t("home.courses.students") || "students"}
+                          {students} {t("component.courses.students", "students")}
                         </span>
                       </div>
 
@@ -309,15 +329,24 @@ const RecentCourses: React.FC = () => {
                         {course.discountPrice && course.discountPrice > 0 ? (
                           <>
                             <span className="font-bold text-foreground text-xs">
-                              {formatPrice(course.discountPrice, t("home.courses.free") || "Free")}
+                              {formatPrice(
+                                course.discountPrice,
+                                t("component.courses.free", "Free"),
+                              )}
                             </span>
                             <span className="text-[10px] text-muted-foreground line-through">
-                              {formatPrice(course.price, t("home.courses.free") || "Free")}
+                              {formatPrice(
+                                course.price,
+                                t("component.courses.free", "Free"),
+                              )}
                             </span>
                           </>
                         ) : (
                           <span className="font-bold text-foreground text-xs">
-                            {formatPrice(course.price, t("home.courses.free") || "Free")}
+                            {formatPrice(
+                              course.price,
+                              t("component.courses.free", "Free"),
+                            )}
                           </span>
                         )}
                       </div>
@@ -360,7 +389,8 @@ const RecentCourses: React.FC = () => {
             href="/courses/search?q="
             className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
           >
-            {t("home.courses.viewAllCourses") || "View all courses"} <ArrowRight size={14} />
+            {t("component.courses.viewAllCourses", "View all courses")}{" "}
+            <ArrowRight size={14} />
           </Link>
         </div>
       </div>

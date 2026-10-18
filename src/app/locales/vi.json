@@ -380,5 +380,18 @@
       "no_content": "Phiên bản {source} chưa có nội dung để dịch.",
       "translated_success": "✨ Đã dịch bản nháp {target}! Xem lại nội dung và lưu khi sẵn sàng."
     }
+  },
+  "home": {
+    "courses": {
+      "newlyUpdated": "Mới cập nhật",
+      "title": "Khóa học mới nhất",
+      "subtitle": "Những khóa học vừa được thêm vào — bắt đầu học ngay hôm nay",
+      "viewAll": "Xem tất cả",
+      "viewAllCourses": "Xem tất cả khóa học",
+      "new": "Mới",
+      "hours": "giờ",
+      "students": "học viên",
+      "free": "Miễn phí"
+    }
   }
 }

@@ -21,6 +21,7 @@ import {
   CheckCircle,
   Loader2,
   Lock,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api/axios";
@@ -121,10 +122,14 @@ const CourseDetail = () => {
     ) ||
     0;
 
-  const [isPlayingPreview, setIsPlayingPreview] = useState(false);
-  const [previewVideoId, setPreviewVideoId] = useState<string | null>(null);
+  // Sidebar first video preview
+  const [isPlayingSidebarFirstVideo, setIsPlayingSidebarFirstVideo] = useState(false);
 
-  // The preview video is always the first video of the course (or specifically selected preview)
+  // Udemy-style Course Preview Modal
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [selectedPreviewLesson, setSelectedPreviewLesson] = useState<Lesson | null>(null);
+
+  // The first video lesson of the course (used for the sidebar preview section)
   const firstVideoLesson = course?.chapters
     ?.flatMap((ch) => ch.lessons || [])
     .find(
@@ -136,11 +141,42 @@ const CourseDetail = () => {
   const defaultFirstVideoId =
     firstVideoLesson?.media?.cloudflareId || firstVideoLesson?.media?.url || "";
 
-  const activePreviewVideoId = previewVideoId || defaultFirstVideoId;
-
-  const posterUrl = activePreviewVideoId
-    ? `https://videodelivery.net/${activePreviewVideoId}/thumbnails/thumbnail.jpg?height=500`
+  const firstVideoPosterUrl = defaultFirstVideoId
+    ? `https://videodelivery.net/${defaultFirstVideoId}/thumbnails/thumbnail.jpg?height=500`
     : course?.thumbnail?.url || "";
+
+  // All free sample preview lessons
+  const previewableLessons = course?.chapters
+    ?.flatMap((ch) => ch.lessons || [])
+    .filter(
+      (l) =>
+        (l.isFreePreview || l._id === firstVideoLesson?._id) &&
+        (l.media?.cloudflareId || l.media?.url || l.type === "video"),
+    ) || [];
+
+  // Active lesson playing inside the preview modal
+  const activeModalLesson = selectedPreviewLesson || previewableLessons[0] || firstVideoLesson;
+  const activeModalVideoId =
+    activeModalLesson?.media?.cloudflareId || activeModalLesson?.media?.url || "";
+
+  // ESC key and body scroll lock for preview modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && previewModalOpen) {
+        setPreviewModalOpen(false);
+      }
+    };
+    if (previewModalOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [previewModalOpen]);
 
   const formatTotalTime = (seconds: number) => {
     if (!seconds || seconds <= 0) return "7h 30m total length";
@@ -456,17 +492,8 @@ const CourseDetail = () => {
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      const vidId = lesson.media?.cloudflareId || lesson.media?.url;
-                                      if (vidId) {
-                                        setPreviewVideoId(vidId);
-                                        setIsPlayingPreview(true);
-                                        const previewEl = document.getElementById("course-preview-player");
-                                        if (previewEl) {
-                                          previewEl.scrollIntoView({ behavior: "smooth", block: "center" });
-                                        }
-                                      } else {
-                                        router.push(lessonUrl);
-                                      }
+                                      setSelectedPreviewLesson(lesson);
+                                      setPreviewModalOpen(true);
                                     }}
                                     className="text-blue-600 font-bold text-xs underline hover:text-blue-800 cursor-pointer"
                                   >
@@ -549,15 +576,15 @@ const CourseDetail = () => {
         {/* Sidebar Purchase Card */}
         <div className="lg:relative">
           <div className="sticky top-8 bg-background border border-border shadow-xl rounded-xl overflow-hidden">
-            {/* Preview Video Player - Always plays the first video of the course */}
+            {/* Preview Video Player - Displays and only plays the first video of the course */}
             <div
               id="course-preview-player"
               className="aspect-video relative overflow-hidden bg-slate-950 group"
             >
-              {isPlayingPreview && activePreviewVideoId ? (
+              {isPlayingSidebarFirstVideo && defaultFirstVideoId ? (
                 <div className="absolute inset-0 [&>div]:!absolute [&>div]:!inset-0 [&>div]:!p-0 [& iframe]:!absolute [& iframe]:!inset-0 [& iframe]:!w-full [& iframe]:!h-full">
                   <Stream
-                    src={activePreviewVideoId}
+                    src={defaultFirstVideoId}
                     controls
                     autoplay
                     responsive={false}
@@ -569,15 +596,15 @@ const CourseDetail = () => {
                 <div
                   className="w-full h-full relative cursor-pointer"
                   onClick={() => {
-                    if (activePreviewVideoId) {
-                      setIsPlayingPreview(true);
+                    if (defaultFirstVideoId) {
+                      setIsPlayingSidebarFirstVideo(true);
                     } else {
                       toast.info("No video preview available for this course");
                     }
                   }}
                 >
                   <img
-                    src={posterUrl}
+                    src={firstVideoPosterUrl}
                     alt={course.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
@@ -731,6 +758,129 @@ const CourseDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Udemy-style Course Preview Modal */}
+      {previewModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+          onClick={() => setPreviewModalOpen(false)}
+        >
+          <div
+            className="bg-[#1c1d1f] text-white rounded-xl shadow-2xl max-w-3xl w-full border border-white/10 overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="px-5 py-4 flex items-start justify-between border-b border-white/10 bg-[#1c1d1f]">
+              <div className="pr-4">
+                <span className="text-[11px] font-semibold text-white/50 uppercase tracking-wider block mb-0.5">
+                  Course Preview
+                </span>
+                <h3 className="text-base sm:text-lg font-bold text-white line-clamp-1">
+                  {course.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewModalOpen(false)}
+                className="text-white/70 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer flex-shrink-0"
+                aria-label="Close modal"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Video Player Container */}
+            <div className="aspect-video relative bg-black w-full overflow-hidden flex-shrink-0">
+              {activeModalVideoId ? (
+                <div className="absolute inset-0 [&>div]:!absolute [&>div]:!inset-0 [&>div]:!p-0 [& iframe]:!absolute [& iframe]:!inset-0 [& iframe]:!w-full [& iframe]:!h-full">
+                  <Stream
+                    key={activeModalVideoId}
+                    src={activeModalVideoId}
+                    controls
+                    autoplay
+                    responsive={false}
+                    width="100%"
+                    height="100%"
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white/50 text-sm">
+                  No video stream available for this lecture.
+                </div>
+              )}
+            </div>
+
+            {/* Free Sample Videos List */}
+            <div className="p-4 sm:p-5 overflow-y-auto bg-[#1c1d1f] flex-1">
+              <h4 className="text-sm font-bold text-white mb-3">
+                Free Sample Videos:
+              </h4>
+              <div className="space-y-2">
+                {previewableLessons.map((sampleLesson) => {
+                  const isCurrent = sampleLesson._id === activeModalLesson?._id;
+                  const sampleVidId =
+                    sampleLesson.media?.cloudflareId || sampleLesson.media?.url;
+                  const samplePoster = sampleVidId
+                    ? `https://videodelivery.net/${sampleVidId}/thumbnails/thumbnail.jpg?height=120`
+                    : course.thumbnail?.url;
+
+                  return (
+                    <div
+                      key={sampleLesson._id}
+                      onClick={() => setSelectedPreviewLesson(sampleLesson)}
+                      className={`flex items-center gap-3.5 p-2.5 rounded-lg border transition-all cursor-pointer ${
+                        isCurrent
+                          ? "bg-white/15 border-white/20 shadow-sm ring-1 ring-white/25"
+                          : "bg-white/5 border-white/5 hover:bg-white/10"
+                      }`}
+                    >
+                      {/* Thumbnail with play icon */}
+                      <div className="w-20 h-12 bg-black rounded overflow-hidden flex-shrink-0 relative group/thumb">
+                        <img
+                          src={samplePoster}
+                          alt={sampleLesson.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div
+                          className={`absolute inset-0 flex items-center justify-center ${
+                            isCurrent
+                              ? "bg-black/30"
+                              : "bg-black/40 group-hover/thumb:bg-black/20"
+                          }`}
+                        >
+                          <Play
+                            fill="currentColor"
+                            size={16}
+                            className={isCurrent ? "text-emerald-400" : "text-white"}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Lesson title */}
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`text-sm line-clamp-1 ${
+                            isCurrent ? "text-white font-bold" : "text-white/80"
+                          }`}
+                        >
+                          {sampleLesson.title}
+                        </p>
+                      </div>
+
+                      {/* Duration */}
+                      <span className="text-xs text-white/60 flex-shrink-0 font-mono ml-2">
+                        {formatLessonDuration(
+                          sampleLesson.media?.duration || sampleLesson.duration,
+                        )}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
