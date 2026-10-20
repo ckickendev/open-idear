@@ -31,9 +31,11 @@ import {
   Maximize2,
   RefreshCw,
 } from "lucide-react";
-import { Stream } from "@cloudflare/stream-react";
+import BunnyPlayer from "@/components/video/BunnyPlayer";
 import { courseApi } from "@/features/series/api/course.api";
 import VideoUpload from "@/app/(editor)/create/VideoUpload";
+import VideoUploadDock from "@/components/video/VideoUploadDock";
+import { useVideoUploadStore } from "@/store/useVideoUploadStore";
 import ImageUpload from "@/app/(editor)/create/ImageUpload";
 import LessonAIPanel from "@/components/course/LessonAIPanel";
 import {
@@ -54,53 +56,25 @@ const LESSON_TYPE_ICONS: Record<string, React.ReactNode> = {
 // ─── Video player preview component ──────────────────────────────────────────
 
 function VideoPlayerPreview({
+  lessonId,
   src,
+  posterUrl,
   className = "",
   autoplay = false,
 }: {
+  lessonId?: string;
   src?: string;
+  posterUrl?: string;
   className?: string;
   autoplay?: boolean;
 }) {
-  if (!src) {
-    return (
-      <div className="w-full h-full min-h-[200px] flex flex-col items-center justify-center p-8 text-muted-foreground bg-zinc-950">
-        <Video size={36} className="mb-2 opacity-50 text-muted-foreground" />
-        <p className="text-xs">No video stream source found</p>
-      </div>
-    );
-  }
-
-  // Cloudflare Stream UIDs are alphanumeric/hex strings or customer cloudflare stream URLs
-  const isCloudflare =
-    !src.includes("/") ||
-    src.includes("cloudflarestream.com") ||
-    src.includes("videodelivery.net");
-
-  if (isCloudflare) {
-    return (
-      <div
-        className={`relative w-full h-full [&>div]:!absolute [&>div]:!inset-0 [&>div]:!p-0 [& iframe]:!absolute [& iframe]:!inset-0 [& iframe]:!w-full [& iframe]:!h-full ${className}`}
-      >
-        <Stream
-          src={src}
-          controls
-          autoplay={autoplay}
-          responsive={false}
-          width="100%"
-          height="100%"
-        />
-      </div>
-    );
-  }
-
   return (
-    <video
-      src={src}
-      controls
-      autoPlay={autoplay}
-      className={`w-full h-full object-contain bg-black ${className}`}
-      playsInline
+    <BunnyPlayer
+      lessonId={lessonId}
+      embedUrl={src && src.includes("://") ? src : undefined}
+      posterUrl={posterUrl}
+      className={className}
+      autoplay={autoplay}
     />
   );
 }
@@ -211,6 +185,26 @@ function LessonRow({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deletingVideo, setDeletingVideo] = useState(false);
+
+  // Check if this lesson has an active background upload
+  const activeLessonUpload = useVideoUploadStore((s) =>
+    s.tasks.find(
+      (t) =>
+        t.lessonId === lesson._id &&
+        (t.status === "authorizing" || t.status === "uploading" || t.status === "saving")
+    )
+  );
+
+  useEffect(() => {
+    const handleOpen = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.lessonId === lesson._id) {
+        setShowVideoUpload(true);
+      }
+    };
+    window.addEventListener("openidear:open-lesson-upload", handleOpen);
+    return () => window.removeEventListener("openidear:open-lesson-upload", handleOpen);
+  }, [lesson._id]);
 
   const hasVideo = lesson.media != null;
   const videoSrc =
@@ -324,7 +318,17 @@ function LessonRow({
 
         {lesson.type === "video" && (
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            {hasVideo ? (
+            {activeLessonUpload ? (
+              <button
+                type="button"
+                onClick={() => setShowVideoUpload(true)}
+                title="Click to view upload progress"
+                className="flex items-center gap-1.5 text-[11px] px-2.5 py-0.5 rounded-full border border-primary/50 bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-all cursor-pointer animate-pulse"
+              >
+                <Loader2 size={10} className="animate-spin text-primary" />
+                Uploading {activeLessonUpload.progress}%
+              </button>
+            ) : hasVideo ? (
               <>
                 <button
                   type="button"
@@ -412,7 +416,7 @@ function LessonRow({
                   {lesson.title || "Lesson Video Preview"}
                 </p>
                 <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 truncate">
-                  <span>Cloudflare Stream</span>
+                  <span>Bunny Stream</span>
                   {videoSrc && (
                     <span className="font-mono text-[10px] bg-muted px-1.5 py-0.2 rounded truncate max-w-[220px]">
                       {videoSrc}
@@ -467,7 +471,11 @@ function LessonRow({
 
           {/* Video Player */}
           <div className="relative w-full aspect-video max-w-2xl mx-auto bg-black rounded-lg overflow-hidden shadow-inner border border-border/40">
-            <VideoPlayerPreview src={videoSrc} />
+            <VideoPlayerPreview
+              lessonId={lesson._id}
+              src={videoSrc}
+              posterUrl={typeof lesson.media === "object" ? lesson.media?.thumbnail : undefined}
+            />
           </div>
         </div>
       )}
@@ -478,7 +486,7 @@ function LessonRow({
           <div className="relative w-full max-w-4xl bg-background rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-card">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600">
+                <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600">
                   <Play size={15} className="fill-current" />
                 </div>
                 <div className="min-w-0">
@@ -486,7 +494,7 @@ function LessonRow({
                     {lesson.title || "Lesson Video Preview"}
                   </h3>
                   <p className="text-[11px] text-muted-foreground flex items-center gap-2">
-                    <span>Cloudflare Stream</span>
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">Bunny Stream</span>
                     {videoSrc && (
                       <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded truncate max-w-[260px]">
                         {videoSrc}
@@ -532,7 +540,12 @@ function LessonRow({
             </div>
 
             <div className="relative w-full aspect-video bg-black flex-1 min-h-[300px]">
-              <VideoPlayerPreview src={videoSrc} autoplay={true} />
+              <VideoPlayerPreview
+                lessonId={lesson._id}
+                src={videoSrc}
+                posterUrl={typeof lesson.media === "object" ? lesson.media?.thumbnail : undefined}
+                autoplay={true}
+              />
             </div>
           </div>
         </div>
@@ -541,9 +554,11 @@ function LessonRow({
       {showVideoUpload && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <VideoUpload
+            lessonId={lesson._id}
             initialTitle={lesson.title}
             onVideoUploaded={handleVideoUploaded}
             onClose={() => setShowVideoUpload(false)}
+            onMinimize={() => setShowVideoUpload(false)}
             isTitleDisplay={true}
           />
         </div>
@@ -786,6 +801,19 @@ export default function CourseBuilderPage() {
   useEffect(() => {
     fetchCourse();
   }, [fetchCourse]);
+
+  // Sync background video uploads completed in the floating dock
+  useEffect(() => {
+    const handleAttached = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.lessonId && detail?.mediaId) {
+        handleVideoAttach(detail.lessonId, detail.mediaId, detail.title);
+        toast.success(`Video attached to "${detail.title || "Lesson"}"!`);
+      }
+    };
+    window.addEventListener("openidear:video-attached", handleAttached);
+    return () => window.removeEventListener("openidear:video-attached", handleAttached);
+  }, []);
 
   // ── Chapter operations ─────────────────────────────────────────────────────
 
@@ -1522,6 +1550,9 @@ export default function CourseBuilderPage() {
           onLessonUpdated={handleLessonAIUpdated}
         />
       )}
+
+      {/* ── Background Video Upload Floating Dock ───────────────────── */}
+      <VideoUploadDock onVideoAttach={handleVideoAttach} />
     </div>
   );
 }

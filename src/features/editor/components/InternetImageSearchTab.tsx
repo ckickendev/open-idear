@@ -120,7 +120,20 @@ export function InternetImageSearchTab({
       setHasSearched(true);
 
       try {
-        const items = await aiVisualApi.searchImages(q, 16, 1);
+        const items = await aiVisualApi.searchImages(
+          {
+            query: q,
+            limit: 16,
+            page: 1,
+            context: {
+              heading,
+              articleTitle,
+              searchQuery: q,
+            },
+          },
+          16,
+          1
+        );
         setResults(items);
         if (items.length === 0) {
           setSearchError("No images found for this query. Try a broader keyword.");
@@ -132,7 +145,7 @@ export function InternetImageSearchTab({
         setIsLoading(false);
       }
     },
-    []
+    [heading, articleTitle]
   );
 
   // Auto-search once on mount if a valid query exists

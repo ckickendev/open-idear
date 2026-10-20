@@ -43,9 +43,42 @@ export const courseApi = {
   deleteLessonVideo: async (lessonId: string) => {
     return await api.delete("/course/lesson/video/delete", { data: { lessonId } });
   },
+  // ── Bunny Stream APIs ──────────────────────────────────────────────────────
+  getBunnyUploadSignature: async (data: {
+    title: string;
+    collectionId?: string;
+    idempotencyKey?: string;
+  }) => {
+    return await api.post("/media/bunny/upload-signature", data);
+  },
+  saveBunnyVideo: async (data: {
+    videoId: string;
+    title?: string;
+    description?: string;
+    duration?: number;
+  }) => {
+    return await api.post("/media/bunny/save", data);
+  },
+  getBunnyPlayback: async (lessonId: string) => {
+    return await api.get(`/media/bunny/playback/${lessonId}`);
+  },
+  getBunnyStatus: async (videoId: string) => {
+    return await api.get(`/media/bunny/status/${videoId}`);
+  },
+  deleteBunnyVideo: async (mediaId: string) => {
+    return await api.delete(`/media/bunny/${mediaId}`);
+  },
+
+  // ── Legacy Cloudflare APIs (Deprecated / Inactive Historical Reference) ───
+  /**
+   * @deprecated Inactive historical reference. All active course uploads use Bunny Stream (courseApi.getBunnyUploadSignature).
+   */
   getCloudflareUploadUrl: async () => {
     return await api.post("/media/cloudflare/upload-url");
   },
+  /**
+   * @deprecated Inactive historical reference. All video saves use Bunny Stream (courseApi.saveBunnyVideo).
+   */
   saveCloudflareVideo: async (data: {
     videoId: string;
     title?: string;
@@ -61,6 +94,9 @@ export const courseApi = {
   },
   restoreCourse: async (courseId: string) => {
     return await api.patch(`/course/restore?courseId=${courseId}`);
+  },
+  cleanTrash: async () => {
+    return await api.delete("/course/cleanTrash");
   },
   // Course Builder APIs
   getCourseForEdit: async (id: string) => {

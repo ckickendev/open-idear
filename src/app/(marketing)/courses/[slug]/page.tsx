@@ -27,7 +27,7 @@ import Link from "next/link";
 import { api } from "@/lib/api/axios";
 import { courseApi } from "@/features/series/api/course.api";
 import { toast } from "sonner";
-import { Stream } from "@cloudflare/stream-react";
+import BunnyPlayer from "@/components/video/BunnyPlayer";
 
 type Lesson = {
   _id: string;
@@ -41,8 +41,11 @@ type Lesson = {
   media?: {
     duration?: number;
     url?: string;
+    thumbnail?: string;
+    bunnyVideoId?: string;
     cloudflareId?: string;
     type?: string;
+    status?: string;
   };
 };
 
@@ -139,11 +142,13 @@ const CourseDetail = () => {
     );
 
   const defaultFirstVideoId =
-    firstVideoLesson?.media?.cloudflareId || firstVideoLesson?.media?.url || "";
+    firstVideoLesson?.media?.bunnyVideoId ||
+    firstVideoLesson?.media?.cloudflareId ||
+    firstVideoLesson?.media?.url ||
+    "";
 
-  const firstVideoPosterUrl = defaultFirstVideoId
-    ? `https://videodelivery.net/${defaultFirstVideoId}/thumbnails/thumbnail.jpg?height=500`
-    : course?.thumbnail?.url || "";
+  const firstVideoPosterUrl =
+    firstVideoLesson?.media?.thumbnail || course?.thumbnail?.url || "";
 
   // All free sample preview lessons
   const previewableLessons = course?.chapters
@@ -151,13 +156,16 @@ const CourseDetail = () => {
     .filter(
       (l) =>
         (l.isFreePreview || l._id === firstVideoLesson?._id) &&
-        (l.media?.cloudflareId || l.media?.url || l.type === "video"),
+        (l.media?.bunnyVideoId || l.media?.cloudflareId || l.media?.url || l.type === "video"),
     ) || [];
 
   // Active lesson playing inside the preview modal
   const activeModalLesson = selectedPreviewLesson || previewableLessons[0] || firstVideoLesson;
   const activeModalVideoId =
-    activeModalLesson?.media?.cloudflareId || activeModalLesson?.media?.url || "";
+    activeModalLesson?.media?.bunnyVideoId ||
+    activeModalLesson?.media?.cloudflareId ||
+    activeModalLesson?.media?.url ||
+    "";
 
   // ESC key and body scroll lock for preview modal
   useEffect(() => {
@@ -581,17 +589,13 @@ const CourseDetail = () => {
               id="course-preview-player"
               className="aspect-video relative overflow-hidden bg-slate-950 group"
             >
-              {isPlayingSidebarFirstVideo && defaultFirstVideoId ? (
-                <div className="absolute inset-0 [&>div]:!absolute [&>div]:!inset-0 [&>div]:!p-0 [& iframe]:!absolute [& iframe]:!inset-0 [& iframe]:!w-full [& iframe]:!h-full">
-                  <Stream
-                    src={defaultFirstVideoId}
-                    controls
-                    autoplay
-                    responsive={false}
-                    width="100%"
-                    height="100%"
-                  />
-                </div>
+              {isPlayingSidebarFirstVideo && firstVideoLesson ? (
+                <BunnyPlayer
+                  lessonId={firstVideoLesson._id}
+                  title={firstVideoLesson.title || course.title}
+                  posterUrl={firstVideoPosterUrl}
+                  autoplay={true}
+                />
               ) : (
                 <div
                   className="w-full h-full relative cursor-pointer"
@@ -791,18 +795,14 @@ const CourseDetail = () => {
 
             {/* Video Player Container */}
             <div className="aspect-video relative bg-black w-full overflow-hidden flex-shrink-0">
-              {activeModalVideoId ? (
-                <div className="absolute inset-0 [&>div]:!absolute [&>div]:!inset-0 [&>div]:!p-0 [& iframe]:!absolute [& iframe]:!inset-0 [& iframe]:!w-full [& iframe]:!h-full">
-                  <Stream
-                    key={activeModalVideoId}
-                    src={activeModalVideoId}
-                    controls
-                    autoplay
-                    responsive={false}
-                    width="100%"
-                    height="100%"
-                  />
-                </div>
+              {activeModalLesson ? (
+                <BunnyPlayer
+                  key={activeModalLesson._id}
+                  lessonId={activeModalLesson._id}
+                  title={activeModalLesson.title || course.title}
+                  posterUrl={activeModalLesson.media?.thumbnail || course.thumbnail?.url}
+                  autoplay={true}
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-white/50 text-sm">
                   No video stream available for this lecture.
@@ -818,11 +818,8 @@ const CourseDetail = () => {
               <div className="space-y-2">
                 {previewableLessons.map((sampleLesson) => {
                   const isCurrent = sampleLesson._id === activeModalLesson?._id;
-                  const sampleVidId =
-                    sampleLesson.media?.cloudflareId || sampleLesson.media?.url;
-                  const samplePoster = sampleVidId
-                    ? `https://videodelivery.net/${sampleVidId}/thumbnails/thumbnail.jpg?height=120`
-                    : course.thumbnail?.url;
+                  const samplePoster =
+                    sampleLesson.media?.thumbnail || course.thumbnail?.url;
 
                   return (
                     <div

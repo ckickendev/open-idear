@@ -17,10 +17,45 @@ export interface MediaAsset {
   _id: string;
   url: string;
   type: "image" | "video" | "audio" | "file";
+  bunnyVideoId?: string;
+  bunnyLibraryId?: string;
+  provider?: "bunny" | "cloudinary" | "cloudflare" | "local";
   cloudflareId?: string;
   duration?: number;
   thumbnail?: string;
   status?: "uploaded" | "processing" | "ready" | "failed";
+  errorMessage?: string;
+}
+
+export interface BunnyUploadSignatureResponse {
+  mediaId: string;
+  videoId: string;
+  libraryId: string;
+  signature: string;
+  expires: number;
+  uploadEndpoint: string;
+  title: string;
+  isReused?: boolean;
+}
+
+export interface BunnyPlaybackConfigResponse {
+  lessonId: string;
+  title: string;
+  isFreePreview: boolean;
+  isEnrolled: boolean;
+  isAuthorized: boolean;
+  isReady: boolean;
+  status: "uploaded" | "processing" | "ready" | "failed";
+  message?: string;
+  mediaId: string;
+  videoId: string;
+  provider: string;
+  duration: number;
+  thumbnailUrl?: string;
+  embedUrl?: string;
+  hlsUrl?: string;
+  expires?: number;
+  isTokenized?: boolean;
 }
 
 export interface TranscriptSegment {

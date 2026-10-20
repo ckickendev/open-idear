@@ -5,3 +5,4 @@
 
 export * from "./types/aiVisual.types";
 export * from "./api/aiVisual.api";
+export * from "./utils/relevanceRanker";

@@ -298,7 +298,8 @@ const CourseListing = () => {
         const response = await axios.get(
           `${ENV.ROOT_API}/course`,
         );
-        setCourses(response.data.data);
+        const courseList = response.data?.courses || response.data?.data || [];
+        setCourses(Array.isArray(courseList) ? courseList : []);
       } catch (error) {
         console.error(error);
       } finally {

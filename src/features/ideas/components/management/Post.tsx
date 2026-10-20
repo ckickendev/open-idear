@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import loadingStore from "@/store/LoadingStore";
 import { postApi } from "@/features/ideas/api/post.api";
 import { categoryApi } from "@/features/categories/api/category.api";
-import { Eye, EyeOff, Trash2, FileText } from "lucide-react";
+import { Eye, EyeOff, Trash2, FileText, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/app/hook/useTranslation";
 import Link from "next/link";
@@ -40,7 +40,9 @@ const Post = () => {
   const [page, setPage] = useState(1);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [confirmDeleteForever, setConfirmDeleteForever] = useState<string | null>(null);
   const [listStatus, setListStatus] = useState<"all" | "trash">("all");
+  const [confirmCleanTrash, setConfirmCleanTrash] = useState(false);
 
   const itemsPerPage = 15;
 
@@ -157,6 +159,46 @@ const Post = () => {
       .finally(() => changeLoad());
   };
 
+  const handleDeletePostForever = (id: string) => {
+    changeLoad();
+    postApi
+      .deletePostForever(id)
+      .then((response: any) => {
+        if (response.success || response.status === 200) {
+          toast.success("Post permanently deleted");
+          const newPosts = posts.filter((post) => post._id !== id);
+          setPosts(newPosts);
+        } else throw new Error(response.message || "Failed to permanently delete post");
+      })
+      .catch((error: any) => {
+        toast.error(error?.message || "Failed to permanently delete post");
+      })
+      .finally(() => {
+        changeLoad();
+        setConfirmDeleteForever(null);
+      });
+  };
+
+  const handleCleanTrash = () => {
+    changeLoad();
+    postApi
+      .cleanTrash()
+      .then((response: any) => {
+        if (response.success || response.status === 200) {
+          const deleted = response.data?.deleted ?? 0;
+          toast.success(`Trash cleaned! ${deleted} post(s) permanently deleted.`);
+          setPosts([]);
+        } else throw new Error(response.message || "Failed to clean trash");
+      })
+      .catch((error: any) => {
+        toast.error(error?.message || "Failed to clean trash");
+      })
+      .finally(() => {
+        changeLoad();
+        setConfirmCleanTrash(false);
+      });
+  };
+
   const statusOptions = [
     { value: "all", label: "All Statuses" },
     { value: "true", label: "Approved" },
@@ -180,27 +222,39 @@ const Post = () => {
         </p>
       </div>
 
-      <div className="flex gap-4 border-b border-border">
-        <button
-          onClick={() => setListStatus("all")}
-          className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${
-            listStatus === "all"
-              ? "border-admin-primary text-admin-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
-          }`}
-        >
-          All
-        </button>
-        <button
-          onClick={() => setListStatus("trash")}
-          className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${
-            listStatus === "trash"
-              ? "border-admin-primary text-admin-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
-          }`}
-        >
-          Trash
-        </button>
+      <div className="flex items-center justify-between border-b border-border">
+        <div className="flex gap-4">
+          <button
+            onClick={() => setListStatus("all")}
+            className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${
+              listStatus === "all"
+                ? "border-admin-primary text-admin-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setListStatus("trash")}
+            className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${
+              listStatus === "trash"
+                ? "border-admin-primary text-admin-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
+            }`}
+          >
+            Trash
+          </button>
+        </div>
+        {listStatus === "trash" && posts.length > 0 && (
+          <button
+            onClick={() => setConfirmCleanTrash(true)}
+            className="mb-1 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white transition-colors font-medium text-xs whitespace-nowrap border border-red-200 dark:border-red-800"
+            title="Permanently delete all posts in trash"
+          >
+            <Sparkles size={13} />
+            <span>Clean Trash</span>
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -336,15 +390,25 @@ const Post = () => {
                         {convertDate(post.createdAt)}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-end gap-1.5">
                           {listStatus === "trash" ? (
-                            <button
-                              onClick={() => handleRestorePost(post._id)}
-                              className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap"
-                              title="Restore post"
-                            >
-                              Restore
-                            </button>
+                            <>
+                              <button
+                                onClick={() => handleRestorePost(post._id)}
+                                className="px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap"
+                                title="Restore post"
+                              >
+                                Restore
+                              </button>
+                              <button
+                                onClick={() => setConfirmDeleteForever(post._id)}
+                                className="px-2.5 py-1.5 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white transition-colors font-medium text-xs whitespace-nowrap flex items-center gap-1"
+                                title="Delete forever"
+                              >
+                                <Trash2 size={13} />
+                                <span>Delete forever</span>
+                              </button>
+                            </>
                           ) : (
                             <>
                               <button
@@ -416,14 +480,23 @@ const Post = () => {
                         </StatusBadge>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
                       {listStatus === "trash" ? (
-                        <button
-                          onClick={() => handleRestorePost(post._id)}
-                          className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap"
-                        >
-                          Restore
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleRestorePost(post._id)}
+                            className="px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap"
+                          >
+                            Restore
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteForever(post._id)}
+                            className="px-2.5 py-1.5 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white transition-colors font-medium text-xs whitespace-nowrap flex items-center gap-1"
+                          >
+                            <Trash2 size={13} />
+                            <span>Delete forever</span>
+                          </button>
+                        </>
                       ) : (
                         <>
                           <button
@@ -464,8 +537,30 @@ const Post = () => {
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => confirmDelete && handleDeletePost(confirmDelete)}
         title="Delete post"
-        message="Are you sure you want to delete this post? This action cannot be undone."
-        confirmText="Delete"
+        message="Are you sure you want to move this post to trash?"
+        confirmText="Move to trash"
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={!!confirmDeleteForever}
+        onClose={() => setConfirmDeleteForever(null)}
+        onConfirm={() =>
+          confirmDeleteForever && handleDeletePostForever(confirmDeleteForever)
+        }
+        title="Delete Post Forever"
+        message="Are you sure you want to permanently delete this post? This will permanently remove the post along with all its comments, versions, and translations. This action cannot be undone."
+        confirmText="Delete forever"
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={confirmCleanTrash}
+        onClose={() => setConfirmCleanTrash(false)}
+        onConfirm={handleCleanTrash}
+        title="Clean Trash"
+        message={`Are you sure you want to permanently delete ALL ${posts.length} post(s) in the trash? This will remove every post along with all their comments, versions, likes, and translations. This action cannot be undone.`}
+        confirmText="Clean Trash"
         variant="danger"
       />
     </div>

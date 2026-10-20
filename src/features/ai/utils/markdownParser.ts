@@ -45,10 +45,12 @@ export function normalizeMarkdownHeadings(markdown: string): string {
     // If 'Introduction' is glued to the first word of the paragraph
     .replace(/^Introduction([A-ZÀ-Ỹ])/gm, "## Introduction\n\n$1")
     .replace(/^Introduction\s*:\s*([A-ZÀ-Ỹ])/gm, "## Introduction\n\n$1")
-    // Ensure any heading preceded by non-newline characters has double newlines before it
-    .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
+    // Ensure any heading preceded by non-newline characters (and not #) has double newlines before it
+    .replace(/([^\n#])\n*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
     // Ensure any heading followed immediately by single newline before text has double newlines
-    .replace(/^(#{1,6}\s+[^\n]+)\n([^\n#])/gm, "$1\n\n$2");
+    .replace(/^(#{1,6}\s+[^\n]+)\n([^\n#])/gm, "$1\n\n$2")
+    // Clean up any duplicate hash mistakes like "### ## Heading" -> "### Heading"
+    .replace(/^(#{1,6})\s+(?:#{1,6}\s+)+/gm, "$1 ");
 }
 
 /**

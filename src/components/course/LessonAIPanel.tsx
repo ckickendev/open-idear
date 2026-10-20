@@ -1012,7 +1012,7 @@ export default function LessonAIPanel({
               {activeTab === "transcript" && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Provider: {intelligence.transcript?.provider || "Cloudflare"}</span>
+                    <span>Provider: {intelligence.transcript?.provider === "cloudflare" ? "Legacy (Cloudflare)" : (intelligence.transcript?.provider || "Bunny")}</span>
                     <span>
                       {intelligence.transcript?.segments?.length || 0} timestamped segments
                     </span>

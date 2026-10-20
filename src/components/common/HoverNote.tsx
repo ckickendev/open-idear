@@ -42,7 +42,7 @@ const HoverNote = ({
 
       {isHovered && (
         <div className={`absolute z-50 ${getPositionClasses()}`}>
-          <div className="bg-card text-white rounded px-3 py-2 shadow-lg whitespace-nowrap text-sm max-w-xs">
+          <div className="bg-gray-900 dark:bg-gray-700 text-white rounded px-3 py-2 shadow-lg whitespace-nowrap text-sm max-w-xs font-medium">
             {note}
 
             {/* Arrow for the tooltip */}

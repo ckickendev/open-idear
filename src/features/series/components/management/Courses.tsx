@@ -2,7 +2,8 @@
 import { toast } from "sonner";
 import loadingStore from "@/store/LoadingStore";
 import { courseApi } from "@/features/series/api/course.api";
-import { Trash2, Edit, X, Plus, BookOpen } from "lucide-react";
+import { Trash2, Edit, X, Plus, BookOpen, Sparkles } from "lucide-react";
+import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/app/hook/useTranslation";
 import HoverNote from "@/components/common/HoverNote";
@@ -31,6 +32,7 @@ const Courses = () => {
   const [selectedItem, setSelectedItem] = useState<CourseType | null>(null);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [listStatus, setListStatus] = useState<"all" | "trash">("all");
+  const [confirmCleanTrash, setConfirmCleanTrash] = useState(false);
   const [formData, setFormData] = useState({
     _id: "",
     title: "",
@@ -156,6 +158,26 @@ const Courses = () => {
     }
   };
 
+  const handleCleanTrash = () => {
+    changeLoad();
+    courseApi
+      .cleanTrash()
+      .then((response: any) => {
+        if (response.success || response.status === 200) {
+          const deleted = response.data?.deleted ?? 0;
+          toast.success(`Trash cleaned! ${deleted} course(s) permanently deleted.`);
+          setCourses([]);
+        } else throw new Error(response.message || "Failed to clean trash");
+      })
+      .catch((error: any) => {
+        toast.error(error?.message || "Failed to clean trash");
+      })
+      .finally(() => {
+        changeLoad();
+        setConfirmCleanTrash(false);
+      });
+  };
+
   const handleImageUploadSuccess = (media: any) => {
     setFormData((prev) => ({ ...prev, thumbnail: media._id }));
   };
@@ -179,27 +201,39 @@ const Courses = () => {
         </button>
       </div>
 
-      <div className="flex gap-4 border-b border-border">
-        <button
-          onClick={() => setListStatus("all")}
-          className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${
-            listStatus === "all"
-              ? "border-admin-primary text-admin-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
-          }`}
-        >
-          All
-        </button>
-        <button
-          onClick={() => setListStatus("trash")}
-          className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${
-            listStatus === "trash"
-              ? "border-admin-primary text-admin-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
-          }`}
-        >
-          Trash
-        </button>
+      <div className="flex items-center justify-between border-b border-border">
+        <div className="flex gap-4">
+          <button
+            onClick={() => setListStatus("all")}
+            className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${
+              listStatus === "all"
+                ? "border-admin-primary text-admin-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setListStatus("trash")}
+            className={`pb-2.5 px-1 text-sm font-medium border-b-2 transition-colors ${
+              listStatus === "trash"
+                ? "border-admin-primary text-admin-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
+            }`}
+          >
+            Trash
+          </button>
+        </div>
+        {listStatus === "trash" && courses.length > 0 && (
+          <button
+            onClick={() => setConfirmCleanTrash(true)}
+            className="mb-1 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white transition-colors font-medium text-xs whitespace-nowrap border border-red-200 dark:border-red-800"
+            title="Permanently delete all courses in trash"
+          >
+            <Sparkles size={13} />
+            <span>Clean Trash</span>
+          </button>
+        )}
       </div>
 
       <div className="bg-background rounded-xl border border-border shadow-admin-sm overflow-hidden">
@@ -240,9 +274,12 @@ const Courses = () => {
                       className="hover:bg-muted/30/50 transition-colors duration-100"
                     >
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-foreground">
+                        <Link
+                          href={`/management/course/${course._id}/curriculum`}
+                          className="text-sm font-medium text-foreground hover:text-admin-primary transition-colors"
+                        >
                           {course.title}
-                        </div>
+                        </Link>
                         <div className="text-xs text-muted-foreground mt-0.5">
                           {course.slug}
                         </div>
@@ -329,9 +366,12 @@ const Courses = () => {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-foreground">
+                      <Link
+                        href={`/management/course/${course._id}/curriculum`}
+                        className="text-sm font-medium text-foreground hover:text-admin-primary transition-colors"
+                      >
                         {course.title}
-                      </div>
+                      </Link>
                       <div className="text-xs text-muted-foreground mt-1">
                         {course.price.toLocaleString()} VND
                       </div>
@@ -493,6 +533,16 @@ const Courses = () => {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmCleanTrash}
+        onClose={() => setConfirmCleanTrash(false)}
+        onConfirm={handleCleanTrash}
+        title="Clean Trash"
+        message={`Are you sure you want to permanently delete ALL ${courses.length} course(s) in the trash? This will remove every course along with all their chapters, lessons, reviews, and enrollments. This action cannot be undone.`}
+        confirmText="Clean Trash"
+        variant="danger"
+      />
     </div>
   );
 };

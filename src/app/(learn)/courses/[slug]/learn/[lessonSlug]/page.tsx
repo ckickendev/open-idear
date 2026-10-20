@@ -36,7 +36,7 @@ import {
   Layers,
   CheckCircle2,
 } from "lucide-react";
-import { Stream } from "@cloudflare/stream-react";
+import BunnyPlayer, { BunnyPlayerRef } from "@/components/video/BunnyPlayer";
 import { toast } from "sonner";
 import {
   KnowledgeCheck,
@@ -67,7 +67,17 @@ type Lesson = {
   type: "video" | "file" | "text";
   isFreePreview: boolean;
   order: number;
-  media?: { url: string; type: string; uid?: string; cloudflareId?: string; version?: number };
+  media?: {
+    url: string;
+    type: string;
+    uid?: string;
+    bunnyVideoId?: string;
+    cloudflareId?: string;
+    version?: number;
+    thumbnail?: string;
+    duration?: number;
+    status?: string;
+  };
 };
 
 type Chapter = {
@@ -101,7 +111,7 @@ const WatchPage = () => {
 
   // Video Chapter playback tracking
   const [currentTime, setCurrentTime] = useState(0);
-  const streamRef = useRef<any>(null);
+  const playerRef = useRef<BunnyPlayerRef>(null);
 
   // Knowledge Check Learner State
   const [quizData, setQuizData] = useState<{
@@ -357,13 +367,9 @@ const WatchPage = () => {
 
   // Video Chapter Seek Handling
   const handleSeekChapter = (seconds: number) => {
-    if (streamRef.current) {
+    if (playerRef.current) {
       try {
-        if (typeof streamRef.current.currentTime === "number") {
-          streamRef.current.currentTime = seconds;
-        } else if (streamRef.current.seek) {
-          streamRef.current.seek(seconds);
-        }
+        playerRef.current.seek(seconds);
       } catch (e) {
         console.log("Seek error:", e);
       }
@@ -541,29 +547,25 @@ const WatchPage = () => {
               </div>
             ) : (
               <>
-                {currentLesson.type === "video" &&
-                  (currentLesson.media?.url || currentLesson.media?.cloudflareId) && (
-                    <div className="absolute inset-0 [&>div]:!absolute [&>div]:!inset-0 [&>div]:!p-0 [& iframe]:!absolute [& iframe]:!inset-0 [& iframe]:!w-full [& iframe]:!h-full">
-                      <Stream
-                        src={currentLesson.media?.cloudflareId || currentLesson.media?.url || ""}
-                        controls
-                        autoplay
-                        responsive={false}
-                        width="100%"
-                        height="100%"
-                        streamRef={streamRef}
-                        onTimeUpdate={(e: any) => {
-                          if (e?.target?.currentTime) {
-                            setCurrentTime(e.target.currentTime);
-                          }
-                        }}
-                        onEnded={() => {
-                          handleLessonComplete(currentLesson._id);
-                          goToNext();
-                        }}
-                      />
-                    </div>
-                  )}
+                {currentLesson.type === "video" && (
+                  <div className="absolute inset-0">
+                    <BunnyPlayer
+                      key={currentLesson._id}
+                      ref={playerRef}
+                      lessonId={currentLesson._id}
+                      title={currentLesson.title}
+                      posterUrl={currentLesson.media?.thumbnail}
+                      autoplay={true}
+                      onTimeUpdate={(currentTime: number) => {
+                        setCurrentTime(currentTime);
+                      }}
+                      onEnded={() => {
+                        handleLessonComplete(currentLesson._id);
+                        goToNext();
+                      }}
+                    />
+                  </div>
+                )}
                 {currentLesson.type === "text" && (
                   <div className="absolute inset-0 bg-background p-12 overflow-auto">
                     <h2 className="text-3xl font-bold mb-6">{currentLesson.title}</h2>

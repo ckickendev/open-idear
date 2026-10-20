@@ -490,9 +490,9 @@ export default function EditorShell() {
     getContent: () => ({
       title,
       html: getHTML(),
-      text: getText().replace(/\n/g, ""),
-      ...(generatedMarkdown ? {
-        markdown: generatedMarkdown,
+      text: getText().replace(/\n+/g, " ").trim(),
+      ...(getCurrentArticleMarkdown() ? {
+        markdown: getCurrentArticleMarkdown(),
         aiContext: generatedAiContext || undefined,
         contentVersion: "blocks-v1" as const,
       } : {}),
@@ -557,28 +557,115 @@ export default function EditorShell() {
   });
 
   // ─── Track fetched post for editor sync ──────────────────────────────
+// ─── Helpers for Restoring Post & Structured Content ────────────────
+function convertBlocksToHtml(blocks: any[]): string {
+  if (!Array.isArray(blocks) || blocks.length === 0) return "";
+  return blocks
+    .map((block) => {
+      switch (block.type) {
+        case "heading": {
+          const level = block.level === 3 ? 3 : 2;
+          return `<h${level}>${block.content || ""}</h${level}>`;
+        }
+        case "paragraph": {
+          return `<p>${block.content || ""}</p>`;
+        }
+        case "code": {
+          const lang = block.language ? ` class="language-${block.language}"` : "";
+          return `<pre><code${lang}>${block.code || ""}</code></pre>`;
+        }
+        case "list": {
+          const tag = block.style === "ordered" ? "ol" : "ul";
+          const items = (block.items || []).map((it: string) => `<li>${it}</li>`).join("");
+          return `<${tag}>${items}</${tag}>`;
+        }
+        case "image": {
+          return `<img src="${block.src || ""}" alt="${block.alt || ""}" />`;
+        }
+        case "quote": {
+          return `<blockquote><p>${block.content || ""}</p></blockquote>`;
+        }
+        case "callout": {
+          return `<blockquote><p><strong>${block.title || block.variant || "Note"}</strong>: ${block.content || ""}</p></blockquote>`;
+        }
+        case "faq": {
+          const title = block.title || "Frequently Asked Questions";
+          const items = (block.items || [])
+            .map((it: any) => `<h3>${it.question || ""}</h3><p>${it.answer || ""}</p>`)
+            .join("");
+          return `<h2>${title}</h2>${items}`;
+        }
+        default:
+          return block.content ? `<p>${block.content}</p>` : "";
+      }
+    })
+    .join("\n");
+}
+
+function resolvePostEditorContent(post: any): { html: string; markdown: string } {
+  if (!post) return { html: "", markdown: "" };
+
+  // 1. Pristine Markdown from ArticleVersion or post.markdown
+  if (post.markdown && typeof post.markdown === "string" && post.markdown.trim()) {
+    const html = toEditorHtml(post.markdown);
+    return { html, markdown: post.markdown };
+  }
+
+  const rawContent = post.content || "";
+
+  // 2. Structured blocks with headings if content is unparsed or corrupted
+  const hasHtmlHeadings = /<h[1-6][^>]*>/i.test(rawContent);
+  const blocksHaveHeadings = Array.isArray(post.blocks) && post.blocks.some((b: any) => b.type === "heading");
+
+  if (!hasHtmlHeadings && blocksHaveHeadings) {
+    const htmlFromBlocks = convertBlocksToHtml(post.blocks);
+    if (htmlFromBlocks) {
+      return { html: htmlFromBlocks, markdown: "" };
+    }
+  }
+
+  // 3. Raw markdown string stored in post.content
+  if (/#{1,6}\s+/.test(rawContent) || /^\s*#[^#]/.test(rawContent)) {
+    let md = rawContent;
+    if (md.includes("<p") || md.includes("<h") || md.includes("<br")) {
+      md = md
+        .replace(/\r\n/g, "\n")
+        .replace(/<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>/gi, "\n\n## $1\n\n")
+        .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "* $1\n")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+    }
+    const html = toEditorHtml(md);
+    return { html, markdown: md };
+  }
+
+  // 4. Content is already valid HTML
+  return { html: rawContent, markdown: "" };
+}
+
+  // ─── Track fetched post for editor sync ──────────────────────────────
   const [loadedPost, setLoadedPost] = useState<any>(null);
+  const contentAppliedKeyRef = useRef<string>("");
 
   // Sync post content into TipTap editor whenever editor becomes ready or loadedPost updates
   useEffect(() => {
-    if (editor && loadedPost?.content !== undefined) {
-      let content = loadedPost.content || "";
-      // Only repair if raw unparsed markdown hashes (##, ###) are trapped inside HTML
-      if (/#{2,6}\s+/.test(content)) {
-        const restoredMd = content
-          .replace(/\r\n/g, "\n")
-          .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
-          .replace(/<[^>]+>/g, "")
-          .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
-          .replace(/\n{3,}/g, "\n\n")
-          .trim();
-        content = toEditorHtml(restoredMd);
-      } else if (loadedPost.markdown && (!content || !content.trim())) {
-        content = toEditorHtml(loadedPost.markdown);
+    if (editor && loadedPost) {
+      const key = `${loadedPost._id || loadedPost.title}::${editorLocale}`;
+      if (contentAppliedKeyRef.current !== key) {
+        const resolved = resolvePostEditorContent(loadedPost);
+        if (resolved.html) {
+          editor.commands.setContent(resolved.html, { emitUpdate: false });
+          contentAppliedKeyRef.current = key;
+        }
+        if (resolved.markdown) {
+          setGeneratedMarkdown(resolved.markdown);
+        }
       }
-      editor.commands.setContent(content);
     }
-  }, [editor, isReady, loadedPost]);
+  }, [editor, isReady, loadedPost, editorLocale]);
 
   // ─── Locale-Aware Post Data Loader (Sprint 3) ────────────────────────
   const loadPostLocaleData = useCallback(
@@ -642,38 +729,23 @@ export default function EditorShell() {
             setGeneratedMarkdown("");
             publishHook.setIsPublished(false);
             if (editor) {
-              editor.commands.setContent("");
+              editor.commands.setContent("", { emitUpdate: false });
             }
+            contentAppliedKeyRef.current = `${targetPostId}::${resolvedLocale}`;
             autoSave.resetHash(`${resolvedLocale}::::`);
           } else {
             setTitle(post.title || "");
             setDescriptionPublic(post.description || "");
             publishHook.setIsPublished(!!post.published);
 
-            let initialHtml = post.content || "";
-            if (post.markdown) {
-              setGeneratedMarkdown(post.markdown);
-              if (/#{2,6}\s+/.test(initialHtml) || !initialHtml.includes("<h2")) {
-                initialHtml = toEditorHtml(post.markdown);
-              }
-            } else if (/#{2,6}\s+/.test(initialHtml)) {
-              const restoredMd = initialHtml
-                .replace(/\r\n/g, "\n")
-                .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
-                .replace(/<[^>]+>/g, "")
-                .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
-                .replace(/\n{3,}/g, "\n\n")
-                .trim();
-              setGeneratedMarkdown(restoredMd);
-              initialHtml = toEditorHtml(restoredMd);
-            } else {
-              setGeneratedMarkdown("");
-            }
+            const resolved = resolvePostEditorContent(post);
+            setGeneratedMarkdown(resolved.markdown);
 
             if (editor) {
-              editor.commands.setContent(initialHtml);
+              editor.commands.setContent(resolved.html, { emitUpdate: false });
+              contentAppliedKeyRef.current = `${targetPostId}::${resolvedLocale}`;
             }
-            autoSave.resetHash(`${resolvedLocale}::${post.title || ""}::${initialHtml}`);
+            autoSave.resetHash(`${resolvedLocale}::${post.title || ""}::${resolved.html}`);
 
             try {
               sessionStorage.removeItem("content_studio_draft");
@@ -805,10 +877,12 @@ export default function EditorShell() {
               if (draft.title) setTitle(draft.title);
               if (draft.description) setDescriptionPublic(draft.description);
               if (draft.category) setCategoryPublic(draft.category);
-              if (draft.markdown) setGeneratedMarkdown(draft.markdown);
+              const resolved = resolvePostEditorContent(draft);
+              if (resolved.markdown) setGeneratedMarkdown(resolved.markdown);
               setLoadedPost(draft);
-              if (editor && draft.content) {
-                editor.commands.setContent(draft.content);
+              if (editor && resolved.html) {
+                editor.commands.setContent(resolved.html, { emitUpdate: false });
+                contentAppliedKeyRef.current = `draft::${draft.title}`;
               }
               setPageLoading(false);
               return;
@@ -2196,6 +2270,22 @@ export default function EditorShell() {
           onClose={() => setIsBatchVisualsModalOpen(false)}
           markdown={getCurrentArticleMarkdown()}
           postId={postId || undefined}
+          editor={editor}
+          onOpenAiFallback={(fallbackCtx) => {
+            setAiImageContext({
+              prompt: `${fallbackCtx.heading} technical illustration`,
+              heading: fallbackCtx.heading,
+              sourceContext: fallbackCtx.heading,
+              visualIntent: (fallbackCtx.visualType as any) || "diagram",
+              recommendedPreset: "technical_diagram",
+              recommendedRatio: "16:9",
+              confidence: 0.85,
+              recommendationReason: `Fallback AI generation for section "${fallbackCtx.heading}"`,
+              contextType: "selection",
+            });
+            setIsBatchVisualsModalOpen(false);
+            setIsAiImageModalOpen(true);
+          }}
           onApplyResult={(updatedMarkdown) => {
             if (!editor || !updatedMarkdown) return;
             const html = toEditorHtml(updatedMarkdown);

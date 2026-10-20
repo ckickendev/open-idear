@@ -75,9 +75,11 @@ const SearchResultsContent = () => {
         const response = await axios.get(
           `${ENV.ROOT_API}/course`,
         );
-        setCourses(response.data.data);
+        const courseList = response.data?.courses || response.data?.data || [];
+        setCourses(Array.isArray(courseList) ? courseList : []);
       } catch (error) {
         console.error(error);
+        setCourses([]);
       } finally {
         setIsLoading(false);
       }
@@ -86,32 +88,46 @@ const SearchResultsContent = () => {
   }, []);
 
   useEffect(() => {
-    let results = courses?.filter(
-      (course) =>
-        course.title.toLowerCase().includes(query.toLowerCase()) ||
-        course.description?.toLowerCase().includes(query.toLowerCase()),
-    );
+    setSearchTerm(query);
+  }, [query]);
+
+  useEffect(() => {
+    const cleanQuery = (query || "").trim().toLowerCase();
+    let results = (courses || []).filter((course) => {
+      if (!cleanQuery) return true;
+      const titleMatch = course.title?.toLowerCase().includes(cleanQuery);
+      const descMatch = course.description?.toLowerCase().includes(cleanQuery);
+      return titleMatch || descMatch;
+    });
 
     if (selectedCategories.length > 0) {
-      // Mapping categories to labels for filtering since current data might not have category IDs
       results = results.filter((course) =>
         selectedCategories.some((catId) => {
           const cat = CATEGORIES.find((c) => c.id === catId);
-          return course.category === cat?.label;
+          const courseCat =
+            typeof course.category === "object" && course.category !== null
+              ? (course.category as any).name || (course.category as any).slug
+              : course.category;
+          return (
+            courseCat?.toLowerCase() === cat?.label.toLowerCase() ||
+            courseCat?.toLowerCase() === cat?.id.toLowerCase()
+          );
         }),
       );
     }
 
     if (selectedPrices.length > 0) {
       results = results.filter((course) => {
-        if (selectedPrices.includes("free") && course.price === 0) return true;
+        const effectivePrice =
+          course.discountPrice !== undefined ? course.discountPrice : course.price;
+        if (selectedPrices.includes("free") && effectivePrice === 0) return true;
         if (
           selectedPrices.includes("under500") &&
-          course.price > 0 &&
-          course.price < 500000
+          effectivePrice > 0 &&
+          effectivePrice < 500000
         )
           return true;
-        if (selectedPrices.includes("above500") && course.price >= 500000)
+        if (selectedPrices.includes("above500") && effectivePrice >= 500000)
           return true;
         return false;
       });
@@ -121,8 +137,11 @@ const SearchResultsContent = () => {
   }, [query, courses, selectedCategories, selectedPrices]);
 
   const handleSearch = () => {
-    if (searchTerm.trim()) {
-      router.push(`/courses/search?q=${encodeURIComponent(searchTerm)}`);
+    const trimmed = searchTerm.trim();
+    if (trimmed) {
+      router.push(`/courses/search?q=${encodeURIComponent(trimmed)}`);
+    } else {
+      router.push(`/courses/search`);
     }
   };
 
@@ -141,6 +160,8 @@ const SearchResultsContent = () => {
   const clearFilters = () => {
     setSelectedCategories([]);
     setSelectedPrices([]);
+    setSearchTerm("");
+    router.push("/courses/search");
   };
 
   return (
@@ -166,7 +187,7 @@ const SearchResultsContent = () => {
             <div className="flex items-center gap-4">
               <span className="text-muted-foreground font-medium whitespace-nowrap">
                 <span className="text-foreground font-bold">
-                  {filteredCourses?.length}
+                  {filteredCourses?.length ?? 0}
                 </span>{" "}
                 results for &quot;{query}&quot;
               </span>
