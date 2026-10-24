@@ -11,7 +11,18 @@
 // =============================================================================
 
 import React from "react";
-import { Monitor, Tablet, Smartphone, Sun, Moon, RefreshCw, Maximize2, Minimize2, ExternalLink } from "lucide-react";
+import {
+  Monitor,
+  Tablet,
+  Smartphone,
+  Sun,
+  Moon,
+  RefreshCw,
+  Maximize2,
+  Minimize2,
+  ExternalLink,
+  ListTree,
+} from "lucide-react";
 
 export type ViewportType = "desktop" | "tablet" | "mobile";
 
@@ -25,6 +36,8 @@ interface PreviewToolbarProps {
   readonly onToggleFullscreen?: () => void;
   readonly onOpenNewWindow?: () => void;
   readonly isRefreshing?: boolean;
+  readonly showToc?: boolean;
+  readonly onToggleToc?: () => void;
 }
 
 export default function PreviewToolbar({
@@ -37,6 +50,8 @@ export default function PreviewToolbar({
   onToggleFullscreen,
   onOpenNewWindow,
   isRefreshing = false,
+  showToc = true,
+  onToggleToc,
 }: PreviewToolbarProps) {
   return (
     <div className="preview-toolbar flex flex-wrap items-center justify-between gap-4 p-3 bg-[var(--color-editor-surface)] border border-[var(--color-editor-border)] rounded-xl shadow-xs select-none">
@@ -86,6 +101,23 @@ export default function PreviewToolbar({
 
       {/* ─── Group 2: Action controls ────────────────────────────────────────── */}
       <div className="flex items-center gap-2">
+        {/* Table of Contents toggle (for Desktop view) */}
+        {viewport === "desktop" && onToggleToc && (
+          <button
+            type="button"
+            onClick={onToggleToc}
+            className={`px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold ${
+              showToc
+                ? "bg-[var(--color-editor-accent)]/15 border-[var(--color-editor-accent)]/40 text-[var(--color-editor-accent)] shadow-xs"
+                : "border-[var(--color-editor-border)] hover:bg-[var(--color-editor-elevated)] text-[var(--color-editor-secondary)]"
+            }`}
+            title={showToc ? "Hide Outline / Table of Contents" : "Show Outline / Table of Contents"}
+          >
+            <ListTree size={14} />
+            <span className="hidden sm:inline">Outline</span>
+          </button>
+        )}
+
         {/* Refresh Action */}
         {onRefresh && (
           <button

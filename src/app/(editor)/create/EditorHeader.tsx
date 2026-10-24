@@ -237,16 +237,23 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             type="button"
             onClick={onTranslateFromSource}
             disabled={isTranslating}
-            className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-500 dark:text-amber-300 border border-amber-500/30 transition-all cursor-pointer disabled:opacity-50 shadow-2xs shrink-0"
+            className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-xs shrink-0 relative overflow-hidden ${
+              isTranslating
+                ? "bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-slate-950 font-bold shadow-amber-500/20 ring-1 ring-amber-400/40 cursor-wait animate-pulse"
+                : "bg-amber-500/15 hover:bg-amber-500/25 text-amber-500 dark:text-amber-300 border border-amber-500/30"
+            }`}
             title={t("editor.header.translate_from_source_title", { source: activeLocale === "vi" ? "English (EN)" : "Vietnamese (VI)" })}
           >
+            {isTranslating && (
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
+            )}
             {isTranslating ? (
-              <Loader2 size={13} className="animate-spin" />
+              <Loader2 size={13} className="animate-spin text-slate-950 shrink-0" />
             ) : (
               <Sparkles size={13} />
             )}
-            <span className="hidden 2xl:inline">{t("editor.header.translate_from", { source: activeLocale === "vi" ? "EN" : "VI" })}</span>
-            <span className="inline 2xl:hidden">{t("editor.header.translate_short")}</span>
+            <span className="hidden 2xl:inline">{isTranslating ? t("editor.banner.translating") : t("editor.header.translate_from", { source: activeLocale === "vi" ? "EN" : "VI" })}</span>
+            <span className="inline 2xl:hidden">{isTranslating ? t("editor.banner.translating") : t("editor.header.translate_short")}</span>
           </button>
         )}
 

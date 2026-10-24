@@ -157,7 +157,16 @@ export const aiApi = {
    * Translates article content from sourceLocale to targetLocale (AI-assisted translation).
    */
   translateArticle: (payload: TranslationRequest) => {
-    return api.post<TranslationResponse>("/ai/v1/translate", payload);
+    const body = {
+      ...payload,
+      sourceTitle: payload.sourceTitle || payload.title || "",
+      sourceContent: payload.sourceContent || payload.content || "",
+      sourceDescription: payload.sourceDescription || payload.description || "",
+      title: payload.title || payload.sourceTitle || "",
+      content: payload.content || payload.sourceContent || "",
+      description: payload.description || payload.sourceDescription || "",
+    };
+    return api.post<TranslationResponse>("/ai/v1/translate", body);
   },
 
   /**
@@ -174,9 +183,12 @@ export const aiApi = {
 // ─── Translation Types ────────────────────────────────────────────────────────
 
 export interface TranslationRequest {
-  readonly title: string;
-  readonly content: string;
+  readonly title?: string;
+  readonly content?: string;
   readonly description?: string;
+  readonly sourceTitle?: string;
+  readonly sourceContent?: string;
+  readonly sourceDescription?: string;
   readonly sourceLocale: "en" | "vi";
   readonly targetLocale: "en" | "vi";
   readonly additionalInstructions?: string;

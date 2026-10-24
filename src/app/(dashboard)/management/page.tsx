@@ -33,7 +33,9 @@ import Series from "@/features/series/components/management/Series";
 import Courses from "@/features/series/components/management/Courses";
 import SupportTicketAdmin from "@/features/users/components/SupportTicketAdmin";
 import ContributionAdmin from "@/features/users/components/ContributionAdmin";
-
+import ProductManagement from "@/features/shop/components/admin/ProductManagement";
+import CategoryManagement from "@/features/shop/components/admin/CategoryManagement";
+import { Package, Layers } from "lucide-react";
 
 const AdminDashboard = () => {
   const router = useRouter();
@@ -52,6 +54,8 @@ const AdminDashboard = () => {
       href: "/management/content-studio",
       badge: "AI",
     },
+    { id: "shop-products", label: "Shop Products", icon: Package, badge: "Shop" },
+    { id: "shop-categories", label: "Shop Categories", icon: Layers },
     { id: "users", label: "Users", icon: Users },
     { id: "series", label: "Series", icon: BookText },
     { id: "courses", label: "Courses", icon: BookOpen },
@@ -66,6 +70,10 @@ const AdminDashboard = () => {
     switch (activeTab) {
       case "categories":
         return <Category />;
+      case "shop-products":
+        return <ProductManagement />;
+      case "shop-categories":
+        return <CategoryManagement />;
       case "topics":
         return <Topic />;
       case "posts":

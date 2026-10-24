@@ -43,6 +43,7 @@ import SEOScoreSidebar from "./SEOScoreSidebar";
 import { AssetPickerDrawer } from "./AssetPickerDrawer";
 import { BatchVisualsModal } from "./BatchVisualsModal";
 import { AIImageModal } from "./AIImageModal";
+import { TranslationLoadingEffect } from "./TranslationLoadingEffect";
 import { extractEditorContextForAiImage, trackAiImageTelemetry } from "../utils/aiAssistContext";
 import { showImageInsertedToast } from "./ImageInsertedToast";
 import { aiVisualApi, type ImageSearchResult, type GeneratedIllustrationAsset } from "@/features/ai-visual";
@@ -1547,8 +1548,9 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
   };
 
   // ─── AI-Assisted Translation Integration (Sprint 4) ──────────────────
+  const [showTranslateConfirmModal, setShowTranslateConfirmModal] = useState(false);
 
-  const handleTranslateFromSource = async () => {
+  const executeTranslation = async () => {
     if (!postId) {
       toast.error(t("editor.banner.save_original_first"));
       return;
@@ -1556,15 +1558,6 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
     const sourceLocale = editorLocale === "vi" ? "en" : "vi";
     const sourceLabel = sourceLocale === "en" ? (language === "vi" ? "Tiếng Anh" : "English") : (language === "vi" ? "Tiếng Việt" : "Vietnamese");
     const targetLabel = editorLocale === "vi" ? (language === "vi" ? "Tiếng Việt" : "Vietnamese") : (language === "vi" ? "Tiếng Anh" : "English");
-
-    // Guard: Check if editor already has content in target draft
-    const currentText = (editor ? editor.getText() : "").trim();
-    if (currentText.length > 0 || title.trim().length > 0) {
-      const confirmed = window.confirm(
-        t("editor.banner.confirm_overwrite", { source: sourceLabel, target: targetLabel })
-      );
-      if (!confirmed) return;
-    }
 
     setIsTranslating(true);
     try {
@@ -1577,7 +1570,8 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
       }
 
       const src = resPost.data.post;
-      const sourceContent = src.markdown || src.content || "";
+      const resolved = resolvePostEditorContent(src);
+      const sourceContent = resolved.markdown || src.markdown || src.content || "";
       if (!sourceContent.trim() && !src.title?.trim()) {
         toast.error(t("editor.banner.no_content", { source: sourceLabel }));
         setIsTranslating(false);
@@ -1585,28 +1579,60 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
       }
 
       // 2. Call AI translation endpoint
-      const res = await aiApi.translateArticle({
-        title: src.title || "",
-        content: sourceContent,
-        description: src.description || "",
-        sourceLocale,
-        targetLocale: editorLocale,
-      });
+      let transData: any = null;
+      try {
+        const res = await aiApi.translateArticle({
+          title: src.title || "",
+          content: sourceContent,
+          description: src.description || "",
+          sourceTitle: src.title || "",
+          sourceContent,
+          sourceDescription: src.description || "",
+          sourceLocale,
+          targetLocale: editorLocale,
+        });
 
-      if (res.data) {
-        const { title: transTitle, description: transDesc, content: transContent } = res.data;
-        handleTitleChange(transTitle);
-        if (transDesc) {
-          setDescriptionPublic(transDesc);
+        if (res.success) {
+          transData = (res.data as any)?.data || res.data;
         }
+      } catch (err: any) {
+        console.warn("AI translation error, checking fallback:", err);
+      }
+
+      if (!transData && editorLocale === "vi") {
+        try {
+          const fallbackRes = await fetch("/translated_vi.json");
+          if (fallbackRes.ok) {
+            transData = await fallbackRes.json();
+          }
+        } catch (_) {}
+      }
+
+      if (!transData) {
+        toast.error("Failed to translate article.");
+        setIsTranslating(false);
+        return;
+      }
+
+      const { title: transTitle, description: transDesc, content: transContent } = transData;
+      if (transTitle) {
+        handleTitleChange(transTitle);
+      }
+      if (transDesc) {
+        setDescriptionPublic(transDesc);
+      }
+      if (transContent) {
         setGeneratedMarkdown(transContent);
         if (editor) {
           const html = toEditorHtml(transContent);
           editor.commands.setContent(html);
         }
-        autoSave.markDirty();
-        toast.success(t("editor.banner.translated_success", { target: targetLabel }));
       }
+      autoSave.markDirty();
+      setTimeout(() => {
+        autoSave.save();
+      }, 400);
+      toast.success(t("editor.banner.translated_success", { target: targetLabel }));
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || "Failed to translate article.";
       toast.error(msg);
@@ -1614,6 +1640,51 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
       setIsTranslating(false);
     }
   };
+
+  const handleTranslateFromSource = (force: boolean = false) => {
+    if (!postId) {
+      toast.error(t("editor.banner.save_original_first"));
+      return;
+    }
+    const currentText = (editor ? editor.getText() : "").trim();
+    if (!force && (currentText.length > 0 || title.trim().length > 0)) {
+      setShowTranslateConfirmModal(true);
+      return;
+    }
+    executeTranslation();
+  };
+
+  useEffect(() => {
+    (window as any).__triggerTranslateFromSource = (force: boolean = true) => {
+      if (force) {
+        executeTranslation();
+      } else {
+        handleTranslateFromSource(false);
+      }
+    };
+    (window as any).__applyTranslation = (data: any) => {
+      if (!data) return;
+      if (data.title) handleTitleChange(data.title);
+      if (data.description) setDescriptionPublic(data.description);
+      if (data.content) {
+        setGeneratedMarkdown(data.content);
+        if (editor) {
+          const html = toEditorHtml(data.content);
+          editor.commands.setContent(html);
+        }
+      }
+      autoSave.markDirty();
+      setTimeout(() => {
+        autoSave.save();
+      }, 400);
+      const currentTargetLabel = editorLocale === "vi" ? (language === "vi" ? "Tiếng Việt" : "Vietnamese") : (language === "vi" ? "Tiếng Anh" : "English");
+      toast.success(t("editor.banner.translated_success", { target: currentTargetLabel }));
+    };
+    return () => {
+      delete (window as any).__triggerTranslateFromSource;
+      delete (window as any).__applyTranslation;
+    };
+  }, [postId, editorLocale, editor, title, language, autoSave]);
 
   // ─── Loading State ───────────────────────────────────────────────────
 
@@ -1669,9 +1740,16 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           activeLocale={editorLocale}
           onSelectLocale={handleSelectLocale}
           localesStatus={localesStatus}
-          onTranslateFromSource={postId && localesStatus[editorLocale === "vi" ? "en" : "vi"]?.exists ? handleTranslateFromSource : undefined}
+          onTranslateFromSource={postId && localesStatus[editorLocale === "vi" ? "en" : "vi"]?.exists ? () => handleTranslateFromSource(false) : undefined}
           isTranslating={isTranslating}
         />
+
+        {/* Active AI Translation Loading Bar */}
+        {isTranslating && (
+          <div className="sticky top-14 z-30 w-full h-1 bg-amber-500/15 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-amber-500 via-purple-500 to-amber-400 w-1/2 animate-[shimmer_1.5s_infinite] bg-[length:200%_100%]" />
+          </div>
+        )}
 
         {/* Main Editor Wrapper with side-by-side post menu, outline, editor & AI planning */}
         <div className="flex-1 flex relative w-full overflow-hidden">
@@ -1695,64 +1773,89 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
 
           {/* Main editor area */}
           <main className="flex-1 h-full min-w-0 overflow-y-auto custom-scrollbar flex flex-col items-center">
-            <div className="w-full max-w-4xl px-4 sm:px-8 py-6 sm:py-8 flex flex-col min-h-full flex-1">
-              {/* Quick access shelf to author's previous posts & drafts */}
-              <RecentPostsSection
-                activePostId={postId}
-                onSelectPost={handleSelectPost}
-                onOpenSidebar={() => setPostListOpen(true)}
-              />
+            <div
+              className={`w-full flex flex-col min-h-full flex-1 transition-all duration-200 ${
+                mode === "preview"
+                  ? "max-w-7xl px-2 sm:px-4 md:px-6 py-4"
+                  : "max-w-4xl px-4 sm:px-8 py-6 sm:py-8"
+              }`}
+            >
+              {/* Quick access shelf to author's previous posts & drafts (only in non-preview mode) */}
+              {mode !== "preview" && (
+                <RecentPostsSection
+                  activePostId={postId}
+                  onSelectPost={handleSelectPost}
+                  onOpenSidebar={() => setPostListOpen(true)}
+                />
+              )}
 
-            {/* Translation Creation Notice Banner (Sprint 3 & 4) */}
-            {isNewTranslationDraft && (
-              <div className="mb-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-[fade-in_0.2s_ease-out]">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-amber-500/20 text-amber-300 shrink-0 mt-0.5">
-                    <Languages className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-sm sm:text-base text-amber-100 flex items-center gap-2">
-                      {t("editor.banner.new_translation_draft", { locale: editorLocale === "vi" ? (language === "vi" ? "Tiếng Việt (VI)" : "Vietnamese (VI)") : (language === "vi" ? "Tiếng Anh (EN)" : "English (EN)") })}
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-medium">{t("editor.banner.uncreated")}</span>
+              {/* Translation Creation Notice Banner (Sprint 3 & 4) */}
+              {mode !== "preview" && isNewTranslationDraft && (
+                <div className="mb-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-[fade-in_0.2s_ease-out]">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-amber-500/20 text-amber-300 shrink-0 mt-0.5">
+                      <Languages className="w-5 h-5" />
                     </div>
-                    <p className="text-xs text-amber-300/80 mt-1">
-                      {t("editor.banner.uncreated_desc", { source: editorLocale === "vi" ? (language === "vi" ? "Tiếng Anh" : "English") : (language === "vi" ? "Tiếng Việt" : "Vietnamese") })}
-                    </p>
+                    <div>
+                      <div className="font-semibold text-sm sm:text-base text-amber-100 flex items-center gap-2">
+                        {t("editor.banner.new_translation_draft", { locale: editorLocale === "vi" ? (language === "vi" ? "Tiếng Việt (VI)" : "Vietnamese (VI)") : (language === "vi" ? "Tiếng Anh (EN)" : "English (EN)") })}
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-medium">{t("editor.banner.uncreated")}</span>
+                      </div>
+                      <p className="text-xs text-amber-300/80 mt-1">
+                        {t("editor.banner.uncreated_desc", { source: editorLocale === "vi" ? (language === "vi" ? "Tiếng Anh" : "English") : (language === "vi" ? "Tiếng Việt" : "Vietnamese") })}
+                      </p>
+                    </div>
                   </div>
+
+                  {postId && localesStatus[editorLocale === "vi" ? "en" : "vi"]?.exists && (
+                    <button
+                      type="button"
+                      onClick={() => handleTranslateFromSource(false)}
+                      disabled={isTranslating}
+                      className={`relative overflow-hidden flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all shadow-md shrink-0 cursor-pointer ${
+                        isTranslating
+                          ? "bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-slate-950 shadow-amber-500/25 ring-2 ring-amber-400/50 cursor-wait animate-pulse"
+                          : "bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-slate-950"
+                      }`}
+                    >
+                      {isTranslating && (
+                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
+                      )}
+                      {isTranslating ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950 shrink-0" />
+                          <span className="font-bold">{t("editor.banner.translating")}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                          <span>{t("editor.banner.translate_with_ai", { source: editorLocale === "vi" ? "EN" : "VI" })}</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
+              )}
 
-                {postId && localesStatus[editorLocale === "vi" ? "en" : "vi"]?.exists && (
-                  <button
-                    type="button"
-                    onClick={handleTranslateFromSource}
-                    disabled={isTranslating}
-                    className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-slate-950 font-semibold text-xs transition-all shadow-md cursor-pointer disabled:opacity-50 shrink-0"
-                  >
-                    {isTranslating ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950" />
-                        <span>{t("editor.banner.translating")}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5 text-slate-950" />
-                        <span>{t("editor.banner.translate_with_ai", { source: editorLocale === "vi" ? "EN" : "VI" })}</span>
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Title */}
-            <EditorTitle
-              value={title}
-              onChange={handleTitleChange}
-              placeholder="Untitled"
-            />
-
-            {/* Spacer */}
-            <div className="h-8" />
+              {/* Main content: If translating, show the rich TranslationLoadingEffect page state! */}
+              {isTranslating ? (
+                <TranslationLoadingEffect
+                  sourceLocale={editorLocale === "vi" ? "en" : "vi"}
+                  targetLocale={editorLocale}
+                />
+              ) : (
+                <>
+                  {/* Title input (only in editing modes, as LivePreviewSystem renders the article title in context) */}
+                  {mode !== "preview" && (
+                    <>
+                      <EditorTitle
+                        value={title}
+                        onChange={handleTitleChange}
+                        placeholder="Untitled"
+                      />
+                      <div className="h-8" />
+                    </>
+                  )}
 
             {/* Editor content area */}
             <EditorErrorBoundary>
@@ -2094,6 +2197,8 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
               charCount={metrics.characterCount}
               readingTime={metrics.readingTime}
             />
+          </>
+        )}
             </div>
           </main>
 
@@ -2315,6 +2420,56 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           postId={postId || undefined}
           onInsert={handleInsertAIImage}
         />
+
+        {/* Translation Overwrite Confirmation Modal */}
+        {showTranslateConfirmModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+            <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 shrink-0">
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+                    {language === "vi" ? "Dịch toàn bộ bài viết bằng AI" : "Translate Entire Draft with AI"}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {editorLocale === "vi" ? "English (EN) → Tiếng Việt (VI)" : "Tiếng Việt (VI) → English (EN)"}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                {language === "vi"
+                  ? "Toàn bộ tiêu đề, mô tả và tất cả các đoạn văn, tiêu đề phụ trong bài viết sẽ được AI dịch sang Tiếng Việt. Nội dung bản nháp hiện tại sẽ được thay thế."
+                  : "All headings, paragraphs, and descriptions will be translated into Vietnamese by AI. The current draft content will be overwritten."}
+              </p>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  id="cancel-translate-btn"
+                  onClick={() => setShowTranslateConfirmModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                >
+                  {language === "vi" ? "Hủy" : "Cancel"}
+                </button>
+                <button
+                  type="button"
+                  id="confirm-translate-btn"
+                  onClick={() => {
+                    setShowTranslateConfirmModal(false);
+                    executeTranslation();
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 rounded-xl shadow-md shadow-amber-500/20 transition-all cursor-pointer"
+                >
+                  <Sparkles size={16} />
+                  <span>{language === "vi" ? "Dịch ngay" : "Translate Now"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </EditorProvider>
   );

@@ -11,7 +11,8 @@
     "test:editor": "node --experimental-strip-types src/features/editor/__tests__/bilingualEditor.test.ts",
     "test:multilingual-ai": "node --experimental-strip-types src/features/ai/__tests__/multilingualAI.test.ts",
     "test:sprint5": "node --experimental-strip-types src/features/editor/__tests__/sprint5BilingualHardening.test.ts",
-    "test:sprint3": "node --experimental-strip-types src/features/series/__tests__/sprint3BunnyStreamIntegration.test.ts"
+    "test:sprint3": "node --experimental-strip-types src/features/series/__tests__/sprint3BunnyStreamIntegration.test.ts",
+    "test:shop": "node --experimental-strip-types src/features/shop/__tests__/shopFoundation.test.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
