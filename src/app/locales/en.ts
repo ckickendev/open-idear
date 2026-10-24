@@ -198,6 +198,7 @@ const en = {
       "ai_usage": "AI Usage",
       "generate_visuals": "Generate All Visuals",
       "all_visuals": "All Visuals",
+      "ai_tools": "AI Tools",
       "visual_mode": "Switch to visual editor",
       "html_mode": "Switch to HTML mode",
       "preview": "Preview",

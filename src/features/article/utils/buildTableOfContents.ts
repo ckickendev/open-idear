@@ -72,10 +72,19 @@ export function buildTableOfContents(
     // Only H2 and H3; H1 is reserved for the article title
     if (block.level !== 2 && block.level !== 3) continue;
 
+    // Clean leading markdown hash artifacts and excessive whitespace
+    let cleanText = (block.content || "").replace(/^#+\s*/, "").trim();
+    if (!cleanText) continue;
+
+    // Defensive guard: truncate excessively long headings to prevent TOC overflow
+    if (cleanText.length > 120) {
+      cleanText = cleanText.slice(0, 117).trim() + "…";
+    }
+
     items.push({
       // ID must match the rendered DOM id: ArticleRenderer uses `id="block-${block.id}"`
       id: `block-${block.id}`,
-      text: block.content,
+      text: cleanText,
       level: block.level,
     });
   }

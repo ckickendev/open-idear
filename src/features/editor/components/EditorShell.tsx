@@ -1694,13 +1694,14 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           )}
 
           {/* Main editor area */}
-          <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-8 py-8 sm:py-10 overflow-y-auto custom-scrollbar">
-            {/* Quick access shelf to author's previous posts & drafts */}
-            <RecentPostsSection
-              activePostId={postId}
-              onSelectPost={handleSelectPost}
-              onOpenSidebar={() => setPostListOpen(true)}
-            />
+          <main className="flex-1 h-full min-w-0 overflow-y-auto custom-scrollbar flex flex-col items-center">
+            <div className="w-full max-w-4xl px-4 sm:px-8 py-6 sm:py-8 flex flex-col min-h-full flex-1">
+              {/* Quick access shelf to author's previous posts & drafts */}
+              <RecentPostsSection
+                activePostId={postId}
+                onSelectPost={handleSelectPost}
+                onOpenSidebar={() => setPostListOpen(true)}
+              />
 
             {/* Translation Creation Notice Banner (Sprint 3 & 4) */}
             {isNewTranslationDraft && (
@@ -2093,6 +2094,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
               charCount={metrics.characterCount}
               readingTime={metrics.readingTime}
             />
+            </div>
           </main>
 
           {/* AI Article Planner side drawer (right) */}

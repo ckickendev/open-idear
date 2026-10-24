@@ -193,6 +193,7 @@ const vi = {
       "ai_usage": "Mức dùng AI",
       "generate_visuals": "Tạo toàn bộ hình ảnh",
       "all_visuals": "Toàn bộ ảnh",
+      "ai_tools": "Công cụ AI",
       "visual_mode": "Chuyển sang trình soạn thảo trực quan",
       "html_mode": "Chuyển sang chế độ HTML",
       "preview": "Xem trước",

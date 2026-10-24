@@ -39,6 +39,14 @@ export interface BunnyPlayerProps {
   className?: string;
   /** Callback when playback progress advances */
   onTimeUpdate?: (currentTime: number) => void;
+  /** Callback with comprehensive progress and percentage */
+  onProgress?: (progressData: { currentTime: number; duration: number; percent: number }) => void;
+  /** Callback triggered once when playback crosses the completion threshold (e.g. >= 90%) or finishes */
+  onAutoCompleted?: () => void;
+  /** Playback completion ratio threshold between 0.1 and 1.0 (default 0.90) */
+  completionThreshold?: number;
+  /** Known total duration in seconds from lesson metadata */
+  knownDuration?: number;
   /** Callback when video finishes playing */
   onEnded?: () => void;
   /** Callback for errors */
@@ -57,6 +65,10 @@ export const BunnyPlayer = forwardRef<BunnyPlayerRef, BunnyPlayerProps>(function
     autoplay = false,
     className = "",
     onTimeUpdate,
+    onProgress,
+    onAutoCompleted,
+    completionThreshold = 0.9,
+    knownDuration,
     onEnded,
     onError,
   },
@@ -68,6 +80,12 @@ export const BunnyPlayer = forwardRef<BunnyPlayerRef, BunnyPlayerProps>(function
   const [isRefreshing, setIsRefreshing] = useState(false);
   const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const hasTriggeredCompletionRef = useRef(false);
+
+  // Reset completion trigger state when lessonId changes
+  useEffect(() => {
+    hasTriggeredCompletionRef.current = false;
+  }, [lessonId]);
 
   useImperativeHandle(ref, () => ({
     seek: (seconds: number) => {
@@ -186,11 +204,34 @@ export const BunnyPlayer = forwardRef<BunnyPlayerRef, BunnyPlayerProps>(function
 
       const eventType = data.event || data.type || data.action;
 
-      if (eventType === "timeupdate" && typeof data.data?.currentTime === "number") {
-        onTimeUpdate?.(data.data.currentTime);
-      } else if (eventType === "timeupdate" && typeof data.currentTime === "number") {
-        onTimeUpdate?.(data.currentTime);
-      } else if (eventType === "ended") {
+      let currTime: number | null = null;
+      let dur: number | null = typeof knownDuration === "number" && knownDuration > 0 ? knownDuration : null;
+
+      if (typeof data.data?.currentTime === "number") currTime = data.data.currentTime;
+      else if (typeof data.currentTime === "number") currTime = data.currentTime;
+
+      if (typeof data.data?.duration === "number") dur = data.data.duration;
+      else if (typeof data.duration === "number") dur = data.duration;
+
+      if (currTime !== null && currTime >= 0) {
+        onTimeUpdate?.(currTime);
+
+        if (dur !== null && dur > 0) {
+          const percent = Math.min(1, currTime / dur);
+          onProgress?.({ currentTime: currTime, duration: dur, percent });
+
+          if (percent >= completionThreshold && !hasTriggeredCompletionRef.current) {
+            hasTriggeredCompletionRef.current = true;
+            onAutoCompleted?.();
+          }
+        }
+      }
+
+      if (eventType === "ended") {
+        if (!hasTriggeredCompletionRef.current) {
+          hasTriggeredCompletionRef.current = true;
+          onAutoCompleted?.();
+        }
         onEnded?.();
       }
     };
@@ -199,7 +240,7 @@ export const BunnyPlayer = forwardRef<BunnyPlayerRef, BunnyPlayerProps>(function
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-  }, [onTimeUpdate, onEnded]);
+  }, [onTimeUpdate, onProgress, onAutoCompleted, onEnded, completionThreshold, knownDuration]);
 
   // Construct active embed URL
   let resolvedEmbedUrl = propEmbedUrl || config?.embedUrl || "";

@@ -106,8 +106,14 @@ const WatchPage = () => {
   const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
+  const [completingLessonId, setCompletingLessonId] = useState<string | null>(null);
   const [isEnrolled, setIsEnrolled] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState<LearnerTab>("overview");
+
+  // Real data progress calculated from actual active lessons vs completed
+  const realProgress = allLessons.length > 0
+    ? Math.min(100, Math.round((completedLessons.length / allLessons.length) * 100))
+    : progress;
 
   // Video Chapter playback tracking
   const [currentTime, setCurrentTime] = useState(0);
@@ -403,19 +409,35 @@ const WatchPage = () => {
     );
   };
 
-  const handleLessonComplete = async (lessonId: string) => {
+  const handleLessonComplete = async (
+    lessonId: string,
+    action?: "complete" | "uncomplete" | "toggle"
+  ) => {
     if (!course?._id || !isEnrolled) return;
     try {
-      const res = await courseApi.completeLesson(course._id, lessonId);
+      setCompletingLessonId(lessonId);
+      const res = await courseApi.completeLesson(course._id, lessonId, action);
       if (res.success) {
         const data = (res.data as any)?.data;
-        setCompletedLessons(data?.completedLessons || []);
+        const updatedCompleted = data?.completedLessons || [];
+        setCompletedLessons(updatedCompleted);
         setProgress(data?.progress || 0);
+
         // Refresh mastery
         loadMastery(lessonId);
+
+        const isNowCompleted = updatedCompleted.includes(lessonId);
+        if (isNowCompleted && action !== "uncomplete") {
+          toast.success("Lesson marked as completed! 🎉");
+        } else if (!isNowCompleted && action === "toggle") {
+          toast.info("Lesson marked as uncompleted");
+        }
       }
     } catch (err) {
-      console.error(err);
+      console.error("Error updating lesson completion:", err);
+      toast.error("Failed to update lesson completion");
+    } finally {
+      setCompletingLessonId(null);
     }
   };
 
@@ -484,17 +506,20 @@ const WatchPage = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Progress Bar */}
+          {/* Progress Bar with Real Data */}
           {isEnrolled && (
-            <div className="hidden md:flex items-center gap-2">
+            <div
+              className="hidden md:flex items-center gap-2"
+              title={`${completedLessons.length} of ${allLessons.length} lessons completed (${realProgress}%)`}
+            >
               <div className="w-32 bg-muted rounded-full h-2 overflow-hidden">
                 <div
                   className="bg-emerald-500 h-full transition-all duration-300 rounded-full"
-                  style={{ width: `${progress}%` }}
+                  style={{ width: `${realProgress}%` }}
                 />
               </div>
               <span className="text-xs text-muted-foreground font-semibold">
-                {progress}%
+                {realProgress}%
               </span>
             </div>
           )}
@@ -555,12 +580,21 @@ const WatchPage = () => {
                       lessonId={currentLesson._id}
                       title={currentLesson.title}
                       posterUrl={currentLesson.media?.thumbnail}
+                      knownDuration={currentLesson.media?.duration}
+                      completionThreshold={0.9}
                       autoplay={true}
                       onTimeUpdate={(currentTime: number) => {
                         setCurrentTime(currentTime);
                       }}
+                      onAutoCompleted={() => {
+                        if (!completedLessons.includes(currentLesson._id)) {
+                          handleLessonComplete(currentLesson._id, "complete");
+                        }
+                      }}
                       onEnded={() => {
-                        handleLessonComplete(currentLesson._id);
+                        if (!completedLessons.includes(currentLesson._id)) {
+                          handleLessonComplete(currentLesson._id, "complete");
+                        }
                         goToNext();
                       }}
                     />
@@ -1311,6 +1345,35 @@ const WatchPage = () => {
             >
               <ChevronLeft size={18} /> Previous Lesson
             </button>
+
+            {/* Lesson Completion Action */}
+            {isEnrolled && currentLesson && (
+              <button
+                type="button"
+                onClick={() => handleLessonComplete(currentLesson._id, "toggle")}
+                disabled={completingLessonId === currentLesson._id}
+                className={`flex items-center gap-2 font-bold px-4 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+                  completedLessons.includes(currentLesson._id)
+                    ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 hover:bg-emerald-500/25 shadow-sm"
+                    : "bg-muted hover:bg-muted/80 text-foreground border border-border hover:border-emerald-500/40"
+                }`}
+                title="Toggle completion status"
+              >
+                {completingLessonId === currentLesson._id ? (
+                  <Loader2 size={15} className="animate-spin text-emerald-500" />
+                ) : completedLessons.includes(currentLesson._id) ? (
+                  <CheckCircle size={15} className="text-emerald-500" />
+                ) : (
+                  <CheckCircle size={15} className="text-muted-foreground" />
+                )}
+                <span>
+                  {completedLessons.includes(currentLesson._id)
+                    ? "Completed"
+                    : "Mark as Complete"}
+                </span>
+              </button>
+            )}
+
             <button
               onClick={goToNext}
               disabled={!nextLesson}
@@ -1388,13 +1451,22 @@ const WatchPage = () => {
                           }`}
                         >
                           {/* Status Icon */}
-                          <div className="flex-shrink-0">
+                          <div
+                            className="flex-shrink-0"
+                            onClick={(e) => {
+                              if (isEnrolled) {
+                                e.stopPropagation();
+                                handleLessonComplete(lesson._id, "toggle");
+                              }
+                            }}
+                            title={isEnrolled ? (isCompleted ? "Click to mark as uncompleted" : "Click to mark as completed") : undefined}
+                          >
                             {isCompleted ? (
-                              <CheckCircle size={15} className="text-emerald-500" />
+                              <CheckCircle size={15} className="text-emerald-500 hover:text-emerald-600 transition-colors" />
                             ) : isLessonLocked ? (
                               <Lock size={14} className="text-muted-foreground" />
                             ) : (
-                              <Play size={14} className={isCurrent ? "text-primary" : "text-muted-foreground"} />
+                              <Play size={14} className={isCurrent ? "text-primary" : "text-muted-foreground hover:text-primary transition-colors"} />
                             )}
                           </div>
 

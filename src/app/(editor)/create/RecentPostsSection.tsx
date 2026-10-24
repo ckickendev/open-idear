@@ -1,29 +1,28 @@
 // =============================================================================
-//  RECENT POSTS SECTION — QUICK ACCESS IN CREATE PAGE
+//  RECENT POSTS SECTION — QUICK ACCESS IN CREATE PAGE (OPTIMIZED & MINIMIZABLE)
 //  src/app/(editor)/create/RecentPostsSection.tsx
 //
 //  Design Decisions:
-//  - Displays author's previous posts & drafts directly on the /create page.
-//  - 1-click navigation to resume editing any past article.
-//  - Shows status badges (Draft vs Published), last updated date, and category.
-//  - Collapsible to keep writing distraction-free.
-//  - "Browse All Posts" button connects directly to the full sidebar.
+//  - Starts in a sleek, minimized compact bar (~38px) by default so the editor
+//    canvas is immediately visible without distraction.
+//  - Allows 1-click resume directly from the minimized bar for the most recent post.
+//  - When expanded, displays compact, sleek mini-cards rather than oversized cards.
+//  - Persists expand/collapse preference in localStorage.
+//  - Uses OpenIdear brand palette (Sky/Cyan/Blue) with glassmorphism.
 // =============================================================================
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
-  FileText,
   Clock,
   ChevronDown,
   ChevronUp,
   ArrowRight,
-  ExternalLink,
   Plus,
-  Sparkles,
   Layers,
   RotateCw,
+  Sparkles,
 } from "lucide-react";
 import { postApi } from "@/features/ideas/api/post.api";
 import { useTranslation } from "@/app/hook/useTranslation";
@@ -44,6 +43,8 @@ interface RecentPostsSectionProps {
   onOpenSidebar: () => void;
 }
 
+const STORAGE_KEY = "openidear_create_recent_posts_expanded";
+
 export function RecentPostsSection({
   activePostId,
   onSelectPost,
@@ -52,8 +53,18 @@ export function RecentPostsSection({
   const { t } = useTranslation();
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isExpanded, setIsExpanded] = useState<boolean>(!activePostId);
   const [hasLoaded, setHasLoaded] = useState(false);
+
+  // Default to minimized (false) to keep the editor clean and focused
+  const [isExpanded, setIsExpanded] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved === "true";
+    } catch {
+      return false;
+    }
+  });
 
   const fetchRecentPosts = useCallback(async () => {
     if (typeof window === "undefined") return;
@@ -65,7 +76,6 @@ export function RecentPostsSection({
       const res = await postApi.getPostsByAuthor();
       if (res?.data?.posts) {
         const list: PostItem[] = [...res.data.posts];
-        // Sort newest first
         list.sort((a, b) => {
           const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
           const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
@@ -92,6 +102,23 @@ export function RecentPostsSection({
     }
   }, [activePostId]);
 
+  const toggleExpanded = () => {
+    setIsExpanded((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(STORAGE_KEY, String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const recentPosts = useMemo(() => posts.slice(0, 6), [posts]);
+  const latestPost = posts[0];
+  const activePost = useMemo(
+    () => posts.find((p) => p._id === activePostId),
+    [posts, activePostId]
+  );
+
   if (!hasLoaded && posts.length === 0) {
     return null;
   }
@@ -100,75 +127,95 @@ export function RecentPostsSection({
     return null;
   }
 
-  const recentPosts = posts.slice(0, 6);
-  const activePost = posts.find((p) => p._id === activePostId);
-
   return (
-    <div className="mb-8 rounded-2xl border border-[var(--color-editor-border)] bg-[var(--color-editor-surface)]/70 backdrop-blur-md shadow-xs overflow-hidden transition-all duration-200">
-      {/* ── Section Header / Toggle Bar ── */}
-      <div className="flex items-center justify-between px-4 sm:px-5 py-3 bg-[var(--color-editor-elevated)]/40 border-b border-[var(--color-editor-border)]/60">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="p-1.5 rounded-lg bg-[var(--color-editor-accent)]/12 text-[var(--color-editor-accent)] shrink-0">
-            <Clock size={15} />
+    <div className="mb-6 rounded-xl border border-[var(--color-editor-border)] bg-[var(--color-editor-surface)]/80 backdrop-blur-md shadow-xs overflow-hidden transition-all duration-200">
+      {/* ── Compact Header Bar ── */}
+      <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 bg-[var(--color-editor-elevated)]/50 gap-2">
+        {/* Left: Clock Icon + Title + Count + Quick Resume Pill */}
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+          <div className="w-6 h-6 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-500 flex items-center justify-center shrink-0">
+            <Clock size={13} />
           </div>
-          <div className="min-w-0 flex items-center gap-2">
-            <h3 className="text-xs sm:text-sm font-bold text-[var(--color-editor-text)] truncate">
+
+          <div className="flex items-center gap-2 min-w-0">
+            <h3 className="text-xs font-bold text-[var(--color-editor-text)] whitespace-nowrap">
               {t("editor.recent_posts.title")}
             </h3>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--color-editor-elevated)] text-[var(--color-editor-secondary)] border border-[var(--color-editor-border)] shrink-0">
-              {t("editor.recent_posts.articles_count", {
-                count: posts.length,
-                unit: posts.length === 1 ? t("editor.recent_posts.article_single") : t("editor.recent_posts.article_plural"),
-              })}
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-[var(--color-editor-elevated)] text-[var(--color-editor-secondary)] border border-[var(--color-editor-border)] shrink-0">
+              {posts.length}
             </span>
-            {activePost && !isExpanded && (
-              <span className="hidden md:inline-flex items-center gap-1 text-[11px] text-[var(--color-editor-muted)] truncate max-w-xs">
+
+            {/* Quick Resume Chip on minimized bar */}
+            {!isExpanded && latestPost && !activePostId && (
+              <button
+                type="button"
+                onClick={() => onSelectPost(latestPost._id)}
+                className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[var(--color-editor-surface)] hover:bg-sky-500/10 text-[11px] text-[var(--color-editor-secondary)] hover:text-sky-500 border border-[var(--color-editor-border)] hover:border-sky-500/30 transition-all max-w-[280px] truncate cursor-pointer group"
+                title={`Resume: ${latestPost.title || t("editor.recent_posts.untitled")}`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                    latestPost.published ? "bg-emerald-500" : "bg-amber-500"
+                  }`}
+                />
+                <span className="truncate">
+                  {latestPost.title || t("editor.recent_posts.untitled")}
+                </span>
+                <ArrowRight size={10} className="shrink-0 text-sky-500 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            )}
+
+            {/* Active post indicator */}
+            {!isExpanded && activePost && (
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-[var(--color-editor-muted)] truncate max-w-[220px]">
                 • {t("editor.recent_posts.editing", { title: activePost.title || t("editor.recent_posts.untitled") })}
               </span>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        {/* Right Action Controls */}
+        <div className="flex items-center gap-1 shrink-0">
           <button
             type="button"
             onClick={fetchRecentPosts}
             disabled={isLoading}
-            className="p-1.5 rounded-lg text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer"
+            className="p-1 rounded-md text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-surface)] transition-colors cursor-pointer"
             title={t("editor.recent_posts.refresh")}
           >
-            <RotateCw size={13} className={isLoading ? "animate-spin" : ""} />
+            <RotateCw size={12} className={isLoading ? "animate-spin" : ""} />
           </button>
 
           <button
             type="button"
             onClick={onOpenSidebar}
-            className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-[var(--color-editor-accent)] hover:bg-[var(--color-editor-accent)]/10 transition-colors cursor-pointer"
+            className="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold text-sky-500 hover:text-sky-400 hover:bg-sky-500/10 transition-colors cursor-pointer"
           >
-            <Layers size={13} />
+            <Layers size={12} />
             <span>{t("editor.recent_posts.view_all_sidebar")}</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setIsExpanded((prev) => !prev)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer"
+            onClick={toggleExpanded}
+            className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-surface)] transition-colors cursor-pointer"
           >
             <span>{isExpanded ? t("editor.recent_posts.hide") : t("editor.recent_posts.show")}</span>
-            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
           </button>
         </div>
       </div>
 
-      {/* ── Expanded Content Grid ── */}
+      {/* ── Compact Expanded Grid ── */}
       {isExpanded && (
-        <div className="p-4 sm:p-5 space-y-3 animate-in fade-in-50 duration-200">
-          <div className="flex items-center justify-between text-xs text-[var(--color-editor-muted)] mb-1">
+        <div className="p-3 sm:p-4 space-y-3 border-t border-[var(--color-editor-border)] animate-in fade-in-50 duration-150">
+          <div className="flex items-center justify-between text-[11px] text-[var(--color-editor-muted)]">
             <span>{t("editor.recent_posts.subtitle")}</span>
-            <span className="text-[11px]">{t("editor.recent_posts.hint")}</span>
+            <span>{t("editor.recent_posts.hint")}</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {/* Sleek, compact 3-column grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
             {recentPosts.map((post) => {
               const isActive = activePostId === post._id;
               const dateStr = post.updatedAt || post.createdAt;
@@ -176,7 +223,6 @@ export function RecentPostsSection({
                 ? new Date(dateStr).toLocaleDateString(undefined, {
                     month: "short",
                     day: "numeric",
-                    year: "numeric",
                   })
                 : t("editor.recent_posts.recent");
 
@@ -189,24 +235,24 @@ export function RecentPostsSection({
                 <div
                   key={post._id}
                   onClick={() => onSelectPost(post._id)}
-                  className={`group relative p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex flex-col justify-between select-none ${
+                  className={`group relative p-2.5 rounded-lg border cursor-pointer transition-all duration-150 flex flex-col justify-between select-none ${
                     isActive
-                      ? "bg-[var(--color-editor-accent)]/10 border-[var(--color-editor-accent)] ring-1 ring-[var(--color-editor-accent)]/30 shadow-xs"
-                      : "bg-[var(--color-editor-elevated)]/40 hover:bg-[var(--color-editor-elevated)] border-[var(--color-editor-border)] hover:border-[var(--color-editor-accent)]/50 hover:shadow-md"
+                      ? "bg-sky-500/10 border-sky-500/60 ring-1 ring-sky-500/30 shadow-xs"
+                      : "bg-[var(--color-editor-elevated)]/40 hover:bg-[var(--color-editor-elevated)] border-[var(--color-editor-border)] hover:border-sky-500/40 hover:shadow-xs"
                   }`}
                 >
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     {/* Status & Date */}
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center justify-between gap-1.5">
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold uppercase tracking-wider ${
                           post.published
                             ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                             : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20"
                         }`}
                       >
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
+                          className={`w-1 h-1 rounded-full ${
                             post.published ? "bg-emerald-500" : "bg-amber-500"
                           }`}
                         />
@@ -219,27 +265,20 @@ export function RecentPostsSection({
                     </div>
 
                     {/* Title */}
-                    <h4 className="text-xs font-bold text-[var(--color-editor-text)] line-clamp-2 leading-snug group-hover:text-[var(--color-editor-accent)] transition-colors">
+                    <h4 className="text-xs font-semibold text-[var(--color-editor-text)] line-clamp-1 group-hover:text-sky-500 transition-colors">
                       {post.title || t("editor.recent_posts.untitled")}
                     </h4>
-
-                    {/* Description snippet */}
-                    {post.description && (
-                      <p className="text-[11px] text-[var(--color-editor-muted)] line-clamp-1">
-                        {post.description}
-                      </p>
-                    )}
                   </div>
 
                   {/* Bottom Meta */}
-                  <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-[var(--color-editor-border)]/40 text-[10px]">
-                    <span className="text-[var(--color-editor-muted)] truncate max-w-[120px]">
+                  <div className="flex items-center justify-between pt-1.5 mt-1.5 border-t border-[var(--color-editor-border)]/40 text-[10px]">
+                    <span className="text-[var(--color-editor-muted)] truncate max-w-[110px]">
                       {categoryName || t("editor.recent_posts.general_category")}
                     </span>
 
-                    <span className="text-[var(--color-editor-accent)] font-semibold inline-flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+                    <span className="text-sky-500 font-semibold inline-flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform text-[10px]">
                       {isActive ? t("editor.recent_posts.currently_editing") : t("editor.recent_posts.open_post")}
-                      <ArrowRight size={11} />
+                      <ArrowRight size={10} />
                     </span>
                   </div>
                 </div>
@@ -248,25 +287,27 @@ export function RecentPostsSection({
           </div>
 
           {/* Action Row */}
-          <div className="flex items-center justify-between pt-2">
-            {activePostId && (
+          <div className="flex items-center justify-between pt-1 text-xs">
+            {activePostId ? (
               <button
                 type="button"
                 onClick={() => onSelectPost(null)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--color-editor-text)] hover:text-[var(--color-editor-accent)] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--color-editor-text)] hover:text-sky-500 transition-colors cursor-pointer"
               >
-                <Plus size={14} />
+                <Plus size={13} />
                 <span>{t("editor.recent_posts.start_new_blank")}</span>
               </button>
+            ) : (
+              <span />
             )}
 
             <button
               type="button"
               onClick={onOpenSidebar}
-              className="text-xs font-semibold text-[var(--color-editor-accent)] hover:underline ml-auto flex items-center gap-1 cursor-pointer"
+              className="text-[11px] font-semibold text-sky-500 hover:text-sky-400 hover:underline flex items-center gap-1 cursor-pointer"
             >
               <span>{t("editor.recent_posts.see_all_in_sidebar", { count: posts.length })}</span>
-              <ArrowRight size={13} />
+              <ArrowRight size={11} />
             </button>
           </div>
         </div>

@@ -124,8 +124,19 @@ export const courseApi = {
   enrollCourse: async (courseId: string) => {
     return await api.post("/course/enroll", { courseId });
   },
-  completeLesson: async (courseId: string, lessonId: string) => {
+  completeLesson: async (
+    courseId: string,
+    lessonId: string,
+    action?: "complete" | "uncomplete" | "toggle"
+  ) => {
     return await api.post("/enrollment/lesson/complete", {
+      courseId,
+      lessonId,
+      action,
+    });
+  },
+  toggleLesson: async (courseId: string, lessonId: string) => {
+    return await api.post("/enrollment/lesson/toggle", {
       courseId,
       lessonId,
     });

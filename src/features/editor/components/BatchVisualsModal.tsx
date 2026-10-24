@@ -843,23 +843,39 @@ export function BatchVisualsModal({
     ? Math.round((batchProgress.processed / batchProgress.total) * 100)
     : 0;
 
+  const getVisualTypeBadge = (type?: string) => {
+    switch (type?.toLowerCase()) {
+      case "illustration":
+        return "bg-sky-500/15 text-sky-400 border-sky-500/30";
+      case "product":
+        return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+      case "diagram":
+        return "bg-indigo-500/15 text-indigo-400 border-indigo-500/30";
+      case "chart":
+      case "infographic":
+        return "bg-amber-500/15 text-amber-400 border-amber-500/30";
+      default:
+        return "bg-sky-500/15 text-sky-400 border-sky-500/30";
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in-50 duration-200">
-      <div className="relative w-full max-w-4xl overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-md animate-in fade-in-50 duration-200">
+      <div className="relative w-full max-w-4xl overflow-hidden rounded-2xl bg-white dark:bg-[#070B14] border border-zinc-200 dark:border-slate-800 shadow-2xl shadow-sky-950/40 flex flex-col max-h-[92vh]">
         {/* ── Modal Header ────────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 shrink-0 bg-zinc-50/70 dark:bg-zinc-900/80">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-slate-800/80 shrink-0 bg-zinc-50/90 dark:bg-[#0A0F1D]/90 backdrop-blur-md">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-500/20">
-              <Sparkles className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white flex items-center justify-center shadow-md shadow-sky-500/25">
+              <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <h3 className="text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2">
                 Smart Visual Assistant
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300">
-                  Sprint 3: Batch Search
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/25">
+                  Batch Search
                 </span>
               </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs text-zinc-500 dark:text-slate-400">
                 Search all visual suggestions in one operation, review candidates, and apply with editorial control
               </p>
             </div>
@@ -868,22 +884,22 @@ export function BatchVisualsModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-slate-200 hover:bg-zinc-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* ── Modal Body ───────────────────────────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 custom-scrollbar">
           {/* Primary Batch Action Banner */}
-          <div className="p-4 rounded-xl bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-violet-950/30 dark:to-indigo-950/30 border border-violet-200 dark:border-violet-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="p-4 rounded-xl bg-gradient-to-r from-sky-500/10 via-blue-500/5 to-cyan-500/10 border border-sky-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
             <div className="space-y-0.5">
-              <div className="flex items-center gap-2 text-xs font-semibold text-violet-900 dark:text-violet-200">
-                <Layers className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+              <div className="flex items-center gap-2 text-xs font-bold text-sky-950 dark:text-sky-200">
+                <Layers className="w-4 h-4 text-sky-500 dark:text-sky-400" />
                 <span>Search All Visual Suggestions in One Operation</span>
               </div>
-              <p className="text-[11px] text-zinc-600 dark:text-zinc-400">
+              <p className="text-[11px] text-zinc-600 dark:text-slate-300">
                 Discovers candidates for all {eligibleForBatchCount} eligible sections with bounded concurrency and rate limit protection.
               </p>
             </div>
@@ -903,7 +919,7 @@ export function BatchVisualsModal({
                   type="button"
                   onClick={handleFindImagesForAllVisuals}
                   disabled={isScanning || eligibleForBatchCount === 0}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white shadow-sm transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 disabled:opacity-50 text-white shadow-md shadow-sky-500/25 transition-all cursor-pointer"
                 >
                   <Search className="w-3.5 h-3.5" />
                   <span>Find Images for All Visuals ({eligibleForBatchCount})</span>
@@ -914,42 +930,42 @@ export function BatchVisualsModal({
 
           {/* Live Progress Bar Card (shown when active) */}
           {batchProgress.isActive && (
-            <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-850 border border-violet-300 dark:border-violet-700/80 shadow-xs space-y-2 animate-in fade-in-50 duration-150">
+            <div className="p-3.5 rounded-xl bg-white dark:bg-[#0E1424] border border-sky-500/40 shadow-xs space-y-2 animate-in fade-in-50 duration-150">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-                  <RotateCw className="w-3.5 h-3.5 animate-spin text-violet-600" />
+                <span className="font-semibold text-zinc-900 dark:text-slate-100 flex items-center gap-1.5">
+                  <RotateCw className="w-3.5 h-3.5 animate-spin text-sky-500" />
                   <span>Searching: {batchProgress.processed} of {batchProgress.total} suggestions processed</span>
                 </span>
-                <span className="font-mono font-bold text-violet-600 dark:text-violet-400 text-xs">
+                <span className="font-mono font-bold text-sky-600 dark:text-sky-400 text-xs">
                   {progressPercent}%
                 </span>
               </div>
 
               {/* Visual Progress Track */}
-              <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-zinc-700 overflow-hidden">
+              <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-slate-800 overflow-hidden">
                 <div
-                  className="h-full bg-violet-600 transition-all duration-300 rounded-full"
+                  className="h-full bg-gradient-to-r from-sky-400 to-blue-500 transition-all duration-300 rounded-full"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
 
               {/* Progress Summary Metrics */}
-              <div className="flex flex-wrap items-center gap-3 text-[11px] text-zinc-500 dark:text-zinc-400 pt-0.5">
+              <div className="flex flex-wrap items-center gap-3 text-[11px] text-zinc-500 dark:text-slate-400 pt-0.5">
                 <span className="flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                   <span>{batchProgress.withResults} with results</span>
                 </span>
-                <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+                <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-slate-700" />
                 <span>{batchProgress.empty} no results</span>
                 {batchProgress.failed > 0 && (
                   <>
-                    <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+                    <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-slate-700" />
                     <span className="text-rose-500">{batchProgress.failed} failed</span>
                   </>
                 )}
                 {batchProgress.satisfied > 0 && (
                   <>
-                    <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+                    <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-slate-700" />
                     <span>{batchProgress.satisfied} already satisfied</span>
                   </>
                 )}
@@ -960,7 +976,7 @@ export function BatchVisualsModal({
           {/* Section Suggestion Cards */}
           {isScanning ? (
             <div className="py-16 flex flex-col items-center justify-center gap-3 text-zinc-400">
-              <RotateCw className="w-6 h-6 animate-spin text-violet-600" />
+              <RotateCw className="w-6 h-6 animate-spin text-sky-500" />
               <p className="text-xs font-medium">Scanning article sections & structure...</p>
             </div>
           ) : sections.length === 0 ? (
@@ -975,14 +991,14 @@ export function BatchVisualsModal({
                 return (
                   <div
                     key={idx}
-                    className={`rounded-xl border transition-all ${
+                    className={`rounded-xl border transition-all overflow-hidden ${
                       sec.isDismissed
-                        ? "bg-zinc-100/50 dark:bg-zinc-850/30 border-zinc-200 dark:border-zinc-800 opacity-60"
+                        ? "bg-zinc-100/50 dark:bg-slate-900/30 border-zinc-200 dark:border-slate-800/60 opacity-60"
                         : sec.isApplied
-                        ? "bg-emerald-50/30 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/60"
+                        ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/60 ring-1 ring-emerald-500/20"
                         : sec.selectedCandidate
-                        ? "bg-white dark:bg-zinc-850 border-violet-400 dark:border-violet-600 shadow-xs ring-1 ring-violet-400/30"
-                        : "bg-zinc-50/70 dark:bg-zinc-850/50 border-zinc-200 dark:border-zinc-800"
+                        ? "bg-white dark:bg-[#0E1424] border-sky-500/60 dark:border-sky-500/60 shadow-md shadow-sky-950/30 ring-1 ring-sky-500/30"
+                        : "bg-zinc-50/80 dark:bg-[#0E1424] border-zinc-200 dark:border-slate-800/80 hover:border-slate-700"
                     }`}
                   >
                     {/* Section Card Top Header */}
@@ -991,19 +1007,19 @@ export function BatchVisualsModal({
                       className={`flex items-center justify-between p-3.5 select-none ${
                         sec.isDismissed
                           ? "cursor-default"
-                          : "cursor-pointer hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 rounded-t-xl transition-colors"
+                          : "cursor-pointer bg-zinc-100/60 dark:bg-[#121829] hover:bg-zinc-200/50 dark:hover:bg-[#182035] transition-colors border-b border-zinc-200/60 dark:border-slate-800/70"
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 shrink-0">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-200 dark:bg-slate-800 text-zinc-700 dark:text-sky-400 border border-zinc-300/80 dark:border-slate-700 shrink-0">
                           H{sec.level}
                         </span>
 
                         <div className="min-w-0 flex-1">
-                          <h4 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                          <h4 className="text-xs font-bold text-zinc-900 dark:text-slate-100 truncate">
                             {sec.heading}
                           </h4>
-                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+                          <p className="text-[11px] text-zinc-500 dark:text-slate-400 truncate">
                             {sec.isDismissed
                               ? "Suggestion dismissed by author."
                               : sec.isCompleted
@@ -1022,19 +1038,19 @@ export function BatchVisualsModal({
                               e.stopPropagation();
                               handleRestoreSuggestion(idx);
                             }}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-300 transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-zinc-200 dark:bg-slate-800 text-zinc-700 dark:text-slate-300 hover:bg-zinc-300 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                           >
                             <Eye className="w-3 h-3" />
                             <span>Restore</span>
                           </button>
                         ) : sec.isApplied ? (
-                          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                          <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                             <Check className="w-3 h-3" />
                             Applied
                           </span>
                         ) : sec.isCompleted ? (
                           <div className="flex items-center gap-1.5">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                               Already Satisfied
                             </span>
                             <button
@@ -1043,24 +1059,24 @@ export function BatchVisualsModal({
                                 e.stopPropagation();
                                 handleToggleReplaceCompleted(idx);
                               }}
-                              className="px-2 py-0.5 rounded text-[10px] font-semibold text-violet-600 dark:text-violet-400 hover:underline cursor-pointer"
+                              className="px-2.5 py-0.5 rounded text-[10px] font-semibold text-sky-500 hover:underline cursor-pointer"
                             >
                               Replace Image
                             </button>
                           </div>
                         ) : isSkippedType ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-zinc-200 dark:bg-slate-800 text-zinc-600 dark:text-slate-400">
                             No Visual Needed
                           </span>
                         ) : (
                           <div className="flex items-center gap-1.5">
                             {sec.selectedCandidate && (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                                 1 Image Selected
                               </span>
                             )}
 
-                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getVisualTypeBadge(sec.visualType)}`}>
                               {sec.visualType}
                             </span>
 
@@ -1072,7 +1088,7 @@ export function BatchVisualsModal({
                                 handleDismissSuggestion(idx);
                               }}
                               title="Dismiss suggestion"
-                              className="p-1 rounded text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                              className="p-1 rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-slate-200 hover:bg-zinc-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                             >
                               <EyeOff className="w-3.5 h-3.5" />
                             </button>
@@ -1080,7 +1096,7 @@ export function BatchVisualsModal({
                         )}
 
                         {!sec.isDismissed && (
-                          <div className="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+                          <div className="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-slate-200">
                             {sec.isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                           </div>
                         )}
@@ -1089,11 +1105,11 @@ export function BatchVisualsModal({
 
                     {/* Expanded Section Detail: Query, Candidates Gallery, Alt Text */}
                     {sec.isExpanded && !sec.isDismissed && !isSkippedType && (
-                      <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 space-y-3.5 bg-white dark:bg-zinc-900/60 rounded-b-xl">
+                      <div className="p-4 border-t border-zinc-200 dark:border-slate-800/80 space-y-3.5 bg-white dark:bg-[#0A0E1A] rounded-b-xl">
                         {/* Editable Search Query Bar */}
                         <div className="flex items-center gap-2">
                           <div className="relative flex-1">
-                            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <Search className="w-3.5 h-3.5 text-zinc-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                             <input
                               type="text"
                               value={sec.searchQuery}
@@ -1109,7 +1125,7 @@ export function BatchVisualsModal({
                                 }
                               }}
                               placeholder="Search images for this section..."
-                              className="w-full pl-8 pr-3 py-1.5 text-xs bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-1 focus:ring-violet-500"
+                              className="w-full pl-8 pr-3 py-2 text-xs bg-zinc-50 dark:bg-[#121827] border border-zinc-200 dark:border-slate-700/80 rounded-xl text-zinc-900 dark:text-slate-100 placeholder-zinc-400 dark:placeholder-slate-500 focus:outline-hidden focus:border-sky-500 focus:ring-1 focus:ring-sky-500/40 transition-colors"
                             />
                           </div>
 
@@ -1117,7 +1133,7 @@ export function BatchVisualsModal({
                             type="button"
                             onClick={() => fetchCandidatesForSection(idx, sec.searchQuery)}
                             disabled={sec.isSearching}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white transition-colors cursor-pointer shrink-0"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 disabled:opacity-50 text-white shadow-sm shadow-sky-500/20 transition-all cursor-pointer shrink-0"
                           >
                             {sec.isSearching ? (
                               <RotateCw className="w-3.5 h-3.5 animate-spin" />
@@ -1130,17 +1146,17 @@ export function BatchVisualsModal({
 
                         {/* Candidates Gallery */}
                         <div className="space-y-1.5">
-                          <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">
+                          <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-600 dark:text-slate-300">
                             <span>Image Candidates ({sec.candidates.length}):</span>
-                            <span className="text-[10px] text-zinc-400">
+                            <span className="text-[10px] text-zinc-400 dark:text-slate-500">
                               Click an image to review and select
                             </span>
                           </div>
 
                           {sec.isSearching ? (
                             <div className="py-8 flex flex-col items-center justify-center gap-2 text-zinc-400 text-xs">
-                              <RotateCw className="w-4 h-4 animate-spin text-violet-500" />
-                              <span>Searching and ranking candidates...</span>
+                              <RotateCw className="w-4 h-4 animate-spin text-sky-500" />
+                              <span className="text-slate-400">Searching and ranking candidates...</span>
                             </div>
                           ) : sec.searchError ? (
                             <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-600 dark:text-rose-400 flex items-center justify-between">
@@ -1154,8 +1170,8 @@ export function BatchVisualsModal({
                               </button>
                             </div>
                           ) : sec.candidates.length === 0 ? (
-                            <div className="p-5 text-center bg-zinc-50 dark:bg-zinc-800/40 rounded-lg border border-dashed border-zinc-200 dark:border-zinc-700 space-y-2">
-                              <p className="text-xs text-zinc-400">
+                            <div className="p-6 text-center bg-zinc-50/50 dark:bg-[#0E1322] rounded-xl border border-dashed border-zinc-200 dark:border-slate-800 space-y-2">
+                              <p className="text-xs text-zinc-500 dark:text-slate-400">
                                 {sec.hasSearched
                                   ? "No suitable stock images found for this query."
                                   : "Click 'Search Images' or run 'Find Images for All Visuals' to find photos."}
@@ -1168,7 +1184,7 @@ export function BatchVisualsModal({
                                     type="button"
                                     onClick={() => handleTriggerAiFallback(idx)}
                                     disabled={sec.isAiGenerating}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-violet-50 dark:bg-violet-950/60 hover:bg-violet-100 dark:hover:bg-violet-900/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 transition-colors cursor-pointer"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 transition-colors cursor-pointer"
                                   >
                                     {sec.isAiGenerating ? (
                                       <RotateCw className="w-3.5 h-3.5 animate-spin" />
@@ -1191,17 +1207,17 @@ export function BatchVisualsModal({
                                   <div
                                     key={cand.id || cIdx}
                                     onClick={() => handleSelectCandidate(idx, cand)}
-                                    className={`group relative rounded-lg overflow-hidden border cursor-pointer transition-all ${
+                                    className={`group relative rounded-xl overflow-hidden border cursor-pointer transition-all ${
                                       isSelected
-                                        ? "ring-2 ring-violet-600 border-violet-600 shadow-sm"
-                                        : "border-zinc-200 dark:border-zinc-700 hover:border-violet-400"
+                                        ? "ring-2 ring-sky-500 border-sky-500 shadow-md shadow-sky-500/25"
+                                        : "border-zinc-200 dark:border-slate-800 hover:border-sky-500/60 bg-zinc-50 dark:bg-[#121827]"
                                     }`}
                                   >
                                     {/* Thumbnail Preview with Error Fallback */}
-                                    <div className="aspect-video bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden flex items-center justify-center">
+                                    <div className="aspect-video bg-zinc-100 dark:bg-slate-900 relative overflow-hidden flex items-center justify-center">
                                       {isBroken ? (
-                                        <div className="w-full h-full flex flex-col items-center justify-center p-2 text-zinc-400 gap-1 bg-zinc-100 dark:bg-zinc-800 text-center select-none">
-                                          <ImageIcon className="w-5 h-5 text-zinc-300 dark:text-zinc-600" />
+                                        <div className="w-full h-full flex flex-col items-center justify-center p-2 text-zinc-400 dark:text-slate-500 gap-1 bg-zinc-100 dark:bg-slate-900 text-center select-none">
+                                          <ImageIcon className="w-5 h-5 text-zinc-300 dark:text-slate-600" />
                                           <span className="text-[9px]">Preview unavailable</span>
                                         </div>
                                       ) : (
@@ -1217,31 +1233,31 @@ export function BatchVisualsModal({
                                       )}
 
                                       {/* Relevance Score Pill */}
-                                      <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold font-mono bg-black/70 backdrop-blur-xs text-white">
+                                      <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold font-mono bg-black/75 backdrop-blur-xs text-sky-300">
                                         {cand.relevanceScore}%
                                       </div>
 
                                       {/* Selection Indicator Checkmark */}
                                       {isSelected && (
-                                        <div className="absolute top-1.5 right-1.5 p-1 rounded-full bg-violet-600 text-white shadow-xs">
+                                        <div className="absolute top-1.5 right-1.5 p-1 rounded-full bg-sky-500 text-white shadow-xs">
                                           <Check className="w-3 h-3 stroke-[3]" />
                                         </div>
                                       )}
                                     </div>
 
                                     {/* Card Metadata Info Bar */}
-                                    <div className="p-2 bg-white dark:bg-zinc-850 space-y-1">
+                                    <div className="p-2.5 bg-white dark:bg-[#121827] space-y-1 border-t border-zinc-100 dark:border-slate-800/80">
                                       <div className="flex items-center justify-between gap-1 text-[10px]">
-                                        <span className="font-semibold text-zinc-700 dark:text-zinc-200 truncate">
+                                        <span className="font-semibold text-zinc-700 dark:text-slate-200 truncate">
                                           {cand.author || "Stock Photo"}
                                         </span>
-                                        <span className="text-zinc-400 text-[9px] shrink-0 uppercase font-mono">
+                                        <span className="text-zinc-400 dark:text-slate-500 text-[9px] shrink-0 uppercase font-mono">
                                           {cand.provider || cand.sourceProvider}
                                         </span>
                                       </div>
 
                                       {/* Dimensions, License Badge & External Attribution Link */}
-                                      <div className="flex items-center justify-between text-[9px] text-zinc-400 pt-0.5 gap-1">
+                                      <div className="flex items-center justify-between text-[9px] text-zinc-400 dark:text-slate-500 pt-0.5 gap-1">
                                         <div className="flex items-center gap-1 min-w-0 truncate">
                                           <span>
                                             {cand.width && cand.height ? `${cand.width}×${cand.height}` : "HD"}
@@ -1260,7 +1276,7 @@ export function BatchVisualsModal({
                                             rel="noopener noreferrer"
                                             onClick={(e) => e.stopPropagation()}
                                             title="View original on provider site"
-                                            className="text-zinc-400 hover:text-violet-600 dark:hover:text-violet-400 inline-flex items-center gap-0.5 shrink-0"
+                                            className="text-zinc-400 hover:text-sky-400 transition-colors inline-flex items-center gap-0.5 shrink-0"
                                           >
                                             <span>Source</span>
                                             <ExternalLink className="w-2.5 h-2.5" />
@@ -1277,9 +1293,9 @@ export function BatchVisualsModal({
 
                         {/* Alt Text & Single Section Apply Footer */}
                         {sec.selectedCandidate && (
-                          <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-zinc-100 dark:border-zinc-800">
+                          <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-zinc-100 dark:border-slate-800/80">
                             <div className="flex-1 space-y-1">
-                              <label className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">
+                              <label className="text-[11px] font-semibold text-zinc-600 dark:text-slate-400">
                                 Alt Text for Accessibility & SEO:
                               </label>
                               <input
@@ -1287,7 +1303,7 @@ export function BatchVisualsModal({
                                 value={sec.altText}
                                 onChange={(e) => handleAltTextChange(idx, e.target.value)}
                                 placeholder="Describe what this visual illustrates..."
-                                className="w-full px-2.5 py-1 text-xs bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-1 focus:ring-violet-500"
+                                className="w-full px-2.5 py-1.5 text-xs bg-zinc-50 dark:bg-[#121827] border border-zinc-200 dark:border-slate-700/80 rounded-lg text-zinc-900 dark:text-slate-100 focus:outline-hidden focus:border-sky-500 focus:ring-1 focus:ring-sky-500/40"
                               />
                             </div>
 
@@ -1295,10 +1311,10 @@ export function BatchVisualsModal({
                               type="button"
                               onClick={() => handleApplySingleSection(idx)}
                               disabled={sec.isApplied}
-                              className={`inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold shrink-0 transition-colors cursor-pointer ${
+                              className={`inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold shrink-0 transition-all cursor-pointer ${
                                 sec.isApplied
                                   ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 cursor-default"
-                                  : "bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 shadow-xs"
+                                  : "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white shadow-sm shadow-sky-500/20"
                               }`}
                             >
                               <Check className="w-3.5 h-3.5" />
@@ -1316,17 +1332,17 @@ export function BatchVisualsModal({
         </div>
 
         {/* ── Modal Footer Actions ────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-zinc-200 dark:border-zinc-800 shrink-0 bg-zinc-50/70 dark:bg-zinc-900/80">
+        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-zinc-200 dark:border-slate-800 shrink-0 bg-zinc-50/80 dark:bg-[#070B14]">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-600 dark:text-slate-400 hover:bg-zinc-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             Cancel
           </button>
 
           <div className="flex items-center gap-3">
-            <span className="text-xs text-zinc-500 dark:text-zinc-400 hidden sm:inline">
+            <span className="text-xs text-zinc-500 dark:text-slate-400 hidden sm:inline">
               {selectedCount} of {eligibleForBatchCount} visuals selected
             </span>
 
@@ -1335,7 +1351,7 @@ export function BatchVisualsModal({
               type="button"
               onClick={handleApplyAllSelected}
               disabled={isApplyingAll || selectedCount === 0}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white shadow-sm transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:opacity-50 text-white shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
             >
               {isApplyingAll ? (
                 <RotateCw className="w-3.5 h-3.5 animate-spin" />
