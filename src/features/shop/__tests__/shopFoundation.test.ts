@@ -5,8 +5,6 @@
 
 import assert from "node:assert";
 import type {
-  ShopCategory,
-  ShopProduct,
   FulfillmentMode,
   AvailabilityStatus,
 } from "../types/shop.types";

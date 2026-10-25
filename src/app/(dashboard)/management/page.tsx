@@ -35,7 +35,17 @@ import SupportTicketAdmin from "@/features/users/components/SupportTicketAdmin";
 import ContributionAdmin from "@/features/users/components/ContributionAdmin";
 import ProductManagement from "@/features/shop/components/admin/ProductManagement";
 import CategoryManagement from "@/features/shop/components/admin/CategoryManagement";
-import { Package, Layers } from "lucide-react";
+import OrderManagement from "@/features/shop/components/admin/OrderManagement";
+import CommerceAnalytics from "@/features/shop/components/admin/CommerceAnalytics";
+import { Package, Layers, ShoppingBag, BarChart3 } from "lucide-react";
+
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  href?: string;
+  badge?: string;
+}
 
 const AdminDashboard = () => {
   const router = useRouter();
@@ -43,7 +53,7 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("categories");
   const isLoading = loadingStore((state) => state.isLoading);
 
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     { id: "categories", label: "Categories", icon: Folder },
     { id: "topics", label: "Topics", icon: Lightbulb },
     { id: "posts", label: "Ideas & Posts", icon: FileText },
@@ -56,6 +66,8 @@ const AdminDashboard = () => {
     },
     { id: "shop-products", label: "Shop Products", icon: Package, badge: "Shop" },
     { id: "shop-categories", label: "Shop Categories", icon: Layers },
+    { id: "shop-orders", label: "Shop Inquiries", icon: ShoppingBag, badge: "Shop" },
+    { id: "shop-analytics", label: "Shop Analytics", icon: BarChart3, badge: "Shop" },
     { id: "users", label: "Users", icon: Users },
     { id: "series", label: "Series", icon: BookText },
     { id: "courses", label: "Courses", icon: BookOpen },
@@ -74,6 +86,10 @@ const AdminDashboard = () => {
         return <ProductManagement />;
       case "shop-categories":
         return <CategoryManagement />;
+      case "shop-orders":
+        return <OrderManagement />;
+      case "shop-analytics":
+        return <CommerceAnalytics />;
       case "topics":
         return <Topic />;
       case "posts":
@@ -170,9 +186,9 @@ const AdminDashboard = () => {
                       <span className="truncate">{item.label}</span>
                     )}
                   </div>
-                  {sidebarOpen && (item as any).badge && (
+                  {sidebarOpen && item.badge && (
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/20 text-primary uppercase">
-                      {(item as any).badge}
+                      {item.badge}
                     </span>
                   )}
                 </button>

@@ -43,6 +43,7 @@ import SEOScoreSidebar from "./SEOScoreSidebar";
 import { AssetPickerDrawer } from "./AssetPickerDrawer";
 import { BatchVisualsModal } from "./BatchVisualsModal";
 import { AIImageModal } from "./AIImageModal";
+import { InsertProductModal } from "./InsertProductModal";
 import { TranslationLoadingEffect } from "./TranslationLoadingEffect";
 import { extractEditorContextForAiImage, trackAiImageTelemetry } from "../utils/aiAssistContext";
 import { showImageInsertedToast } from "./ImageInsertedToast";
@@ -232,6 +233,9 @@ export default function EditorShell() {
   const seoOpen = activeSidePanel === "seo";
   const assetPickerOpen = activeSidePanel === "asset-picker";
 
+  // Shop Product Embed Modal state (Sprint S5)
+  const [showProductModal, setShowProductModal] = useState(false);
+
   const [assetPickerContext, setAssetPickerContext] = useState<{
     heading?: string;
     searchQuery?: string;
@@ -404,6 +408,18 @@ export default function EditorShell() {
       }
     },
   });
+
+  const handleInsertProduct = useCallback(
+    (data: {
+      productId: string;
+      contextualLabel?: string;
+      layout?: "card" | "compact";
+    }) => {
+      if (!editor) return;
+      editor.chain().focus().insertProductEmbed(data).run();
+    },
+    [editor]
+  );
 
   // ─── Post-Insertion Event Handlers (edit-image-alt, remove-image-node) ────────
   useEffect(() => {
@@ -1367,6 +1383,9 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           )
           .run();
         break;
+      case "product_embed":
+        setShowProductModal(true);
+        break;
     }
   };
 
@@ -1883,7 +1902,12 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                 /* Visual editor */
                 <div className="animate-[fade-in_0.15s_ease-out] relative">
                   {/* Toolbar */}
-                  {editor && <Toolbar editor={editor} />}
+                  {editor && (
+                    <Toolbar
+                      editor={editor}
+                      onInsertProduct={() => setShowProductModal(true)}
+                    />
+                  )}
 
                   {/* Editor canvas */}
                   <EditorCanvas editor={editor} />
@@ -2470,6 +2494,13 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
             </div>
           </div>
         )}
+
+        {/* Shop Product Embed Modal (Sprint S5 Content Commerce) */}
+        <InsertProductModal
+          isOpen={showProductModal}
+          onClose={() => setShowProductModal(false)}
+          onInsert={handleInsertProduct}
+        />
       </div>
     </EditorProvider>
   );

@@ -16,7 +16,6 @@
 import React from "react";
 import "@/styles/editorial.css";
 import type { ArticleBlock, ContentVersion } from "../types/article.types";
-import HtmlRenderer from "@/features/preview/components/HtmlRenderer";
 
 // ─── Block Component Imports ───────────────────────────────────────────────
 
@@ -26,6 +25,7 @@ import ArticleComparisonTable from "./ArticleComparisonTable";
 import ArticleFAQ from "./ArticleFAQ";
 import ArticleCTA from "./ArticleCTA";
 import ArticleQuote from "./ArticleQuote";
+import { ArticleProductEmbed } from "@/features/shop/components/embed/ArticleProductEmbed";
 
 // ─── Props ────────────────────────────────────────────────────────────────
 
@@ -215,6 +215,15 @@ function ArticleBlockItem({ block }: { block: ArticleBlock }) {
       return <ArticleQuote block={block} />;
     case "list":
       return <ArticleList block={block} />;
+    case "product_card":
+      return (
+        <ArticleProductEmbed
+          productId={block.productId}
+          contextualLabel={block.contextualLabel}
+          layout={block.layout}
+          embedId={block.id}
+        />
+      );
     default:
       return <UnknownBlock type={(block as ArticleBlock).type} />;
   }

@@ -132,6 +132,15 @@ export interface ListBlock extends BaseBlock {
   items: string[];
 }
 
+// ─── Product Embed (Sprint S5 Content Commerce) ───────────────────────────
+
+export interface ProductCardBlock extends BaseBlock {
+  type: "product_card";
+  productId: string;
+  contextualLabel?: string;
+  layout?: "card" | "compact" | "banner";
+}
+
 // ─── Discriminated Union ──────────────────────────────────────────────────────
 
 /**
@@ -148,7 +157,8 @@ export type ArticleBlock =
   | FAQBlock
   | CTABlock
   | QuoteBlock
-  | ListBlock;
+  | ListBlock
+  | ProductCardBlock;
 
 /** All valid block type string literals. Derived from the union for runtime checks. */
 export type ArticleBlockType = ArticleBlock["type"];

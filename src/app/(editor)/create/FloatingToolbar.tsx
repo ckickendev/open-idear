@@ -15,6 +15,7 @@ import {
   HelpCircle,
   Table2,
   Megaphone,
+  ShoppingBag,
 } from "lucide-react";
 
 interface BlockInsertButtonProps {
@@ -98,6 +99,13 @@ const blockItems = [
     label: "Call to Action",
     icon: Megaphone,
     description: "Promotional call-to-action block",
+    category: "Interactive",
+  },
+  {
+    type: "product_embed",
+    label: "Shop Product",
+    icon: ShoppingBag,
+    description: "Embed live PC hardware product card",
     category: "Interactive",
   },
 ];

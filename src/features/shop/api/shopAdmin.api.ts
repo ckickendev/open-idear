@@ -8,6 +8,11 @@ import type {
   ShopCategory,
   ShopProduct,
   ProductAdminFilterParams,
+  ShopOrder,
+  OrderAdminFilterParams,
+  ShopOrderStatus,
+  VerifySupplierPayload,
+  CommerceAnalyticsOverview,
 } from "../types/shop.types";
 
 export const shopAdminApi = {
@@ -103,4 +108,119 @@ export const shopAdminApi = {
   deleteProduct: async (id: string): Promise<ApiResponse<{ message: string }>> => {
     return api.delete<{ message: string }>(`/shop/products/${id}`);
   },
+
+  // ─── ORDER & INQUIRY ENDPOINTS (SPRINT S3) ────────────────────────────────
+
+  getOrders: async (
+    params?: OrderAdminFilterParams
+  ): Promise<
+    ApiResponse<{
+      orders: ShopOrder[];
+      pagination: { total: number; page: number; limit: number; pages: number };
+    }>
+  > => {
+    const res = await api.get<{
+      status: string;
+      data: ShopOrder[];
+      pagination: { total: number; page: number; limit: number; pages: number };
+    }>("/shop/orders/admin", { params });
+
+    return {
+      ...res,
+      data: {
+        orders: res.data?.data || [],
+        pagination: res.data?.pagination || {
+          total: 0,
+          page: 1,
+          limit: 20,
+          pages: 1,
+        },
+      },
+    };
+  },
+
+  getOrderById: async (id: string): Promise<ApiResponse<ShopOrder>> => {
+    const res = await api.get<{ status: string; data: ShopOrder }>(
+      `/shop/orders/admin/${id}`
+    );
+    return {
+      ...res,
+      data: res.data?.data,
+    };
+  },
+
+  updateOrderStatus: async (
+    id: string,
+    status: ShopOrderStatus,
+    note?: string
+  ): Promise<ApiResponse<ShopOrder>> => {
+    const res = await api.patch<{ status: string; data: ShopOrder }>(
+      `/shop/orders/admin/${id}/status`,
+      { status, note }
+    );
+    return {
+      ...res,
+      data: res.data?.data,
+    };
+  },
+
+  updateOrderAdminNote: async (
+    id: string,
+    adminNote: string
+  ): Promise<ApiResponse<ShopOrder>> => {
+    const res = await api.patch<{ status: string; data: ShopOrder }>(
+      `/shop/orders/admin/${id}/notes`,
+      { adminNote }
+    );
+    return {
+      ...res,
+      data: res.data?.data,
+    };
+  },
+
+  verifySupplierItem: async (
+    orderId: string,
+    itemId: string | number,
+    payload: VerifySupplierPayload
+  ): Promise<ApiResponse<ShopOrder>> => {
+    const res = await api.patch<{ status: string; data: ShopOrder }>(
+      `/shop/orders/admin/${orderId}/items/${itemId}/verify-supplier`,
+      payload
+    );
+    return {
+      ...res,
+      data: res.data?.data,
+    };
+  },
+
+  releaseExpiredReservations: async (): Promise<
+    ApiResponse<{ count: number; releasedOrderReferences: string[] }>
+  > => {
+    const res = await api.post<{
+      status: string;
+      data: { count: number; releasedOrderReferences: string[] };
+    }>("/shop/orders/admin/release-expired");
+    return {
+      ...res,
+      data: res.data?.data,
+    };
+  },
+
+  // ─── COMMERCE FUNNEL & LAUNCH ANALYTICS (SPRINT S6) ───────────────────────
+
+  getAnalyticsOverview: async (params?: {
+    range?: "7d" | "30d" | "90d" | "all" | "custom";
+    startDate?: string;
+    endDate?: string;
+  }): Promise<ApiResponse<CommerceAnalyticsOverview>> => {
+    const res = await api.get<{
+      status: string;
+      data: CommerceAnalyticsOverview;
+    }>("/shop/analytics/overview", { params });
+    return {
+      ...res,
+      data: res.data?.data,
+    };
+  },
 };
+

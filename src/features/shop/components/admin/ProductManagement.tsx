@@ -568,19 +568,32 @@ export default function ProductManagement() {
                             setStockModalProduct(prod);
                             setNewStockQuantity(prod.stockQuantity);
                           }}
-                          className="group/stock inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium hover:bg-accent transition-colors cursor-pointer"
-                          title="Click to quickly update stock"
+                          className="group/stock inline-flex flex-col items-center px-2 py-1 rounded-md text-xs font-medium hover:bg-accent transition-colors cursor-pointer"
+                          title="Click to quickly update on-hand stock"
                         >
-                          <span
-                            className={
-                              prod.stockQuantity > 0
-                                ? "text-emerald-600 dark:text-emerald-400 font-bold"
-                                : "text-destructive font-bold"
-                            }
-                          >
-                            {prod.stockQuantity}
-                          </span>
-                          <Edit size={11} className="opacity-0 group-hover/stock:opacity-100 text-muted-foreground" />
+                          <div className="flex items-center gap-1">
+                            <span
+                              className={
+                                prod.fulfillmentMode === "supplier_order"
+                                  ? "text-muted-foreground"
+                                  : prod.stockQuantity - (prod.reservedQuantity || 0) > 0
+                                  ? "text-emerald-600 dark:text-emerald-400 font-bold"
+                                  : "text-destructive font-bold"
+                              }
+                            >
+                              {prod.fulfillmentMode === "supplier_order"
+                                ? "—"
+                                : prod.stockQuantity - (prod.reservedQuantity || 0)}
+                            </span>
+                            <Edit size={11} className="opacity-0 group-hover/stock:opacity-100 text-muted-foreground" />
+                          </div>
+                          {prod.fulfillmentMode === "stock" && (
+                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                              {prod.reservedQuantity && prod.reservedQuantity > 0
+                                ? `(${prod.stockQuantity} on-hand, ${prod.reservedQuantity} rsv)`
+                                : `(${prod.stockQuantity} on-hand)`}
+                            </span>
+                          )}
                         </button>
                       </td>
 

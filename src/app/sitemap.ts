@@ -37,9 +37,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
       alternates: {
         languages: {
-          en: siteUrl,
+          en: `${siteUrl}/vi`,
           vi: `${siteUrl}/vi`,
           "x-default": siteUrl,
+        },
+      },
+    },
+    {
+      url: `${siteUrl}/shop`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9,
+      alternates: {
+        languages: {
+          en: `${siteUrl}/shop`,
+          "x-default": `${siteUrl}/shop`,
         },
       },
     },
@@ -101,8 +113,51 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
   } catch (err) {
-    console.error("Error generating dynamic sitemap:", err);
+    console.error("Error generating dynamic sitemap (articles):", err);
   }
 
-  return [...staticRoutes, ...articleRoutes];
+  // 3. Published Shop Products (Sprint S2: drafts and archived items strictly excluded)
+  const shopRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const res = await fetch(`${ENV.ROOT_API}/shop/products?limit=50&page=1`, {
+      next: { revalidate: 3600 },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const products: Array<{
+        slug: string;
+        status: string;
+        updatedAt?: string;
+        createdAt?: string;
+      }> = data.data || [];
+
+      for (const product of products) {
+        if (!product.slug || product.status !== "published") continue;
+
+        const lastModified = product.updatedAt
+          ? new Date(product.updatedAt)
+          : product.createdAt
+          ? new Date(product.createdAt)
+          : new Date();
+
+        shopRoutes.push({
+          url: `${siteUrl}/shop/${product.slug}`,
+          lastModified,
+          changeFrequency: "daily",
+          priority: 0.8,
+          alternates: {
+            languages: {
+              en: `${siteUrl}/shop/${product.slug}`,
+              "x-default": `${siteUrl}/shop/${product.slug}`,
+            },
+          },
+        });
+      }
+    }
+  } catch (err) {
+    console.error("Error generating dynamic sitemap (shop products):", err);
+  }
+
+  return [...staticRoutes, ...articleRoutes, ...shopRoutes];
 }

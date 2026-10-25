@@ -110,6 +110,14 @@ export default function Header() {
                 {t("component.header.course")}
               </Link>
             </li>
+            <li className="max-lg:border-b max-lg:py-3 px-3">
+              <Link
+                href="/shop"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 px-3.5 py-2 rounded-lg hover:bg-accent/60 border border-transparent hover:border-border"
+              >
+                Shop
+              </Link>
+            </li>
           </ul>
         </div>
 
