@@ -114,7 +114,7 @@ export interface UsePostEditorReturn {
   getHTML: () => string;
   getJSON: () => JSONContent;
   getText: () => string;
-  setContent: (html: string) => void;
+  setContent: (html: string, options?: { emitUpdate?: boolean }) => void;
   isEmpty: boolean;
   characterCount: number;
   wordCount: number;

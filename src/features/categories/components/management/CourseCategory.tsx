@@ -116,7 +116,7 @@ const CourseCategory = () => {
             newCategory.data?.category || (newCategory.data as any),
           ]);
 
-          toast.success("Thêm danh mục khoá học thành công");
+          toast.success("Course category added successfully");
         } else throw new Error(newCategory.message);
       } catch (error: any) {
         toast.error(error?.message);
@@ -129,7 +129,7 @@ const CourseCategory = () => {
 
   const handleEditCategory = () => {
     if (!formData.name.trim()) {
-      toast.error("Tên danh mục không được để trống");
+      toast.error("Category name cannot be empty");
       return;
     }
     courseCategoryApi
@@ -148,7 +148,7 @@ const CourseCategory = () => {
             ),
           );
 
-          toast.success("Cập nhật danh mục khoá học thành công");
+          toast.success("Course category updated successfully");
         } else throw new Error(response.message);
       })
       .catch((error) => {
@@ -167,11 +167,11 @@ const CourseCategory = () => {
       .then((response) => {
         if (response.success) {
           setCategories((prev) => prev.filter((cat) => cat._id !== id));
-          toast.success("Xóa danh mục khoá học thành công");
-        } else throw new Error(response.message || "Lỗi xóa danh mục");
+          toast.success("Course category deleted successfully");
+        } else throw new Error(response.message || "Error deleting category");
       })
       .catch((error) => {
-        toast.error(error?.message || "Lỗi xóa danh mục");
+        toast.error(error?.message || "Error deleting category");
       })
       .finally(() => changeLoad());
   };
@@ -181,10 +181,10 @@ const CourseCategory = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-foreground">
-            Danh mục khoá học
+            Course Categories
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Quản lý các danh mục khoá học của hệ thống
+            Manage system course categories
           </p>
         </div>
         <button
@@ -192,22 +192,22 @@ const CourseCategory = () => {
           className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors focus:outline-none focus:ring-2 focus:ring-admin-primary-ring"
         >
           <Plus size={16} />
-          Thêm danh mục
+          Add Category
         </button>
       </div>
 
       <AdminSearchInput
         value={searchTerm}
         onChange={setSearchTerm}
-        placeholder="Tìm kiếm danh mục khoá học..."
+        placeholder="Search course categories..."
       />
 
       <p className="text-sm text-muted-foreground">
-        {filteredCategories.length} danh mục
+        {filteredCategories.length} categories
         {searchTerm && (
           <span className="text-muted-foreground">
             {" "}
-            (lọc từ {categories.length} tổng cộng)
+            (filtered from {categories.length} total)
           </span>
         )}
       </p>
@@ -220,15 +220,15 @@ const CourseCategory = () => {
             icon={BookOpen}
             title={
               searchTerm
-                ? "Không tìm thấy danh mục"
-                : "Chưa có danh mục khoá học nào"
+                ? "No categories found"
+                : "No course categories yet"
             }
             description={
               searchTerm
-                ? "Thử thay đổi từ khóa tìm kiếm"
-                : "Bắt đầu bằng cách thêm danh mục đầu tiên"
+                ? "Try changing your search terms"
+                : "Start by adding the first category"
             }
-            actionLabel={!searchTerm ? "Thêm danh mục" : undefined}
+            actionLabel={!searchTerm ? "Add Category" : undefined}
             onAction={!searchTerm ? () => openModal("add") : undefined}
           />
         ) : (
@@ -241,19 +241,19 @@ const CourseCategory = () => {
                       #
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Tên danh mục
+                      Category Name
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                      Mô tả
+                      Description
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Hình nền
+                      Background
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                      Ngày tạo
+                      Created Date
                     </th>
                     <th className="px-6 py-3.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Hành động
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -300,14 +300,14 @@ const CourseCategory = () => {
                           <button
                             onClick={() => openModal("edit", category)}
                             className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light transition-colors"
-                            title="Chỉnh sửa"
+                            title="Edit"
                           >
                             <Edit size={16} />
                           </button>
                           <button
                             onClick={() => setConfirmDelete(category._id)}
                             className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                            title="Xóa"
+                            title="Delete"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -369,9 +369,9 @@ const CourseCategory = () => {
         isOpen={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => confirmDelete && handleDeleteCategory(confirmDelete)}
-        title="Xóa danh mục khoá học"
-        message="Bạn có chắc chắn muốn xóa danh mục này? Hành động này không thể hoàn tác."
-        confirmText="Xóa"
+        title="Delete course category"
+        message="Are you sure you want to delete this category? This action cannot be undone."
+        confirmText="Delete"
         variant="danger"
       />
 
@@ -385,8 +385,8 @@ const CourseCategory = () => {
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <h3 className="text-lg font-semibold text-foreground">
                 {modalType === "add"
-                  ? "Thêm danh mục mới"
-                  : "Chỉnh sửa danh mục"}
+                  ? "Add new category"
+                  : "Edit category"}
               </h3>
               <button
                 onClick={closeModal}
@@ -398,7 +398,7 @@ const CourseCategory = () => {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground/80 mb-1.5">
-                  Tên danh mục <span className="text-red-500">*</span>
+                  Category Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -407,12 +407,12 @@ const CourseCategory = () => {
                     setFormData({ ...formData, name: e.target.value })
                   }
                   className="w-full px-3 py-2.5 text-sm border border-border rounded-lg focus:outline-none focus:border-admin-primary focus:ring-2 focus:ring-admin-primary-ring transition-all"
-                  placeholder="Nhập tên danh mục"
+                  placeholder="Enter category name"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground/80 mb-1.5">
-                  Mô tả
+                  Description
                 </label>
                 <TextAreaCustom
                   id="description"
@@ -421,7 +421,7 @@ const CourseCategory = () => {
                     setFormData({ ...formData, description: e.target.value })
                   }
                   rows={3}
-                  placeholder="Mô tả về danh mục khoá học này"
+                  placeholder="Description of this course category"
                 />
               </div>
               <div>
@@ -433,7 +433,7 @@ const CourseCategory = () => {
                   type="text"
                   value={formData.slug}
                   className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-muted/30 text-muted-foreground"
-                  placeholder="Slug sẽ được tạo tự động"
+                  placeholder="Slug will be generated automatically"
                 />
               </div>
             </div>
@@ -442,7 +442,7 @@ const CourseCategory = () => {
                 onClick={closeModal}
                 className="px-4 py-2 text-sm font-medium text-foreground/80 bg-background border border-border rounded-lg hover:bg-muted/30 transition-colors"
               >
-                Hủy
+                Cancel
               </button>
               <button
                 onClick={
@@ -450,7 +450,7 @@ const CourseCategory = () => {
                 }
                 className="px-4 py-2 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors"
               >
-                {modalType === "add" ? "Thêm mới" : "Cập nhật"}
+                {modalType === "add" ? "Add new" : "Update"}
               </button>
             </div>
           </div>

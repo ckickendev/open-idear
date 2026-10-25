@@ -5,15 +5,12 @@ import axios from "axios";
 import {
   Mail,
   Search,
-  Filter,
   Ticket,
   Eye,
   CheckCircle2,
   Clock,
   XCircle,
-  AlertCircle,
   Loader2,
-  ChevronDown,
   X,
   Send,
   Trash2,
@@ -53,22 +50,22 @@ interface Stats {
 
 /* ── Constants ───────────────────────────────────────── */
 const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; cls: string; badgeCls: string }> = {
-  pending: { label: "Chờ xử lý", icon: Clock, cls: "text-yellow-600", badgeCls: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300" },
-  in_review: { label: "Đang xem xét", icon: Eye, cls: "text-blue-600", badgeCls: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
-  resolved: { label: "Đã giải quyết", icon: CheckCircle2, cls: "text-green-600", badgeCls: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
-  closed: { label: "Đã đóng", icon: XCircle, cls: "text-gray-500", badgeCls: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
+  pending: { label: "Pending", icon: Clock, cls: "text-yellow-600", badgeCls: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300" },
+  in_review: { label: "In Review", icon: Eye, cls: "text-blue-600", badgeCls: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+  resolved: { label: "Resolved", icon: CheckCircle2, cls: "text-green-600", badgeCls: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
+  closed: { label: "Closed", icon: XCircle, cls: "text-gray-500", badgeCls: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
 };
 
 const PRIORITY_CONFIG: Record<string, { label: string; cls: string }> = {
-  low: { label: "Thấp", cls: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" },
-  normal: { label: "Bình thường", cls: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
-  high: { label: "Cao", cls: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" },
-  urgent: { label: "Khẩn cấp", cls: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
+  low: { label: "Low", cls: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" },
+  normal: { label: "Normal", cls: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+  high: { label: "High", cls: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" },
+  urgent: { label: "Urgent", cls: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
-  account: "Tài khoản", content: "Nội dung", payment: "Thanh toán",
-  technical: "Kỹ thuật", fraud: "Lừa đảo", other: "Khác",
+  account: "Account", content: "Content", payment: "Payment",
+  technical: "Technical", fraud: "Fraud", other: "Other",
 };
 
 const inputCls = "px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/40 transition";
@@ -130,7 +127,7 @@ function TicketDetailModal({
               <Mail size={20} className="text-violet-600 dark:text-violet-400" />
             </div>
             <div>
-              <h3 className="font-bold text-foreground">Chi tiết yêu cầu</h3>
+              <h3 className="font-bold text-foreground">Ticket Details</h3>
               <p className="text-xs text-muted-foreground font-mono">
                 #{String(ticket._id).slice(-8).toUpperCase()}
               </p>
@@ -159,7 +156,7 @@ function TicketDetailModal({
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">
-                {ticket.user ? `${ticket.user.name} (@${ticket.user.username})` : "Khách vãng lai"}
+                {ticket.user ? `${ticket.user.name} (@${ticket.user.username})` : "Guest User"}
               </p>
               <p className="text-xs text-muted-foreground">
                 {ticket.user?.email || ticket.guestEmail || "—"}
@@ -182,13 +179,13 @@ function TicketDetailModal({
 
           {/* Subject */}
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Tiêu đề</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Subject</p>
             <p className="text-base font-semibold text-foreground">{ticket.subject}</p>
           </div>
 
           {/* Message */}
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Nội dung</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Message</p>
             <div className="bg-muted/60 rounded-xl p-4 text-sm text-foreground leading-relaxed whitespace-pre-wrap">
               {ticket.message}
             </div>
@@ -197,16 +194,16 @@ function TicketDetailModal({
           {/* Dates */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-muted/40 rounded-xl p-3">
-              <p className="text-xs text-muted-foreground mb-0.5">Ngày gửi</p>
+              <p className="text-xs text-muted-foreground mb-0.5">Submitted Date</p>
               <p className="text-sm font-semibold text-foreground">
-                {new Date(ticket.createdAt).toLocaleString("vi-VN")}
+                {new Date(ticket.createdAt).toLocaleString("en-US")}
               </p>
             </div>
             {ticket.resolvedAt && (
               <div className="bg-muted/40 rounded-xl p-3">
-                <p className="text-xs text-muted-foreground mb-0.5">Ngày giải quyết</p>
+                <p className="text-xs text-muted-foreground mb-0.5">Resolved Date</p>
                 <p className="text-sm font-semibold text-foreground">
-                  {new Date(ticket.resolvedAt).toLocaleString("vi-VN")}
+                  {new Date(ticket.resolvedAt).toLocaleString("en-US")}
                 </p>
               </div>
             )}
@@ -215,32 +212,32 @@ function TicketDetailModal({
           {/* Divider */}
           <div className="border-t border-border pt-4">
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-              Phản hồi admin
+              Admin Response
             </p>
 
             {/* Status change */}
             <div className="mb-3">
-              <label className="block text-sm font-medium text-foreground mb-1.5">Cập nhật trạng thái</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Update Status</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as any)}
                 className={`w-full ${inputCls}`}
               >
-                <option value="pending">Chờ xử lý</option>
-                <option value="in_review">Đang xem xét</option>
-                <option value="resolved">Đã giải quyết</option>
-                <option value="closed">Đã đóng</option>
+                <option value="pending">Pending</option>
+                <option value="in_review">In Review</option>
+                <option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
               </select>
             </div>
 
             {/* Admin note */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Ghi chú nội bộ</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Internal Note</label>
               <textarea
                 rows={4}
                 value={adminNote}
                 onChange={(e) => setAdminNote(e.target.value)}
-                placeholder="Ghi chú dành cho quản trị viên..."
+                placeholder="Notes for administrator..."
                 className={`w-full ${inputCls} resize-none`}
               />
             </div>
@@ -250,7 +247,7 @@ function TicketDetailModal({
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-6 border-t border-border flex-shrink-0">
           <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors">
-            Hủy
+            Cancel
           </button>
           <button
             onClick={handleSave}
@@ -258,7 +255,7 @@ function TicketDetailModal({
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
           >
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-            Lưu thay đổi
+            Save Changes
           </button>
         </div>
       </div>
@@ -308,7 +305,7 @@ export default function SupportTicketAdmin() {
   }, [fetchTickets]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Xóa yêu cầu này?")) return;
+    if (!confirm("Delete this ticket?")) return;
     try {
       const token = localStorage.getItem("access_token");
       await axios.delete(`${ENV.ROOT_API}/support/admin/tickets/${id}`, {
@@ -341,10 +338,10 @@ export default function SupportTicketAdmin() {
     <div className="space-y-6">
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Chờ xử lý" value={stats.pending} icon={Clock} color="bg-yellow-100 dark:bg-yellow-900/40 text-yellow-600 dark:text-yellow-400" />
-        <StatCard label="Đang xem xét" value={stats.in_review} icon={Eye} color="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400" />
-        <StatCard label="Đã giải quyết" value={stats.resolved} icon={CheckCircle2} color="bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400" />
-        <StatCard label="Đã đóng" value={stats.closed} icon={XCircle} color="bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400" />
+        <StatCard label="Pending" value={stats.pending} icon={Clock} color="bg-yellow-100 dark:bg-yellow-900/40 text-yellow-600 dark:text-yellow-400" />
+        <StatCard label="In Review" value={stats.in_review} icon={Eye} color="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400" />
+        <StatCard label="Resolved" value={stats.resolved} icon={CheckCircle2} color="bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400" />
+        <StatCard label="Closed" value={stats.closed} icon={XCircle} color="bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400" />
       </div>
 
       {/* Filters */}
@@ -355,7 +352,7 @@ export default function SupportTicketAdmin() {
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Tìm kiếm..."
+              placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className={`w-full pl-8 ${inputCls}`}
@@ -369,11 +366,11 @@ export default function SupportTicketAdmin() {
               onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
               className={inputCls}
             >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="pending">Chờ xử lý</option>
-              <option value="in_review">Đang xem xét</option>
-              <option value="resolved">Đã giải quyết</option>
-              <option value="closed">Đã đóng</option>
+              <option value="all">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="in_review">In Review</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
             </select>
           </div>
 
@@ -384,11 +381,11 @@ export default function SupportTicketAdmin() {
               onChange={(e) => { setPriorityFilter(e.target.value); setPage(1); }}
               className={inputCls}
             >
-              <option value="all">Tất cả độ ưu tiên</option>
-              <option value="urgent">Khẩn cấp</option>
-              <option value="high">Cao</option>
-              <option value="normal">Bình thường</option>
-              <option value="low">Thấp</option>
+              <option value="all">All priorities</option>
+              <option value="urgent">Urgent</option>
+              <option value="high">High</option>
+              <option value="normal">Normal</option>
+              <option value="low">Low</option>
             </select>
           </div>
 
@@ -396,7 +393,7 @@ export default function SupportTicketAdmin() {
           <button
             onClick={fetchTickets}
             className="p-2.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground"
-            title="Làm mới"
+            title="Refresh"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
           </button>
@@ -412,19 +409,19 @@ export default function SupportTicketAdmin() {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Ticket size={36} className="text-muted-foreground mb-3" />
-            <p className="text-sm font-semibold text-foreground mb-1">Không có yêu cầu nào</p>
-            <p className="text-xs text-muted-foreground">Chưa có yêu cầu hỗ trợ nào phù hợp.</p>
+            <p className="text-sm font-semibold text-foreground mb-1">No tickets found</p>
+            <p className="text-xs text-muted-foreground">No support tickets match the current criteria.</p>
           </div>
         ) : (
           <>
             {/* Table header */}
             <div className="hidden md:grid md:grid-cols-[1fr_120px_100px_100px_120px_80px] gap-4 px-5 py-3 bg-muted/50 border-b border-border text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              <span>Yêu cầu</span>
-              <span>Người gửi</span>
-              <span>Trạng thái</span>
-              <span>Ưu tiên</span>
-              <span>Ngày gửi</span>
-              <span>Hành động</span>
+              <span>Ticket</span>
+              <span>Sender</span>
+              <span>Status</span>
+              <span>Priority</span>
+              <span>Submitted</span>
+              <span>Actions</span>
             </div>
 
             <div className="divide-y divide-border">
@@ -443,7 +440,7 @@ export default function SupportTicketAdmin() {
                           #{String(ticket._id).slice(-6).toUpperCase()}
                         </span>
                         {ticket.adminNote && (
-                          <span className="text-xs text-violet-600 dark:text-violet-400 font-medium">Đã phản hồi</span>
+                          <span className="text-xs text-violet-600 dark:text-violet-400 font-medium">Responded</span>
                         )}
                       </div>
                       <p className="text-sm font-semibold text-foreground truncate">{ticket.subject}</p>
@@ -453,7 +450,7 @@ export default function SupportTicketAdmin() {
                     {/* Sender */}
                     <div className="min-w-0">
                       <p className="text-xs font-medium text-foreground truncate">
-                        {ticket.user ? ticket.user.name : "Khách"}
+                        {ticket.user ? ticket.user.name : "Guest"}
                       </p>
                       <p className="text-[11px] text-muted-foreground truncate">
                         {ticket.user?.email || ticket.guestEmail || "—"}
@@ -476,7 +473,7 @@ export default function SupportTicketAdmin() {
 
                     {/* Date */}
                     <div className="text-xs text-muted-foreground">
-                      {new Date(ticket.createdAt).toLocaleDateString("vi-VN")}
+                      {new Date(ticket.createdAt).toLocaleDateString("en-US")}
                     </div>
 
                     {/* Actions */}
@@ -484,14 +481,14 @@ export default function SupportTicketAdmin() {
                       <button
                         onClick={() => setSelectedTicket(ticket)}
                         className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"
-                        title="Xem chi tiết"
+                        title="View details"
                       >
                         <Eye size={16} />
                       </button>
                       <button
                         onClick={() => handleDelete(ticket._id)}
                         className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 transition-colors"
-                        title="Xóa"
+                        title="Delete"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -508,7 +505,7 @@ export default function SupportTicketAdmin() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Tổng: <span className="font-semibold text-foreground">{total}</span> yêu cầu
+            Total: <span className="font-semibold text-foreground">{total}</span> tickets
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -516,7 +513,7 @@ export default function SupportTicketAdmin() {
               onClick={() => setPage((p) => p - 1)}
               className="px-3 py-1.5 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Trước
+              Previous
             </button>
             <span className="text-sm text-muted-foreground px-2">
               {page} / {totalPages}
@@ -526,7 +523,7 @@ export default function SupportTicketAdmin() {
               onClick={() => setPage((p) => p + 1)}
               className="px-3 py-1.5 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Tiếp
+              Next
             </button>
           </div>
         </div>

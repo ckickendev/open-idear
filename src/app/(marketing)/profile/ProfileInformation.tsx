@@ -16,9 +16,9 @@ import { UserRoundPen } from "lucide-react";
 const profileSchema = z.object({
   name: z
     .string()
-    .min(1, "Tên không được để trống")
-    .max(100, "Tên không được quá 100 ký tự"),
-  bio: z.string().max(500, "Tiểu sử không được quá 500 ký tự").optional(),
+    .min(1, "Name is required")
+    .max(100, "Name cannot exceed 100 characters"),
+  bio: z.string().max(500, "Bio cannot exceed 500 characters").optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -117,7 +117,7 @@ const ProfileInformation = () => {
               {/* Registration Date - Read only */}
               <div className="flex items-center py-3 border-b border-border">
                 <span className="text-muted-foreground font-medium w-1/4">
-                  Ngày đăng ký
+                  Joined Date
                 </span>
                 <span className="text-foreground">
                   {convertDate(currentUser.createdAt.toString())}
@@ -127,7 +127,7 @@ const ProfileInformation = () => {
               {/* Name */}
               <div className="flex items-center py-3 border-b border-border">
                 <span className="text-muted-foreground font-medium w-1/4">
-                  Họ Tên
+                  Full Name
                 </span>
                 {isEditing ? (
                   <div className="flex-1">
@@ -150,7 +150,7 @@ const ProfileInformation = () => {
               {/* Username */}
               <div className="flex items-center py-3 border-b border-border">
                 <span className="text-muted-foreground font-medium w-1/4">
-                  Tên người dùng
+                  Username
                 </span>
                 {isEditing ? (
                   <div className="flex-1">
@@ -192,14 +192,14 @@ const ProfileInformation = () => {
               {/* Biography */}
               <div className="flex items-start py-3 border-b border-border">
                 <span className="text-muted-foreground font-medium w-1/4 pt-2">
-                  Tiểu sử
+                  Bio
                 </span>
                 {isEditing ? (
                   <div className="flex-1">
                     <textarea
                       {...register("bio")}
                       className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
-                      placeholder="Nhập tiểu sử của bạn..."
+                      placeholder="Tell us about yourself..."
                     />
                     {errors.bio && (
                       <p className="text-red-500 text-xs text-sm mt-1">
@@ -217,10 +217,10 @@ const ProfileInformation = () => {
               {/* Account Status - Read only */}
               <div className="flex items-center py-3 border-b border-border">
                 <span className="text-muted-foreground font-medium w-1/4">
-                  Trạng thái tài khoản
+                  Account Status
                 </span>
                 <span className="text-muted-foreground">
-                  {currentUser.activate ? "Đã kích hoạt" : "Chưa kích hoạt"}
+                  {currentUser.activate ? "Active" : "Inactive"}
                 </span>
               </div>
             </div>
@@ -233,7 +233,7 @@ const ProfileInformation = () => {
                   disabled={isLoading}
                   className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                 >
-                  {isLoading ? "Đang lưu..." : "Lưu thay đổi"}
+                  {isLoading ? "Saving..." : "Save Changes"}
                 </button>
                 <button
                   type="button"
@@ -241,7 +241,7 @@ const ProfileInformation = () => {
                   disabled={isLoading}
                   className="bg-accent hover:bg-accent disabled:bg-muted text-white font-medium py-2 px-4 rounded-lg transition-colors"
                 >
-                  Hủy
+                  Cancel
                 </button>
               </div>
             )}
@@ -250,17 +250,17 @@ const ProfileInformation = () => {
           {/* Membership Section */}
           <div className="mt-12">
             <h2 className="text-xl font-bold text-foreground mb-6">
-              Thông Tin Gói Hội Viên
+              Membership Plan
             </h2>
 
             <div className="bg-muted/30 rounded-lg p-6 mb-6">
               <p className="text-muted-foreground mb-4">
-                Bạn chưa đăng ký gói hội viên nào.
+                You have not subscribed to any membership plan yet.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors">
-                  Đăng ký gói hội viên
+                  Subscribe to Plan
                 </button>
 
                 <button
@@ -269,7 +269,7 @@ const ProfileInformation = () => {
                   disabled={isEditing}
                   className="border border-blue-600 text-blue-600 hover:bg-blue-50 disabled:opacity-50 font-medium py-3 px-6 rounded-lg transition-colors"
                 >
-                  {isEditing ? "Đang chỉnh sửa..." : "Chỉnh sửa hồ sơ"}
+                  {isEditing ? "Editing..." : "Edit Profile"}
                 </button>
               </div>
             </div>

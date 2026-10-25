@@ -193,6 +193,7 @@
       "ai_usage": "Mức dùng AI",
       "generate_visuals": "Tạo toàn bộ hình ảnh",
       "all_visuals": "Toàn bộ ảnh",
+      "ai_tools": "Công cụ AI",
       "visual_mode": "Chuyển sang trình soạn thảo trực quan",
       "html_mode": "Chuyển sang chế độ HTML",
       "preview": "Xem trước",
@@ -379,6 +380,19 @@
       "could_not_retrieve": "Không thể lấy phiên bản {source}.",
       "no_content": "Phiên bản {source} chưa có nội dung để dịch.",
       "translated_success": "✨ Đã dịch bản nháp {target}! Xem lại nội dung và lưu khi sẵn sàng."
+    }
+  },
+  "home": {
+    "courses": {
+      "newlyUpdated": "Mới cập nhật",
+      "title": "Khóa học mới nhất",
+      "subtitle": "Những khóa học vừa được thêm vào — bắt đầu học ngay hôm nay",
+      "viewAll": "Xem tất cả",
+      "viewAllCourses": "Xem tất cả khóa học",
+      "new": "Mới",
+      "hours": "giờ",
+      "students": "học viên",
+      "free": "Miễn phí"
     }
   }
 }

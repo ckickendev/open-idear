@@ -198,6 +198,7 @@
       "ai_usage": "AI Usage",
       "generate_visuals": "Generate All Visuals",
       "all_visuals": "All Visuals",
+      "ai_tools": "AI Tools",
       "visual_mode": "Switch to visual editor",
       "html_mode": "Switch to HTML mode",
       "preview": "Preview",
@@ -384,6 +385,19 @@
       "could_not_retrieve": "Could not retrieve the {source} version.",
       "no_content": "The {source} version has no content to translate yet.",
       "translated_success": "✨ {target} draft translated! Review content and save when ready."
+    }
+  },
+  "home": {
+    "courses": {
+      "newlyUpdated": "Newly Updated",
+      "title": "Latest Courses",
+      "subtitle": "Courses just added — start learning today",
+      "viewAll": "View All",
+      "viewAllCourses": "View all courses",
+      "new": "New",
+      "hours": "hours",
+      "students": "students",
+      "free": "Free"
     }
   }
 }

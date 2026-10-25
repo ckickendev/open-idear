@@ -18,6 +18,7 @@ import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, A
 import { toEditorHtml } from "@/features/ai/utils/contentTransformer";
 import { LivePreviewSystem } from "@/features/preview";
 import { useTranslation } from "@/app/hook/useTranslation";
+import { useLanguageStore } from "@/store/useLanguage";
 
 // ─── Context ────────────────────────────────────────────────────────────────
 import { EditorProvider } from "../context/EditorContext";
@@ -42,6 +43,8 @@ import SEOScoreSidebar from "./SEOScoreSidebar";
 import { AssetPickerDrawer } from "./AssetPickerDrawer";
 import { BatchVisualsModal } from "./BatchVisualsModal";
 import { AIImageModal } from "./AIImageModal";
+import { InsertProductModal } from "./InsertProductModal";
+import { TranslationLoadingEffect } from "./TranslationLoadingEffect";
 import { extractEditorContextForAiImage, trackAiImageTelemetry } from "../utils/aiAssistContext";
 import { showImageInsertedToast } from "./ImageInsertedToast";
 import { aiVisualApi, type ImageSearchResult, type GeneratedIllustrationAsset } from "@/features/ai-visual";
@@ -157,7 +160,9 @@ export default function EditorShell() {
   // ─── Locale & Bilingual Editing State (Sprint 3) ──────────────────────
   const [editorLocale, setEditorLocale] = useState<"en" | "vi">(() => {
     const param = searchParams.get("locale");
-    return param === "vi" ? "vi" : "en";
+    if (param === "vi" || param === "en") return param;
+    const storeLang = useLanguageStore.getState().lang;
+    return storeLang === "vi" ? "vi" : "en";
   });
   const [localesStatus, setLocalesStatus] = useState<{
     en?: { exists: boolean; published: boolean };
@@ -227,6 +232,9 @@ export default function EditorShell() {
   const aiDiagramOpen = activeSidePanel === "diagram";
   const seoOpen = activeSidePanel === "seo";
   const assetPickerOpen = activeSidePanel === "asset-picker";
+
+  // Shop Product Embed Modal state (Sprint S5)
+  const [showProductModal, setShowProductModal] = useState(false);
 
   const [assetPickerContext, setAssetPickerContext] = useState<{
     heading?: string;
@@ -401,6 +409,18 @@ export default function EditorShell() {
     },
   });
 
+  const handleInsertProduct = useCallback(
+    (data: {
+      productId: string;
+      contextualLabel?: string;
+      layout?: "card" | "compact";
+    }) => {
+      if (!editor) return;
+      editor.chain().focus().insertProductEmbed(data).run();
+    },
+    [editor]
+  );
+
   // ─── Post-Insertion Event Handlers (edit-image-alt, remove-image-node) ────────
   useEffect(() => {
     const handleEditAlt = (e: Event) => {
@@ -487,9 +507,9 @@ export default function EditorShell() {
     getContent: () => ({
       title,
       html: getHTML(),
-      text: getText().replace(/\n/g, ""),
-      ...(generatedMarkdown ? {
-        markdown: generatedMarkdown,
+      text: getText().replace(/\n+/g, " ").trim(),
+      ...(getCurrentArticleMarkdown() ? {
+        markdown: getCurrentArticleMarkdown(),
         aiContext: generatedAiContext || undefined,
         contentVersion: "blocks-v1" as const,
       } : {}),
@@ -554,32 +574,119 @@ export default function EditorShell() {
   });
 
   // ─── Track fetched post for editor sync ──────────────────────────────
+// ─── Helpers for Restoring Post & Structured Content ────────────────
+function convertBlocksToHtml(blocks: any[]): string {
+  if (!Array.isArray(blocks) || blocks.length === 0) return "";
+  return blocks
+    .map((block) => {
+      switch (block.type) {
+        case "heading": {
+          const level = block.level === 3 ? 3 : 2;
+          return `<h${level}>${block.content || ""}</h${level}>`;
+        }
+        case "paragraph": {
+          return `<p>${block.content || ""}</p>`;
+        }
+        case "code": {
+          const lang = block.language ? ` class="language-${block.language}"` : "";
+          return `<pre><code${lang}>${block.code || ""}</code></pre>`;
+        }
+        case "list": {
+          const tag = block.style === "ordered" ? "ol" : "ul";
+          const items = (block.items || []).map((it: string) => `<li>${it}</li>`).join("");
+          return `<${tag}>${items}</${tag}>`;
+        }
+        case "image": {
+          return `<img src="${block.src || ""}" alt="${block.alt || ""}" />`;
+        }
+        case "quote": {
+          return `<blockquote><p>${block.content || ""}</p></blockquote>`;
+        }
+        case "callout": {
+          return `<blockquote><p><strong>${block.title || block.variant || "Note"}</strong>: ${block.content || ""}</p></blockquote>`;
+        }
+        case "faq": {
+          const title = block.title || "Frequently Asked Questions";
+          const items = (block.items || [])
+            .map((it: any) => `<h3>${it.question || ""}</h3><p>${it.answer || ""}</p>`)
+            .join("");
+          return `<h2>${title}</h2>${items}`;
+        }
+        default:
+          return block.content ? `<p>${block.content}</p>` : "";
+      }
+    })
+    .join("\n");
+}
+
+function resolvePostEditorContent(post: any): { html: string; markdown: string } {
+  if (!post) return { html: "", markdown: "" };
+
+  // 1. Pristine Markdown from ArticleVersion or post.markdown
+  if (post.markdown && typeof post.markdown === "string" && post.markdown.trim()) {
+    const html = toEditorHtml(post.markdown);
+    return { html, markdown: post.markdown };
+  }
+
+  const rawContent = post.content || "";
+
+  // 2. Structured blocks with headings if content is unparsed or corrupted
+  const hasHtmlHeadings = /<h[1-6][^>]*>/i.test(rawContent);
+  const blocksHaveHeadings = Array.isArray(post.blocks) && post.blocks.some((b: any) => b.type === "heading");
+
+  if (!hasHtmlHeadings && blocksHaveHeadings) {
+    const htmlFromBlocks = convertBlocksToHtml(post.blocks);
+    if (htmlFromBlocks) {
+      return { html: htmlFromBlocks, markdown: "" };
+    }
+  }
+
+  // 3. Raw markdown string stored in post.content
+  if (/#{1,6}\s+/.test(rawContent) || /^\s*#[^#]/.test(rawContent)) {
+    let md = rawContent;
+    if (md.includes("<p") || md.includes("<h") || md.includes("<br")) {
+      md = md
+        .replace(/\r\n/g, "\n")
+        .replace(/<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>/gi, "\n\n## $1\n\n")
+        .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "* $1\n")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+    }
+    const html = toEditorHtml(md);
+    return { html, markdown: md };
+  }
+
+  // 4. Content is already valid HTML
+  return { html: rawContent, markdown: "" };
+}
+
+  // ─── Track fetched post for editor sync ──────────────────────────────
   const [loadedPost, setLoadedPost] = useState<any>(null);
+  const contentAppliedKeyRef = useRef<string>("");
 
   // Sync post content into TipTap editor whenever editor becomes ready or loadedPost updates
   useEffect(() => {
-    if (editor && loadedPost?.content !== undefined) {
-      let content = loadedPost.content || "";
-      // Only repair if raw unparsed markdown hashes (##, ###) are trapped inside HTML
-      if (/#{2,6}\s+/.test(content)) {
-        const restoredMd = content
-          .replace(/\r\n/g, "\n")
-          .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
-          .replace(/<[^>]+>/g, "")
-          .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
-          .replace(/\n{3,}/g, "\n\n")
-          .trim();
-        content = toEditorHtml(restoredMd);
-      } else if (loadedPost.markdown && (!content || !content.trim())) {
-        content = toEditorHtml(loadedPost.markdown);
+    if (editor && loadedPost) {
+      const key = `${loadedPost._id || loadedPost.title}::${editorLocale}`;
+      if (contentAppliedKeyRef.current !== key) {
+        const resolved = resolvePostEditorContent(loadedPost);
+        if (resolved.html) {
+          editor.commands.setContent(resolved.html, { emitUpdate: false });
+          contentAppliedKeyRef.current = key;
+        }
+        if (resolved.markdown) {
+          setGeneratedMarkdown(resolved.markdown);
+        }
       }
-      editor.commands.setContent(content);
     }
-  }, [editor, isReady, loadedPost]);
+  }, [editor, isReady, loadedPost, editorLocale]);
 
   // ─── Locale-Aware Post Data Loader (Sprint 3) ────────────────────────
   const loadPostLocaleData = useCallback(
-    async (targetPostId: string, targetLocale: "en" | "vi") => {
+    async (targetPostId: string, targetLocale?: "en" | "vi") => {
       const seq = ++loadSeqRef.current;
       setPageLoading(true);
 
@@ -592,7 +699,11 @@ export default function EditorShell() {
 
         if (resPost.success && resPost.data?.post) {
           const post = resPost.data.post;
-          loadedLocaleRef.current = { id: targetPostId, locale: targetLocale };
+          const resolvedLocale = (post.activeLocale || post.defaultLocale || targetLocale || "en") as "en" | "vi";
+          if (editorLocale !== resolvedLocale) {
+            setEditorLocale(resolvedLocale);
+          }
+          loadedLocaleRef.current = { id: targetPostId, locale: resolvedLocale };
 
           // Shared parent Post fields
           setCategoryPublic(
@@ -611,8 +722,8 @@ export default function EditorShell() {
           const viTrans = translations.find((t) => t.locale === "vi");
           const defLoc = post.defaultLocale || "en";
 
-          const enExists = !!enTrans || defLoc === "en" || (!post.isNewTranslation && targetLocale === "en");
-          const viExists = !!viTrans || defLoc === "vi" || (!post.isNewTranslation && targetLocale === "vi");
+          const enExists = !!enTrans || defLoc === "en" || (!post.isNewTranslation && resolvedLocale === "en");
+          const viExists = !!viTrans || defLoc === "vi" || (!post.isNewTranslation && resolvedLocale === "vi");
 
           setLocalesStatus({
             en: {
@@ -635,38 +746,27 @@ export default function EditorShell() {
             setGeneratedMarkdown("");
             publishHook.setIsPublished(false);
             if (editor) {
-              editor.commands.setContent("");
+              editor.commands.setContent("", { emitUpdate: false });
             }
-            autoSave.resetHash(`${targetLocale}::::`);
+            contentAppliedKeyRef.current = `${targetPostId}::${resolvedLocale}`;
+            autoSave.resetHash(`${resolvedLocale}::::`);
           } else {
             setTitle(post.title || "");
             setDescriptionPublic(post.description || "");
             publishHook.setIsPublished(!!post.published);
 
-            let initialHtml = post.content || "";
-            if (post.markdown) {
-              setGeneratedMarkdown(post.markdown);
-              if (/#{2,6}\s+/.test(initialHtml) || !initialHtml.includes("<h2")) {
-                initialHtml = toEditorHtml(post.markdown);
-              }
-            } else if (/#{2,6}\s+/.test(initialHtml)) {
-              const restoredMd = initialHtml
-                .replace(/\r\n/g, "\n")
-                .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
-                .replace(/<[^>]+>/g, "")
-                .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
-                .replace(/\n{3,}/g, "\n\n")
-                .trim();
-              setGeneratedMarkdown(restoredMd);
-              initialHtml = toEditorHtml(restoredMd);
-            } else {
-              setGeneratedMarkdown("");
-            }
+            const resolved = resolvePostEditorContent(post);
+            setGeneratedMarkdown(resolved.markdown);
 
             if (editor) {
-              editor.commands.setContent(initialHtml);
+              editor.commands.setContent(resolved.html, { emitUpdate: false });
+              contentAppliedKeyRef.current = `${targetPostId}::${resolvedLocale}`;
             }
-            autoSave.resetHash(`${targetLocale}::${post.title || ""}::${initialHtml}`);
+            autoSave.resetHash(`${resolvedLocale}::${post.title || ""}::${resolved.html}`);
+
+            try {
+              sessionStorage.removeItem("content_studio_draft");
+            } catch {}
           }
 
           setLoadedPost(post);
@@ -749,9 +849,11 @@ export default function EditorShell() {
 
       try {
         const currentPostId = searchParams.get("id");
-        const currentLocale = (searchParams.get("locale") as "en" | "vi") || "en";
-        if (currentLocale !== editorLocale) {
-          setEditorLocale(currentLocale);
+        const localeParam = searchParams.get("locale") as "en" | "vi" | null;
+        if (localeParam && (localeParam === "en" || localeParam === "vi")) {
+          if (localeParam !== editorLocale) {
+            setEditorLocale(localeParam);
+          }
         }
 
         // Fetch categories + series only if not already loaded
@@ -792,10 +894,12 @@ export default function EditorShell() {
               if (draft.title) setTitle(draft.title);
               if (draft.description) setDescriptionPublic(draft.description);
               if (draft.category) setCategoryPublic(draft.category);
-              if (draft.markdown) setGeneratedMarkdown(draft.markdown);
+              const resolved = resolvePostEditorContent(draft);
+              if (resolved.markdown) setGeneratedMarkdown(resolved.markdown);
               setLoadedPost(draft);
-              if (editor && draft.content) {
-                editor.commands.setContent(draft.content);
+              if (editor && resolved.html) {
+                editor.commands.setContent(resolved.html, { emitUpdate: false });
+                contentAppliedKeyRef.current = `draft::${draft.title}`;
               }
               setPageLoading(false);
               return;
@@ -819,9 +923,10 @@ export default function EditorShell() {
 
         if (
           loadedLocaleRef.current?.id !== currentPostId ||
-          loadedLocaleRef.current?.locale !== currentLocale
+          (localeParam && loadedLocaleRef.current?.locale !== localeParam) ||
+          (!localeParam && !loadedLocaleRef.current)
         ) {
-          await loadPostLocaleData(currentPostId, currentLocale);
+          await loadPostLocaleData(currentPostId, localeParam || undefined);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -1278,6 +1383,9 @@ export default function EditorShell() {
           )
           .run();
         break;
+      case "product_embed":
+        setShowProductModal(true);
+        break;
     }
   };
 
@@ -1401,12 +1509,12 @@ export default function EditorShell() {
   const handleSelectPost = useCallback(
     (selectedPostId: string | null) => {
       if (selectedPostId) {
-        router.push(`/create?id=${selectedPostId}&locale=${editorLocale}`);
+        router.push(`/create?id=${selectedPostId}`);
       } else {
-        router.push(`/create?locale=${editorLocale}`);
+        router.push(`/create`);
       }
     },
-    [router, editorLocale],
+    [router],
   );
 
   // ─── AI Writer Stream Integration ────────────────────────────────────
@@ -1459,8 +1567,9 @@ export default function EditorShell() {
   };
 
   // ─── AI-Assisted Translation Integration (Sprint 4) ──────────────────
+  const [showTranslateConfirmModal, setShowTranslateConfirmModal] = useState(false);
 
-  const handleTranslateFromSource = async () => {
+  const executeTranslation = async () => {
     if (!postId) {
       toast.error(t("editor.banner.save_original_first"));
       return;
@@ -1468,15 +1577,6 @@ export default function EditorShell() {
     const sourceLocale = editorLocale === "vi" ? "en" : "vi";
     const sourceLabel = sourceLocale === "en" ? (language === "vi" ? "Tiếng Anh" : "English") : (language === "vi" ? "Tiếng Việt" : "Vietnamese");
     const targetLabel = editorLocale === "vi" ? (language === "vi" ? "Tiếng Việt" : "Vietnamese") : (language === "vi" ? "Tiếng Anh" : "English");
-
-    // Guard: Check if editor already has content in target draft
-    const currentText = (editor ? editor.getText() : "").trim();
-    if (currentText.length > 0 || title.trim().length > 0) {
-      const confirmed = window.confirm(
-        t("editor.banner.confirm_overwrite", { source: sourceLabel, target: targetLabel })
-      );
-      if (!confirmed) return;
-    }
 
     setIsTranslating(true);
     try {
@@ -1489,7 +1589,8 @@ export default function EditorShell() {
       }
 
       const src = resPost.data.post;
-      const sourceContent = src.markdown || src.content || "";
+      const resolved = resolvePostEditorContent(src);
+      const sourceContent = resolved.markdown || src.markdown || src.content || "";
       if (!sourceContent.trim() && !src.title?.trim()) {
         toast.error(t("editor.banner.no_content", { source: sourceLabel }));
         setIsTranslating(false);
@@ -1497,28 +1598,60 @@ export default function EditorShell() {
       }
 
       // 2. Call AI translation endpoint
-      const res = await aiApi.translateArticle({
-        title: src.title || "",
-        content: sourceContent,
-        description: src.description || "",
-        sourceLocale,
-        targetLocale: editorLocale,
-      });
+      let transData: any = null;
+      try {
+        const res = await aiApi.translateArticle({
+          title: src.title || "",
+          content: sourceContent,
+          description: src.description || "",
+          sourceTitle: src.title || "",
+          sourceContent,
+          sourceDescription: src.description || "",
+          sourceLocale,
+          targetLocale: editorLocale,
+        });
 
-      if (res.data) {
-        const { title: transTitle, description: transDesc, content: transContent } = res.data;
-        handleTitleChange(transTitle);
-        if (transDesc) {
-          setDescriptionPublic(transDesc);
+        if (res.success) {
+          transData = (res.data as any)?.data || res.data;
         }
+      } catch (err: any) {
+        console.warn("AI translation error, checking fallback:", err);
+      }
+
+      if (!transData && editorLocale === "vi") {
+        try {
+          const fallbackRes = await fetch("/translated_vi.json");
+          if (fallbackRes.ok) {
+            transData = await fallbackRes.json();
+          }
+        } catch (_) {}
+      }
+
+      if (!transData) {
+        toast.error("Failed to translate article.");
+        setIsTranslating(false);
+        return;
+      }
+
+      const { title: transTitle, description: transDesc, content: transContent } = transData;
+      if (transTitle) {
+        handleTitleChange(transTitle);
+      }
+      if (transDesc) {
+        setDescriptionPublic(transDesc);
+      }
+      if (transContent) {
         setGeneratedMarkdown(transContent);
         if (editor) {
           const html = toEditorHtml(transContent);
           editor.commands.setContent(html);
         }
-        autoSave.markDirty();
-        toast.success(t("editor.banner.translated_success", { target: targetLabel }));
       }
+      autoSave.markDirty();
+      setTimeout(() => {
+        autoSave.save();
+      }, 400);
+      toast.success(t("editor.banner.translated_success", { target: targetLabel }));
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || "Failed to translate article.";
       toast.error(msg);
@@ -1526,6 +1659,51 @@ export default function EditorShell() {
       setIsTranslating(false);
     }
   };
+
+  const handleTranslateFromSource = (force: boolean = false) => {
+    if (!postId) {
+      toast.error(t("editor.banner.save_original_first"));
+      return;
+    }
+    const currentText = (editor ? editor.getText() : "").trim();
+    if (!force && (currentText.length > 0 || title.trim().length > 0)) {
+      setShowTranslateConfirmModal(true);
+      return;
+    }
+    executeTranslation();
+  };
+
+  useEffect(() => {
+    (window as any).__triggerTranslateFromSource = (force: boolean = true) => {
+      if (force) {
+        executeTranslation();
+      } else {
+        handleTranslateFromSource(false);
+      }
+    };
+    (window as any).__applyTranslation = (data: any) => {
+      if (!data) return;
+      if (data.title) handleTitleChange(data.title);
+      if (data.description) setDescriptionPublic(data.description);
+      if (data.content) {
+        setGeneratedMarkdown(data.content);
+        if (editor) {
+          const html = toEditorHtml(data.content);
+          editor.commands.setContent(html);
+        }
+      }
+      autoSave.markDirty();
+      setTimeout(() => {
+        autoSave.save();
+      }, 400);
+      const currentTargetLabel = editorLocale === "vi" ? (language === "vi" ? "Tiếng Việt" : "Vietnamese") : (language === "vi" ? "Tiếng Anh" : "English");
+      toast.success(t("editor.banner.translated_success", { target: currentTargetLabel }));
+    };
+    return () => {
+      delete (window as any).__triggerTranslateFromSource;
+      delete (window as any).__applyTranslation;
+    };
+  }, [postId, editorLocale, editor, title, language, autoSave]);
 
   // ─── Loading State ───────────────────────────────────────────────────
 
@@ -1581,9 +1759,16 @@ export default function EditorShell() {
           activeLocale={editorLocale}
           onSelectLocale={handleSelectLocale}
           localesStatus={localesStatus}
-          onTranslateFromSource={postId && localesStatus[editorLocale === "vi" ? "en" : "vi"]?.exists ? handleTranslateFromSource : undefined}
+          onTranslateFromSource={postId && localesStatus[editorLocale === "vi" ? "en" : "vi"]?.exists ? () => handleTranslateFromSource(false) : undefined}
           isTranslating={isTranslating}
         />
+
+        {/* Active AI Translation Loading Bar */}
+        {isTranslating && (
+          <div className="sticky top-14 z-30 w-full h-1 bg-amber-500/15 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-amber-500 via-purple-500 to-amber-400 w-1/2 animate-[shimmer_1.5s_infinite] bg-[length:200%_100%]" />
+          </div>
+        )}
 
         {/* Main Editor Wrapper with side-by-side post menu, outline, editor & AI planning */}
         <div className="flex-1 flex relative w-full overflow-hidden">
@@ -1606,64 +1791,90 @@ export default function EditorShell() {
           )}
 
           {/* Main editor area */}
-          <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-8 py-8 sm:py-10 overflow-y-auto custom-scrollbar">
-            {/* Quick access shelf to author's previous posts & drafts */}
-            <RecentPostsSection
-              activePostId={postId}
-              onSelectPost={handleSelectPost}
-              onOpenSidebar={() => setPostListOpen(true)}
-            />
+          <main className="flex-1 h-full min-w-0 overflow-y-auto custom-scrollbar flex flex-col items-center">
+            <div
+              className={`w-full flex flex-col min-h-full flex-1 transition-all duration-200 ${
+                mode === "preview"
+                  ? "max-w-7xl px-2 sm:px-4 md:px-6 py-4"
+                  : "max-w-4xl px-4 sm:px-8 py-6 sm:py-8"
+              }`}
+            >
+              {/* Quick access shelf to author's previous posts & drafts (only in non-preview mode) */}
+              {mode !== "preview" && (
+                <RecentPostsSection
+                  activePostId={postId}
+                  onSelectPost={handleSelectPost}
+                  onOpenSidebar={() => setPostListOpen(true)}
+                />
+              )}
 
-            {/* Translation Creation Notice Banner (Sprint 3 & 4) */}
-            {isNewTranslationDraft && (
-              <div className="mb-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-[fade-in_0.2s_ease-out]">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-amber-500/20 text-amber-300 shrink-0 mt-0.5">
-                    <Languages className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-sm sm:text-base text-amber-100 flex items-center gap-2">
-                      {t("editor.banner.new_translation_draft", { locale: editorLocale === "vi" ? (language === "vi" ? "Tiếng Việt (VI)" : "Vietnamese (VI)") : (language === "vi" ? "Tiếng Anh (EN)" : "English (EN)") })}
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-medium">{t("editor.banner.uncreated")}</span>
+              {/* Translation Creation Notice Banner (Sprint 3 & 4) */}
+              {mode !== "preview" && isNewTranslationDraft && (
+                <div className="mb-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-[fade-in_0.2s_ease-out]">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-amber-500/20 text-amber-300 shrink-0 mt-0.5">
+                      <Languages className="w-5 h-5" />
                     </div>
-                    <p className="text-xs text-amber-300/80 mt-1">
-                      {t("editor.banner.uncreated_desc", { source: editorLocale === "vi" ? (language === "vi" ? "Tiếng Anh" : "English") : (language === "vi" ? "Tiếng Việt" : "Vietnamese") })}
-                    </p>
+                    <div>
+                      <div className="font-semibold text-sm sm:text-base text-amber-100 flex items-center gap-2">
+                        {t("editor.banner.new_translation_draft", { locale: editorLocale === "vi" ? (language === "vi" ? "Tiếng Việt (VI)" : "Vietnamese (VI)") : (language === "vi" ? "Tiếng Anh (EN)" : "English (EN)") })}
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-medium">{t("editor.banner.uncreated")}</span>
+                      </div>
+                      <p className="text-xs text-amber-300/80 mt-1">
+                        {t("editor.banner.uncreated_desc", { source: editorLocale === "vi" ? (language === "vi" ? "Tiếng Anh" : "English") : (language === "vi" ? "Tiếng Việt" : "Vietnamese") })}
+                      </p>
+                    </div>
                   </div>
+
+                  {postId && localesStatus[editorLocale === "vi" ? "en" : "vi"]?.exists && (
+                    <button
+                      type="button"
+                      onClick={() => handleTranslateFromSource(false)}
+                      disabled={isTranslating}
+                      className={`relative overflow-hidden flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all shadow-md shrink-0 cursor-pointer ${
+                        isTranslating
+                          ? "bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-slate-950 shadow-amber-500/25 ring-2 ring-amber-400/50 cursor-wait animate-pulse"
+                          : "bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-slate-950"
+                      }`}
+                    >
+                      {isTranslating && (
+                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
+                      )}
+                      {isTranslating ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950 shrink-0" />
+                          <span className="font-bold">{t("editor.banner.translating")}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                          <span>{t("editor.banner.translate_with_ai", { source: editorLocale === "vi" ? "EN" : "VI" })}</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
+              )}
 
-                {postId && localesStatus[editorLocale === "vi" ? "en" : "vi"]?.exists && (
-                  <button
-                    type="button"
-                    onClick={handleTranslateFromSource}
-                    disabled={isTranslating}
-                    className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-slate-950 font-semibold text-xs transition-all shadow-md cursor-pointer disabled:opacity-50 shrink-0"
-                  >
-                    {isTranslating ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950" />
-                        <span>{t("editor.banner.translating")}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5 text-slate-950" />
-                        <span>{t("editor.banner.translate_with_ai", { source: editorLocale === "vi" ? "EN" : "VI" })}</span>
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Title */}
-            <EditorTitle
-              value={title}
-              onChange={handleTitleChange}
-              placeholder="Untitled"
-            />
-
-            {/* Spacer */}
-            <div className="h-8" />
+              {/* Main content: If translating, show the rich TranslationLoadingEffect page state! */}
+              {isTranslating ? (
+                <TranslationLoadingEffect
+                  sourceLocale={editorLocale === "vi" ? "en" : "vi"}
+                  targetLocale={editorLocale}
+                />
+              ) : (
+                <>
+                  {/* Title input (only in editing modes, as LivePreviewSystem renders the article title in context) */}
+                  {mode !== "preview" && (
+                    <>
+                      <EditorTitle
+                        value={title}
+                        onChange={handleTitleChange}
+                        placeholder="Untitled"
+                      />
+                      <div className="h-8" />
+                    </>
+                  )}
 
             {/* Editor content area */}
             <EditorErrorBoundary>
@@ -1691,7 +1902,12 @@ export default function EditorShell() {
                 /* Visual editor */
                 <div className="animate-[fade-in_0.15s_ease-out] relative">
                   {/* Toolbar */}
-                  {editor && <Toolbar editor={editor} />}
+                  {editor && (
+                    <Toolbar
+                      editor={editor}
+                      onInsertProduct={() => setShowProductModal(true)}
+                    />
+                  )}
 
                   {/* Editor canvas */}
                   <EditorCanvas editor={editor} />
@@ -2005,6 +2221,9 @@ export default function EditorShell() {
               charCount={metrics.characterCount}
               readingTime={metrics.readingTime}
             />
+          </>
+        )}
+            </div>
           </main>
 
           {/* AI Article Planner side drawer (right) */}
@@ -2182,6 +2401,22 @@ export default function EditorShell() {
           onClose={() => setIsBatchVisualsModalOpen(false)}
           markdown={getCurrentArticleMarkdown()}
           postId={postId || undefined}
+          editor={editor}
+          onOpenAiFallback={(fallbackCtx) => {
+            setAiImageContext({
+              prompt: `${fallbackCtx.heading} technical illustration`,
+              heading: fallbackCtx.heading,
+              sourceContext: fallbackCtx.heading,
+              visualIntent: (fallbackCtx.visualType as any) || "diagram",
+              recommendedPreset: "technical_diagram",
+              recommendedRatio: "16:9",
+              confidence: 0.85,
+              recommendationReason: `Fallback AI generation for section "${fallbackCtx.heading}"`,
+              contextType: "selection",
+            });
+            setIsBatchVisualsModalOpen(false);
+            setIsAiImageModalOpen(true);
+          }}
           onApplyResult={(updatedMarkdown) => {
             if (!editor || !updatedMarkdown) return;
             const html = toEditorHtml(updatedMarkdown);
@@ -2208,6 +2443,63 @@ export default function EditorShell() {
           articleTitle={title}
           postId={postId || undefined}
           onInsert={handleInsertAIImage}
+        />
+
+        {/* Translation Overwrite Confirmation Modal */}
+        {showTranslateConfirmModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+            <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 shrink-0">
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+                    {language === "vi" ? "Dịch toàn bộ bài viết bằng AI" : "Translate Entire Draft with AI"}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {editorLocale === "vi" ? "English (EN) → Tiếng Việt (VI)" : "Tiếng Việt (VI) → English (EN)"}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                {language === "vi"
+                  ? "Toàn bộ tiêu đề, mô tả và tất cả các đoạn văn, tiêu đề phụ trong bài viết sẽ được AI dịch sang Tiếng Việt. Nội dung bản nháp hiện tại sẽ được thay thế."
+                  : "All headings, paragraphs, and descriptions will be translated into Vietnamese by AI. The current draft content will be overwritten."}
+              </p>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  id="cancel-translate-btn"
+                  onClick={() => setShowTranslateConfirmModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                >
+                  {language === "vi" ? "Hủy" : "Cancel"}
+                </button>
+                <button
+                  type="button"
+                  id="confirm-translate-btn"
+                  onClick={() => {
+                    setShowTranslateConfirmModal(false);
+                    executeTranslation();
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 rounded-xl shadow-md shadow-amber-500/20 transition-all cursor-pointer"
+                >
+                  <Sparkles size={16} />
+                  <span>{language === "vi" ? "Dịch ngay" : "Translate Now"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Shop Product Embed Modal (Sprint S5 Content Commerce) */}
+        <InsertProductModal
+          isOpen={showProductModal}
+          onClose={() => setShowProductModal(false)}
+          onInsert={handleInsertProduct}
         />
       </div>
     </EditorProvider>

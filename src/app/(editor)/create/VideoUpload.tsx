@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Upload,
   X,
@@ -8,8 +8,12 @@ import {
   Loader2,
   CheckCircle2,
   CloudUpload,
+  RefreshCw,
+  Minus,
+  ArrowDownToLine,
 } from "lucide-react";
-import { courseApi } from "@/features/series/api/course.api";
+import { toast } from "sonner";
+import { useVideoUploadStore } from "@/store/useVideoUploadStore";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -19,9 +23,12 @@ interface VideoUploadProps {
   onClose: () => void;
   /** Whether to show the modal header with a close button (default: true) */
   isTitleDisplay?: boolean;
+  initialTitle?: string;
+  lessonId?: string;
+  onMinimize?: () => void;
 }
 
-type UploadState = "idle" | "uploading" | "saving" | "done" | "error";
+type UploadState = "idle" | "authorizing" | "uploading" | "saving" | "done" | "error" | "aborted";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -36,34 +43,71 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
   onVideoUploaded,
   onClose,
   isTitleDisplay = true,
+  initialTitle = "",
+  lessonId = "default",
+  onMinimize,
 }) => {
   const [file, setFile] = useState<File | null>(null);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(initialTitle);
   const [isDragging, setIsDragging] = useState(false);
-  const [uploadState, setUploadState] = useState<UploadState>("idle");
-  const [progress, setProgress] = useState(0);
-  const [error, setError] = useState("");
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [localError, setLocalError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isUploading = uploadState === "uploading" || uploadState === "saving";
+  const startUpload = useVideoUploadStore((s) => s.startUpload);
+  const abortUpload = useVideoUploadStore((s) => s.abortUpload);
+  const removeUpload = useVideoUploadStore((s) => s.removeUpload);
+  const retryUpload = useVideoUploadStore((s) => s.retryUpload);
+
+  // Detect if an existing upload task is already tracked for this lesson
+  const currentTask = useVideoUploadStore((s) => {
+    if (activeTaskId) {
+      return s.tasks.find((t) => t.id === activeTaskId) || null;
+    }
+    if (lessonId && lessonId !== "default") {
+      return s.tasks.find((t) => t.lessonId === lessonId && t.status !== "aborted") || null;
+    }
+    return null;
+  });
+
+  // Effective file representation (either newly chosen in modal or active in store)
+  const effectiveFile = file || currentTask?.file || null;
+  const effectiveFileName = file?.name || currentTask?.fileName || "";
+  const effectiveFileSize = file?.size || currentTask?.fileSize || 0;
+
+  // Sync title from store if available
+  useEffect(() => {
+    if (currentTask?.lessonTitle && !title) {
+      setTitle(currentTask.lessonTitle);
+    }
+  }, [currentTask?.lessonTitle]);
+
+  const uploadState: UploadState = currentTask ? currentTask.status : "idle";
+  const progress = currentTask ? currentTask.progress : 0;
+  const error = localError || (currentTask?.error ?? "");
+
+  const isUploading =
+    uploadState === "authorizing" || uploadState === "uploading" || uploadState === "saving";
 
   // ── File selection & validation ──────────────────────────────────────────
 
   const handleFileSelect = (selectedFile: File) => {
     if (!selectedFile.type.startsWith("video/")) {
-      setError("Please select a valid video file (MP4, MOV, AVI, …)");
+      setLocalError("Please select a valid video file (MP4, MOV, AVI, …)");
       return;
     }
     // 2 GB max
     if (selectedFile.size > 2 * 1024 * 1024 * 1024) {
-      setError("File size must be less than 2 GB");
+      setLocalError("File size must be less than 2 GB");
       return;
     }
     setFile(selectedFile);
-    if (!title) setTitle(selectedFile.name.replace(/\.[^/.]+$/, ""));
-    setError("");
-    setUploadState("idle");
-    setProgress(0);
+    const fileNameWithoutExt = selectedFile.name.replace(/\.[^/.]+$/, "");
+    if (!title || title === initialTitle || /^Lesson\s+\d+$/i.test(title.trim())) {
+      setTitle(fileNameWithoutExt);
+    }
+    setLocalError("");
+    setActiveTaskId(null);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,79 +122,74 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
   };
 
   const clearFile = () => {
+    if (currentTask) {
+      if (isUploading) {
+        abortUpload(currentTask.id);
+      } else {
+        removeUpload(currentTask.id);
+      }
+    }
+    setActiveTaskId(null);
     setFile(null);
-    setTitle("");
-    setError("");
-    setUploadState("idle");
-    setProgress(0);
+    setTitle(initialTitle || "");
+    setLocalError("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   // ── Upload flow ──────────────────────────────────────────────────────────
 
   const handleUpload = async () => {
-    if (!file || !title.trim()) {
-      setError("Please select a file and enter a title.");
+    const uploadFile = effectiveFile;
+    if (!uploadFile || !title.trim()) {
+      setLocalError("Please select a file and enter a title.");
       return;
     }
-    setError("");
+    setLocalError("");
 
     try {
-      // Step 1 — Obtain Cloudflare Stream upload URL from our backend
-      setUploadState("uploading");
-      setProgress(0);
-
-      const uploadUrlRes = await courseApi.getCloudflareUploadUrl();
-      if (uploadUrlRes.data.status !== "success") {
-        throw new Error("Could not get upload URL from server.");
-      }
-      const { uploadURL, uid: videoId } = uploadUrlRes.data.data;
-
-      // Step 2 — Upload the file directly to Cloudflare Stream (with XHR progress)
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", uploadURL);
-
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            setProgress(Math.round((e.loaded / e.total) * 100));
-          }
-        };
-
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve();
-          } else {
-            reject(new Error(`Upload failed (HTTP ${xhr.status})`));
-          }
-        };
-
-        xhr.onerror = () => reject(new Error("Network error during upload."));
-
-        const fd = new FormData();
-        fd.append("file", file);
-        xhr.send(fd);
+      const taskId = await startUpload({
+        file: uploadFile,
+        lessonId,
+        lessonTitle: title.trim(),
+        onComplete: (mediaId, completedTitle) => {
+          onVideoUploaded(mediaId, completedTitle);
+        },
       });
-
-      // Step 3 — Persist metadata in our backend
-      setUploadState("saving");
-      console.log("videoId", videoId);
-      console.log("title", title);
-      const saveRes = await courseApi.saveCloudflareVideo({ videoId, title });
-      if (saveRes.data.status !== "success") {
-        throw new Error("Could not save video metadata.");
-      }
-      console.log("saveRes", saveRes);
-      const mediaId: string = saveRes.data.data._id;
-
-      // Step 4 — Notify parent
-      setUploadState("done");
-      setTimeout(() => {
-        onVideoUploaded(mediaId, title);
-      }, 800);
+      setActiveTaskId(taskId);
     } catch (err: any) {
-      setError(err.message || "An unexpected error occurred.");
-      setUploadState("error");
+      setLocalError(err.message || "Failed to start upload.");
+    }
+  };
+
+  const handleRetry = async () => {
+    if (currentTask) {
+      setLocalError("");
+      await retryUpload(currentTask.id);
+    }
+  };
+
+  const handleMinimize = () => {
+    toast.info("Upload running in the bottom dock. You can now edit or upload another video!");
+    if (onMinimize) {
+      onMinimize();
+    } else {
+      onClose();
+    }
+  };
+
+  const handleCancelOrAbort = () => {
+    if (currentTask && isUploading) {
+      abortUpload(currentTask.id);
+      setActiveTaskId(null);
+    }
+    onClose();
+  };
+
+  const handleClose = () => {
+    if (isUploading) {
+      handleMinimize();
+    } else {
+      onClose();
     }
   };
 
@@ -165,21 +204,34 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
             <CloudUpload className="text-[var(--color-editor-accent)]" size={22} />
             <h2 className="text-lg font-bold text-[var(--color-editor-text)]">Upload Video</h2>
           </div>
-          {!isUploading && (
+          <div className="flex items-center gap-1.5">
+            {isUploading && (
+              <button
+                type="button"
+                onClick={handleMinimize}
+                className="p-1.5 rounded-xl hover:bg-[var(--color-editor-elevated)] text-[var(--color-editor-muted)] hover:text-[var(--color-editor-text)] transition-all duration-200 cursor-pointer"
+                title="Minimize to bottom dock"
+                aria-label="Minimize"
+              >
+                <Minus size={18} />
+              </button>
+            )}
             <button
-              onClick={onClose}
+              type="button"
+              onClick={handleClose}
               className="p-1.5 rounded-xl hover:bg-[var(--color-editor-elevated)] text-[var(--color-editor-muted)] hover:text-[var(--color-editor-text)] transition-all duration-200 cursor-pointer"
+              title={isUploading ? "Minimize & close window" : "Close"}
               aria-label="Close"
             >
               <X size={18} />
             </button>
-          )}
+          </div>
         </div>
       )}
 
       <div className="p-5 space-y-4">
         {/* Dropzone / File info */}
-        {!file || uploadState === "idle" ? (
+        {!effectiveFileName || uploadState === "idle" ? (
           <div
             onDragOver={(e) => {
               e.preventDefault();
@@ -221,21 +273,26 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
           </div>
         ) : (
           /* Selected file display */
-          <div className="flex items-center gap-3 bg-[var(--color-editor-accent)]/8 rounded-xl p-3 border border-[var(--color-editor-accent)]/20">
-            <Video className="text-[var(--color-editor-accent)] shrink-0" size={22} />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[var(--color-editor-text)] truncate">
-                {file.name}
-              </p>
-              <p className="text-xs text-[var(--color-editor-muted)]">
-                {formatSize(file.size)}
-              </p>
+          <div className="flex items-center justify-between p-3.5 bg-[var(--color-editor-elevated)] rounded-xl border border-[var(--color-editor-border)]">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 rounded-lg bg-[var(--color-editor-accent)]/10 text-[var(--color-editor-accent)] flex-shrink-0">
+                <Video size={20} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[var(--color-editor-text)] truncate max-w-[280px]">
+                  {effectiveFileName}
+                </p>
+                <p className="text-xs text-[var(--color-editor-muted)]">
+                  {formatSize(effectiveFileSize)}
+                </p>
+              </div>
             </div>
-            {!isUploading && uploadState !== "done" && (
+            {!isUploading && (
               <button
+                type="button"
                 onClick={clearFile}
-                className="text-[var(--color-editor-muted)] hover:text-red-500 text-xs transition-colors cursor-pointer"
-                aria-label="Remove file"
+                className="p-1 rounded-lg text-[var(--color-editor-muted)] hover:text-red-500 hover:bg-red-500/10 transition-all cursor-pointer"
+                title="Remove file and upload another"
               >
                 <X size={16} />
               </button>
@@ -245,18 +302,16 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
 
         {/* Lesson title input */}
         <div>
-          <label className="block text-sm font-medium text-[var(--color-editor-secondary)] mb-1">
+          <label className="block text-xs font-semibold text-[var(--color-editor-muted)] mb-1.5 uppercase tracking-wider">
             Lesson title
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            disabled={isUploading}
+            disabled={isUploading || uploadState === "done"}
             placeholder="Enter lesson title…"
-            className="w-full px-3 py-2 border border-[var(--color-editor-border)] rounded-xl text-sm bg-[var(--color-editor-elevated)] text-[var(--color-editor-text)] placeholder:text-[var(--color-editor-muted)]
- focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50 outline-none
- disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[var(--color-editor-border)] bg-[var(--color-editor-elevated)] text-[var(--color-editor-text)] placeholder-[var(--color-editor-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)] disabled:opacity-60 transition-all duration-200"
           />
         </div>
 
@@ -268,23 +323,30 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
         )}
 
         {/* Upload progress */}
+        {uploadState === "authorizing" && (
+          <div className="flex items-center gap-2 text-sm text-[var(--color-editor-accent)] animate-pulse">
+            <Loader2 className="animate-spin" size={14} />
+            Authorizing Bunny Stream upload session…
+          </div>
+        )}
+
         {uploadState === "uploading" && (
           <div className="space-y-2 animate-[fade-in_0.15s_ease-out]">
             <div className="flex justify-between text-xs text-[var(--color-editor-muted)]">
               <span className="flex items-center gap-1.5">
                 <Loader2 className="animate-spin" size={12} />
-                Uploading to Cloudflare Stream…
+                Uploading directly to Bunny Stream…
               </span>
               <span className="font-bold text-[var(--color-editor-accent)]">{progress}%</span>
             </div>
             <div className="w-full bg-[var(--color-editor-elevated)] rounded-full h-2.5 overflow-hidden">
               <div
-                className="h-2.5 bg-gradient-to-r from-[var(--color-editor-accent)] to-violet-500 rounded-full transition-all duration-300 ease-out"
+                className="h-2.5 bg-gradient-to-r from-[var(--color-editor-accent)] to-emerald-500 rounded-full transition-all duration-300 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
             <p className="text-xs text-[var(--color-editor-muted)] text-right">
-              {formatSize(file?.size ?? 0)} total
+              {formatSize(effectiveFileSize)} total
             </p>
           </div>
         )}
@@ -293,7 +355,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
         {uploadState === "saving" && (
           <div className="flex items-center gap-2 text-sm text-[var(--color-editor-accent)] animate-pulse">
             <Loader2 className="animate-spin" size={14} />
-            Saving video metadata…
+            Registering video with backend…
           </div>
         )}
 
@@ -301,40 +363,89 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
         {uploadState === "done" && (
           <div className="flex items-center gap-2 text-sm text-[var(--color-editor-success)] font-medium animate-[fade-in_0.2s_ease-out]">
             <CheckCircle2 size={16} className="text-[var(--color-editor-success)]" />
-            Video uploaded successfully!
+            Video uploaded and registered successfully!
           </div>
         )}
       </div>
 
       {/* Footer actions */}
-      <div className="flex gap-2 justify-end px-5 py-4 border-t border-[var(--color-editor-border)] bg-[var(--color-editor-elevated)]/50">
-        <button
-          onClick={onClose}
-          disabled={isUploading}
-          className="px-4 py-2 text-sm rounded-xl border border-[var(--color-editor-border)] text-[var(--color-editor-secondary)] hover:bg-[var(--color-editor-elevated)]
- disabled:opacity-50 transition-all duration-200 cursor-pointer"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleUpload}
-          disabled={
-            !file || !title.trim() || isUploading || uploadState === "done"
-          }
-          className="px-5 py-2 text-sm rounded-xl bg-[var(--color-editor-accent)] text-white font-semibold
- hover:bg-[var(--color-editor-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed
- flex items-center gap-2 transition-all duration-200 shadow-sm active:scale-[0.97]"
-        >
-          {isUploading ? (
+      <div className="flex items-center justify-between px-5 py-4 border-t border-[var(--color-editor-border)] bg-[var(--color-editor-elevated)]/50">
+        <div>
+          {isUploading && (
+            <button
+              type="button"
+              onClick={handleMinimize}
+              className="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-editor-accent)] hover:underline cursor-pointer"
+            >
+              <ArrowDownToLine size={14} />
+              Minimize to bottom bar
+            </button>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          {uploadState === "done" ? (
             <>
-              <Loader2 className="animate-spin" size={14} /> Uploading…
+              <button
+                type="button"
+                onClick={clearFile}
+                className="px-4 py-2 text-sm rounded-xl border border-[var(--color-editor-border)] text-[var(--color-editor-secondary)] hover:bg-[var(--color-editor-elevated)] transition-all duration-200 cursor-pointer"
+              >
+                Upload different video
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-2 text-sm rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-all duration-200 cursor-pointer"
+              >
+                Close
+              </button>
+            </>
+          ) : uploadState === "error" ? (
+            <>
+              <button
+                type="button"
+                onClick={handleCancelOrAbort}
+                className="px-4 py-2 text-sm rounded-xl border border-[var(--color-editor-border)] text-[var(--color-editor-secondary)] hover:bg-[var(--color-editor-elevated)] transition-all duration-200 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="px-5 py-2 text-sm rounded-xl bg-[var(--color-editor-accent)] text-white font-semibold hover:bg-[var(--color-editor-accent-hover)] flex items-center gap-2 transition-all duration-200 cursor-pointer"
+              >
+                <RefreshCw size={14} /> Retry Upload
+              </button>
             </>
           ) : (
             <>
-              <Upload size={14} /> Upload
+              <button
+                type="button"
+                onClick={handleCancelOrAbort}
+                className="px-4 py-2 text-sm rounded-xl border border-[var(--color-editor-border)] text-[var(--color-editor-secondary)] hover:bg-[var(--color-editor-elevated)] disabled:opacity-50 transition-all duration-200 cursor-pointer"
+              >
+                {isUploading ? "Abort" : "Cancel"}
+              </button>
+              <button
+                type="button"
+                onClick={handleUpload}
+                disabled={!effectiveFileName || !title.trim() || isUploading}
+                className="px-5 py-2 text-sm rounded-xl bg-[var(--color-editor-accent)] text-white font-semibold hover:bg-[var(--color-editor-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all duration-200 shadow-sm active:scale-[0.97] cursor-pointer"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={14} /> Uploading…
+                  </>
+                ) : (
+                  <>
+                    <Upload size={14} /> Upload
+                  </>
+                )}
+              </button>
             </>
           )}
-        </button>
+        </div>
       </div>
     </div>
   );

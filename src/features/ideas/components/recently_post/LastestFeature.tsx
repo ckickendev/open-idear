@@ -15,7 +15,7 @@ const LastestFeature = () => {
   const { t } = useTranslation();
   const [selectFeature, setSelectFeature] = useState(0);
   const [allCategory, setAllCategory] = useState<any[]>([
-    { name: "Tất cả", slug: "all" },
+    { name: "All", slug: "all" },
   ]);
   const [allPosts, setAllPosts] = useState<PostInterface[]>([]);
   const [isLocalLoading, setIsLocalLoading] = useState(true);
@@ -40,7 +40,7 @@ const LastestFeature = () => {
         if (response.status === 200 && response.data?.recentlyData) {
           if (Array.isArray(response.data.recentlyData.categories)) {
             setAllCategory([
-              { name: "Tất cả", slug: "all" },
+              { name: "All", slug: "all" },
               ...response.data.recentlyData.categories,
             ]);
           }

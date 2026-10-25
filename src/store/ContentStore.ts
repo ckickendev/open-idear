@@ -1,10 +1,10 @@
 import { create } from "zustand";
 
 interface ContentState {
-  title: String;
-  content: String;
-  setTitle: (title: String) => void;
-  setContent: (content: String) => void;
+  title: string;
+  content: string;
+  setTitle: (title: string) => void;
+  setContent: (content: string) => void;
   postList: any[];
   setPostList: (postList: any[]) => void;
   modeHTML: boolean;
@@ -16,20 +16,14 @@ interface ContentState {
 const contentStore = create<ContentState>((set) => ({
   title: "",
   content: "",
-  setTitle: (title) =>
-    set(() => {
-      return { title: title };
-    }),
-  setContent: (content) =>
-    set(() => {
-      return { content: content };
-    }),
+  setTitle: (title) => set({ title }),
+  setContent: (content) => set({ content }),
   postList: [],
-  setPostList: (postList) => set(() => ({ postList: postList })),
+  setPostList: (postList) => set({ postList }),
   modeHTML: false,
-  setModeHTML: (mode) => set(() => ({ modeHTML: mode })),
+  setModeHTML: (modeHTML) => set({ modeHTML }),
   showHtmlEditor: false,
-  setShowHtmlEditor: (isShow) => set(() => ({ showHtmlEditor: isShow })),
+  setShowHtmlEditor: (showHtmlEditor) => set({ showHtmlEditor }),
 }));
 
 export default contentStore;

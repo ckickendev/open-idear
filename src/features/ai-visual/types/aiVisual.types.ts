@@ -128,6 +128,14 @@ export type VisualAnalyticsAction =
   | "visual_generation_rejected"
   | "visual_generation_regenerated"
   | "visual_suggestion_dismissed"
+  | "batch_search_started"
+  | "batch_search_completed"
+  | "search_success"
+  | "search_failure"
+  | "candidate_selected"
+  | "image_applied"
+  | "suggestion_dismissed"
+  | "ai_fallback_requested"
   | "generated"
   | "accepted"
   | "regenerated"
@@ -141,6 +149,34 @@ export type VisualAnalyticsAction =
   | "ai_image_accepted"
   | "ai_image_rejected"
   | "ai_image_inserted";
+
+export interface BatchSearchSuggestionItem {
+  id?: string;
+  heading: string;
+  query?: string;
+  visualType?: string;
+  context?: Record<string, any>;
+}
+
+export interface BatchSearchResultItem {
+  id?: string;
+  heading: string;
+  query: string;
+  success: boolean;
+  count: number;
+  candidates: ImageSearchResult[];
+  error?: string;
+}
+
+export interface BatchSearchResponse {
+  status: string;
+  total: number;
+  completed: number;
+  withResults: number;
+  empty: number;
+  failed: number;
+  results: BatchSearchResultItem[];
+}
 
 export interface VisualAnalyticsEvent {
   heading?: string;
@@ -157,6 +193,10 @@ export interface VisualAnalyticsEvent {
 export interface ImageSearchResult {
   readonly id: string;
   readonly url: string;
+  /** Primary image URL conforming to Sprint 1 contract */
+  readonly imageUrl?: string;
+  /** Provider name, e.g. "unsplash" | "pexels" | "asset_library" */
+  readonly provider?: string;
   readonly thumbnailUrl: string;
   readonly title: string;
   readonly alt: string;
@@ -165,7 +205,7 @@ export interface ImageSearchResult {
   readonly width?:          number;
   readonly height?:         number;
   readonly tags?:           string[];
-  // ─── Provider Safety (Sprint 2) ──────────────────────────────────────────
+  // ─── Provider Safety & Attribution ──────────────────────────────────────
   /** Photographer or creator name from the source provider. */
   readonly author?:         string;
   /**
@@ -179,6 +219,8 @@ export interface ImageSearchResult {
   readonly sourceProvider?: string;
   /** Original provider asset page URL (for dedup & attribution). */
   readonly sourceUrl?:      string;
+  /** Provider usage restrictions or guidelines */
+  readonly usageRestrictions?: string[];
 }
 
 export interface ImageSearchResponse {
@@ -193,6 +235,9 @@ export interface ImageSearchOptions {
   readonly query: string;
   readonly limit?: number;
   readonly page?: number;
+  readonly orientation?: "landscape" | "portrait" | "square";
+  readonly visualSuggestionId?: string;
+  readonly context?: Record<string, any>;
 }
 
 export interface ImagePlaceholderAttributes {

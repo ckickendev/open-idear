@@ -615,7 +615,7 @@ export function ImagePlaceholderView({
         {status === "idle" && (
           <div className="py-2.5 space-y-3">
             {/* 1. Decision Recommendation Card */}
-            <div className="p-3.5 rounded-lg bg-white/90 dark:bg-zinc-850/80 border border-zinc-200/80 dark:border-zinc-800 shadow-xs space-y-2.5">
+            <div className="p-3.5 rounded-lg bg-white/90 dark:bg-[#0E1424] border border-zinc-200/80 dark:border-slate-800 shadow-xs space-y-2.5">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">

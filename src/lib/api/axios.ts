@@ -1,23 +1,57 @@
 import { ENV } from "@/api/const";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 
-// Get token securely without exposing localStorage in components
-export const getToken = () => {
+// Helper to read cookie by name
+export const getCookie = (name: string): string | null => {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+};
+
+// Get token securely with localStorage + cookie fallback
+export const getToken = (): string | null => {
   if (typeof window !== "undefined") {
-    return localStorage.getItem("access_token");
+    try {
+      const localToken = localStorage.getItem("access_token");
+      if (localToken) return localToken;
+    } catch {
+      // ignore localStorage security / storage quota errors
+    }
+
+    // Fallback: check cookie for access_token or token
+    const cookieToken = getCookie("access_token") || getCookie("token");
+    if (cookieToken) {
+      try {
+        localStorage.setItem("access_token", cookieToken);
+      } catch {
+        // ignore
+      }
+      return cookieToken;
+    }
   }
   return null;
 };
 
 export const setToken = (token: string) => {
   if (typeof window !== "undefined") {
-    localStorage.setItem("access_token", token);
+    try {
+      localStorage.setItem("access_token", token);
+    } catch {
+      // ignore
+    }
+    document.cookie = `access_token=${encodeURIComponent(token)}; path=/; max-age=2592000; SameSite=Lax`;
   }
 };
 
 export const removeToken = () => {
   if (typeof window !== "undefined") {
-    localStorage.removeItem("access_token");
+    try {
+      localStorage.removeItem("access_token");
+    } catch {
+      // ignore
+    }
+    document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
+    document.cookie = "token=; path=/; max-age=0; SameSite=Lax";
   }
 };
 
@@ -81,6 +115,20 @@ export interface ApiResponse<T = any> {
   message?: string;
 }
 
+const extractErrorMessage = (error: any): string => {
+  const data = error?.response?.data;
+  if (data?.details && data?.error) {
+    return `${data.error}: ${data.details}`;
+  }
+  return (
+    data?.details ||
+    data?.error ||
+    data?.message ||
+    error?.message ||
+    "An error occurred"
+  );
+};
+
 export const api = {
   get: async <T = any>(
     url: string,
@@ -98,11 +146,7 @@ export const api = {
         success: false,
         data: null as any,
         status: error?.response?.status || 500,
-        message:
-          error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          error?.message ||
-          "An error occurred",
+        message: extractErrorMessage(error),
       };
     }
   },
@@ -135,11 +179,7 @@ export const api = {
         success: false,
         data: null as any,
         status: error?.response?.status || 500,
-        message:
-          error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          error?.message ||
-          "An error occurred",
+        message: extractErrorMessage(error),
       };
     }
   },
@@ -160,11 +200,7 @@ export const api = {
         success: false,
         data: null as any,
         status: error?.response?.status || 500,
-        message:
-          error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          error?.message ||
-          "An error occurred",
+        message: extractErrorMessage(error),
       };
     }
   },
@@ -185,11 +221,7 @@ export const api = {
         success: false,
         data: null as any,
         status: error?.response?.status || 500,
-        message:
-          error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          error?.message ||
-          "An error occurred",
+        message: extractErrorMessage(error),
       };
     }
   },
@@ -209,11 +241,7 @@ export const api = {
         success: false,
         data: null as any,
         status: error?.response?.status || 500,
-        message:
-          error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          error?.message ||
-          "An error occurred",
+        message: extractErrorMessage(error),
       };
     }
   },

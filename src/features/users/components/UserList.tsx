@@ -175,7 +175,7 @@ const UserList = () => {
         if (newUser.success) {
           setUsers([...users, newUser.data.user]);
           setShowModal(false);
-          toast.success("Thêm người dùng thành công");
+          toast.success("User added successfully");
         } else throw new Error(newUser.message);
       } catch (error: any) {
         setShowModal(false);
@@ -193,7 +193,7 @@ const UserList = () => {
       !formData.username.trim() ||
       !formData.email.trim()
     ) {
-      toast.success("Vui lòng điền đầy đủ thông tin bắt buộc");
+      toast.error("Please fill in all required fields");
       changeLoad();
       return;
     }
@@ -215,7 +215,7 @@ const UserList = () => {
             ),
           );
           setShowModal(false);
-          toast.success("Cập nhật người dùng thành công");
+          toast.success("User updated successfully");
         } else throw new Error(response.message);
         changeLoad();
       })
@@ -231,7 +231,7 @@ const UserList = () => {
       .deleteUser(id)
       .then((response) => {
         if (response.success) {
-          toast.success("Xóa người dùng thành công");
+          toast.success("User deleted successfully");
         } else throw new Error(response.message);
         changeLoad();
       })
@@ -248,7 +248,7 @@ const UserList = () => {
       .restoreUser(id)
       .then((response) => {
         if (response.success) {
-          toast.success("Khôi phục người dùng thành công");
+          toast.success("User restored successfully");
           setUsers(users.filter((u) => u._id !== id));
         } else throw new Error(response.message);
         changeLoad();
@@ -273,7 +273,7 @@ const UserList = () => {
         ),
       );
       toast.success(
-        `${newActivate === "true" ? "Kích hoạt" : "Vô hiệu hóa"} người dùng thành công`,
+        `${newActivate === "true" ? "Activated" : "Deactivated"} user successfully`,
       );
     } catch (error: any) {
       toast.error(error?.message);
@@ -283,14 +283,14 @@ const UserList = () => {
   };
 
   const roleOptions = [
-    { value: "all", label: "Tất cả vai trò" },
-    { value: "0", label: "Người dùng" },
-    { value: "1", label: "Quản trị viên" },
+    { value: "all", label: "All Roles" },
+    { value: "0", label: "User" },
+    { value: "1", label: "Admin" },
   ];
   const statusOptions = [
-    { value: "all", label: "Tất cả trạng thái" },
-    { value: "true", label: "Đang hoạt động" },
-    { value: "false", label: "Đã vô hiệu hóa" },
+    { value: "all", label: "All Statuses" },
+    { value: "true", label: "Active" },
+    { value: "false", label: "Deactivated" },
   ];
 
   return (
@@ -298,17 +298,17 @@ const UserList = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-foreground">
-            Quản lý Người dùng
+            User Management
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Quản lý tài khoản và quyền truy cập
+            Manage accounts and permissions
           </p>
         </div>
         <button
           onClick={() => openModal("add")}
           className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors"
         >
-          <Plus size={16} /> Thêm mới
+          <Plus size={16} /> Add User
         </button>
       </div>
 
@@ -321,7 +321,7 @@ const UserList = () => {
               : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
           }`}
         >
-          Tất cả
+          All
         </button>
         <button
           onClick={() => setListStatus("trash")}
@@ -331,7 +331,7 @@ const UserList = () => {
               : "border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border"
           }`}
         >
-          Thùng rác
+          Trash
         </button>
       </div>
 
@@ -339,7 +339,7 @@ const UserList = () => {
         <AdminSearchInput
           value={searchTerm}
           onChange={setSearchTerm}
-          placeholder="Tìm kiếm theo tên, username hoặc email..."
+          placeholder="Search by name, username or email..."
         />
         <div className="flex gap-3">
           <AdminFilterSelect
@@ -357,10 +357,10 @@ const UserList = () => {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {filteredUsers.length} người dùng{" "}
+          {filteredUsers.length} users{" "}
           {hasActiveFilters && (
             <span className="text-muted-foreground">
-              (lọc từ {users.length} tổng cộng)
+              (filtered from {users.length} total)
             </span>
           )}
         </p>
@@ -369,7 +369,7 @@ const UserList = () => {
             onClick={resetFilters}
             className="text-sm text-admin-primary hover:underline font-medium"
           >
-            Xóa bộ lọc
+            Clear filters
           </button>
         )}
       </div>
@@ -382,10 +382,10 @@ const UserList = () => {
             icon={Users}
             title={
               hasActiveFilters
-                ? "Không tìm thấy người dùng"
-                : "Chưa có người dùng nào"
+                ? "No users found"
+                : "No users yet"
             }
-            description={hasActiveFilters ? "Thử thay đổi bộ lọc" : undefined}
+            description={hasActiveFilters ? "Try changing your filters" : undefined}
           />
         ) : (
           <>
@@ -397,22 +397,22 @@ const UserList = () => {
                       #
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Thông tin
+                      Info
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
                       Email
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Vai trò
+                      Role
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Trạng thái
+                      Status
                     </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                      Ngày tham gia
+                      Joined Date
                     </th>
                     <th className="px-6 py-3.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Hành động
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -484,7 +484,7 @@ const UserList = () => {
                           }
                           dot
                         >
-                          {user.activate === true ? "Hoạt động" : "Vô hiệu hóa"}
+                          {user.activate === true ? "Active" : "Deactivated"}
                         </StatusBadge>
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground hidden lg:table-cell whitespace-nowrap">
@@ -496,16 +496,16 @@ const UserList = () => {
                             <button
                               onClick={() => handleRestoreUser(user._id)}
                               className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap"
-                              title="Khôi phục"
+                              title="Restore"
                             >
-                              Khôi phục
+                              Restore
                             </button>
                           ) : (
                             <>
                               <button
                                 onClick={() => openModal("edit", user)}
                                 className="p-2 rounded-lg text-admin-primary hover:bg-admin-primary-light transition-colors"
-                                title="Chỉnh sửa"
+                                title="Edit"
                               >
                                 <Edit size={16} />
                               </button>
@@ -516,8 +516,8 @@ const UserList = () => {
                                 className={`p-2 rounded-lg transition-colors ${user.activate === true ? "text-red-500 hover:bg-red-50" : "text-emerald-600 hover:bg-emerald-50"}`}
                                 title={
                                   user.activate === true
-                                    ? "Vô hiệu hóa"
-                                    : "Kích hoạt"
+                                    ? "Deactivate"
+                                    : "Activate"
                                 }
                               >
                                 {user.activate === true ? (
@@ -529,7 +529,7 @@ const UserList = () => {
                               <button
                                 onClick={() => setConfirmDelete(user._id)}
                                 className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                                title="Xóa"
+                                title="Delete"
                               >
                                 <Trash2 size={16} />
                               </button>
@@ -543,10 +543,10 @@ const UserList = () => {
               </table>
             </div>
             <div className="sm:hidden divide-y divide-border">
-              {currentUsers.map((user, index) => (
+              {currentUsers.map((user) => (
                 <div
                   key={user._id}
-                  className="p-4 hover:bg-muted/30/50 transition-colors"
+                  className="p-4 hover:bg-muted/30 transition-colors"
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0">
@@ -581,7 +581,7 @@ const UserList = () => {
                               onClick={() => handleRestoreUser(user._id)}
                               className="px-3 py-1.5 rounded-lg bg-indigo-50 text-admin-primary hover:bg-admin-primary hover:text-white transition-colors font-medium text-xs whitespace-nowrap"
                             >
-                              Khôi phục
+                              Restore
                             </button>
                           ) : (
                             <>
@@ -634,9 +634,9 @@ const UserList = () => {
         isOpen={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => confirmDelete && handleDeleteUser(confirmDelete)}
-        title="Xóa người dùng"
-        message="Bạn có chắc chắn muốn xóa người dùng này?"
-        confirmText="Xóa"
+        title="Delete user"
+        message="Are you sure you want to delete this user?"
+        confirmText="Delete"
         variant="danger"
       />
 
@@ -650,8 +650,8 @@ const UserList = () => {
             <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-background rounded-t-xl z-10">
               <h3 className="text-lg font-semibold text-foreground">
                 {modalType === "add"
-                  ? "Thêm người dùng mới"
-                  : "Chỉnh sửa người dùng"}
+                  ? "Add new user"
+                  : "Edit user"}
               </h3>
               <button
                 onClick={closeModal}
@@ -663,28 +663,28 @@ const UserList = () => {
             <div className="p-6 space-y-4">
               {[
                 {
-                  label: "Họ và tên",
+                  label: "Full Name",
                   key: "name",
                   required: true,
-                  placeholder: "Nhập họ và tên...",
+                  placeholder: "Enter full name...",
                 },
                 {
-                  label: "Tên đăng nhập",
+                  label: "Username",
                   key: "username",
                   required: true,
-                  placeholder: "Nhập tên đăng nhập...",
+                  placeholder: "Enter username...",
                 },
                 {
                   label: "Email",
                   key: "email",
                   required: true,
-                  placeholder: "Nhập email...",
+                  placeholder: "Enter email...",
                   type: "email",
                 },
                 {
-                  label: "Số điện thoại",
+                  label: "Phone Number",
                   key: "phone",
-                  placeholder: "Nhập số điện thoại...",
+                  placeholder: "Enter phone number...",
                   type: "tel",
                 },
               ].map((field) => (
@@ -706,18 +706,18 @@ const UserList = () => {
               ))}
               <div>
                 <label className="block text-sm font-medium text-foreground/80 mb-1.5">
-                  Vai trò
+                  Role
                 </label>
                 <select
                   value={formData.role}
                   className="w-full px-3 py-2.5 text-sm border border-border rounded-lg focus:outline-none focus:border-admin-primary focus:ring-2 focus:ring-admin-primary-ring"
                 >
-                  <option value="user">Người dùng</option>
+                  <option value="user">User</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground/80 mb-1.5">
-                  Trạng thái
+                  Status
                 </label>
                 <select
                   value={formData.activate}
@@ -726,8 +726,8 @@ const UserList = () => {
                   }
                   className="w-full px-3 py-2.5 text-sm border border-border rounded-lg focus:outline-none focus:border-admin-primary focus:ring-2 focus:ring-admin-primary-ring"
                 >
-                  <option value="true">Hoạt động</option>
-                  <option value="false">Vô hiệu hóa</option>
+                  <option value="true">Active</option>
+                  <option value="false">Deactivated</option>
                 </select>
               </div>
             </div>
@@ -736,13 +736,13 @@ const UserList = () => {
                 onClick={closeModal}
                 className="px-4 py-2 text-sm font-medium text-foreground/80 bg-background border border-border rounded-lg hover:bg-muted/30 transition-colors"
               >
-                Hủy
+                Cancel
               </button>
               <button
                 onClick={modalType === "add" ? handleAddUser : handleEditUser}
                 className="px-4 py-2 text-sm font-medium text-white bg-admin-primary rounded-lg hover:bg-admin-primary-hover transition-colors"
               >
-                {modalType === "add" ? "Thêm mới" : "Cập nhật"}
+                {modalType === "add" ? "Add new" : "Update"}
               </button>
             </div>
           </div>

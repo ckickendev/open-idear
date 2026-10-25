@@ -38,20 +38,20 @@ type Course = {
 };
 
 const CATEGORIES = [
-  { id: "web", label: "Lập trình Web", icon: Code },
-  { id: "ai", label: "Trí tuệ nhân tạo", icon: Brain },
-  { id: "data", label: "Khoa học dữ liệu", icon: Database },
-  { id: "security", label: "An ninh mạng", icon: Lock },
-  { id: "cloud", label: "Điện toán đám mây", icon: Cloud },
+  { id: "web", label: "Web Development", icon: Code },
+  { id: "ai", label: "Artificial Intelligence", icon: Brain },
+  { id: "data", label: "Data Science", icon: Database },
+  { id: "security", label: "Cybersecurity", icon: Lock },
+  { id: "cloud", label: "Cloud Computing", icon: Cloud },
   { id: "devops", label: "DevOps", icon: Terminal },
   { id: "mobile", label: "Mobile App", icon: Smartphone },
   { id: "uiux", label: "UI/UX Design", icon: Layout },
 ];
 
 const PRICE_RANGES = [
-  { id: "free", label: "Miễn phí" },
-  { id: "under500", label: "Dưới 500.000đ" },
-  { id: "above500", label: "Trên 500.000đ" },
+  { id: "free", label: "Free" },
+  { id: "under500", label: "Under 500,000 VND" },
+  { id: "above500", label: "Above 500,000 VND" },
 ];
 
 const SearchResultsContent = () => {
@@ -75,9 +75,11 @@ const SearchResultsContent = () => {
         const response = await axios.get(
           `${ENV.ROOT_API}/course`,
         );
-        setCourses(response.data.data);
+        const courseList = response.data?.courses || response.data?.data || [];
+        setCourses(Array.isArray(courseList) ? courseList : []);
       } catch (error) {
         console.error(error);
+        setCourses([]);
       } finally {
         setIsLoading(false);
       }
@@ -86,32 +88,46 @@ const SearchResultsContent = () => {
   }, []);
 
   useEffect(() => {
-    let results = courses?.filter(
-      (course) =>
-        course.title.toLowerCase().includes(query.toLowerCase()) ||
-        course.description?.toLowerCase().includes(query.toLowerCase()),
-    );
+    setSearchTerm(query);
+  }, [query]);
+
+  useEffect(() => {
+    const cleanQuery = (query || "").trim().toLowerCase();
+    let results = (courses || []).filter((course) => {
+      if (!cleanQuery) return true;
+      const titleMatch = course.title?.toLowerCase().includes(cleanQuery);
+      const descMatch = course.description?.toLowerCase().includes(cleanQuery);
+      return titleMatch || descMatch;
+    });
 
     if (selectedCategories.length > 0) {
-      // Mapping categories to labels for filtering since current data might not have category IDs
       results = results.filter((course) =>
         selectedCategories.some((catId) => {
           const cat = CATEGORIES.find((c) => c.id === catId);
-          return course.category === cat?.label;
+          const courseCat =
+            typeof course.category === "object" && course.category !== null
+              ? (course.category as any).name || (course.category as any).slug
+              : course.category;
+          return (
+            courseCat?.toLowerCase() === cat?.label.toLowerCase() ||
+            courseCat?.toLowerCase() === cat?.id.toLowerCase()
+          );
         }),
       );
     }
 
     if (selectedPrices.length > 0) {
       results = results.filter((course) => {
-        if (selectedPrices.includes("free") && course.price === 0) return true;
+        const effectivePrice =
+          course.discountPrice !== undefined ? course.discountPrice : course.price;
+        if (selectedPrices.includes("free") && effectivePrice === 0) return true;
         if (
           selectedPrices.includes("under500") &&
-          course.price > 0 &&
-          course.price < 500000
+          effectivePrice > 0 &&
+          effectivePrice < 500000
         )
           return true;
-        if (selectedPrices.includes("above500") && course.price >= 500000)
+        if (selectedPrices.includes("above500") && effectivePrice >= 500000)
           return true;
         return false;
       });
@@ -121,8 +137,11 @@ const SearchResultsContent = () => {
   }, [query, courses, selectedCategories, selectedPrices]);
 
   const handleSearch = () => {
-    if (searchTerm.trim()) {
-      router.push(`/courses/search?q=${encodeURIComponent(searchTerm)}`);
+    const trimmed = searchTerm.trim();
+    if (trimmed) {
+      router.push(`/courses/search?q=${encodeURIComponent(trimmed)}`);
+    } else {
+      router.push(`/courses/search`);
     }
   };
 
@@ -141,6 +160,8 @@ const SearchResultsContent = () => {
   const clearFilters = () => {
     setSelectedCategories([]);
     setSelectedPrices([]);
+    setSearchTerm("");
+    router.push("/courses/search");
   };
 
   return (
@@ -159,16 +180,16 @@ const SearchResultsContent = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="Tìm kiếm khóa học..."
+                placeholder="Search courses..."
                 className="w-full pl-12 pr-4 py-4 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background shadow-sm transition-all"
               />
             </div>
             <div className="flex items-center gap-4">
               <span className="text-muted-foreground font-medium whitespace-nowrap">
                 <span className="text-foreground font-bold">
-                  {filteredCourses?.length}
+                  {filteredCourses?.length ?? 0}
                 </span>{" "}
-                kết quả cho &quot;{query}&quot;
+                results for &quot;{query}&quot;
               </span>
             </div>
           </div>
@@ -182,7 +203,7 @@ const SearchResultsContent = () => {
             onClick={() => setIsSidebarOpen(true)}
             className="lg:hidden flex items-center justify-center gap-2 bg-background border border-border p-4 rounded-xl font-bold text-foreground/80 shadow-sm"
           >
-            <Filter size={18} /> Lọc kết quả
+            <Filter size={18} /> Filter Results
           </button>
 
           {/* Sidebar Filters */}
@@ -192,7 +213,7 @@ const SearchResultsContent = () => {
             <div className="lg:sticky lg:top-24 h-full overflow-y-auto lg:overflow-visible">
               <div className="flex items-center justify-between p-6 lg:p-0 mb-8 border-b lg:border-0">
                 <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <Filter size={20} className="text-blue-600" /> Bộ lọc
+                  <Filter size={20} className="text-blue-600" /> Filters
                 </h3>
                 <button
                   onClick={() => setIsSidebarOpen(false)}
@@ -205,13 +226,13 @@ const SearchResultsContent = () => {
               {/* Categories Filter */}
               <div className="px-6 lg:px-0 mb-10">
                 <h4 className="font-bold text-foreground mb-6 flex items-center justify-between">
-                  Lĩnh vực
+                  Categories
                   {selectedCategories.length > 0 && (
                     <button
                       onClick={() => setSelectedCategories([])}
                       className="text-xs text-blue-600 hover:underline"
                     >
-                      Xóa
+                      Clear
                     </button>
                   )}
                 </h4>
@@ -244,13 +265,13 @@ const SearchResultsContent = () => {
               {/* Price Filter */}
               <div className="px-6 lg:px-0 mb-10">
                 <h4 className="font-bold text-foreground mb-6 flex items-center justify-between">
-                  Mức giá
+                  Price
                   {selectedPrices.length > 0 && (
                     <button
                       onClick={() => setSelectedPrices([])}
                       className="text-xs text-blue-600 hover:underline"
                     >
-                      Xóa
+                      Clear
                     </button>
                   )}
                 </h4>
@@ -283,7 +304,7 @@ const SearchResultsContent = () => {
                 onClick={clearFilters}
                 className="w-full py-4 border-2 border-dashed border-border text-muted-foreground font-bold rounded-2xl hover:border-red-500 hover:text-red-500 text-xs transition-all text-sm mb-12"
               >
-                Xóa tất cả bộ lọc
+                Reset All Filters
               </button>
             </div>
           </aside>
@@ -292,7 +313,7 @@ const SearchResultsContent = () => {
           <main className="flex-1">
             <div className="flex items-center justify-between mb-8 pb-6 border-b border-border">
               <h2 className="text-2xl font-extrabold text-foreground">
-                {query ? `Kết quả tìm kiếm cho"${query}"` : "Tất cả khóa học"}
+                {query ? `Search results for "${query}"` : "All Courses"}
               </h2>
               <div className="flex items-center gap-2 bg-muted/30 p-1 rounded-xl border border-border">
                 <button
@@ -353,7 +374,7 @@ const SearchResultsContent = () => {
                       />
                       <div className="absolute top-4 left-4">
                         <div className="flex items-center gap-1.5 text-white/90 text-[10px] font-bold bg-background/40 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-white/20 uppercase tracking-wider">
-                          {course.price === 0 ? "Phổ biến" : "Bán chạy"}
+                          {course.price === 0 ? "Popular" : "Bestseller"}
                         </div>
                       </div>
                     </div>
@@ -388,21 +409,21 @@ const SearchResultsContent = () => {
                         <div>
                           {course.price === 0 ? (
                             <div className="text-xl font-black text-foreground">
-                              MIỄN PHÍ
+                              FREE
                             </div>
                           ) : course.discountPrice &&
                             course.discountPrice > 0 ? (
                             <div className="flex flex-col">
                               <span className="text-xl font-black text-foreground">
-                                {course.discountPrice.toLocaleString()} VNĐ
+                                {course.discountPrice.toLocaleString()} VND
                               </span>
                               <span className="text-xs text-muted-foreground line-through">
-                                {course.price.toLocaleString()} VNĐ
+                                {course.price.toLocaleString()} VND
                               </span>
                             </div>
                           ) : (
                             <div className="text-xl font-black text-foreground">
-                              {course.price.toLocaleString()} VNĐ
+                              {course.price.toLocaleString()} VND
                             </div>
                           )}
                         </div>
@@ -420,17 +441,16 @@ const SearchResultsContent = () => {
                   <Search className="text-muted-foreground/70" size={32} />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">
-                  Không tìm thấy kết quả
+                  No results found
                 </h3>
                 <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
-                  Thử thay đổi từ khóa tìm kiếm hoặc xóa các bộ lọc để tìm thấy
-                  nội dung phù hợp.
+                  Try adjusting your search terms or clearing filters to find what you are looking for.
                 </p>
                 <button
                   onClick={clearFilters}
                   className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
                 >
-                  Khám phá tất cả khóa học
+                  Explore All Courses
                 </button>
               </div>
             )}

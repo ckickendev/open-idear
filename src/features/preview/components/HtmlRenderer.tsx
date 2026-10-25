@@ -14,8 +14,18 @@
 // =============================================================================
 
 import React, { useMemo, useState, useRef, useEffect } from "react";
-import { Copy, Check, ExternalLink, X } from "lucide-react";
+import { X } from "lucide-react";
 import { slugifyHeading } from "@/features/editor/hooks/useHeadingOutline";
+import { ArticleProductEmbed } from "@/features/shop/components/embed/ArticleProductEmbed";
+
+interface HtmlSegment {
+  type: "html" | "product-embed";
+  content?: string;
+  productId?: string;
+  contextualLabel?: string;
+  layout?: "card" | "compact";
+  embedId?: string;
+}
 
 interface HtmlRendererProps {
   readonly html: string;
@@ -36,19 +46,15 @@ export default function HtmlRenderer({ html, isDark }: HtmlRendererProps) {
     y: number;
   } | null>(null);
 
-  // State to track copied code blocks (by index/id)
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
   // ─── Rendering Pipeline ──────────────────────────────────────────────────────
-  // We use useMemo to avoid re-rendering or running DOM updates unless HTML changes.
-  const processedContent = useMemo(() => {
-    if (!html) return { __html: "<p className='text-gray-400 italic'>No content written yet.</p>" };
-
-    // Standardize code blocks, tables, images, and links in the HTML string
-    let parsed = html;
+  // Parse HTML into text/HTML chunks and interactive product embed cards
+  const processedSegments = useMemo<HtmlSegment[]>(() => {
+    if (!html) {
+      return [{ type: "html", content: "<p class='text-gray-400 italic'>No content written yet.</p>" }];
+    }
 
     // 1. Wrap tables in responsive containers
-    parsed = parsed.replace(
+    let parsed = html.replace(
       /<table([^>]*)>([\s\S]*?)<\/table>/g,
       '<div class="responsive-table-wrapper"><table class="preview-table" $1>$2</table></div>'
     );
@@ -67,7 +73,50 @@ export default function HtmlRenderer({ html, isDark }: HtmlRendererProps) {
       }
     );
 
-    return { __html: parsed };
+    // 3. Parse out product embeds
+    const embedRegex = /<div\s+[^>]*data-type=["'](?:product-card|product-embed)["'][^>]*>(?:<\/div>)?/gi;
+    const segments: HtmlSegment[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = embedRegex.exec(parsed)) !== null) {
+      if (match.index > lastIndex) {
+        const textBefore = parsed.substring(lastIndex, match.index);
+        if (textBefore.trim()) {
+          segments.push({ type: "html", content: textBefore });
+        }
+      }
+
+      const tagStr = match[0];
+      const idMatch =
+        tagStr.match(/data-product-id=["']([^"']*)["']/i) ||
+        tagStr.match(/data-id=["']([^"']*)["']/i);
+      const labelMatch = tagStr.match(/data-contextual-label=["']([^"']*)["']/i);
+      const layoutMatch = tagStr.match(/data-layout=["']([^"']*)["']/i);
+      const embedIdMatch = tagStr.match(/data-embed-id=["']([^"']*)["']/i);
+
+      const productId = idMatch ? idMatch[1] : "";
+      if (productId) {
+        segments.push({
+          type: "product-embed",
+          productId,
+          contextualLabel: labelMatch ? labelMatch[1] : undefined,
+          layout: (layoutMatch?.[1] as "card" | "compact") || "card",
+          embedId: embedIdMatch ? embedIdMatch[1] : undefined,
+        });
+      }
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    if (lastIndex < parsed.length) {
+      const remaining = parsed.substring(lastIndex);
+      if (remaining.trim()) {
+        segments.push({ type: "html", content: remaining });
+      }
+    }
+
+    return segments.length > 0 ? segments : [{ type: "html", content: parsed }];
   }, [html]);
 
   // ─── Event Delegation & Interaction Interceptors ────────────────────────────
@@ -95,8 +144,11 @@ export default function HtmlRenderer({ html, isDark }: HtmlRendererProps) {
         if (codeElement) {
           const textToCopy = codeElement.textContent || "";
           navigator.clipboard.writeText(textToCopy).then(() => {
-            setCopiedId(blockId);
-            setTimeout(() => setCopiedId(null), 2000);
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = "Copied!";
+            setTimeout(() => {
+              copyBtn.textContent = originalText;
+            }, 2000);
           });
         }
       }
@@ -188,7 +240,7 @@ export default function HtmlRenderer({ html, isDark }: HtmlRendererProps) {
       btnWrapper.appendChild(button);
       pre.insertBefore(btnWrapper, pre.firstChild);
     });
-  }, [processedContent]);
+  }, [processedSegments]);
 
   return (
     <div className={`html-renderer-root ${isDark ? "preview-dark" : "preview-light"}`}>
@@ -196,8 +248,27 @@ export default function HtmlRenderer({ html, isDark }: HtmlRendererProps) {
       <div
         ref={containerRef}
         className="preview-content-prose prose max-w-none"
-        dangerouslySetInnerHTML={processedContent}
-      />
+      >
+        {processedSegments.map((segment, idx) => {
+          if (segment.type === "product-embed" && segment.productId) {
+            return (
+              <ArticleProductEmbed
+                key={`embed-${segment.productId}-${idx}`}
+                productId={segment.productId}
+                contextualLabel={segment.contextualLabel}
+                layout={segment.layout}
+                embedId={segment.embedId}
+              />
+            );
+          }
+          return (
+            <div
+              key={`html-${idx}`}
+              dangerouslySetInnerHTML={{ __html: segment.content || "" }}
+            />
+          );
+        })}
+      </div>
 
       {/* Real-time Link Hover Preview Overlay */}
       {hoverLink && (

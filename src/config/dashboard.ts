@@ -14,15 +14,15 @@ import {
  * Single source of truth for admin sidebar items.
  */
 export const dashboardNavItems = [
-  { id: "categories", label: "Danh mục", icon: Folder },
-  { id: "topics", label: "Chủ đề", icon: Lightbulb },
-  { id: "posts", label: "Ý tưởng/Bài viết", icon: FileText },
-  { id: "users", label: "Người dùng", icon: Users },
+  { id: "categories", label: "Categories", icon: Folder },
+  { id: "topics", label: "Topics", icon: Lightbulb },
+  { id: "posts", label: "Ideas & Posts", icon: FileText },
+  { id: "users", label: "Users", icon: Users },
   { id: "series", label: "Series", icon: BookText },
-  { id: "courses", label: "Khóa học", icon: BookOpen },
-  { id: "course-categories", label: "Danh mục khoá học", icon: Folder },
-  { id: "reports", label: "Báo cáo vi phạm", icon: AlertTriangle },
-  { id: "settings", label: "Cài đặt", icon: Settings },
+  { id: "courses", label: "Courses", icon: BookOpen },
+  { id: "course-categories", label: "Course Categories", icon: Folder },
+  { id: "reports", label: "Violation Reports", icon: AlertTriangle },
+  { id: "settings", label: "Settings", icon: Settings },
 ] as const;
 
 export type DashboardNavItem = (typeof dashboardNavItems)[number];

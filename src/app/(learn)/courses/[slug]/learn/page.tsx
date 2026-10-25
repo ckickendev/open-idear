@@ -51,7 +51,7 @@ export default function LearnIndexPage() {
       <div className="animate-pulse flex flex-col items-center">
         <div className="h-12 w-12 border-4 border-[var(--color-admin-primary)] border-t-transparent rounded-full animate-spin"></div>
         <p className="mt-4 text-muted-foreground font-medium">
-          Đang tải khóa học...
+          Loading course...
         </p>
       </div>
     </div>

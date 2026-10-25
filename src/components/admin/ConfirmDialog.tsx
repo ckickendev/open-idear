@@ -19,8 +19,8 @@ const ConfirmDialog = ({
   onConfirm,
   title,
   message,
-  confirmText = "Xác nhận",
-  cancelText = "Hủy",
+  confirmText = "Confirm",
+  cancelText = "Cancel",
   variant = "danger",
 }: ConfirmDialogProps) => {
   const confirmRef = useRef<HTMLButtonElement>(null);

@@ -16,35 +16,100 @@ import type {
   VisualAnalyticsEvent,
   ImportedAssetRecord,
   ImportStockImageResponse,
+  BatchSearchSuggestionItem,
+  BatchSearchResponse,
 } from "../types/aiVisual.types";
 
 export const aiVisualApi = {
   /**
    * Search unified images across user Asset Library and curated technical stock.
-   * Supports pagination via optional `page` parameter.
+   * Supports pagination via optional `page` parameter and orientation.
    */
-  async searchImages(query: string, limit = 12, page = 1): Promise<ImageSearchResult[]> {
-    if (!query || !query.trim()) return [];
+  async searchImages(
+    queryOrOptions: string | {
+      query: string;
+      limit?: number;
+      page?: number;
+      orientation?: "landscape" | "portrait" | "square";
+      visualSuggestionId?: string;
+      context?: Record<string, any>;
+    },
+    legacyLimit = 12,
+    legacyPage = 1
+  ): Promise<ImageSearchResult[]> {
+    const opts = typeof queryOrOptions === "string"
+      ? { query: queryOrOptions, limit: legacyLimit, page: legacyPage }
+      : queryOrOptions;
+
+    const payload = {
+      query: (opts.query || "").trim(),
+      limit: opts.limit ?? 12,
+      page: opts.page ?? 1,
+      orientation: opts.orientation,
+      visualSuggestionId: opts.visualSuggestionId,
+      context: opts.context,
+    };
+
+    if (!payload.query && !payload.visualSuggestionId && !payload.context) return [];
+
     try {
-      const res = await api.post<ImageSearchResponse>("/ai/v1/images/search", {
-        query: query.trim(),
-        limit,
-        page,
-      });
+      const res = await api.post<ImageSearchResponse>("/ai/v1/images/search", payload);
       return res.data?.data || [];
     } catch (err) {
       console.error("[aiVisualApi] searchImages failed:", err);
       try {
-        const fallbackRes = await api.post<ImageSearchResponse>("/ai/images/search", {
-          query: query.trim(),
-          limit,
-          page,
-        });
+        const fallbackRes = await api.post<ImageSearchResponse>("/ai/images/search", payload);
         return fallbackRes.data?.data || [];
       } catch (fallbackErr) {
         console.error("[aiVisualApi] searchImages fallback failed:", fallbackErr);
         return [];
       }
+    }
+  },
+
+  /**
+   * Batch searches images across multiple visual suggestions in a single operation,
+   * respecting provider rate limits and deduplicating identical queries.
+   */
+  async batchSearchImages(
+    suggestions: BatchSearchSuggestionItem[],
+    options: {
+      limit?: number;
+      orientation?: "landscape" | "portrait" | "square";
+      signal?: AbortSignal;
+    } = {}
+  ): Promise<BatchSearchResponse> {
+    const payload = {
+      suggestions,
+      limit: options.limit ?? 6,
+      orientation: options.orientation || "landscape",
+    };
+
+    try {
+      const res = await api.post<BatchSearchResponse>(
+        "/ai/v1/images/batch-search",
+        payload,
+        { signal: options.signal }
+      );
+      if (res.data) return res.data;
+      throw new Error("Invalid response from batch search");
+    } catch (err: any) {
+      if (options.signal?.aborted || err?.name === "CanceledError" || err?.code === "ERR_CANCELED") {
+        throw new Error("Batch search was cancelled");
+      }
+      try {
+        const fallbackRes = await api.post<BatchSearchResponse>(
+          "/ai/images/batch-search",
+          payload,
+          { signal: options.signal }
+        );
+        if (fallbackRes.data) return fallbackRes.data;
+      } catch (fbErr: any) {
+        if (options.signal?.aborted || fbErr?.name === "CanceledError" || fbErr?.code === "ERR_CANCELED") {
+          throw new Error("Batch search was cancelled");
+        }
+      }
+      throw err;
     }
   },
 

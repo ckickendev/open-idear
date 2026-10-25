@@ -16,35 +16,35 @@ const HELP_NAV = [
   {
     href: "/help/trung-tam-tro-giup",
     icon: HelpCircle,
-    label: "Trung tâm trợ giúp",
+    label: "Help Center",
     color: "text-blue-500",
     bg: "bg-blue-50 dark:bg-blue-950/40",
   },
   {
     href: "/help/ngan-chan-lua-dao",
     icon: ShieldAlert,
-    label: "Trung tâm ngăn chặn hành vi lừa đảo",
+    label: "Anti-Fraud Center",
     color: "text-orange-500",
     bg: "bg-orange-50 dark:bg-orange-950/40",
   },
   {
     href: "/help/trang-thai-tai-khoan",
     icon: BadgeCheck,
-    label: "Trạng thái tài khoản",
+    label: "Account Status",
     color: "text-green-500",
     bg: "bg-green-50 dark:bg-green-950/40",
   },
   {
     href: "/help/hop-thu-ho-tro",
     icon: Mail,
-    label: "Hộp thư hỗ trợ",
+    label: "Support Inbox",
     color: "text-violet-500",
     bg: "bg-violet-50 dark:bg-violet-950/40",
   },
   {
     href: "/help/bao-cao-su-co",
     icon: AlertTriangle,
-    label: "Báo cáo sự cố",
+    label: "Report an Issue",
     color: "text-red-500",
     bg: "bg-red-50 dark:bg-red-950/40",
   },
@@ -63,7 +63,7 @@ function HelpSidebar() {
       <div className="sticky top-6 bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
         {/* Header */}
         <div className="px-5 py-4 border-b border-border">
-          <h2 className="text-base font-bold text-foreground">Trợ giúp & Hỗ trợ</h2>
+          <h2 className="text-base font-bold text-foreground">Help & Support</h2>
           <p className="text-xs text-muted-foreground mt-0.5">OpenIdear Help Center</p>
         </div>
 
@@ -73,7 +73,7 @@ function HelpSidebar() {
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Tìm kiếm trợ giúp..."
+              placeholder="Search help..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-8 pr-3 py-2 text-sm bg-muted rounded-lg border-0 outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground text-foreground"
@@ -117,7 +117,7 @@ function HelpSidebar() {
           })}
           {filtered.length === 0 && (
             <p className="text-center text-sm text-muted-foreground py-6">
-              Không tìm thấy kết quả
+              No results found
             </p>
           )}
         </nav>
@@ -125,7 +125,7 @@ function HelpSidebar() {
         {/* Footer */}
         <div className="px-5 py-3 border-t border-border">
           <p className="text-xs text-muted-foreground">
-            © 2024 OpenIdear · Tất cả quyền được bảo lưu
+            © 2024 OpenIdear · All rights reserved
           </p>
         </div>
       </div>
@@ -152,11 +152,11 @@ export default function HelpLayout({
           <div className="flex items-center gap-3 mb-2">
             <HelpCircle size={28} className="text-white/80" />
             <h1 className="text-2xl md:text-3xl font-black text-white">
-              Trung tâm trợ giúp OpenIdear
+              OpenIdear Help Center
             </h1>
           </div>
           <p className="text-white/70 text-sm md:text-base max-w-xl">
-            Tìm câu trả lời, liên hệ hỗ trợ và quản lý tài khoản của bạn.
+            Find answers, contact support, and manage your account.
           </p>
         </div>
       </div>

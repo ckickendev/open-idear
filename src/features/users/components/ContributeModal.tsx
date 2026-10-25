@@ -23,11 +23,11 @@ interface ContributeModalProps {
 }
 
 const CONTRIBUTION_TYPES = [
-  { value: "feature", label: "Tính năng mới", icon: Lightbulb, color: "text-amber-500" },
-  { value: "bug", label: "Báo lỗi", icon: Bug, color: "text-red-500" },
-  { value: "improvement", label: "Cải thiện", icon: TrendingUp, color: "text-blue-500" },
-  { value: "content", label: "Nội dung", icon: FileText, color: "text-green-500" },
-  { value: "other", label: "Khác", icon: MoreHorizontal, color: "text-gray-500" },
+  { value: "feature", label: "New feature", icon: Lightbulb, color: "text-amber-500" },
+  { value: "bug", label: "Bug report", icon: Bug, color: "text-red-500" },
+  { value: "improvement", label: "Improvement", icon: TrendingUp, color: "text-blue-500" },
+  { value: "content", label: "Content", icon: FileText, color: "text-green-500" },
+  { value: "other", label: "Other", icon: MoreHorizontal, color: "text-gray-500" },
 ] as const;
 
 export default function ContributeModal({ isOpen, onClose }: ContributeModalProps) {
@@ -41,7 +41,7 @@ export default function ContributeModal({ isOpen, onClose }: ContributeModalProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !message.trim()) {
-      setError("Vui lòng điền đầy đủ tiêu đề và nội dung.");
+      setError("Please provide both title and content.");
       return;
     }
 
@@ -60,7 +60,7 @@ export default function ContributeModal({ isOpen, onClose }: ContributeModalProp
         handleClose();
       }, 2000);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại.");
+      setError(err.response?.data?.message || "An error occurred, please try again.");
     } finally {
       setSending(false);
     }
@@ -95,10 +95,10 @@ export default function ContributeModal({ isOpen, onClose }: ContributeModalProp
               <CheckCircle2 size={32} className="text-green-600 dark:text-green-400" />
             </div>
             <h3 className="text-lg font-bold text-foreground mb-2">
-              Cảm ơn bạn đã đóng góp!
+              Thank you for your feedback!
             </h3>
             <p className="text-sm text-muted-foreground">
-              Ý kiến của bạn đã được gửi thành công. Chúng tôi sẽ xem xét và phản hồi sớm nhất.
+              Your feedback has been submitted successfully. We will review it shortly.
             </p>
           </div>
         ) : (
@@ -110,8 +110,8 @@ export default function ContributeModal({ isOpen, onClose }: ContributeModalProp
                   <MessageSquare size={20} className="text-violet-600 dark:text-violet-400" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground text-base">Đóng góp ý kiến</h3>
-                  <p className="text-xs text-muted-foreground">Giúp chúng tôi cải thiện OpenIdear</p>
+                  <h3 className="font-bold text-foreground text-base">Submit Feedback</h3>
+                  <p className="text-xs text-muted-foreground">Help us improve OpenIdear</p>
                 </div>
               </div>
               <button
@@ -127,7 +127,7 @@ export default function ContributeModal({ isOpen, onClose }: ContributeModalProp
               {/* Type selector */}
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Loại đóng góp
+                  Feedback Type
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {CONTRIBUTION_TYPES.map((ct) => {
@@ -157,13 +157,13 @@ export default function ContributeModal({ isOpen, onClose }: ContributeModalProp
               {/* Title */}
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Tiêu đề <span className="text-red-500">*</span>
+                  Title <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="VD: Thêm tính năng tìm kiếm nâng cao..."
+                  placeholder="e.g. Add advanced search feature..."
                   maxLength={200}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/40 transition"
                 />
@@ -172,12 +172,12 @@ export default function ContributeModal({ isOpen, onClose }: ContributeModalProp
               {/* Message */}
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Nội dung chi tiết <span className="text-red-500">*</span>
+                  Detailed Content <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Mô tả chi tiết ý kiến đóng góp của bạn..."
+                  placeholder="Describe your feedback or suggestion in detail..."
                   rows={5}
                   maxLength={5000}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/40 transition resize-none"
@@ -201,7 +201,7 @@ export default function ContributeModal({ isOpen, onClose }: ContributeModalProp
                   onClick={handleClose}
                   className="px-5 py-2.5 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors text-foreground"
                 >
-                  Hủy
+                  Cancel
                 </button>
                 <button
                   type="submit"
@@ -213,7 +213,7 @@ export default function ContributeModal({ isOpen, onClose }: ContributeModalProp
                   ) : (
                     <Send size={16} />
                   )}
-                  Gửi đóng góp
+                  Submit Feedback
                 </button>
               </div>
             </form>

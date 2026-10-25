@@ -14,10 +14,12 @@ import {
   Quote,
   Code,
   Minus,
+  ShoppingBag,
 } from "lucide-react";
 
 interface ToolbarProps {
   editor: Editor | null;
+  onInsertProduct?: () => void;
 }
 
 interface ToolbarButtonProps {
@@ -58,7 +60,7 @@ const GroupLabel = ({ children }: { children: React.ReactNode }) => (
   </span>
 );
 
-const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
+const Toolbar: React.FC<ToolbarProps> = ({ editor, onInsertProduct }) => {
   if (!editor) return null;
 
   const iconSize = 16;
@@ -188,6 +190,19 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
       >
         <span className="text-xs font-bold">H3</span>
       </ToolbarButton>
+
+      {onInsertProduct && (
+        <>
+          <Divider />
+          <GroupLabel>Shop</GroupLabel>
+          <ToolbarButton
+            onClick={onInsertProduct}
+            title="Insert Shop Product Embed"
+          >
+            <ShoppingBag size={iconSize} className="text-emerald-500" />
+          </ToolbarButton>
+        </>
+      )}
     </div>
   );
 };

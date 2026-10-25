@@ -33,7 +33,19 @@ import Series from "@/features/series/components/management/Series";
 import Courses from "@/features/series/components/management/Courses";
 import SupportTicketAdmin from "@/features/users/components/SupportTicketAdmin";
 import ContributionAdmin from "@/features/users/components/ContributionAdmin";
+import ProductManagement from "@/features/shop/components/admin/ProductManagement";
+import CategoryManagement from "@/features/shop/components/admin/CategoryManagement";
+import OrderManagement from "@/features/shop/components/admin/OrderManagement";
+import CommerceAnalytics from "@/features/shop/components/admin/CommerceAnalytics";
+import { Package, Layers, ShoppingBag, BarChart3 } from "lucide-react";
 
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  href?: string;
+  badge?: string;
+}
 
 const AdminDashboard = () => {
   const router = useRouter();
@@ -41,10 +53,10 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("categories");
   const isLoading = loadingStore((state) => state.isLoading);
 
-  const menuItems = [
-    { id: "categories", label: "Danh mục", icon: Folder },
-    { id: "topics", label: "Chủ đề", icon: Lightbulb },
-    { id: "posts", label: "Ý tưởng/Bài viết", icon: FileText },
+  const menuItems: MenuItem[] = [
+    { id: "categories", label: "Categories", icon: Folder },
+    { id: "topics", label: "Topics", icon: Lightbulb },
+    { id: "posts", label: "Ideas & Posts", icon: FileText },
     {
       id: "content-studio",
       label: "AI Content Studio",
@@ -52,20 +64,32 @@ const AdminDashboard = () => {
       href: "/management/content-studio",
       badge: "AI",
     },
-    { id: "users", label: "Người dùng", icon: Users },
+    { id: "shop-products", label: "Shop Products", icon: Package, badge: "Shop" },
+    { id: "shop-categories", label: "Shop Categories", icon: Layers },
+    { id: "shop-orders", label: "Shop Inquiries", icon: ShoppingBag, badge: "Shop" },
+    { id: "shop-analytics", label: "Shop Analytics", icon: BarChart3, badge: "Shop" },
+    { id: "users", label: "Users", icon: Users },
     { id: "series", label: "Series", icon: BookText },
-    { id: "courses", label: "Khóa học", icon: BookOpen },
-    { id: "course-categories", label: "Danh mục khoá học", icon: Folder },
-    { id: "reports", label: "Báo cáo vi phạm", icon: AlertTriangle },
-    { id: "support", label: "Hộp thư hỗ trợ", icon: Mail },
-    { id: "contributions", label: "Đóng góp ý kiến", icon: MessageSquare },
-    { id: "settings", label: "Cài đặt", icon: Settings },
+    { id: "courses", label: "Courses", icon: BookOpen },
+    { id: "course-categories", label: "Course Categories", icon: Folder },
+    { id: "reports", label: "Violation Reports", icon: AlertTriangle },
+    { id: "support", label: "Support Inbox", icon: Mail },
+    { id: "contributions", label: "Contributions", icon: MessageSquare },
+    { id: "settings", label: "Settings", icon: Settings },
   ];
 
   const renderContent = () => {
     switch (activeTab) {
       case "categories":
         return <Category />;
+      case "shop-products":
+        return <ProductManagement />;
+      case "shop-categories":
+        return <CategoryManagement />;
+      case "shop-orders":
+        return <OrderManagement />;
+      case "shop-analytics":
+        return <CommerceAnalytics />;
       case "topics":
         return <Topic />;
       case "posts":
@@ -88,7 +112,7 @@ const AdminDashboard = () => {
 
         return (
           <div className="text-muted-foreground text-sm">
-            Chọn một mục từ menu
+            Select an item from the menu
           </div>
         );
     }
@@ -162,9 +186,9 @@ const AdminDashboard = () => {
                       <span className="truncate">{item.label}</span>
                     )}
                   </div>
-                  {sidebarOpen && (item as any).badge && (
+                  {sidebarOpen && item.badge && (
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/20 text-primary uppercase">
-                      {(item as any).badge}
+                      {item.badge}
                     </span>
                   )}
                 </button>
@@ -178,14 +202,14 @@ const AdminDashboard = () => {
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors text-[13.5px] font-medium"
-            title={sidebarOpen ? "Thu gọn sidebar" : "Mở rộng sidebar"}
+            title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarOpen ? (
               <PanelLeftClose size={18} />
             ) : (
               <PanelLeft size={18} />
             )}
-            {sidebarOpen && <span>Thu gọn</span>}
+            {sidebarOpen && <span>Collapse</span>}
           </button>
         </div>
       </aside>
@@ -215,7 +239,7 @@ const AdminDashboard = () => {
                 {menuItems.find((item) => item.id === activeTab)?.label}
               </h2>
               <p className="text-xs text-muted-foreground hidden sm:block">
-                Quản lý và theo dõi{" "}
+                Manage and monitor{" "}
                 {menuItems
                   .find((item) => item.id === activeTab)
                   ?.label.toLowerCase()}

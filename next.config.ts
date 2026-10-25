@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
   sassOptions: {
     implementation: "sass-embedded",
   },
@@ -22,4 +23,5 @@ const nextConfig: NextConfig = {
   },
 };
 
+// Reload config
 export default nextConfig;

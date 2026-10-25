@@ -11,7 +11,6 @@ import {
   ArrowLeft,
   Sun,
   Monitor,
-  Check,
   ShieldAlert,
   BadgeCheck,
   Mail,
@@ -62,22 +61,22 @@ export default function Profile() {
   const themeOptions = [
     {
       value: "light",
-      label: "Tắt",
+      label: "Off",
       icon: Sun,
       description: undefined,
     },
     {
       value: "dark",
-      label: "Bật",
+      label: "On",
       icon: Moon,
       description: undefined,
     },
     {
       value: "system",
-      label: "Tự động",
+      label: "Automatic",
       icon: Monitor,
       description:
-        "Chúng tôi sẽ tự động điều chỉnh màn hình theo cài đặt hệ thống trên thiết bị của bạn.",
+        "We'll automatically adjust the display based on your device system settings.",
     },
   ] as const;
 
@@ -163,7 +162,7 @@ export default function Profile() {
                   <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                     <User size={18} className="text-muted-foreground/50" />
                   </span>
-                  <span className="text-sm font-medium">Trang cá nhân</span>
+                  <span className="text-sm font-medium">Profile</span>
                 </button>
               </Link>
 
@@ -173,7 +172,7 @@ export default function Profile() {
                     <Settings size={18} className="text-muted-foreground/50" />
                   </span>
                   <span className="text-sm font-medium flex-1 text-left">
-                    Cài đặt và quyền riêng tư
+                    Settings & Privacy
                   </span>
                   <ChevronRight />
                 </button>
@@ -193,7 +192,7 @@ export default function Profile() {
                   />
                 </span>
                 <span className="text-sm font-medium flex-1 text-left">
-                  Trợ giúp và hỗ trợ
+                  Help & Support
                 </span>
                 <ChevronRight />
               </button>
@@ -210,7 +209,7 @@ export default function Profile() {
                   <Moon size={18} className="text-muted-foreground/50" />
                 </span>
                 <span className="text-sm font-medium flex-1 text-left">
-                  Màn hình &amp; trợ năng
+                  Display &amp; Accessibility
                 </span>
                 <ChevronRight />
               </button>
@@ -228,7 +227,7 @@ export default function Profile() {
                       className="text-muted-foreground/50"
                     />
                   </span>
-                  <span className="text-sm font-medium">Đóng góp ý kiến</span>
+                  <span className="text-sm font-medium">Feedback</span>
               </button>
 
               <button
@@ -238,13 +237,13 @@ export default function Profile() {
                 <span className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                   <LogOut size={18} className="text-muted-foreground/50" />
                 </span>
-                <span className="text-sm font-medium">Đăng xuất</span>
+                <span className="text-sm font-medium">Log Out</span>
               </button>
             </div>
 
             {/* Footer */}
             <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border">
-              <p>Quyền riêng tư · Điều khoản · Quảng cáo · Cookie</p>
+              <p>Privacy · Terms · Advertising · Cookies</p>
             </div>
           </div>
 
@@ -259,11 +258,11 @@ export default function Profile() {
               <button
                 onClick={() => setPanel("main")}
                 className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-accent text-foreground transition-colors flex-shrink-0"
-                aria-label="Quay lại"
+                aria-label="Back"
               >
                 <ArrowLeft size={18} className="text-muted-foreground/50" />
               </button>
-              <h3 className="text-base font-bold text-foreground">Màn hình &amp; trợ năng</h3>
+              <h3 className="text-base font-bold text-foreground">Display &amp; Accessibility</h3>
             </div>
 
             {/* Dark mode section */}
@@ -275,11 +274,11 @@ export default function Profile() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold leading-tight text-foreground">
-                    Chế độ tối
+                    Dark Mode
                   </p>
                   <p className="text-xs text-muted-foreground leading-snug mt-0.5">
-                    Điều chỉnh giao diện của OpenIdear để giảm độ chói và cho
-                    đôi mắt được nghỉ ngơi.
+                    Adjust the appearance of OpenIdear to reduce glare and give
+                    your eyes a break.
                   </p>
                 </div>
               </div>
@@ -327,7 +326,7 @@ export default function Profile() {
 
             {/* Footer */}
             <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border">
-              <p>Quyền riêng tư · Điều khoản · Quảng cáo · Cookie</p>
+              <p>Privacy · Terms · Advertising · Cookies</p>
             </div>
           </div>
 
@@ -342,11 +341,11 @@ export default function Profile() {
               <button
                 onClick={() => setPanel("main")}
                 className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-accent text-foreground transition-colors flex-shrink-0"
-                aria-label="Quay lại"
+                aria-label="Back"
               >
                 <ArrowLeft size={18} className="text-muted-foreground/50" />
               </button>
-              <h3 className="text-base font-bold text-foreground">Trợ giúp và hỗ trợ</h3>
+              <h3 className="text-base font-bold text-foreground">Help & Support</h3>
             </div>
 
             {/* Help menu items */}
@@ -355,27 +354,27 @@ export default function Profile() {
                 {
                   href: "/help/trung-tam-tro-giup",
                   icon: HelpCircle,
-                  label: "Trung tâm trợ giúp",
+                  label: "Help Center",
                 },
                 {
                   href: "/help/ngan-chan-lua-dao",
                   icon: ShieldAlert,
-                  label: "Trung tâm ngăn chặn hành vi lừa đảo",
+                  label: "Safety Center",
                 },
                 {
                   href: "/help/trang-thai-tai-khoan",
                   icon: BadgeCheck,
-                  label: "Trạng thái tài khoản",
+                  label: "Account Status",
                 },
                 {
                   href: "/help/hop-thu-ho-tro",
                   icon: Mail,
-                  label: "Hộp thư hỗ trợ",
+                  label: "Support Inbox",
                 },
                 {
                   href: "/help/bao-cao-su-co",
                   icon: AlertTriangle,
-                  label: "Báo cáo sự cố",
+                  label: "Report a Problem",
                 },
               ].map((item) => (
                 <Link
@@ -397,7 +396,7 @@ export default function Profile() {
 
             {/* Footer */}
             <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border">
-              <p>Quyền riêng tư · Điều khoản · Quảng cáo · Cookie</p>
+              <p>Privacy · Terms · Advertising · Cookies</p>
             </div>
           </div>
         </div>

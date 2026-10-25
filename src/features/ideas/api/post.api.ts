@@ -42,6 +42,12 @@ export const postApi = {
   restorePost: async (postId: string) => {
     return await api.post("/post/restorePost", { postId });
   },
+  deletePostForever: async (postId: string) => {
+    return await api.post("/post/deleteForever", { postId });
+  },
+  cleanTrash: async () => {
+    return await api.post("/post/cleanTrash");
+  },
   changePublicManager: async (postId: string, published: boolean, locale?: string) => {
     return await api.patch(`/post/changePublicManager?id=${postId}${locale ? `&locale=${locale}` : ""}`, {
       published,

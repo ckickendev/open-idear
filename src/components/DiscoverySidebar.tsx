@@ -116,7 +116,7 @@ function MiniPostCard({ post }: { post: SidebarPost }) {
 function MiniSeriesCard({ series }: { series: SidebarSeries }) {
   return (
     <Link
-      href={`/series?slug=${series.slug}`}
+      href={`/series/${series.slug}`}
       className="group flex gap-2.5 items-center hover:bg-accent/40 border border-transparent hover:border-border/30 rounded-xl p-1.5 -mx-1.5 transition-all duration-200"
     >
       <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-muted">

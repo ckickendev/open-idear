@@ -11,6 +11,7 @@ import { HardBreakExtension } from "./hardBreak";
 import { SelectionExtension } from "./selection";
 import { RawHtmlExtension } from "./rawHtml";
 import { ImagePlaceholderExtension } from "./imagePlaceholder";
+import { ProductEmbedExtension } from "./productEmbed";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -101,6 +102,7 @@ export function createEditorExtensions(
     }),
     RawHtmlExtension,
     ImagePlaceholderExtension,
+    ProductEmbedExtension,
     FileHandler.configure({
       allowedMimeTypes: [
         "image/png",
@@ -133,4 +135,5 @@ export { HardBreakExtension } from "./hardBreak";
 export { SelectionExtension } from "./selection";
 export { RawHtmlExtension } from "./rawHtml";
 export { ImagePlaceholderExtension } from "./imagePlaceholder";
+export { ProductEmbedExtension } from "./productEmbed";
 

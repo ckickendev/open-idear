@@ -90,9 +90,9 @@ export function usePostEditor(
   }, [editor]);
 
   const setContent = useCallback(
-    (html: string) => {
+    (html: string, options?: { emitUpdate?: boolean }) => {
       if (editor) {
-        editor.commands.setContent(html);
+        editor.commands.setContent(html, options);
       }
     },
     [editor],

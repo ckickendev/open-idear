@@ -57,6 +57,8 @@ interface ContentStudioState {
   // Step 1: Topic & Idea Generation Inputs
   topic: string;
   setTopic: (topic: string) => void;
+  language: "en" | "vi";
+  setLanguage: (language: "en" | "vi") => void;
   contentGoal: ContentGoal;
   setContentGoal: (goal: ContentGoal) => void;
   numberOfIdeas: number;
@@ -148,6 +150,8 @@ export const useContentStudioStore = create<ContentStudioState>((set, get) => ({
 
   topic: "",
   setTopic: (topic) => set({ topic }),
+  language: "en",
+  setLanguage: (language) => set({ language }),
   contentGoal: "seo",
   setContentGoal: (contentGoal) => set({ contentGoal }),
   numberOfIdeas: 10,

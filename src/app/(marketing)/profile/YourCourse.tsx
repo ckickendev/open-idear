@@ -68,7 +68,7 @@ const YourCourse = () => {
           {course.title}
         </h3>
         <p className="text-sm text-muted-foreground mb-3 line-clamp-2 flex-1">
-          {course.description || "Chưa có mô tả"}
+          {course.description || "No description provided"}
         </p>
 
         {isCreated ? (
@@ -76,19 +76,19 @@ const YourCourse = () => {
             <span
               className={`text-xs font-bold px-2 py-1 uppercase tracking-wider ${course.status === "published" ? "bg-[#d1d7dc] text-foreground" : "bg-muted border border-border text-foreground"}`}
             >
-              {course.status === "published" ? "Đã xuất bản" : "Bản nháp"}
+              {course.status === "published" ? "Published" : "Draft"}
             </span>
             <Link
               href={`/management/course/${course._id}/curriculum`}
               className="text-sm font-bold text-blue-600 flex items-center gap-1 hover:underline"
             >
-              <Settings size={14} /> Quản lý
+              <Settings size={14} /> Manage
             </Link>
           </div>
         ) : (
           <div className="mt-auto pt-3">
             <div className="flex justify-between text-xs text-muted-foreground mb-1">
-              <span>Tiến độ học tập</span>
+              <span>Learning Progress</span>
               <span className="font-bold text-foreground">0%</span>
             </div>
             <div className="w-full bg-muted rounded-full h-1.5 mb-3">
@@ -99,13 +99,13 @@ const YourCourse = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock size={12} /> Bắt đầu ngay
+                <Clock size={12} /> Start now
               </span>
               <Link
                 href={`/courses/${course._id}`} // Or course.slug if available
                 className="text-sm font-bold bg-background text-white px-3 py-1.5 rounded hover:bg-card transition-colors"
               >
-                Vào học
+                Learn Now
               </Link>
             </div>
           </div>
@@ -121,17 +121,17 @@ const YourCourse = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
             <BookText className="text-blue-600" size={32} />
-            Khóa học của bạn
+            Your Courses
           </h1>
           <p className="text-muted-foreground">
-            Tổng quan về các khóa học bạn giảng dạy và theo học
+            Overview of the courses you teach and enroll in
           </p>
         </div>
 
         {/* Enrolled Courses Section */}
         <div className="mb-10">
           <h2 className="text-xl font-bold text-foreground mb-4 border-b border-border pb-2">
-            Khóa học đã đăng ký
+            Enrolled Courses
           </h2>
           {enrolledCourses.length > 0 ? (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -140,13 +140,13 @@ const YourCourse = () => {
           ) : (
             <div className="text-center py-8 bg-muted/30 border border-border rounded-lg">
               <p className="text-muted-foreground mb-3">
-                Bạn chưa tham gia khóa học nào.
+                You have not enrolled in any courses yet.
               </p>
               <Link
                 href="/courses"
                 className="text-blue-600 font-bold hover:underline"
               >
-                Khám phá các khóa học ngay
+                Explore courses now
               </Link>
             </div>
           )}
@@ -155,7 +155,7 @@ const YourCourse = () => {
         {/* Created Courses Section */}
         <div>
           <h2 className="text-xl font-bold text-foreground mb-4 border-b border-border pb-2">
-            Khóa học bạn giảng dạy
+            Instructor Courses
           </h2>
           {createdCourses.length > 0 ? (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -164,13 +164,13 @@ const YourCourse = () => {
           ) : (
             <div className="text-center py-8 bg-muted/30 border border-border rounded-lg">
               <p className="text-muted-foreground mb-3">
-                Bạn chưa tạo khóa học nào.
+                You haven't created any courses yet.
               </p>
               <Link
                 href="/management/my-courses"
                 className="text-blue-600 font-bold hover:underline"
               >
-                Tạo khóa học mới
+                Create New Course
               </Link>
             </div>
           )}

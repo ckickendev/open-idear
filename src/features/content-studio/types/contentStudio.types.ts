@@ -144,6 +144,7 @@ export interface GenerateIdeasRequest {
   contentGoal: ContentGoal;
   numberOfIdeas: number;
   existingCategories?: string[];
+  language?: "en" | "vi";
 }
 
 export interface GenerateIdeasResponse {
@@ -206,6 +207,7 @@ export interface ContentBrief {
 export interface GenerateBriefRequest {
   idea: ContentIdea;
   existingCategories?: string[];
+  language?: "en" | "vi";
 }
 
 export interface GenerateBriefResponse {
@@ -277,6 +279,7 @@ export interface ContentOutline {
 export interface GenerateOutlineRequest {
   idea: ContentIdea;
   contentBrief: ContentBrief;
+  language?: "en" | "vi";
 }
 
 export interface GenerateOutlineResponse {

@@ -32,14 +32,14 @@ const GATEWAYS: {
 }[] = [
   {
     id: "payos",
-    label: "Chuyển khoản ngân hàng",
-    desc: "QR Code VietQR — Chuyển khoản liên ngân hàng 24/7",
+    label: "Bank Transfer",
+    desc: "QR Code VietQR — 24/7 Interbank Transfer",
     available: true,
   },
   {
     id: "demo",
     label: "Demo Payment",
-    desc: "Thanh toán thử nghiệm (miễn phí)",
+    desc: "Test Payment Simulation (Free)",
     available: true,
   },
   {
@@ -48,7 +48,7 @@ const GATEWAYS: {
     desc: "Visa, Mastercard, Apple Pay",
     available: false,
   },
-  { id: "momo", label: "MoMo", desc: "Ví điện tử MoMo", available: false },
+  { id: "momo", label: "MoMo", desc: "MoMo E-Wallet", available: false },
 ];
 
 // ─── Cart Item Row ──────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ const CartItemRow = ({
           {item.title}
         </Link>
         <p className="text-xs text-muted-foreground mt-1">
-          {item.instructor?.name || "Giảng viên"}
+          {item.instructor?.name || "Instructor"}
         </p>
       </div>
 
@@ -102,7 +102,7 @@ const CartItemRow = ({
         <div className="text-right">
           <div className="font-bold text-foreground">
             {effectivePrice === 0
-              ? "Miễn phí"
+              ? "Free"
               : `₫${effectivePrice.toLocaleString()}`}
           </div>
           {item.discountPrice &&
@@ -117,7 +117,7 @@ const CartItemRow = ({
           onClick={() => onRemove(item._id)}
           disabled={isRemoving}
           className="text-muted-foreground hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100"
-          title="Xóa khỏi giỏ hàng"
+          title="Remove from cart"
         >
           <Trash2 size={16} />
         </button>
@@ -143,24 +143,23 @@ const PaymentSuccess = () => {
           </div>
         </div>
         <h1 className="text-3xl font-extrabold text-foreground mb-3">
-          Thanh toán thành công!
+          Payment Successful!
         </h1>
         <p className="text-muted-foreground mb-8 leading-relaxed">
-          Các khóa học đã được thêm vào danh sách học tập của bạn. Bắt đầu học
-          ngay!
+          Your enrolled courses have been added to your learning dashboard. Start learning now!
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={() => router.push("/my-learning")}
             className="bg-[var(--color-admin-primary)] text-white font-bold px-8 py-3.5 rounded-xl hover:bg-[var(--color-admin-primary-hover)] transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2"
           >
-            Đi tới Học tập <ChevronRight size={18} />
+            Go to My Learning <ChevronRight size={18} />
           </button>
           <button
             onClick={() => router.push("/courses")}
             className="border border-border text-foreground/80 font-bold px-8 py-3.5 rounded-xl hover:bg-muted/30 transition-colors"
           >
-            Tiếp tục khám phá
+            Continue Browsing
           </button>
         </div>
       </div>
@@ -175,16 +174,15 @@ const EmptyCart = () => (
     <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mb-6">
       <ShoppingCart size={36} className="text-muted-foreground" />
     </div>
-    <h2 className="text-2xl font-bold text-foreground mb-2">Giỏ hàng trống</h2>
+    <h2 className="text-2xl font-bold text-foreground mb-2">Your Cart is Empty</h2>
     <p className="text-muted-foreground mb-8 max-w-sm">
-      Hãy khám phá các khóa học và thêm vào giỏ hàng để bắt đầu hành trình học
-      tập.
+      Explore our wide range of courses and add them to your cart to begin your learning journey.
     </p>
     <Link
       href="/courses"
       className="bg-[var(--color-admin-primary)] text-white font-bold px-8 py-3.5 rounded-xl hover:bg-[var(--color-admin-primary-hover)] transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
     >
-      Khám phá khóa học
+      Explore Courses
     </Link>
   </div>
 );
@@ -220,23 +218,23 @@ const PaymentCancelled = () => {
           </div>
         </div>
         <h1 className="text-3xl font-extrabold text-foreground mb-3">
-          Thanh toán bị hủy
+          Payment Cancelled
         </h1>
         <p className="text-muted-foreground mb-8 leading-relaxed">
-          Giao dịch của bạn đã bị hủy. Giỏ hàng của bạn vẫn được giữ nguyên.
+          Your transaction was cancelled. Your cart items have been saved.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={() => router.push("/checkout")}
             className="bg-[var(--color-admin-primary)] text-white font-bold px-8 py-3.5 rounded-xl hover:bg-[var(--color-admin-primary-hover)] transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2"
           >
-            Thử lại <ChevronRight size={18} />
+            Try Again <ChevronRight size={18} />
           </button>
           <button
             onClick={() => router.push("/courses")}
             className="border border-border text-foreground/80 font-bold px-8 py-3.5 rounded-xl hover:bg-muted/30 transition-colors"
           >
-            Tiếp tục khám phá
+            Continue Browsing
           </button>
         </div>
       </div>
@@ -284,7 +282,7 @@ const CheckoutPageInner = () => {
             }
           })
           .catch(() => {
-            toast.info("Đang xác nhận thanh toán, vui lòng chờ...");
+            toast.info("Verifying payment, please wait...");
             clearLocalCart();
             setPaymentSuccess(true);
           })
@@ -310,9 +308,9 @@ const CheckoutPageInner = () => {
     setRemovingId(courseId);
     const result = await removeFromCart(courseId);
     if (result.success) {
-      toast.info("Đã xóa khỏi giỏ hàng");
+      toast.info("Removed from cart");
     } else {
-      toast.error(result.message || "Không thể xóa");
+      toast.error(result.message || "Failed to remove item");
     }
     setRemovingId(null);
   };
@@ -326,14 +324,14 @@ const CheckoutPageInner = () => {
         // payOS flow: create checkout → redirect to payOS
         const checkoutRes = await paymentApi.createCheckout("payos");
         if (!checkoutRes.success) {
-          toast.error(checkoutRes.message || "Không thể tạo đơn thanh toán");
+          toast.error(checkoutRes.message || "Failed to create checkout session");
           setIsProcessing(false);
           return;
         }
 
         const checkoutUrl = checkoutRes.data?.data?.checkoutUrl;
         if (!checkoutUrl) {
-          toast.error("Lỗi hệ thống: không thể tạo link thanh toán");
+          toast.error("System error: Unable to generate payment link");
           setIsProcessing(false);
           return;
         }
@@ -346,14 +344,14 @@ const CheckoutPageInner = () => {
       // Demo flow: create checkout → process instantly
       const checkoutRes = await paymentApi.createCheckout("demo");
       if (!checkoutRes.success) {
-        toast.error(checkoutRes.message || "Không thể tạo đơn thanh toán");
+        toast.error(checkoutRes.message || "Failed to create checkout session");
         setIsProcessing(false);
         return;
       }
 
       const paymentId = checkoutRes.data?.data?._id;
       if (!paymentId) {
-        toast.error("Lỗi hệ thống: không tìm thấy mã thanh toán");
+        toast.error("System error: Payment ID not found");
         setIsProcessing(false);
         return;
       }
@@ -363,10 +361,10 @@ const CheckoutPageInner = () => {
         clearLocalCart();
         setPaymentSuccess(true);
       } else {
-        toast.error(payRes.message || "Thanh toán thất bại");
+        toast.error(payRes.message || "Payment failed");
       }
     } catch (error: any) {
-      toast.error(error?.message || "Đã xảy ra lỗi trong quá trình thanh toán");
+      toast.error(error?.message || "An error occurred during payment processing");
     } finally {
       setIsProcessing(false);
     }
@@ -378,7 +376,7 @@ const CheckoutPageInner = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 size={48} className="animate-spin text-[var(--color-admin-primary)] mx-auto mb-4" />
-          <p className="text-muted-foreground">Đang xác nhận thanh toán...</p>
+          <p className="text-muted-foreground">Verifying payment...</p>
         </div>
       </div>
     );
@@ -410,10 +408,10 @@ const CheckoutPageInner = () => {
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
         <Lock size={48} className="text-muted-foreground mb-4" />
         <h2 className="text-2xl font-bold text-foreground mb-2">
-          Vui lòng đăng nhập
+          Please Sign In
         </h2>
         <p className="text-muted-foreground mb-6">
-          Bạn cần đăng nhập để xem giỏ hàng và thanh toán.
+          You must be signed in to view your cart and proceed to checkout.
         </p>
       </div>
     );
@@ -431,11 +429,11 @@ const CheckoutPageInner = () => {
             >
               <ArrowLeft size={22} />
             </button>
-            <h1 className="text-xl font-bold text-foreground">Thanh toán</h1>
+            <h1 className="text-xl font-bold text-foreground">Checkout</h1>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <ShoppingCart size={16} />
-            <span>{items.length} khóa học</span>
+            <span>{items.length} courses</span>
           </div>
         </div>
       </div>
@@ -457,7 +455,7 @@ const CheckoutPageInner = () => {
             <div className="lg:col-span-2">
               <div className="bg-background rounded-2xl border border-border shadow-sm p-6">
                 <h2 className="font-bold text-lg text-foreground mb-4">
-                  Giỏ hàng ({items.length} khóa học)
+                  Cart ({items.length} courses)
                 </h2>
                 {items.map((item) => (
                   <CartItemRow
@@ -472,7 +470,7 @@ const CheckoutPageInner = () => {
               {/* Payment Methods */}
               <div className="bg-background rounded-2xl border border-border shadow-sm p-6 mt-6">
                 <h2 className="font-bold text-lg text-foreground mb-4">
-                  Phương thức thanh toán
+                  Payment Methods
                 </h2>
                 <div className="space-y-3">
                   {GATEWAYS.map((gw) => (
@@ -504,7 +502,7 @@ const CheckoutPageInner = () => {
                           </span>
                           {!gw.available && (
                             <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium">
-                              Sắp ra mắt
+                              Coming Soon
                             </span>
                           )}
                         </div>
@@ -534,12 +532,12 @@ const CheckoutPageInner = () => {
             <div className="lg:col-span-1">
               <div className="bg-background rounded-2xl border border-border shadow-sm p-6 sticky top-8">
                 <h2 className="font-bold text-lg text-foreground mb-5">
-                  Tổng quan đơn hàng
+                  Order Summary
                 </h2>
 
                 <div className="space-y-3 mb-5">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tạm tính:</span>
+                    <span className="text-muted-foreground">Subtotal:</span>
                     <span className="text-foreground">
                       ₫{subtotal.toLocaleString()}
                     </span>
@@ -547,7 +545,7 @@ const CheckoutPageInner = () => {
                   {totalDiscount > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-emerald-600 flex items-center gap-1">
-                        <Tag size={14} /> Giảm giá:
+                        <Tag size={14} /> Discount:
                       </span>
                       <span className="text-emerald-600 font-medium">
                         -₫{totalDiscount.toLocaleString()}
@@ -556,11 +554,11 @@ const CheckoutPageInner = () => {
                   )}
                   <div className="border-t border-border pt-3 flex justify-between">
                     <span className="font-bold text-foreground">
-                      Tổng cộng:
+                      Total:
                     </span>
                     <span className="font-extrabold text-xl text-foreground">
                       {finalTotal === 0
-                        ? "Miễn phí"
+                        ? "Free"
                         : `₫${finalTotal.toLocaleString()}`}
                     </span>
                   </div>
@@ -573,19 +571,18 @@ const CheckoutPageInner = () => {
                 >
                   {isProcessing ? (
                     <>
-                      <Loader2 size={20} className="animate-spin" /> Đang xử
-                      lý...
+                      <Loader2 size={20} className="animate-spin" /> Processing...
                     </>
                   ) : (
                     <>
-                      <CreditCard size={20} /> Thanh toán ngay
+                      <CreditCard size={20} /> Pay Now
                     </>
                   )}
                 </button>
 
                 <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
                   <Shield size={14} />
-                  <span>Giao dịch được bảo mật & mã hóa</span>
+                  <span>Secure & encrypted transaction</span>
                 </div>
               </div>
             </div>

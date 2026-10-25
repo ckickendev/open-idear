@@ -92,7 +92,7 @@ const EnrolledCourseCard = ({ enrollment }: { enrollment: EnrollmentItem }) => {
         {/* Status badge */}
         {status === "completed" && (
           <div className="absolute top-3 right-3 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
-            <Award size={12} /> Hoàn thành
+            <Award size={12} /> Completed
           </div>
         )}
       </div>
@@ -103,7 +103,7 @@ const EnrolledCourseCard = ({ enrollment }: { enrollment: EnrollmentItem }) => {
           {course.title}
         </h3>
         <p className="text-xs text-muted-foreground mb-4 font-medium">
-          {course.instructor?.name || "Giảng viên"}
+          {course.instructor?.name || "Instructor"}
         </p>
 
         {/* Progress */}
@@ -112,7 +112,7 @@ const EnrolledCourseCard = ({ enrollment }: { enrollment: EnrollmentItem }) => {
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground font-medium">
-            {completedLessons.length} / {totalLessons} bài học
+            {completedLessons.length} / {totalLessons} lessons
           </span>
           <span
             className={`text-xs font-bold ${
@@ -132,15 +132,15 @@ const EnrolledCourseCard = ({ enrollment }: { enrollment: EnrollmentItem }) => {
           <span className="text-sm font-bold text-foreground/80 group-hover:text-[var(--color-admin-primary)] flex items-center justify-center gap-2 transition-colors">
             {progress > 0 && progress < 100 ? (
               <>
-                Tiếp tục học <ArrowRight size={16} />
+                Continue Learning <ArrowRight size={16} />
               </>
             ) : progress >= 100 ? (
               <>
-                Xem lại khóa học <ArrowRight size={16} />
+                Review Course <ArrowRight size={16} />
               </>
             ) : (
               <>
-                Bắt đầu học <Play size={16} />
+                Start Learning <Play size={16} />
               </>
             )}
           </span>
@@ -179,16 +179,16 @@ const EmptyState = () => (
       <BookOpen size={40} className="text-[var(--color-admin-primary)]" />
     </div>
     <h2 className="text-2xl font-bold text-foreground mb-3">
-      Chưa có khóa học nào
+      No enrolled courses yet
     </h2>
     <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-      Bạn chưa đăng ký khóa học nào. Hãy khám phá và bắt đầu hành trình học tập!
+      You have not enrolled in any courses yet. Explore our catalog and begin your learning journey!
     </p>
     <Link
       href="/courses"
       className="inline-flex items-center gap-2 bg-[var(--color-admin-primary)] text-white font-bold px-8 py-3.5 rounded-xl hover:bg-[var(--color-admin-primary-hover)] transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
     >
-      Khám phá khóa học <ArrowRight size={18} />
+      Explore Courses <ArrowRight size={18} />
     </Link>
   </div>
 );
@@ -230,10 +230,10 @@ const MyLearningPage = () => {
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
         <Lock size={48} className="text-muted-foreground mb-4" />
         <h2 className="text-2xl font-bold text-foreground mb-2">
-          Vui lòng đăng nhập
+          Please Sign In
         </h2>
         <p className="text-muted-foreground">
-          Đăng nhập để xem các khóa học đã đăng ký.
+          Sign in to view your enrolled courses.
         </p>
       </div>
     );
@@ -262,10 +262,10 @@ const MyLearningPage = () => {
       <div className="bg-gradient-to-r from-[var(--color-admin-primary)] via-indigo-600 to-blue-700 text-white">
         <div className="max-w-7xl mx-auto px-6 py-12">
           <h1 className="text-3xl lg:text-4xl font-extrabold mb-2">
-            Học tập của tôi
+            My Learning
           </h1>
           <p className="text-indigo-200 font-medium">
-            Theo dõi tiến trình và tiếp tục hành trình học tập.
+            Track your progress and continue your learning journey.
           </p>
 
           {/* Stats */}
@@ -276,19 +276,19 @@ const MyLearningPage = () => {
                   {enrollments.length}
                 </div>
                 <div className="text-xs text-indigo-200 font-medium">
-                  Tổng khóa học
+                  Total Courses
                 </div>
               </div>
               <div className="bg-background/10 backdrop-blur-sm rounded-xl px-6 py-3 border border-white/10">
                 <div className="text-2xl font-extrabold">{inProgressCount}</div>
                 <div className="text-xs text-indigo-200 font-medium">
-                  Đang học
+                  In Progress
                 </div>
               </div>
               <div className="bg-background/10 backdrop-blur-sm rounded-xl px-6 py-3 border border-white/10">
                 <div className="text-2xl font-extrabold">{completedCount}</div>
                 <div className="text-xs text-indigo-200 font-medium">
-                  Đã hoàn thành
+                  Completed
                 </div>
               </div>
             </div>
@@ -313,10 +313,10 @@ const MyLearningPage = () => {
                   }`}
                 >
                   {status === "all"
-                    ? "Tất cả"
+                    ? "All"
                     : status === "active"
-                      ? "Đang học"
-                      : "Hoàn thành"}
+                      ? "In Progress"
+                      : "Completed"}
                 </button>
               ))}
             </div>
@@ -327,7 +327,7 @@ const MyLearningPage = () => {
               />
               <input
                 type="text"
-                placeholder="Tìm khóa học..."
+                placeholder="Search courses..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-admin-primary)] focus:border-transparent text-sm"
@@ -343,7 +343,7 @@ const MyLearningPage = () => {
           <EmptyState />
         ) : filtered.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            Không tìm thấy khóa học nào khớp với bộ lọc.
+            No courses match your filter criteria.
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
