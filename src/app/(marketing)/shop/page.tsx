@@ -66,6 +66,7 @@ export default async function ShopPage({
         initialCategories={categories}
         initialProducts={productData.products}
         initialPagination={productData.pagination}
+        initialError={productData.error || null}
       />
     </Suspense>
   );

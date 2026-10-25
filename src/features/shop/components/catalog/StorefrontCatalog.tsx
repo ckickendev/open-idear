@@ -1,13 +1,13 @@
 "use client";
 
 // =============================================================================
-//  OPENIDEAR SHOP — STOREFRONT CATALOG CONTAINER (SPRINT S2)
+//  OPENIDEAR SHOP — STOREFRONT CATALOG CONTAINER
 //  src/features/shop/components/catalog/StorefrontCatalog.tsx
 // =============================================================================
 
 import { useState, useEffect, useCallback, useTransition, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
+import type {
   ShopCategory,
   PublicShopProduct,
   PublicProductFilterParams,
@@ -15,8 +15,10 @@ import {
 } from "../../types/shop.types";
 import { shopPublicApi } from "../../api/shopPublic.api";
 import { StorefrontHeader } from "./StorefrontHeader";
+import { CategoryShortcuts } from "./CategoryShortcuts";
 import { SearchBar } from "./SearchBar";
 import { FilterSidebar } from "./FilterSidebar";
+import { ActiveFilterChips } from "./ActiveFilterChips";
 import { ProductGrid } from "./ProductGrid";
 import {
   SlidersHorizontal,
@@ -35,12 +37,14 @@ interface StorefrontCatalogProps {
     limit: number;
     pages: number;
   };
+  initialError?: string | null;
 }
 
 export function StorefrontCatalog({
   initialCategories,
   initialProducts,
   initialPagination,
+  initialError = null,
 }: StorefrontCatalogProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -51,24 +55,34 @@ export function StorefrontCatalog({
   const [products, setProducts] = useState<PublicShopProduct[]>(initialProducts);
   const [pagination, setPagination] = useState(initialPagination);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   // Parse filters from URL searchParams
   const getFiltersFromUrl = useCallback((): PublicProductFilterParams => {
     const page = parseInt(searchParams.get("page") || "1", 10) || 1;
     const category = searchParams.get("category") || undefined;
-    const fulfillmentMode = (searchParams.get("fulfillmentMode") as FulfillmentMode) || undefined;
-    const minPrice = searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined;
-    const maxPrice = searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined;
+    const fulfillmentMode =
+      (searchParams.get("fulfillmentMode") as FulfillmentMode) || undefined;
+    const availabilityStatus =
+      (searchParams.get("availabilityStatus") as PublicProductFilterParams["availabilityStatus"]) ||
+      undefined;
+    const minPrice = searchParams.get("minPrice")
+      ? Number(searchParams.get("minPrice"))
+      : undefined;
+    const maxPrice = searchParams.get("maxPrice")
+      ? Number(searchParams.get("maxPrice"))
+      : undefined;
     const search = searchParams.get("search") || undefined;
-    const sort = (searchParams.get("sort") as PublicProductFilterParams["sort"]) || "newest";
+    const sort =
+      (searchParams.get("sort") as PublicProductFilterParams["sort"]) || "newest";
 
     return {
       page,
       limit: 20,
       category,
       fulfillmentMode,
+      availabilityStatus,
       minPrice,
       maxPrice,
       search,
@@ -82,6 +96,7 @@ export function StorefrontCatalog({
       page: f.page || 1,
       category: f.category || "",
       fulfillmentMode: f.fulfillmentMode || "",
+      availabilityStatus: f.availabilityStatus || "",
       minPrice: f.minPrice ?? null,
       maxPrice: f.maxPrice ?? null,
       search: f.search || "",
@@ -92,8 +107,9 @@ export function StorefrontCatalog({
   const [filters, setFilters] = useState<PublicProductFilterParams>(getFiltersFromUrl());
 
   // Track the signature of the data currently rendered in state.
-  // Initialized with the server-rendered signature so initial mount does not trigger a duplicate fetch.
-  const lastFetchedSignatureRef = useRef<string>(getFilterSignature(getFiltersFromUrl()));
+  const lastFetchedSignatureRef = useRef<string>(
+    getFilterSignature(getFiltersFromUrl())
+  );
 
   // Fetch products whenever filters change
   const fetchProducts = useCallback(
@@ -102,8 +118,12 @@ export function StorefrontCatalog({
       setError(null);
       try {
         const res = await shopPublicApi.getProducts(currentFilters);
-        setProducts(res.products);
-        setPagination(res.pagination);
+        if (res.error) {
+          setError(res.error);
+        } else {
+          setProducts(res.products);
+          setPagination(res.pagination);
+        }
       } catch (err: unknown) {
         console.error("Failed to load products:", err);
         setError(
@@ -141,6 +161,7 @@ export function StorefrontCatalog({
     if (merged.page && merged.page > 1) params.set("page", String(merged.page));
     if (merged.category) params.set("category", merged.category);
     if (merged.fulfillmentMode) params.set("fulfillmentMode", merged.fulfillmentMode);
+    if (merged.availabilityStatus) params.set("availabilityStatus", merged.availabilityStatus);
     if (merged.minPrice !== undefined) params.set("minPrice", String(merged.minPrice));
     if (merged.maxPrice !== undefined) params.set("maxPrice", String(merged.maxPrice));
     if (merged.search) params.set("search", merged.search);
@@ -156,6 +177,10 @@ export function StorefrontCatalog({
     updateUrl({ ...updates, page: 1 });
   };
 
+  const handleRemoveSingleFilter = (key: keyof PublicProductFilterParams) => {
+    updateUrl({ [key]: undefined, page: 1 });
+  };
+
   const handleResetFilters = () => {
     startTransition(() => {
       router.push("/shop", { scroll: false });
@@ -168,13 +193,29 @@ export function StorefrontCatalog({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const hasActiveFilters = Boolean(
+    filters.category ||
+      filters.fulfillmentMode ||
+      filters.availabilityStatus ||
+      filters.minPrice !== undefined ||
+      filters.maxPrice !== undefined ||
+      filters.search
+  );
+
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
-      {/* ─── Storefront Header ─────────────────────────────────────────── */}
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl">
+      {/* ─── 1. Storefront Header Banner ────────────────────────────────── */}
       <StorefrontHeader />
 
-      {/* ─── Search & Sort Bar ─────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
+      {/* ─── 2. Category Shortcuts Bar ───────────────────────────────────── */}
+      <CategoryShortcuts
+        categories={categories}
+        activeCategory={filters.category}
+        onSelectCategory={(slug) => handleFilterChange({ category: slug })}
+      />
+
+      {/* ─── 3. Search & Sort Bar ────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-4">
         <div className="flex-1 max-w-lg">
           <SearchBar
             value={filters.search || ""}
@@ -188,10 +229,13 @@ export function StorefrontCatalog({
             variant="outline"
             size="sm"
             onClick={() => setIsMobileFilterOpen(true)}
-            className="lg:hidden gap-1.5 h-10 px-3 cursor-pointer"
+            className="lg:hidden gap-1.5 h-10 px-3 cursor-pointer border-border"
           >
-            <SlidersHorizontal className="h-4 w-4" />
-            <span>Filters</span>
+            <SlidersHorizontal className="h-4 w-4 text-blue-600" />
+            <span className="font-semibold text-xs">Filters</span>
+            {hasActiveFilters && (
+              <span className="h-2 w-2 rounded-full bg-blue-600" />
+            )}
           </Button>
 
           {/* Sort Dropdown */}
@@ -206,7 +250,7 @@ export function StorefrontCatalog({
                   sort: e.target.value as PublicProductFilterParams["sort"],
                 })
               }
-              className="pl-9 pr-8 py-2 text-xs font-medium bg-card border border-border rounded-xl text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all cursor-pointer appearance-none h-10"
+              className="pl-9 pr-8 py-2 text-xs font-semibold bg-card border border-border rounded-xl text-foreground focus:outline-hidden focus:ring-2 focus:ring-blue-500/40 focus:border-blue-600 transition-all cursor-pointer appearance-none h-10 shadow-2xs"
               aria-label="Sort products by"
             >
               <option value="newest">Sort: Newest Added</option>
@@ -218,7 +262,15 @@ export function StorefrontCatalog({
         </div>
       </div>
 
-      {/* ─── Catalog Body (Sidebar + Grid) ─────────────────────────────── */}
+      {/* ─── 4. Active Filter Chips ─────────────────────────────────────── */}
+      <ActiveFilterChips
+        filters={filters}
+        categories={categories}
+        onRemoveFilter={handleRemoveSingleFilter}
+        onResetAll={handleResetFilters}
+      />
+
+      {/* ─── 5. Catalog Body (Sidebar + Grid) ────────────────────────────── */}
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         {/* Filter Sidebar (Desktop + Mobile Drawer) */}
         <FilterSidebar
@@ -231,14 +283,22 @@ export function StorefrontCatalog({
         />
 
         {/* Main Content Area */}
-        <div className="flex-1 w-full space-y-8">
-          {/* Results count & active tags */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>
-              Showing {products.length} of {pagination.total} products
+        <div className="flex-1 w-full space-y-6 min-w-0">
+          {/* Results count indicator */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground pb-1">
+            <span className="font-medium">
+              {pagination.total > 0 ? (
+                <>
+                  Showing <strong className="text-foreground">{products.length}</strong>{" "}
+                  of <strong className="text-foreground">{pagination.total}</strong> products
+                </>
+              ) : (
+                <span>0 products available</span>
+              )}
             </span>
+
             {filters.category && (
-              <span className="font-medium text-foreground">
+              <span className="font-semibold text-blue-600 dark:text-blue-400">
                 Category:{" "}
                 {categories.find((c) => c.slug === filters.category)?.name ||
                   filters.category}
@@ -246,16 +306,17 @@ export function StorefrontCatalog({
             )}
           </div>
 
-          {/* Product Grid */}
+          {/* Product Grid with error, empty, loading handling */}
           <ProductGrid
             products={products}
             isLoading={isLoading || isPending}
             error={error}
+            hasActiveFilters={hasActiveFilters}
             onRetry={() => fetchProducts(filters)}
             onResetFilters={handleResetFilters}
           />
 
-          {/* ─── Pagination ──────────────────────────────────────────────── */}
+          {/* ─── 6. Pagination Controls ──────────────────────────────────── */}
           {pagination.pages > 1 && (
             <div className="flex items-center justify-center gap-2 pt-6 border-t border-border/50">
               <Button
@@ -272,7 +333,6 @@ export function StorefrontCatalog({
               <div className="flex items-center gap-1">
                 {Array.from({ length: pagination.pages }, (_, i) => i + 1)
                   .filter((p) => {
-                    // Show current, first, last, and immediate neighbors
                     return (
                       p === 1 ||
                       p === pagination.pages ||
@@ -295,7 +355,9 @@ export function StorefrontCatalog({
                           size="sm"
                           onClick={() => handlePageChange(p)}
                           className={`h-8 w-8 p-0 cursor-pointer text-xs ${
-                            p === pagination.page ? "font-bold" : ""
+                            p === pagination.page
+                              ? "bg-blue-600 text-white font-bold"
+                              : ""
                           }`}
                         >
                           {p}

@@ -151,6 +151,7 @@ export interface PublicProductListResponse {
     limit: number;
     pages: number;
   };
+  error?: string | null;
 }
 
 // ─── ORDER & INQUIRY WORKFLOW TYPES (SPRINT S3) ──────────────────────────────

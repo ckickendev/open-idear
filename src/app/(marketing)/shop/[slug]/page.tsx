@@ -113,7 +113,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                 {product.category && (
                   <Link
                     href={`/shop?category=${product.category.slug}`}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 hover:bg-blue-100 transition-colors"
                   >
                     <Tag className="h-3 w-3" />
                     <span>{product.category.name}</span>
