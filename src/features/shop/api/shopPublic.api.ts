@@ -113,6 +113,89 @@ export const shopPublicApi = {
   },
 };
 
+interface BatchQueueItem {
+  id: string;
+  resolve: (product: PublicShopProduct | null) => void;
+  reject: (err: unknown) => void;
+}
+
+let pendingBatchQueue: BatchQueueItem[] = [];
+let batchScheduled = false;
+const productEmbedCache = new Map<string, PublicShopProduct>();
+
+/**
+ * Microtask / short-debounce batch loader for product embeds.
+ * Combines concurrent embed requests into a single `/shop/products/batch` call.
+ */
+export function loadBatchedProduct(
+  idOrSlug: string
+): Promise<PublicShopProduct | null> {
+  const cleanId = (idOrSlug || "").trim();
+  if (!cleanId) return Promise.resolve(null);
+
+  if (productEmbedCache.has(cleanId)) {
+    return Promise.resolve(productEmbedCache.get(cleanId)!);
+  }
+
+  return new Promise((resolve, reject) => {
+    pendingBatchQueue.push({ id: cleanId, resolve, reject });
+
+    if (!batchScheduled) {
+      batchScheduled = true;
+      setTimeout(async () => {
+        batchScheduled = false;
+        const currentQueue = pendingBatchQueue;
+        pendingBatchQueue = [];
+
+        if (currentQueue.length === 0) return;
+
+        // Collect unique uncached IDs
+        const idsToFetch = Array.from(
+          new Set(
+            currentQueue
+              .map((q) => q.id)
+              .filter((id) => !productEmbedCache.has(id))
+          )
+        );
+
+        if (idsToFetch.length === 0) {
+          for (const q of currentQueue) {
+            q.resolve(productEmbedCache.get(q.id) || null);
+          }
+          return;
+        }
+
+        try {
+          const products = await shopPublicApi.getBatchProducts(idsToFetch);
+          for (const prod of products) {
+            if (prod._id) productEmbedCache.set(prod._id, prod);
+            if (prod.slug) productEmbedCache.set(prod.slug, prod);
+          }
+
+          for (const q of currentQueue) {
+            const found = productEmbedCache.get(q.id) || null;
+            q.resolve(found);
+          }
+        } catch {
+          // Graceful fallback to single product fetch on batch error
+          for (const q of currentQueue) {
+            try {
+              const single = await shopPublicApi.getProductBySlug(q.id);
+              if (single) {
+                if (single._id) productEmbedCache.set(single._id, single);
+                if (single.slug) productEmbedCache.set(single.slug, single);
+              }
+              q.resolve(single);
+            } catch {
+              q.resolve(null);
+            }
+          }
+        }
+      }, 10);
+    }
+  });
+}
+
 /**
  * Server-side public fetchers for Next.js App Router (RSC & generateMetadata).
  */

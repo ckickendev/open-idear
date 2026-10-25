@@ -23,6 +23,7 @@ import type {
   AvailabilityStatus,
   PublicationStatus,
 } from "../../types/shop.types";
+import { formatVND } from "../../utils/formatters";
 import AdminSearchInput from "@/components/admin/AdminSearchInput";
 import AdminPagination from "@/components/admin/AdminPagination";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
@@ -30,13 +31,6 @@ import EmptyState from "@/components/admin/EmptyState";
 import TableSkeleton from "@/components/admin/TableSkeleton";
 import { MediaLibraryModal } from "@/features/media-library";
 import type { MediaAsset } from "@/features/media-library";
-
-function formatVND(amount: number) {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(amount);
-}
 
 export default function ProductManagement() {
   const [products, setProducts] = useState<ShopProduct[]>([]);

@@ -5,7 +5,7 @@
 //  src/features/shop/components/catalog/StorefrontCatalog.tsx
 // =============================================================================
 
-import { useState, useEffect, useCallback, useTransition } from "react";
+import { useState, useEffect, useCallback, useTransition, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ShopCategory,
@@ -76,7 +76,24 @@ export function StorefrontCatalog({
     };
   }, [searchParams]);
 
+  // Canonical string representation of active filters
+  const getFilterSignature = useCallback((f: PublicProductFilterParams) => {
+    return JSON.stringify({
+      page: f.page || 1,
+      category: f.category || "",
+      fulfillmentMode: f.fulfillmentMode || "",
+      minPrice: f.minPrice ?? null,
+      maxPrice: f.maxPrice ?? null,
+      search: f.search || "",
+      sort: f.sort || "newest",
+    });
+  }, []);
+
   const [filters, setFilters] = useState<PublicProductFilterParams>(getFiltersFromUrl());
+
+  // Track the signature of the data currently rendered in state.
+  // Initialized with the server-rendered signature so initial mount does not trigger a duplicate fetch.
+  const lastFetchedSignatureRef = useRef<string>(getFilterSignature(getFiltersFromUrl()));
 
   // Fetch products whenever filters change
   const fetchProducts = useCallback(
@@ -104,9 +121,17 @@ export function StorefrontCatalog({
   // Sync state with URL params
   useEffect(() => {
     const urlFilters = getFiltersFromUrl();
+    const currentSignature = getFilterSignature(urlFilters);
     setFilters(urlFilters);
+
+    // Skip redundant fetch if server-rendered data already satisfies current URL query
+    if (currentSignature === lastFetchedSignatureRef.current) {
+      return;
+    }
+
+    lastFetchedSignatureRef.current = currentSignature;
     fetchProducts(urlFilters);
-  }, [searchParams, getFiltersFromUrl, fetchProducts]);
+  }, [searchParams, getFiltersFromUrl, getFilterSignature, fetchProducts]);
 
   // Update URL search parameters
   const updateUrl = (newFilters: Partial<PublicProductFilterParams>) => {

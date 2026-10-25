@@ -23,7 +23,7 @@ import {
   Sparkles,
   ArrowRight,
 } from "lucide-react";
-import { shopPublicApi } from "@/features/shop/api/shopPublic.api";
+import { shopPublicApi, loadBatchedProduct } from "@/features/shop/api/shopPublic.api";
 import type { PublicShopProduct } from "@/features/shop/types/shop.types";
 import { formatVND } from "@/features/shop/utils/formatters";
 
@@ -54,7 +54,7 @@ export const ArticleProductEmbed: React.FC<ArticleProductEmbedProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const impressionTrackedRef = useRef(false);
 
-  // 1. Resolve live public product data
+  // 1. Resolve live public product data via microtask batching
   useEffect(() => {
     let isMounted = true;
     if (!productId) {
@@ -66,8 +66,7 @@ export const ArticleProductEmbed: React.FC<ArticleProductEmbedProps> = ({
     setLoading(true);
     setError(false);
 
-    shopPublicApi
-      .getProductBySlug(productId)
+    loadBatchedProduct(productId)
       .then((data) => {
         if (!isMounted) return;
         if (data) {
