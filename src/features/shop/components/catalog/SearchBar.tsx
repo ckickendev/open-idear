@@ -1,11 +1,11 @@
 "use client";
 
 // =============================================================================
-//  OPENIDEAR SHOP — SEARCH BAR (SPRINT S2)
+//  OPENIDEAR SHOP — SEARCH BAR
 //  src/features/shop/components/catalog/SearchBar.tsx
 // =============================================================================
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, X } from "lucide-react";
 
 interface SearchBarProps {
@@ -17,23 +17,38 @@ interface SearchBarProps {
 export function SearchBar({
   value,
   onChange,
-  placeholder = "Search PC hardware by name or keyword...",
+  placeholder = "Search PC hardware by model, brand, or specification...",
 }: SearchBarProps) {
   const [internalValue, setInternalValue] = useState(value);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setInternalValue(value);
   }, [value]);
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (internalValue !== value) {
-        onChange(internalValue);
-      }
+  const handleInputChange = (val: string) => {
+    setInternalValue(val);
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      onChange(val.trim());
     }, 350);
+  };
 
-    return () => clearTimeout(handler);
-  }, [internalValue, value, onChange]);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      onChange(internalValue.trim());
+    } else if (e.key === "Escape") {
+      setInternalValue("");
+      onChange("");
+    }
+  };
+
+  const handleClear = () => {
+    setInternalValue("");
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    onChange("");
+  };
 
   return (
     <div className="relative w-full">
@@ -41,21 +56,19 @@ export function SearchBar({
         <Search className="h-4 w-4" />
       </div>
       <input
-        type="text"
+        type="search"
         value={internalValue}
-        onChange={(e) => setInternalValue(e.target.value)}
+        onChange={(e) => handleInputChange(e.target.value)}
+        onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className="w-full pl-10 pr-9 py-2.5 text-sm bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-200"
+        className="w-full pl-10 pr-9 py-2 text-sm bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-2 focus:ring-blue-500/40 focus:border-blue-600 transition-all duration-200 h-10 shadow-2xs"
       />
       {internalValue && (
         <button
           type="button"
-          onClick={() => {
-            setInternalValue("");
-            onChange("");
-          }}
+          onClick={handleClear}
           className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
-          aria-label="Clear search"
+          aria-label="Clear search query"
         >
           <X className="h-4 w-4" />
         </button>

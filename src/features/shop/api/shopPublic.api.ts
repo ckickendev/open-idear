@@ -41,6 +41,19 @@ export const shopPublicApi = {
       pagination: { total: number; page: number; limit: number; pages: number };
     }>("/shop/products", { params });
 
+    if (!res.success) {
+      return {
+        products: [],
+        pagination: {
+          total: 0,
+          page: 1,
+          limit: 20,
+          pages: 1,
+        },
+        error: res.message || "Failed to load products from server",
+      };
+    }
+
     return {
       products: res.data?.data || [],
       pagination: res.data?.pagination || {
@@ -49,6 +62,7 @@ export const shopPublicApi = {
         limit: 20,
         pages: 1,
       },
+      error: null,
     };
   },
 
@@ -239,6 +253,7 @@ export async function fetchPublicProductsServer(
       return {
         products: [],
         pagination: { total: 0, page: 1, limit: 20, pages: 1 },
+        error: `API returned HTTP ${res.status}`,
       };
     }
 
@@ -246,12 +261,17 @@ export async function fetchPublicProductsServer(
     return {
       products: json.data || [],
       pagination: json.pagination || { total: 0, page: 1, limit: 20, pages: 1 },
+      error: null,
     };
   } catch (err) {
     console.error("fetchPublicProductsServer error:", err);
     return {
       products: [],
       pagination: { total: 0, page: 1, limit: 20, pages: 1 },
+      error:
+        err instanceof Error
+          ? err.message
+          : "Network error connecting to shop server",
     };
   }
 }
