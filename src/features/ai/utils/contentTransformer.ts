@@ -6,7 +6,7 @@
 //  Injects AI Image Placeholder metadata into the DOM for Tiptap consumption.
 // =============================================================================
 
-import { parseMarkdownToHtml } from "./markdownParser";
+import { parseMarkdownToHtml } from "./markdownParser.ts";
 import type { ImageSuggestion, VisualSuggestion } from "@/features/ai-visual/types/aiVisual.types";
 
 function escapeHtmlAttr(str: string): string {

@@ -65,6 +65,7 @@ export function usePublishPost(
             locale: targetLocale,
             description: config.description,
             image: config.image,
+            background: config.background,
             series: config.series,
             category: config.category,
           },

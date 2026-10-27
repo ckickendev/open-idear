@@ -76,7 +76,40 @@ const en = {
       "contact": "Contact",
       "ava": "WE ARE ALSO AVAILABLE ON",
       "hotcourse": "Featured Courses",
-      "hottoppic": "Featured Topics"
+      "hottoppic": "Featured Topics",
+      "copyright": "© {year} OpenIdear. All rights reserved."
+    },
+    "comment": {
+      "sortBy": "Sort by:",
+      "top": "Top",
+      "newest": "Newest",
+      "placeholder": "Write a comment...",
+      "charLimit": "{current}/{max} characters",
+      "post": "Post Comment",
+      "submitting": "Submitting...",
+      "reply": "Reply",
+      "report": "Report",
+      "replyPlaceholder": "Write your reply...",
+      "send": "Send",
+      "cancel": "Cancel",
+      "viewMoreReplies": "View {count} more replies",
+      "loadMore": "Load more comments",
+      "loading": "Loading...",
+      "edited": "(edited)"
+    },
+    "article": {
+      "toc": "Table of Contents",
+      "minRead": "min read",
+      "history": "History",
+      "share": "Share",
+      "shareCopied": "Article link copied to clipboard!",
+      "signInToLike": "Please sign in to like this post",
+      "signInToSave": "Please sign in to save articles to collections",
+      "signInToFollow": "Please sign in to follow authors",
+      "authorFollowed": "Author followed successfully",
+      "authorUnfollowed": "Author unfollowed successfully",
+      "relatedTopics": "Related Topics",
+      "noRelatedTopics": "No related topics available."
     },
     "lastest_feature": {
       "last": "Recent Posts",
@@ -244,7 +277,18 @@ const en = {
       "update_action": "Update ({locale})",
       "publish_action": "Publish ({locale})",
       "cover_success": "AI Cover image generated & uploaded to Cloudinary!",
-      "cover_error": "Failed to regenerate AI cover image."
+      "cover_error": "Failed to regenerate AI cover image.",
+      "background_title": "Hero Background",
+      "background_subtitle": "Style or Banner Image",
+      "background_placeholder": "Paste image URL (https://...) or CSS gradient...",
+      "background_presets": "Presets",
+      "background_upload_btn": "Upload Background Image",
+      "background_clear_btn": "Clear Background",
+      "change_cover": "Change Cover",
+      "remove_cover": "Remove Cover",
+      "current_cover": "Current Cover Image",
+      "click_to_edit_publish": "Published — Click to edit publish info",
+      "live_post_hint": "Live Post: Changes to description, image, or background will take effect immediately upon updating."
     },
     "seo_sidebar": {
       "title": "SEO Score",

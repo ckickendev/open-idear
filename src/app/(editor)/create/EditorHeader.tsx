@@ -19,6 +19,7 @@ import {
   FileText,
   Loader2,
   ChevronDown,
+  CheckCircle2,
 } from "lucide-react";
 import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
 import Link from "next/link";
@@ -129,7 +130,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
 }) => {
   const { t } = useTranslation();
   const canSave = hasTitle;
-  const canPublish = isEditMode && !isPublished;
+  const canPublish = isEditMode;
 
   const activeAiToolsCount = [
     aiPlannerOpen,
@@ -596,23 +597,26 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             <span className="hidden sm:inline">{t("editor.header.save")}</span>
           </button>
 
-          {/* Publish button */}
+          {/* Publish / Edit Publish Info button */}
           <button
             onClick={onPublish}
-            disabled={isPublished}
             className={`group relative flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer overflow-hidden shrink-0 ${
               !isPublished
                 ? "bg-[var(--color-editor-accent)] hover:bg-[var(--color-editor-accent-hover)] text-white shadow-lg shadow-[var(--color-editor-accent)]/25 hover:shadow-[var(--color-editor-accent-hover)]/30 active:scale-[0.97]"
-                : "bg-[var(--color-editor-elevated)] text-[var(--color-editor-muted)] cursor-not-allowed"
+                : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30 active:scale-[0.97] shadow-xs"
             }`}
-            aria-label={isPublished ? t("editor.header.already_published") : t("editor.header.publish")}
-            title={isPublished ? t("editor.header.already_published") : t("editor.header.publish_title")}
+            aria-label={isPublished ? t("editor.header.published_btn") : t("editor.header.publish")}
+            title={isPublished ? (t("editor.header.edit_publish_info") || "Published — Click to edit publish info") : t("editor.header.publish_title")}
           >
-            {/* Shimmer overlay on hover */}
+            {/* Shimmer overlay on hover when not published */}
             {!isPublished && (
               <span className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer transition-opacity duration-300" />
             )}
-            <Send size={14} className="relative z-10 shrink-0" />
+            {isPublished ? (
+              <CheckCircle2 size={14} className="relative z-10 shrink-0 text-emerald-500" />
+            ) : (
+              <Send size={14} className="relative z-10 shrink-0" />
+            )}
             <span className="relative z-10">{isPublished ? t("editor.header.published_btn") : t("editor.header.publish")}</span>
           </button>
         </div>      </div>

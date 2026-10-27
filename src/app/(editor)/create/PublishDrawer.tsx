@@ -12,6 +12,12 @@ import {
   Loader2,
   Image as ImageIcon,
   ChevronRight,
+  Upload,
+  Trash2,
+  CheckCircle2,
+  Palette,
+  Eye,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
@@ -35,7 +41,12 @@ interface PublishDrawerProps {
   description: string;
   onDescriptionChange: (val: string) => void;
   /** Cover image */
+  currentImage?: string | null;
   onCoverImageUploaded: (image: any) => void;
+  onRemoveCoverImage?: () => void;
+  /** Hero Background */
+  background?: string;
+  onBackgroundChange?: (val: string) => void;
   /** Is publishing in progress */
   isPublishing?: boolean;
   /** Topic from editor title */
@@ -50,6 +61,15 @@ interface PublishDrawerProps {
   onUnpublish?: () => void;
 }
 
+const BG_PRESETS = [
+  { id: "none", label: "Default", value: "" },
+  { id: "cyber", label: "Cyber Violet", value: "linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)" },
+  { id: "midnight", label: "Midnight Blue", value: "linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e293b 100%)" },
+  { id: "emerald", label: "Tech Emerald", value: "linear-gradient(135deg, #022c22 0%, #064e3b 50%, #0f172a 100%)" },
+  { id: "sunset", label: "Sunset Amber", value: "linear-gradient(135deg, #18181b 0%, #451a03 50%, #7c2d12 100%)" },
+  { id: "purple", label: "Dark Pulse", value: "linear-gradient(135deg, #2e1065 0%, #3b0764 50%, #09090b 100%)" },
+];
+
 const PublishDrawer: React.FC<PublishDrawerProps> = ({
   isOpen,
   onClose,
@@ -63,7 +83,11 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
   onCreateSeries,
   description,
   onDescriptionChange,
+  currentImage,
   onCoverImageUploaded,
+  onRemoveCoverImage,
+  background = "",
+  onBackgroundChange,
   isPublishing = false,
   initialTopic = "",
   onAutoFillAI,
@@ -74,15 +98,24 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
   const { t } = useTranslation();
   const [aiCoverImage, setAiCoverImage] = useState<CoverImageResult | null>(null);
   const [isRegeneratingCover, setIsRegeneratingCover] = useState(false);
+  const [showReplaceCover, setShowReplaceCover] = useState(false);
+  const [showUploadBg, setShowUploadBg] = useState(false);
   const [showCreateSeries, setShowCreateSeries] = useState(false);
   const [newSeriesName, setNewSeriesName] = useState("");
   const [expandedSections, setExpandedSections] = useState({
     description: true,
     coverImage: true,
+    background: true,
     category: true,
     series: false,
   });
   const [isClosing, setIsClosing] = useState(false);
+
+  // Resolved current cover URL
+  const effectiveCoverUrl =
+    aiCoverImage?.url ||
+    (typeof currentImage === "object" ? (currentImage as any)?.url : currentImage) ||
+    null;
 
   // Escape key handler
   useEffect(() => {
@@ -115,12 +148,29 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
       setAiCoverImage(cover);
       if (cover?.url) {
         onCoverImageUploaded(cover);
+        setShowReplaceCover(false);
       }
       toast.success(t("editor.publish_drawer.cover_success"));
     } catch (err: any) {
       toast.error(err?.message || t("editor.publish_drawer.cover_error"));
     } finally {
       setIsRegeneratingCover(false);
+    }
+  };
+
+  const handleRemoveCover = () => {
+    setAiCoverImage(null);
+    setShowReplaceCover(false);
+    onRemoveCoverImage?.();
+    toast.success(t("editor.publish_drawer.remove_cover") || "Cover image removed");
+  };
+
+  const handleBgUploaded = (image: any) => {
+    const url = image?.url || (typeof image === "string" ? image : "");
+    if (url) {
+      onBackgroundChange?.(url);
+      setShowUploadBg(false);
+      toast.success(t("editor.publish_drawer.background_title") + " uploaded!");
     }
   };
 
@@ -142,6 +192,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
     if (result.coverImage) {
       setAiCoverImage(result.coverImage);
       onCoverImageUploaded(result.coverImage);
+      setShowReplaceCover(false);
     }
 
     // Auto match category if possible
@@ -198,8 +249,8 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                 {activeLocale === "vi" ? "🇻🇳 Tiếng Việt" : "🇺🇸 English"}
               </span>
               {isPublished && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                  {t("editor.header.published")}
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+                  {t("editor.header.published_btn")}
                 </span>
               )}
             </div>
@@ -218,13 +269,24 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
           </button>
         </div>
 
+        {/* Live Published Status Banner */}
+        {isPublished && (
+          <div className="mx-6 mt-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-start gap-2.5">
+            <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium leading-relaxed">
+              {t("editor.publish_drawer.live_post_hint")}
+            </p>
+          </div>
+        )}
+
         {/* Progress steps */}
         <div className="px-6 py-3 border-b border-[var(--color-editor-border)]/50">
           <div className="flex items-center gap-2">
             {[
               { label: t("editor.publish_drawer.step_description"), done: !!description.trim() },
+              { label: t("editor.publish_drawer.cover_title"), done: !!effectiveCoverUrl },
               { label: t("editor.publish_drawer.step_category"), done: !!selectedCategory },
-              { label: t("editor.publish_drawer.step_publish"), done: false },
+              { label: isPublished ? t("editor.publish_drawer.update_action", { locale: "" }).replace(/[()]/g, "") : t("editor.publish_drawer.step_publish"), done: false },
             ].map((step, i) => (
               <React.Fragment key={step.label}>
                 <div className="flex items-center gap-1.5">
@@ -241,7 +303,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                     {step.label}
                   </span>
                 </div>
-                {i < 2 && (
+                {i < 3 && (
                   <ChevronRight size={10} className="text-[var(--color-editor-muted)]/40 flex-shrink-0" />
                 )}
               </React.Fragment>
@@ -258,8 +320,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
             onAutoFill={handleAutoFillAIResult}
           />
 
-          {/* Existing Publish Settings Below */}
-          {/* Description Section */}
+          {/* 1. Description Section */}
           <CollapsibleSection
             title={t("editor.publish_drawer.description_title")}
             subtitle={t("editor.publish_drawer.description_subtitle")}
@@ -276,7 +337,7 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
             />
           </CollapsibleSection>
 
-          {/* Cover Image Section */}
+          {/* 2. Cover Image Section */}
           <CollapsibleSection
             title={t("editor.publish_drawer.cover_title")}
             subtitle={t("editor.publish_drawer.cover_subtitle")}
@@ -284,59 +345,93 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
             onToggle={() => toggleSection("coverImage")}
           >
             <div className="space-y-3">
-              {aiCoverImage?.url ? (
-                <div className="relative rounded-xl overflow-hidden border border-purple-500/30 bg-purple-950/20 group">
+              {effectiveCoverUrl && !showReplaceCover ? (
+                <div className="relative rounded-xl overflow-hidden border border-[var(--color-editor-border)] bg-[var(--color-editor-elevated)] group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={aiCoverImage.url}
-                    alt={aiCoverImage.alt || "AI Cover Image"}
-                    className="w-full h-44 object-cover rounded-xl"
+                    src={effectiveCoverUrl}
+                    alt={aiCoverImage?.alt || "Article Cover"}
+                    className="w-full h-44 object-cover rounded-t-xl"
                   />
-                  <div className="absolute top-2 left-2 flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-950/80 backdrop-blur-md border border-purple-500/30 text-[10px] font-bold text-purple-200">
-                    <Sparkles className="w-3 h-3 text-purple-400" /> {t("editor.publish_drawer.ai_generated")}
+                  <div className="absolute top-2 left-2 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/20 text-[10px] font-bold text-white shadow-sm">
+                    {aiCoverImage?.url ? (
+                      <>
+                        <Sparkles className="w-3 h-3 text-purple-400" />
+                        {t("editor.publish_drawer.ai_generated")}
+                      </>
+                    ) : (
+                      <>
+                        <ImageIcon className="w-3 h-3 text-blue-400" />
+                        {t("editor.publish_drawer.current_cover") || "Current Cover"}
+                      </>
+                    )}
                   </div>
 
-                  <div className="p-3 bg-purple-950/40 border-t border-purple-500/20">
-                    <p className="text-[11px] text-purple-200 font-medium truncate">
-                      {aiCoverImage.prompt || aiCoverImage.alt}
-                    </p>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-[10px] text-purple-300/60 font-mono">
-                        {aiCoverImage.width}×{aiCoverImage.height}px
-                      </span>
+                  <div className="p-3 bg-[var(--color-editor-elevated)] border-t border-[var(--color-editor-border)] flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowReplaceCover(true)}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-[var(--color-editor-surface)] hover:bg-[var(--color-editor-border)] text-[var(--color-editor-text)] border border-[var(--color-editor-border)] transition-colors cursor-pointer"
+                    >
+                      <Upload size={12} />
+                      {t("editor.publish_drawer.change_cover") || "Change Cover"}
+                    </button>
+
+                    <div className="flex items-center gap-1.5">
                       <button
                         type="button"
                         onClick={handleRegenerateCover}
                         disabled={isRegeneratingCover}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-purple-600 hover:bg-purple-500 text-white transition-colors cursor-pointer disabled:opacity-50"
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-purple-600 hover:bg-purple-500 text-white transition-colors cursor-pointer disabled:opacity-50"
+                        title={t("editor.publish_drawer.regenerate_cover")}
                       >
                         {isRegeneratingCover ? (
-                          <>
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                            {t("editor.publish_drawer.regenerating")}
-                          </>
+                          <Loader2 className="w-3 h-3 animate-spin" />
                         ) : (
-                          <>
-                            <Wand2 className="w-3 h-3 text-amber-300" />
-                            {t("editor.publish_drawer.regenerate_cover")}
-                          </>
+                          <Wand2 className="w-3 h-3 text-amber-300" />
                         )}
+                        <span className="hidden sm:inline">{t("editor.publish_drawer.regenerate_cover")}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleRemoveCover}
+                        className="p-1.5 text-xs font-semibold rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/25 transition-colors cursor-pointer"
+                        title={t("editor.publish_drawer.remove_cover") || "Remove Cover"}
+                        aria-label="Remove Cover"
+                      >
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="rounded-xl overflow-hidden">
+                <div className="rounded-xl overflow-hidden space-y-2">
                   <ImageUpload
-                    onImageUploaded={onCoverImageUploaded}
-                    onClose={() => {}}
+                    onImageUploaded={(img) => {
+                      onCoverImageUploaded(img);
+                      setShowReplaceCover(false);
+                    }}
+                    onClose={() => setShowReplaceCover(false)}
                     isTitleDisplay={false}
                   />
-                  <div className="mt-2 text-right">
+
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    {effectiveCoverUrl && showReplaceCover && (
+                      <button
+                        type="button"
+                        onClick={() => setShowReplaceCover(false)}
+                        className="text-xs text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] transition-colors cursor-pointer"
+                      >
+                        {t("editor.publish_drawer.cancel")}
+                      </button>
+                    )}
+
                     <button
                       type="button"
                       onClick={handleRegenerateCover}
                       disabled={isRegeneratingCover}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 transition-all cursor-pointer disabled:opacity-50"
+                      className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
                     >
                       {isRegeneratingCover ? (
                         <>
@@ -356,7 +451,131 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
             </div>
           </CollapsibleSection>
 
-          {/* Category Section */}
+          {/* 3. Hero Background Section */}
+          <CollapsibleSection
+            title={t("editor.publish_drawer.background_title")}
+            subtitle={t("editor.publish_drawer.background_subtitle")}
+            expanded={expandedSections.background}
+            onToggle={() => toggleSection("background")}
+          >
+            <div className="space-y-3">
+              {/* Presets Chips */}
+              <div>
+                <label className="text-[11px] font-semibold text-[var(--color-editor-secondary)] uppercase tracking-wider block mb-1.5">
+                  {t("editor.publish_drawer.background_presets")}
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {BG_PRESETS.map((preset) => {
+                    const isSelected = (background || "") === preset.value;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => onBackgroundChange?.(preset.value)}
+                        className={`h-8 rounded-lg text-[10px] font-medium px-2 flex items-center justify-center transition-all cursor-pointer border ${
+                          isSelected
+                            ? "border-[var(--color-editor-accent)] ring-2 ring-[var(--color-editor-accent)]/30 text-white font-bold"
+                            : "border-[var(--color-editor-border)] text-[var(--color-editor-text)] hover:border-[var(--color-editor-secondary)]"
+                        }`}
+                        style={{
+                          background: preset.value || "var(--color-editor-elevated)",
+                        }}
+                      >
+                        <span className={preset.value ? "drop-shadow-sm truncate" : "truncate"}>
+                          {preset.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Custom URL Input */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-[var(--color-editor-secondary)] uppercase tracking-wider">
+                  Custom Image URL or Gradient
+                </label>
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={background || ""}
+                    onChange={(e) => onBackgroundChange?.(e.target.value)}
+                    placeholder={t("editor.publish_drawer.background_placeholder")}
+                    className="flex-1 bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)] rounded-xl px-3 py-2 text-xs text-[var(--color-editor-text)] placeholder:text-[var(--color-editor-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-editor-accent)]/40 focus:border-[var(--color-editor-accent)]/50 transition-all"
+                  />
+                  {background && (
+                    <button
+                      type="button"
+                      onClick={() => onBackgroundChange?.("")}
+                      className="px-2.5 py-2 text-xs font-semibold text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 rounded-xl transition-colors cursor-pointer"
+                      title={t("editor.publish_drawer.background_clear_btn")}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Upload background toggle */}
+              <div>
+                {!showUploadBg ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowUploadBg(true)}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-[var(--color-editor-elevated)] hover:bg-[var(--color-editor-border)]/50 text-[var(--color-editor-text)] border border-[var(--color-editor-border)] transition-colors cursor-pointer"
+                  >
+                    <Upload size={12} />
+                    {t("editor.publish_drawer.background_upload_btn")}
+                  </button>
+                ) : (
+                  <div className="space-y-2 p-2 rounded-xl border border-[var(--color-editor-border)] bg-[var(--color-editor-elevated)]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-[var(--color-editor-text)]">
+                        {t("editor.publish_drawer.background_upload_btn")}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowUploadBg(false)}
+                        className="text-xs text-[var(--color-editor-muted)] hover:text-[var(--color-editor-text)] cursor-pointer"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                    <ImageUpload
+                      onImageUploaded={handleBgUploaded}
+                      onClose={() => setShowUploadBg(false)}
+                      isTitleDisplay={false}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Background Live Preview Box */}
+              {background && (
+                <div
+                  className="relative rounded-xl overflow-hidden p-3 min-h-[75px] flex flex-col justify-end border border-white/10 shadow-inner"
+                  style={
+                    background.startsWith("http") || background.startsWith("/")
+                      ? {
+                          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.65)), url(${background})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                        }
+                      : { background }
+                  }
+                >
+                  <span className="relative z-10 text-xs font-bold text-white drop-shadow-md truncate">
+                    Preview: {initialTopic || "Post Header Title"}
+                  </span>
+                  <span className="relative z-10 text-[10px] text-white/80 drop-shadow-xs line-clamp-1">
+                    {description || "Article preview on custom background..."}
+                  </span>
+                </div>
+              )}
+            </div>
+          </CollapsibleSection>
+
+          {/* 4. Category Section */}
           <CollapsibleSection
             title={t("editor.publish_drawer.category_title")}
             subtitle={t("editor.publish_drawer.category_subtitle")}
@@ -378,12 +597,11 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
                   </option>
                 ))}
               </select>
-              {/* Custom dropdown arrow */}
               <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-editor-muted)] pointer-events-none" />
             </div>
           </CollapsibleSection>
 
-          {/* Series Section */}
+          {/* 5. Series Section */}
           <CollapsibleSection
             title={t("editor.publish_drawer.series_title")}
             subtitle={t("editor.publish_drawer.series_subtitle")}

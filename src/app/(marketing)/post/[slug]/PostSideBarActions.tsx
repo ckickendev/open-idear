@@ -17,18 +17,32 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { ArticleVersionAction } from "@/features/article/versioning";
 import { SaveToCollectionModal } from "@/features/collections";
+import { useTranslation } from "@/app/hook/useTranslation";
 
-export default function PostSidebarActions({ postData }: any) {
+export interface PostSidebarActionsProps {
+  postData: any;
+  variant?: "floating" | "inline" | "both";
+}
+
+export default function PostSidebarActions({
+  postData,
+  variant = "both",
+}: PostSidebarActionsProps) {
+  const { t } = useTranslation();
   const currentUser = authenticationStore((state) => state.currentUser);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isFollowed, setIsFollowed] = useState(false);
-  const [likeCount, setLikeCount] = useState(postData?.likes?.length);
-  const [commentCount, setCommentCount] = useState(postData?.comments?.length);
-  const [display, setDisplay] = useState(false);
+  const [likeCount, setLikeCount] = useState(postData?.likes?.length || 0);
+  const [commentCount, setCommentCount] = useState(postData?.comments?.length || 0);
+  const [displayFloating, setDisplayFloating] = useState(false);
 
   const handleLike = async () => {
+    if (!currentUser?._id) {
+      toast.info(t("component.article.signInToLike", "Please sign in to like this post"));
+      return;
+    }
     try {
       const res = await axios.post(
         `${REACT_APP_ROOT_BACKEND}/comments/voteLike/${postData._id}`,
@@ -38,47 +52,33 @@ export default function PostSidebarActions({ postData }: any) {
       if (res.status !== 200) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-      console.log("data.post.postlike:", res.data.postLike);
       const { postLike } = res.data;
       if (postLike) {
         setIsLiked(true);
-        setLikeCount(likeCount + 1);
+        setLikeCount((prev: number) => prev + 1);
       } else {
         setIsLiked(false);
-        setLikeCount(likeCount - 1);
+        setLikeCount((prev: number) => Math.max(0, prev - 1));
       }
-    } catch (error) {
-      toast.error("Error when like post");
+    } catch {
+      toast.error("Error when liking post");
     }
   };
 
-  const handleBookmark = async () => {
-    try {
-      // Using native fetch with Next.js optimizations
-      const res = await axios.post(
-        `${REACT_APP_ROOT_BACKEND}/post/marked?postId=${postData._id}`,
-        { headers: getHeadersToken() },
-      );
-
-      if (res.status !== 200) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-      console.log("data.post.postlike:", res.data.isMarked);
-      const { isMarked } = res.data;
-      if (isMarked) {
-        toast.success("Post bookmarked successfully");
-      } else {
-        toast.info("Post unbookmarked successfully");
-      }
-      setIsBookmarked(isMarked);
-    } catch (error) {
-      toast.error("Error when bookmarking post");
+  const handleBookmark = () => {
+    if (!currentUser?._id) {
+      toast.info(t("component.article.signInToSave", "Please sign in to save articles to collections"));
+      return;
     }
+    setIsSaveModalOpen(true);
   };
 
   const handleFollow = async () => {
+    if (!currentUser?._id) {
+      toast.info(t("component.article.signInToFollow", "Please sign in to follow authors"));
+      return;
+    }
     try {
-      // Using native fetch with Next.js optimizations
       const res = await axios.patch(
         `${REACT_APP_ROOT_BACKEND}/post/followUser?postId=${postData._id}`,
         { headers: getHeadersToken() },
@@ -87,16 +87,47 @@ export default function PostSidebarActions({ postData }: any) {
       if (res.status !== 200) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-      console.log("data.post.postlike:", res.data.isFollowed);
-      const { isFollowed } = res.data;
-      if (isFollowed) {
-        toast.success("User followed successfully");
+      const { isFollowed: followed } = res.data;
+      if (followed) {
+        toast.success(t("component.article.authorFollowed", "Author followed successfully"));
       } else {
-        toast.info("User unfollowed successfully");
+        toast.info(t("component.article.authorUnfollowed", "Author unfollowed successfully"));
       }
-      setIsFollowed(isFollowed);
-    } catch (error) {
-      toast.error("Error when follow user");
+      setIsFollowed(followed);
+    } catch {
+      toast.error("Error when following author");
+    }
+  };
+
+  const handleShare = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: postData?.title || "Article on OpenIdear",
+          url,
+        });
+        return;
+      } catch {
+        // User cancelled or share dismissed, fall back to clipboard copy
+      }
+    }
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success(t("component.article.shareCopied", "Article link copied to clipboard!"));
+      } catch {
+        toast.info(url);
+      }
+    }
+  };
+
+  const handleCommentScroll = () => {
+    const el =
+      document.getElementById("comments") ||
+      document.getElementById("comment-section");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -108,143 +139,201 @@ export default function PostSidebarActions({ postData }: any) {
           { headers: getHeadersToken() },
         );
 
-        if (res.status !== 200) {
-          throw new Error(`HTTP error! status: ${res.status}`);
+        if (res.status === 200) {
+          const { isLiked: liked, isBookmarked: marked, isFollowed: followed } = res.data;
+          setIsLiked(Boolean(liked));
+          setIsBookmarked(Boolean(marked));
+          setIsFollowed(Boolean(followed));
         }
-        console.log("data.post.postlike:", res.data);
-        const { isLiked, isBookmarked, isFollowed } = res.data;
-        setIsLiked(isLiked);
-        setIsBookmarked(isBookmarked);
-        setIsFollowed(isFollowed);
-      } catch (error) {
-        toast.error("Error when fetching post status");
+      } catch {
+        // Silently continue if unauthenticated or offline
       }
     };
 
-    getStatus();
-  }, []);
+    if (postData?._id) {
+      getStatus();
+    }
+  }, [postData?._id]);
 
   const handleScroll = useCallback(() => {
-    console.log("Scrolled!", window.scrollY);
-
-    if (window.scrollY > 600) {
-      setDisplay(true);
-    } else {
-      setDisplay(false);
-    }
-
-    if (window.scrollY > 3000) {
-      setDisplay(false);
-    }
-  }, []); // Empty dependency array means this function is memoized and won't re-create on every render
+    const scrollY = window.scrollY;
+    setDisplayFloating(scrollY > 500 && scrollY < 3200);
+  }, []);
 
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
+    if (variant === "inline") return;
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [handleScroll]); // Dependency array includes handleScroll to ensure the listener is updated if handleScroll changes
+  }, [handleScroll, variant]);
+
+  const renderInlineActions = () => (
+    <div className="flex items-center flex-wrap gap-2 text-muted-foreground">
+      {/* Like Button */}
+      <button
+        type="button"
+        onClick={handleLike}
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer shadow-xs ${
+          isLiked
+            ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-semibold"
+            : "bg-muted/60 hover:bg-muted text-foreground/80 hover:text-foreground border border-border/60"
+        }`}
+        title="Like article"
+      >
+        <Heart size={14} className={isLiked ? "fill-rose-500 text-rose-500" : ""} />
+        <span>{likeCount}</span>
+      </button>
+
+      {/* Save to Collection Button */}
+      <button
+        type="button"
+        onClick={handleBookmark}
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer shadow-xs ${
+          isBookmarked
+            ? "bg-primary/10 text-primary border border-primary/30 font-semibold"
+            : "bg-muted/60 hover:bg-muted text-foreground/80 hover:text-foreground border border-border/60"
+        }`}
+        title="Save to Collection"
+      >
+        <Bookmark size={14} className={isBookmarked ? "fill-primary text-primary" : ""} />
+        <span>Save</span>
+      </button>
+
+      {/* Comments Button */}
+      <button
+        type="button"
+        onClick={handleCommentScroll}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/60 hover:bg-muted text-foreground/80 hover:text-foreground border border-border/60 transition-all duration-200 cursor-pointer shadow-xs"
+        title="Jump to Comments"
+      >
+        <MessageCircle size={14} />
+        <span>{commentCount}</span>
+      </button>
+
+      {/* Share Button */}
+      <button
+        type="button"
+        onClick={handleShare}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/60 hover:bg-muted text-foreground/80 hover:text-foreground border border-border/60 transition-all duration-200 cursor-pointer shadow-xs"
+        title={t("component.article.share", "Share article")}
+      >
+        <Share2 size={14} />
+        <span>{t("component.article.share", "Share")}</span>
+      </button>
+    </div>
+  );
+
+  const renderFloatingSidebar = () => {
+    if (!displayFloating) return null;
+
+    return (
+      <div className="hidden xl:flex fixed left-8 top-1/2 -translate-y-1/2 flex-col items-center gap-4 z-30 p-2.5 rounded-full bg-background/80 backdrop-blur-md border border-border/60 shadow-lg shadow-black/5 dark:shadow-black/40 animate-in fade-in slide-in-from-left-4 duration-300">
+        {/* Like Button */}
+        <div className="flex flex-col items-center">
+          <button
+            type="button"
+            onClick={handleLike}
+            className={`p-2.5 rounded-full transition-all duration-200 hover:scale-110 cursor-pointer ${
+              isLiked
+                ? "bg-rose-500/15 text-rose-600 dark:text-rose-400"
+                : "hover:bg-muted text-muted-foreground hover:text-foreground"
+            }`}
+            title="Like article"
+          >
+            <Heart size={18} className={isLiked ? "fill-current" : ""} />
+          </button>
+          <span className="text-[11px] font-mono font-medium text-muted-foreground mt-0.5">
+            {likeCount}
+          </span>
+        </div>
+
+        {/* Author Avatar with Follow pill */}
+        {postData?.author && (
+          <div className="relative group">
+            <Link
+              href={`/profile/${postData.author.username || postData.author.name}`}
+              className="block w-9 h-9 rounded-full overflow-hidden ring-2 ring-border hover:ring-primary transition-all cursor-pointer shadow-xs"
+              title={`View ${postData.author.name || postData.author.username}'s profile`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={postData.author.avatar || postData.author.avatarUrl || "/avatar.png"}
+                alt="Author"
+                className="w-full h-full object-cover"
+              />
+            </Link>
+            <button
+              type="button"
+              onClick={handleFollow}
+              className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white transition-transform hover:scale-110 cursor-pointer ${
+                isFollowed ? "bg-emerald-500 hover:bg-emerald-600" : "bg-primary hover:bg-primary/90"
+              }`}
+              title={isFollowed ? "Unfollow" : "Follow"}
+            >
+              {isFollowed ? <Check size={10} /> : <Plus size={10} />}
+            </button>
+          </div>
+        )}
+
+        {/* Save to Collection Button */}
+        <button
+          type="button"
+          onClick={handleBookmark}
+          title="Save to Collection"
+          className={`p-2.5 rounded-full transition-all duration-200 hover:scale-110 cursor-pointer ${
+            isBookmarked
+              ? "bg-primary/15 text-primary"
+              : "hover:bg-muted text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Bookmark size={18} className={isBookmarked ? "fill-current" : ""} />
+        </button>
+
+        {/* Comments Button */}
+        <div className="flex flex-col items-center">
+          <button
+            type="button"
+            onClick={handleCommentScroll}
+            className="p-2.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-110 cursor-pointer"
+            title="Comments"
+          >
+            <MessageCircle size={18} />
+          </button>
+          <span className="text-[11px] font-mono font-medium text-muted-foreground mt-0.5">
+            {commentCount}
+          </span>
+        </div>
+
+        {/* Version History Button */}
+        {postData?.slug && (
+          <ArticleVersionAction
+            slug={postData.slug}
+            postId={postData._id}
+            currentVersion={postData.latestVersion || postData.currentVersionId?.version || "1.0"}
+            currentContent={postData.content || postData.text || ""}
+            authorId={postData.author?._id || postData.author}
+            variant="sidebar"
+          />
+        )}
+
+        {/* Share Button */}
+        <button
+          type="button"
+          onClick={handleShare}
+          className="p-2.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-110 cursor-pointer"
+          title="Share article"
+        >
+          <Share2 size={18} />
+        </button>
+      </div>
+    );
+  };
 
   return (
     <>
-      {display && (
-        <div className="hidden md:block fixed left-12 top-1/2 transform -translate-y-1/2 flex flex-col items-center space-y-6 z-10">
-          {/* Like Button with Heart */}
-          <div className="flex flex-col items-center">
-            <button
-              onClick={handleLike}
-              className={`p-3 rounded-full transition-all duration-200 hover:scale-110 ${
-                isLiked
-                  ? "bg-red-100 text-red-500 text-xs hover:bg-red-200"
-                  : "bg-muted text-muted-foreground hover:bg-muted"
-              } cursor-pointer`}
-            >
-              <Heart size={20} className={isLiked ? "fill-current" : ""} />
-            </button>
-            <span className="text-sm font-medium text-foreground/80 mt-1">
-              {likeCount}
-            </span>
-          </div>
-
-          {/* Author Avatar */}
-          <div className="relative">
-            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-border hover:border-border transition-colors cursor-pointer">
-              <Link href={`/profile/${postData.author.username}`}>
-                <img
-                  src={postData.author.avatar}
-                  alt="Author avatar image"
-                  className="w-full h-full object-cover"
-                />
-              </Link>
-            </div>
-            {/* Small plus icon for follow */}
-            {isFollowed ? (
-              <div
-                onClick={handleFollow}
-                className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors"
-              >
-                <Check size={12} className="text-white" />
-              </div>
-            ) : (
-              <div
-                onClick={handleFollow}
-                className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors"
-              >
-                <Plus size={12} className="text-white" />
-              </div>
-            )}
-          </div>
-
-          {/* Save to Collection Button */}
-          <button
-            onClick={() => {
-              if (!currentUser?._id) {
-                toast.info("Please sign in to save articles to collections");
-                return;
-              }
-              setIsSaveModalOpen(true);
-            }}
-            title="Save to Collection"
-            className={`p-3 rounded-full transition-all duration-200 hover:scale-110 ${
-              isBookmarked
-                ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400"
-                : "bg-muted text-muted-foreground hover:bg-muted"
-            } cursor-pointer`}
-          >
-            <Bookmark
-              size={20}
-              className={isBookmarked ? "fill-current" : ""}
-            />
-          </button>
-
-          {/* Comments */}
-          <div className="flex flex-col items-center">
-            <button className="p-3 rounded-full bg-muted text-muted-foreground hover:bg-muted transition-all duration-200 hover:scale-110 cursor-pointer">
-              <MessageCircle size={20} />
-            </button>
-            <span className="text-sm font-medium text-foreground/80 mt-1">
-              {commentCount}
-            </span>
-          </div>
-
-          {/* Version History Button */}
-          {postData?.slug && (
-            <ArticleVersionAction
-              slug={postData.slug}
-              postId={postData._id}
-              currentVersion={postData.latestVersion || postData.currentVersionId?.version || "1.0"}
-              currentContent={postData.content || postData.text || ""}
-              authorId={postData.author?._id || postData.author}
-              variant="sidebar"
-            />
-          )}
-
-          {/* Share Button */}
-          <button className="p-3 rounded-full bg-muted text-muted-foreground hover:bg-muted transition-all duration-200 hover:scale-110 cursor-pointer">
-            <Share2 size={20} />
-          </button>
-        </div>
-      )}
+      {variant !== "floating" && renderInlineActions()}
+      {variant !== "inline" && renderFloatingSidebar()}
 
       {/* ── Save To Collection Modal ── */}
       <SaveToCollectionModal

@@ -15,6 +15,7 @@ export interface PublishConfig {
   postId: string;
   description: string;
   image: string | null;
+  background?: string;
   series: string;
   category: string;
   locale?: "en" | "vi";
@@ -59,7 +60,12 @@ export interface PublishDrawerProps {
   description: string;
   onDescriptionChange: (val: string) => void;
   /** Cover image */
-  onCoverImageUploaded: (image: MediaAsset) => void;
+  currentImage?: string | null;
+  onCoverImageUploaded: (image: MediaAsset | any) => void;
+  onRemoveCoverImage?: () => void;
+  /** Hero Background */
+  background?: string;
+  onBackgroundChange?: (val: string) => void;
   /** Publishing in progress */
   isPublishing?: boolean;
 }

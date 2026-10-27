@@ -71,7 +71,40 @@ const vi = {
       "contact": "Liên hệ",
       "ava": "CHÚNG TÔI CŨNG CÓ MẶT TRÊN",
       "hotcourse": "Khóa học nổi bật",
-      "hottoppic": "Chủ đề nổi bật"
+      "hottoppic": "Chủ đề nổi bật",
+      "copyright": "© {year} OpenIdear. Tất cả quyền được bảo lưu."
+    },
+    "comment": {
+      "sortBy": "Sắp xếp theo:",
+      "top": "Nổi bật",
+      "newest": "Mới nhất",
+      "placeholder": "Viết bình luận...",
+      "charLimit": "{current}/{max} ký tự",
+      "post": "Đăng bình luận",
+      "submitting": "Đang gửi...",
+      "reply": "Trả lời",
+      "report": "Báo cáo",
+      "replyPlaceholder": "Viết câu trả lời của bạn...",
+      "send": "Gửi",
+      "cancel": "Hủy",
+      "viewMoreReplies": "Xem thêm {count} câu trả lời",
+      "loadMore": "Tải thêm bình luận",
+      "loading": "Đang tải...",
+      "edited": "(đã chỉnh sửa)"
+    },
+    "article": {
+      "toc": "Mục lục",
+      "minRead": "phút đọc",
+      "history": "Lịch sử",
+      "share": "Chia sẻ",
+      "shareCopied": "Đã sao chép liên kết bài viết vào clipboard!",
+      "signInToLike": "Vui lòng đăng nhập để thích bài viết",
+      "signInToSave": "Vui lòng đăng nhập để lưu vào bộ sưu tập",
+      "signInToFollow": "Vui lòng đăng nhập để theo dõi tác giả",
+      "authorFollowed": "Đã theo dõi tác giả thành công",
+      "authorUnfollowed": "Đã hủy theo dõi tác giả",
+      "relatedTopics": "Chủ đề liên quan",
+      "noRelatedTopics": "Không có chủ đề liên quan."
     },
     "lastest_feature": {
       "last": "Post gần đây",
@@ -239,7 +272,18 @@ const vi = {
       "update_action": "Cập nhật ({locale})",
       "publish_action": "Xuất bản ({locale})",
       "cover_success": "Ảnh bìa AI đã được tạo và tải lên Cloudinary!",
-      "cover_error": "Không thể tạo lại ảnh bìa AI."
+      "cover_error": "Không thể tạo lại ảnh bìa AI.",
+      "background_title": "Hình nền bài viết",
+      "background_subtitle": "Ảnh nền hoặc kiểu nền",
+      "background_placeholder": "Dán URL hình ảnh (https://...) hoặc mã gradient CSS...",
+      "background_presets": "Mẫu có sẵn",
+      "background_upload_btn": "Tải lên ảnh nền",
+      "background_clear_btn": "Xóa hình nền",
+      "change_cover": "Thay đổi ảnh bìa",
+      "remove_cover": "Xóa ảnh bìa",
+      "current_cover": "Ảnh bìa hiện tại",
+      "click_to_edit_publish": "Đã xuất bản — Bấm để chỉnh sửa thông tin xuất bản",
+      "live_post_hint": "Bài viết đã xuất bản: Thay đổi mô tả, hình ảnh hoặc ảnh nền sẽ được cập nhật ngay lập tức."
     },
     "seo_sidebar": {
       "title": "Điểm SEO",

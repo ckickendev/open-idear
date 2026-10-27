@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import Article from "./Article";
 import { useTranslation } from "@/app/hook/useTranslation";
+import { usePathname } from "next/navigation";
 import axios from "axios";
 import { MainFeatureSkeleton, PostCardSkeleton } from "@/components/ui/Skeletons";
 import MainFeature from "./MainFeature";
@@ -12,7 +13,9 @@ import ArticleRightSide from "./ArticleRightSide";
 import Link from "next/link";
 
 const LastestFeature = () => {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const pathname = usePathname();
+  const activeLocale = pathname?.startsWith("/vi") ? "vi" : (lang || "en");
   const [selectFeature, setSelectFeature] = useState(0);
   const [allCategory, setAllCategory] = useState<any[]>([
     { name: "All", slug: "all" },
@@ -23,16 +26,12 @@ const LastestFeature = () => {
   useEffect(() => {
     let isMounted = true;
     const fetchRecentlyData = async () => {
-      const rootApi = ENV?.ROOT_API;
-      if (!rootApi) {
-        setIsLocalLoading(false);
-        return;
-      }
+      const rootApi = ENV?.ROOT_API || "http://localhost:5001";
       try {
         setIsLocalLoading(true);
         const response = await axios.get(
-          `${rootApi}/post/getRecentlyData`,
-          { timeout: 4000 }
+          `${rootApi}/post/getRecentlyData?locale=${activeLocale}`,
+          { timeout: 10000 }
         );
 
         if (!isMounted) return;
@@ -61,20 +60,22 @@ const LastestFeature = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [activeLocale]);
 
   const onSelectFeature = async (index: number) => {
     setSelectFeature(index);
 
-    const rootApi = ENV?.ROOT_API;
+    const rootApi = ENV?.ROOT_API || "http://localhost:5001";
     if (!rootApi || !allCategory[index]) return;
 
     try {
       setIsLocalLoading(true);
-      const response = await axios.get(
-        `${rootApi}/post/getRecentlyDataByFeatures?feature=${allCategory[index].slug}`,
-        { timeout: 4000 }
-      );
+      const isAll = allCategory[index].slug === "all";
+      const endpoint = isAll
+        ? `${rootApi}/post/getRecentlyData?locale=${activeLocale}`
+        : `${rootApi}/post/getRecentlyDataByFeatures?feature=${allCategory[index].slug}&locale=${activeLocale}`;
+
+      const response = await axios.get(endpoint, { timeout: 10000 });
       if (response.status === 200 && response.data?.recentlyData?.posts) {
         setAllPosts(response.data.recentlyData.posts);
       }
@@ -92,7 +93,7 @@ const LastestFeature = () => {
         : category.name;
       return (
         <button
-          key={index}
+          key={category.slug || index}
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
             index === selectFeature
               ? "bg-primary/10 text-primary border border-primary/20"
@@ -105,6 +106,8 @@ const LastestFeature = () => {
       );
     });
   };
+
+  const moreHref = activeLocale === "vi" ? "/vi/recently-post" : "/recently-post";
 
   return (
     <>
@@ -121,7 +124,7 @@ const LastestFeature = () => {
 
           <div className="flex items-center">
             <Link
-              href="/recently-post"
+              href={moreHref}
               className="inline-flex items-center text-muted-foreground hover:text-foreground text-xs font-semibold cursor-pointer group transition-colors"
             >
               <span>
@@ -132,41 +135,48 @@ const LastestFeature = () => {
           </div>
         </div>
 
-        {/* Main Featured Content */}
+        {/* Content area */}
         {isLocalLoading ? (
-          <div className="flex flex-col lg:flex-row gap-6 mb-6">
-            <MainFeatureSkeleton />
-            <div className="w-full lg:w-1/5">
-              <PostCardSkeleton />
+          <>
+            <div className="flex flex-col lg:flex-row gap-6 mb-6">
+              <MainFeatureSkeleton />
+              <div className="w-full lg:w-1/5">
+                <PostCardSkeleton />
+              </div>
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+              {Array.from({ length: 5 }).map((_, idx) => (
+                <PostCardSkeleton key={idx} />
+              ))}
+            </div>
+          </>
+        ) : allPosts.length === 0 ? (
+          <div className="py-16 text-center text-muted-foreground text-sm border border-dashed border-border/50 rounded-xl">
+            {t("component.lastest_feature.noPosts") !== "component.lastest_feature.noPosts"
+              ? t("component.lastest_feature.noPosts")
+              : "No posts found."}
           </div>
         ) : (
-          <div className="flex flex-col lg:flex-row gap-6 mb-6">
-            {allPosts.length > 0 && <MainFeature postData={allPosts[0]} />}
-            <div className="w-full lg:w-1/5">
-              {allPosts.length > 1 && <ArticleRightSide postData={allPosts[1]} />}
+          <>
+            <div className="flex flex-col lg:flex-row gap-6 mb-6">
+              {allPosts[0] && (
+                <MainFeature postData={allPosts[0]} />
+              )}
+              {allPosts.length > 1 && (
+                <div className="w-full lg:w-1/5">
+                  <ArticleRightSide postData={allPosts[1]} />
+                </div>
+              )}
             </div>
-          </div>
-        )}
 
-        {isLocalLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            {Array.from({ length: 5 }).map((_, idx) => (
-              <PostCardSkeleton key={idx} />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            {allPosts.length > 2 ? (
-              allPosts.slice(2, 7).map((data: PostInterface, index: number) => {
-                return <Article key={index} postData={data} />;
-              })
-            ) : (
-              <div className="col-span-full py-12 text-center text-muted-foreground text-sm">
-                {t("component.lastest_feature.noPosts") !== "component.lastest_feature.noPosts" ? t("component.lastest_feature.noPosts") : "No posts found."}
+            {allPosts.length > 2 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                {allPosts.slice(2, 7).map((data: PostInterface, index: number) => {
+                  return <Article key={data._id || index} postData={data} />;
+                })}
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </>

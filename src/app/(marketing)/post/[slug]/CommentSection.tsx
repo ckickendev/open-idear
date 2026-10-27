@@ -10,6 +10,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { TextAreaCustom } from "@/components/common/TextAreaCustom";
 import { CommentSkeleton } from "@/components/ui/Skeletons";
+import { useTranslation } from "@/app/hook/useTranslation";
 
 type Comment = {
   _id: string;
@@ -32,6 +33,7 @@ type Comment = {
 };
 
 function CommentSection({ postId }: { postId: string }) {
+  const { t } = useTranslation();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -208,18 +210,18 @@ function CommentSection({ postId }: { postId: string }) {
     <div className="comment-section">
       {/* Sort controls */}
       <div className="comment-controls flex gap-4 mb-4">
-        <span className="font-semibold">Sort by:</span>
+        <span className="font-semibold">{t("component.comment.sortBy", "Sort by:")}</span>
         <button
           onClick={() => setSortBy("hot")}
           className={`px-3 cursor-pointer py-1 rounded ${sortBy === "hot" ? "bg-blue-500 text-white" : "bg-muted"}`}
         >
-          Top
+          {t("component.comment.top", "Top")}
         </button>
         <button
           onClick={() => setSortBy("new")}
           className={`px-3 cursor-pointer py-1 rounded ${sortBy === "new" ? "bg-blue-500 text-white" : "bg-muted"}`}
         >
-          Newest
+          {t("component.comment.newest", "Newest")}
         </button>
       </div>
 
@@ -254,7 +256,7 @@ function CommentSection({ postId }: { postId: string }) {
           disabled={loading}
           className="load-more-btn mt-4 px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
         >
-          {loading ? "Loading..." : "Load more comments"}
+          {loading ? t("component.comment.loading", "Loading...") : t("component.comment.loadMore", "Load more comments")}
         </button>
       )}
     </div>
@@ -275,6 +277,7 @@ function CommentItem({
   onVote,
   onLoadMoreReplies,
 }: CommentItemProps) {
+  const { t } = useTranslation();
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyContent, setReplyContent] = useState("");
 
@@ -308,7 +311,7 @@ function CommentItem({
         </span>
         <span className="text-muted-foreground text-sm">{comment.timeAgo}</span>
         {comment.isEdited && (
-          <span className="text-muted-foreground text-xs">(edited)</span>
+          <span className="text-muted-foreground text-xs">{t("component.comment.edited", "(edited)")}</span>
         )}
       </div>
 
@@ -335,15 +338,15 @@ function CommentItem({
         {comment.level < 10 && (
           <button
             onClick={() => setShowReplyForm(!showReplyForm)}
-            className="text-blue-500 hover:text-blue-600"
+            className="text-blue-500 hover:text-blue-600 cursor-pointer"
           >
-            Reply
+            {t("component.comment.reply", "Reply")}
           </button>
         )}
 
         {/* Report button */}
-        <button className="text-muted-foreground hover:text-muted-foreground">
-          Report
+        <button className="text-muted-foreground hover:text-foreground cursor-pointer">
+          {t("component.comment.report", "Report")}
         </button>
       </div>
 
@@ -356,24 +359,24 @@ function CommentItem({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onChange={(e: any) => setReplyContent(e.target.value)}
             rows={3}
-            placeholder="Write your reply..."
+            placeholder={t("component.comment.replyPlaceholder", "Write your reply...")}
           />
           <div className="flex gap-2 mt-2">
             <button
               onClick={handleReply}
               disabled={!replyContent.trim()}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 cursor-pointer"
             >
-              Send
+              {t("component.comment.send", "Send")}
             </button>
             <button
               onClick={() => {
                 setShowReplyForm(false);
                 setReplyContent("");
               }}
-              className="px-4 py-2 border border-border rounded hover:bg-muted/30"
+              className="px-4 py-2 border border-border rounded hover:bg-muted/30 cursor-pointer"
             >
-              Cancel
+              {t("component.comment.cancel", "Cancel")}
             </button>
           </div>
         </div>
@@ -398,9 +401,9 @@ function CommentItem({
               onClick={() =>
                 onLoadMoreReplies(comment._id, comment.replies.length)
               }
-              className="load-more-replies mt-2 text-blue-500 hover:text-blue-600 text-sm"
+              className="load-more-replies mt-2 text-blue-500 hover:text-blue-600 text-sm cursor-pointer"
             >
-              View {comment.totalReplies - comment.replies.length} more replies
+              {t("component.comment.viewMoreReplies", { count: comment.totalReplies - comment.replies.length }, `View ${comment.totalReplies - comment.replies.length} more replies`)}
             </button>
           )}
         </div>
@@ -412,13 +415,17 @@ function CommentItem({
 // Comment form component
 function CommentForm({
   onSubmit,
-  placeholder = "Write a comment...",
+  placeholder,
 }: {
   onSubmit: (content: string) => Promise<void> | void;
   placeholder?: string;
 }) {
+  const { t, lang } = useTranslation();
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const effectivePlaceholder =
+    placeholder || t("component.comment.placeholder", "Write a comment...");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -435,27 +442,31 @@ function CommentForm({
     }
   };
 
+  const charUnit = lang === "vi" ? "ký tự" : "characters";
+
   return (
     <form onSubmit={handleSubmit} className="comment-form mb-6">
       <div className="form-group">
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder={placeholder}
-          className="w-full p-3 border border-border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder={effectivePlaceholder}
+          className="w-full p-3 border border-border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-background text-foreground"
           rows={4}
           maxLength={2000}
         />
         <div className="flex justify-between items-center mt-2">
           <span className="text-sm text-muted-foreground">
-            {content.length}/2000 characters
+            {content.length}/2000 {charUnit}
           </span>
           <button
             type="submit"
             disabled={!content.trim() || isSubmitting}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
           >
-            {isSubmitting ? "Submitting..." : "Post Comment"}
+            {isSubmitting
+              ? t("component.comment.submitting", "Submitting...")
+              : t("component.comment.post", "Post Comment")}
           </button>
         </div>
       </div>

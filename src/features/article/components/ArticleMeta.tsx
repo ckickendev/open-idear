@@ -24,6 +24,7 @@
 // =============================================================================
 
 import React from "react";
+import { Calendar, Clock } from "lucide-react";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -39,7 +40,6 @@ export interface ArticleMetaAuthor {
 export interface ArticleMetaProps {
   /**
    * Category label displayed as an eyebrow above the title.
-   * Rendered as a presentational span — not a link (links belong in the page).
    */
   category?: string;
 
@@ -54,35 +54,55 @@ export interface ArticleMetaProps {
 
   /**
    * ISO 8601 publication date string (e.g. "2026-08-24T15:00:00Z").
-   * Formatted into a human-readable date at render time.
    */
   publishedAt?: string;
 
   /**
    * ISO 8601 date of last update.
-   * Only shown when it differs from publishedAt by more than one day.
    */
   updatedAt?: string;
 
   /**
-   * Final display reading time in minutes, already computed and resolved
-   * by the page (combines AI estimate + calculateReadingTime fallback).
+   * Final display reading time in minutes.
    */
   readingTimeMinutes?: number;
 
   /**
    * Optional tag strings shown below the metadata row.
-   * Not rendered when empty or absent.
    */
   tags?: string[];
+
+  /**
+   * Featured cover image rendered in high-end editorial frame below author bar.
+   */
+  coverImage?: {
+    url?: string;
+    description?: string;
+  };
+
+  /**
+   * Version action button or pill (e.g. History v1.0).
+   */
+  versionAction?: React.ReactNode;
+
+  /**
+   * Inline actions toolbar (Like, Save, Comment, Share).
+   */
+  actions?: React.ReactNode;
+
+  /**
+   * Active locale ("en" | "vi"). Defaults to "en".
+   */
+  locale?: "en" | "vi";
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Format an ISO timestamp to a human-readable date string. */
-function formatDate(iso: string): string {
+function formatDate(iso: string, locale: "en" | "vi" = "en"): string {
   try {
-    return new Date(iso).toLocaleDateString("en-US", {
+    const localeString = locale === "vi" ? "vi-VN" : "en-US";
+    return new Date(iso).toLocaleDateString(localeString, {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -92,24 +112,21 @@ function formatDate(iso: string): string {
   }
 }
 
-/**
- * Returns true if two ISO date strings represent different calendar days.
- * Used to suppress the "Updated" label when the post was published and updated
- * on the same day.
- */
-function isDifferentDay(isoA: string, isoB: string): boolean {
-  try {
-    const a = new Date(isoA).toDateString();
-    const b = new Date(isoB).toDateString();
-    return a !== b;
-  } catch {
-    return false;
-  }
+/** Check if image caption is a generic placeholder like "Uploaded Image". */
+function isGenericCaption(desc?: string): boolean {
+  if (!desc) return true;
+  const lower = desc.trim().toLowerCase();
+  return (
+    lower === "uploaded image" ||
+    lower === "image" ||
+    lower === "untitled" ||
+    lower === "null" ||
+    lower === "undefined"
+  );
 }
 
 /**
  * Generates a simple initials-based avatar as an inline SVG data URI.
- * Used when avatarUrl is absent — no external service needed.
  */
 function getInitialsAvatar(name: string): string {
   const initials = name
@@ -119,12 +136,11 @@ function getInitialsAvatar(name: string): string {
     .toUpperCase()
     .slice(0, 2);
 
-  // Simple deterministic hue from first char code
   const hue = ((name.charCodeAt(0) ?? 65) * 37) % 360;
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-  <circle cx="20" cy="20" r="20" fill="hsl(${hue},55%,48%)"/>
-  <text x="20" y="26" text-anchor="middle" font-size="15" font-family="system-ui,sans-serif" font-weight="600" fill="white">${initials}</text>
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
+  <circle cx="22" cy="22" r="22" fill="hsl(${hue},55%,48%)"/>
+  <text x="22" y="28" text-anchor="middle" font-size="16" font-family="system-ui,sans-serif" font-weight="600" fill="white">${initials}</text>
 </svg>`;
 
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
@@ -141,92 +157,123 @@ export default function ArticleMeta({
   updatedAt,
   readingTimeMinutes,
   tags,
+  coverImage,
+  versionAction,
+  actions,
+  locale = "en",
 }: ArticleMetaProps) {
-  // Determine whether to show the "Updated" segment
-  const showUpdated =
-    !!updatedAt &&
-    !!publishedAt &&
-    isDifferentDay(publishedAt, updatedAt);
-
   return (
-    <header className="ed-article-meta">
-      {/* ── 1. Category eyebrow ────────────────────────────────────────────── */}
-      {category && (
-        <span className="ed-article-meta__category" aria-label={`Category: ${category}`}>
-          {category}
-        </span>
-      )}
+    <header className="ed-article-meta pt-4 pb-2">
+      {/* ── 1. Eyebrow Metadata Row ────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center gap-2.5 sm:gap-3.5 text-xs text-muted-foreground mb-4">
+        {category && (
+          <span
+            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 shadow-xs"
+            aria-label={`Category: ${category}`}
+          >
+            {category}
+          </span>
+        )}
 
-      {/* ── 2. Article title ────────────────────────────────────────────────── */}
-      <h1 className="ed-article-meta__title">{title}</h1>
+        {publishedAt && (
+          <span className="inline-flex items-center gap-1.5 font-medium">
+            <Calendar size={13} className="text-muted-foreground/80 shrink-0" />
+            <time dateTime={publishedAt}>{formatDate(publishedAt, locale)}</time>
+          </span>
+        )}
 
-      {/* ── 3. Description ──────────────────────────────────────────────────── */}
-      {description && (
-        <p className="ed-article-meta__description">{description}</p>
-      )}
-
-      {/* ── 4. Author identity ──────────────────────────────────────────────── */}
-      {author && (
-        <div className="ed-article-meta__author">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={author.avatarUrl ?? getInitialsAvatar(author.name)}
-            alt={author.avatarUrl ? `${author.name}'s avatar` : ""}
-            aria-hidden={!author.avatarUrl}
-            className="ed-article-meta__avatar"
-            width={40}
-            height={40}
-            loading="eager"
-          />
-          <div className="ed-article-meta__author-info">
-            <span className="ed-article-meta__author-name">{author.name}</span>
-            {author.role && (
-              <span className="ed-article-meta__author-role">{author.role}</span>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── 5. Publication metadata ─────────────────────────────────────────── */}
-      {(publishedAt || readingTimeMinutes !== undefined) && (
-        <div className="ed-article-meta__pub-row" aria-label="Article metadata">
-          {publishedAt && (
-            <span className="ed-article-meta__pub-date">
-              Published{" "}
-              <time dateTime={publishedAt}>{formatDate(publishedAt)}</time>
+        {readingTimeMinutes !== undefined && (
+          <>
+            <span className="text-border select-none" aria-hidden="true">·</span>
+            <span
+              className="inline-flex items-center gap-1.5 font-medium"
+              aria-label={locale === "vi" ? `Thời gian đọc ước tính: ${readingTimeMinutes} phút` : `Estimated reading time: ${readingTimeMinutes} minutes`}
+            >
+              <Clock size={13} className="text-muted-foreground/80 shrink-0" />
+              {readingTimeMinutes} {locale === "vi" ? "phút đọc" : "min read"}
             </span>
-          )}
+          </>
+        )}
 
-          {showUpdated && (
-            <>
-              <span className="ed-article-meta__dot" aria-hidden="true">·</span>
-              <span className="ed-article-meta__pub-date">
-                Updated{" "}
-                <time dateTime={updatedAt!}>{formatDate(updatedAt!)}</time>
-              </span>
-            </>
-          )}
+        {versionAction && (
+          <>
+            <span className="text-border select-none" aria-hidden="true">·</span>
+            <div className="inline-flex items-center">{versionAction}</div>
+          </>
+        )}
+      </div>
 
-          {readingTimeMinutes !== undefined && (
-            <>
-              <span className="ed-article-meta__dot" aria-hidden="true">·</span>
-              <span
-                className="ed-article-meta__reading-time"
-                aria-label={`Estimated reading time: ${readingTimeMinutes} minutes`}
-              >
-                {readingTimeMinutes} min read
+      {/* ── 2. Article Title ────────────────────────────────────────────────── */}
+      <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[2.65rem] font-extrabold tracking-tight text-foreground leading-[1.18] mb-4 overflow-wrap-break-word">
+        {title}
+      </h1>
+
+      {/* ── 3. Description / Excerpt ────────────────────────────────────────── */}
+      {description && (
+        <p className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed max-w-3xl mb-6">
+          {description}
+        </p>
+      )}
+
+      {/* ── 4. Author Identity & Inline Actions Toolbar ──────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4 border-y border-border/50 mb-8">
+        {author && (
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={author.avatarUrl ?? getInitialsAvatar(author.name)}
+              alt={author.avatarUrl ? `${author.name}'s avatar` : ""}
+              aria-hidden={!author.avatarUrl}
+              className="w-11 h-11 rounded-full object-cover ring-2 ring-border/60 shrink-0 shadow-xs"
+              width={44}
+              height={44}
+              loading="eager"
+            />
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-foreground leading-snug">
+                {author.name}
               </span>
-            </>
+              {author.role && (
+                <span className="text-xs text-muted-foreground leading-tight">
+                  {author.role}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {actions && <div className="flex items-center flex-wrap gap-2">{actions}</div>}
+      </div>
+
+      {/* ── 5. Featured Cover Image ──────────────────────────────────────────── */}
+      {coverImage?.url && (
+        <div className="mb-8">
+          <div className="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-2xl overflow-hidden border border-border/40 shadow-xl shadow-black/5 dark:shadow-black/30 group">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={coverImage.url}
+              alt={title}
+              className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+              loading="eager"
+            />
+          </div>
+          {coverImage.description && !isGenericCaption(coverImage.description) && (
+            <p className="text-xs text-muted-foreground text-center italic mt-2.5">
+              {coverImage.description}
+            </p>
           )}
         </div>
       )}
 
       {/* ── 6. Tags ─────────────────────────────────────────────────────────── */}
       {tags && tags.length > 0 && (
-        <div className="ed-article-meta__tags" aria-label="Article tags">
+        <div className="flex flex-wrap gap-2 mb-6" aria-label="Article tags">
           {tags.map((tag) => (
-            <span key={tag} className="ed-article-meta__tag">
-              {tag}
+            <span
+              key={tag}
+              className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-muted/60 hover:bg-muted text-muted-foreground border border-border/50 transition-colors"
+            >
+              #{tag}
             </span>
           ))}
         </div>

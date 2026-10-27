@@ -56,23 +56,45 @@ export const removeToken = () => {
 };
 
 const apiClient = axios.create({
-  baseURL: ENV.ROOT_API || "http://localhost:5000",
+  baseURL: ENV.ROOT_API || "http://localhost:5001",
 });
 
 export const getHeadersToken = () => {
   const token = getToken();
+  let locale = "en";
+  if (typeof window !== "undefined") {
+    try {
+      const saved = localStorage.getItem("language");
+      if (saved === "en" || saved === "vi") {
+        locale = saved;
+      } else {
+        const cookieMatch = document.cookie.match(/(?:^|;\s*)NEXT_LOCALE=([^;]*)/);
+        if (cookieMatch && (cookieMatch[1] === "en" || cookieMatch[1] === "vi")) {
+          locale = cookieMatch[1];
+        } else if (window.location.pathname.startsWith("/vi")) {
+          locale = "vi";
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
   return {
     Authorization: token ? `Bearer ${token}` : "",
+    "x-locale": locale,
   };
 };
 
-// Request interceptor to attach token automatically
+// Request interceptor to attach token and locale automatically
 apiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
       const headers = getHeadersToken();
       if (headers.Authorization) {
         config.headers.Authorization = headers.Authorization;
+      }
+      if (!config.headers["x-locale"] && headers["x-locale"]) {
+        config.headers["x-locale"] = headers["x-locale"];
       }
     }
     return config;

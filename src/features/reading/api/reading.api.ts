@@ -16,9 +16,10 @@ export const readingApi = {
    * GET /reading/continue
    * Returns list of recently read articles for the authenticated user.
    */
-  getContinueReading: async (limit: number = 6): Promise<ContinueReadingItem[]> => {
+  getContinueReading: async (limit: number = 6, locale?: string): Promise<ContinueReadingItem[]> => {
+    const query = locale ? `limit=${limit}&locale=${encodeURIComponent(locale)}` : `limit=${limit}`;
     const response = await api.get<{ success: boolean; data: ContinueReadingItem[] }>(
-      `/reading/continue?limit=${limit}`
+      `/reading/continue?${query}`
     );
     if (!response.success || !response.data?.data) {
       return [];

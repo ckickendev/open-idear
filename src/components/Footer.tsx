@@ -4,7 +4,8 @@ import Logo from "@/components/common/Logo";
 import Image from "next/image";
 
 export default function Footer() {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const currentYear = new Date().getFullYear();
   return (
     <footer className="px-3 mx-auto pt-4 lg:px-9 border-t border-border bg-card flex justify-center items-center flex-col">
       <div className="container px-4 grid gap-10 row-gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -27,43 +28,43 @@ export default function Footer() {
             {t("component.footer.hotcourse")}
           </p>
           <a
-            href="#"
+            href={lang === "vi" ? "/vi/courses" : "/courses"}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            UPSC - Union Public Service Commission
+            {lang === "vi" ? "Lộ trình Docker & Kubernetes" : "Docker & Kubernetes Roadmap"}
           </a>
           <a
-            href="#"
+            href={lang === "vi" ? "/vi/courses" : "/courses"}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            General Knowledge
+            {lang === "vi" ? "Lập trình Web Hiện đại" : "Modern Web Development"}
           </a>
           <a
-            href="#"
+            href={lang === "vi" ? "/vi/courses" : "/courses"}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            MBA
+            {lang === "vi" ? "Trí tuệ Nhân tạo & Machine Learning" : "Artificial Intelligence & ML"}
           </a>
-          <p className="text-base font-bold tracking-wide text-foreground">
+          <p className="text-base font-bold tracking-wide text-foreground mt-2">
             {t("component.footer.hottoppic")}
           </p>
           <a
-            href="#"
+            href={lang === "vi" ? "/vi/category/build-pc" : "/category/build-pc"}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            Human Resource Management
+            {lang === "vi" ? "Build PC & Phần cứng" : "Build PC & Hardware"}
           </a>
           <a
-            href="#"
+            href={lang === "vi" ? "/vi/category/lap-trinh" : "/category/lap-trinh"}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            Operations Management
+            {lang === "vi" ? "Lập trình & Thuật toán" : "Programming & Algorithms"}
           </a>
           <a
-            href="#"
+            href={lang === "vi" ? "/vi/recently-post" : "/recently-post"}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            Marketing Management
+            {lang === "vi" ? "Bài viết Công nghệ Mới" : "Latest Tech Articles"}
           </a>
         </div>
 
@@ -121,7 +122,7 @@ export default function Footer() {
 
       <div className="w-full flex flex-col-reverse justify-center items-center pt-5 pb-10 border-t border-border lg:flex-row">
         <p className="text-sm text-muted-foreground">
-          © Copyright 2023 Company. All rights reserved.
+          {t("component.footer.copyright", { year: currentYear }, `© ${currentYear} OpenIdear. ${lang === "vi" ? "Tất cả quyền được bảo lưu." : "All rights reserved."}`)}
         </p>
       </div>
     </footer>

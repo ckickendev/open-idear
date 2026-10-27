@@ -3,6 +3,7 @@
 import { ENV } from "@/api/const";
 import React, { useEffect } from "react";
 import { useTranslation } from "@/app/hook/useTranslation";
+import { usePathname } from "next/navigation";
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,26 +20,25 @@ interface Post {
   slug: string;
   createdAt: string;
   text?: string;
+  description?: string;
 }
 
 const HotPost: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const pathname = usePathname();
+  const activeLocale = pathname?.startsWith("/vi") ? "vi" : (lang || "en");
   const [articles, setArticles] = React.useState<Post[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
   useEffect(() => {
     let isMounted = true;
     const fetchHotPost = async () => {
-      const rootApi = ENV?.ROOT_API;
-      if (!rootApi) {
-        setIsLoading(false);
-        return;
-      }
+      const rootApi = ENV?.ROOT_API || "http://localhost:5001";
       try {
         setIsLoading(true);
         const res = await axios.get(
-          `${rootApi}/post/getHotPostsWeek?limit=10&page=1`,
-          { timeout: 4000 }
+          `${rootApi}/post/getHotPostsWeek?limit=10&page=1&locale=${activeLocale}`,
+          { timeout: 10000 }
         );
         if (!isMounted) return;
         if (res.status === 200) {
@@ -58,7 +58,7 @@ const HotPost: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [activeLocale]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
@@ -88,13 +88,15 @@ const HotPost: React.FC = () => {
                 ? (typeof article.readtime === "string" ? parseInt(article.readtime, 10) : article.readtime)
                 : Math.max(1, Math.ceil((article.text || "").split(/\s+/).length / 200)) || 5;
 
+              const postUrl = activeLocale === "vi" ? `/vi/post/${article.slug}` : `/post/${article.slug}`;
+
               return (
                 <div
                   key={article._id}
                   className="flex flex-col bg-card border border-border/50 hover:border-border rounded-xl p-3 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 ease-in-out group cursor-pointer h-full"
                 >
                   <Link
-                    href={`/post/${article.slug}`}
+                    href={postUrl}
                     className="block relative aspect-[16/10] w-full bg-muted rounded-lg overflow-hidden mb-3"
                   >
                     <Image
@@ -107,15 +109,15 @@ const HotPost: React.FC = () => {
                   </Link>
 
                   <div className="flex flex-1 flex-col">
-                    <Link href={`/post/${article.slug}`} className="block">
+                    <Link href={postUrl} className="block">
                       <h3 className="font-bold text-xs leading-snug text-foreground hover:text-primary transition-colors line-clamp-2 mb-1.5 hover:underline tracking-tight">
                         {article.title}
                       </h3>
                     </Link>
 
-                    {article.text && (
+                    {(article.description || article.text) && (
                       <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed mb-3">
-                        {article.text}
+                        {article.description || article.text}
                       </p>
                     )}
 
@@ -128,9 +130,7 @@ const HotPost: React.FC = () => {
                       <span className="mx-1 text-muted-foreground/50">•</span>
                       <span>
                         {minutesRead}{" "}
-                        {t("component.lastest_feature.minRead") !== "component.lastest_feature.minRead"
-                          ? t("component.lastest_feature.minRead")
-                          : "min read"}
+                        {activeLocale === "vi" ? "phút đọc" : "min read"}
                       </span>
                     </div>
                   </div>

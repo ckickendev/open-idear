@@ -56,6 +56,16 @@ interface ArticleRendererProps {
   isDark?: boolean;
 }
 
+import { marked, type MarkedOptions } from "marked";
+
+// Configure marked options once
+const markedOptions: MarkedOptions = {
+  async: false,
+  gfm: true,
+  breaks: true,
+};
+marked.setOptions(markedOptions);
+
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
 /** Checks if a string contains inline HTML tags (e.g. <strong>, <em>, <code>, <a>). */
@@ -63,18 +73,58 @@ function hasInlineHtml(str: string): boolean {
   return /<[a-z][\s\S]*>/i.test(str);
 }
 
+/**
+ * Transforms parsed prose HTML to promote standalone images and image captions
+ * into responsive, accessible <figure> blocks with .ed-image styling.
+ */
+function transformProseHtml(rawHtml: string): string {
+  if (!rawHtml) return "";
+
+  // Pattern 1: <p><img ...> <em>caption with optional links</em></p>
+  let html = rawHtml.replace(
+    /<p>\s*(<img[^>]+>)\s*(?:<br\s*\/?>)?\s*(?:<em>(.*?)<\/em>)?\s*<\/p>/gi,
+    (_match, imgTag: string, caption?: string) => {
+      let enhancedImg = imgTag;
+      if (!enhancedImg.includes("class=")) {
+        enhancedImg = enhancedImg.replace("<img", "<img class=\"ed-image__img\" loading=\"lazy\" decoding=\"async\"");
+      }
+      return `<figure class="ed-image my-8"><div class="ed-image__wrap">${enhancedImg}</div>${
+        caption ? `<figcaption class="ed-image__caption">${caption}</figcaption>` : ""
+      }</figure>`;
+    }
+  );
+
+  // Pattern 2: standalone <p><img ...></p>
+  html = html.replace(
+    /<p>\s*(<img[^>]+>)\s*<\/p>/gi,
+    (_match, imgTag: string) => {
+      let enhancedImg = imgTag;
+      if (!enhancedImg.includes("class=")) {
+        enhancedImg = enhancedImg.replace("<img", "<img class=\"ed-image__img\" loading=\"lazy\" decoding=\"async\"");
+      }
+      return `<figure class="ed-image my-8"><div class="ed-image__wrap">${enhancedImg}</div></figure>`;
+    }
+  );
+
+  return html;
+}
+
 // ─── Inline Primitive Renderers ───────────────────────────────────────────
 
 function ArticleParagraph({ content, id }: { content: string; id: string }) {
-  if (hasInlineHtml(content)) {
-    return (
-      <p
-        id={`block-${id}`}
-        dangerouslySetInnerHTML={{ __html: content }}
-      />
-    );
-  }
-  return <p id={`block-${id}`}>{content}</p>;
+  const parsedHtml = React.useMemo(() => {
+    if (!content) return "";
+    const rawHtml = marked.parse(content, { breaks: true, gfm: true }) as string;
+    return transformProseHtml(rawHtml);
+  }, [content]);
+
+  return (
+    <div
+      id={`block-${id}`}
+      className="ed-paragraph-block"
+      dangerouslySetInnerHTML={{ __html: parsedHtml }}
+    />
+  );
 }
 
 function ArticleHeading({
@@ -87,50 +137,30 @@ function ArticleHeading({
   id: string;
 }) {
   const anchorHref = `#block-${id}`;
-  const containsHtml = hasInlineHtml(content);
+  const parsedContent = React.useMemo(() => {
+    return marked.parseInline(content) as string;
+  }, [content]);
+
+  const cleanLabel = content.replace(/<[^>]*>/g, "").replace(/[#*`_~]/g, "");
 
   const anchor = (
     <a
       href={anchorHref}
       className="ed-heading-anchor__link"
-      aria-label={`Link to section: ${content.replace(/<[^>]*>/g, "")}`}
+      aria-label={`Link to section: ${cleanLabel}`}
       tabIndex={0}
     >
       #
     </a>
   );
 
-  if (level === 2) {
-    if (containsHtml) {
-      return (
-        <h2 id={`block-${id}`} className="ed-heading-anchor">
-          {anchor}
-          <span dangerouslySetInnerHTML={{ __html: content }} />
-        </h2>
-      );
-    }
-    return (
-      <h2 id={`block-${id}`} className="ed-heading-anchor">
-        {anchor}
-        {content}
-      </h2>
-    );
-  }
-
-  if (containsHtml) {
-    return (
-      <h3 id={`block-${id}`} className="ed-heading-anchor">
-        {anchor}
-        <span dangerouslySetInnerHTML={{ __html: content }} />
-      </h3>
-    );
-  }
+  const Tag = level === 2 ? "h2" : "h3";
 
   return (
-    <h3 id={`block-${id}`} className="ed-heading-anchor">
+    <Tag id={`block-${id}`} className="ed-heading-anchor">
       {anchor}
-      {content}
-    </h3>
+      <span dangerouslySetInnerHTML={{ __html: parsedContent }} />
+    </Tag>
   );
 }
 
@@ -139,6 +169,10 @@ function ArticleImage({
 }: {
   block: Extract<ArticleBlock, { type: "image" }>;
 }) {
+  const captionHtml = React.useMemo(() => {
+    return block.caption ? (marked.parseInline(block.caption) as string) : null;
+  }, [block.caption]);
+
   return (
     <figure id={`block-${block.id}`} className="ed-image">
       <div className="ed-image__wrap">
@@ -153,10 +187,11 @@ function ArticleImage({
           decoding="async"
         />
       </div>
-      {block.caption && (
-        <figcaption className="ed-image__caption">
-          {block.caption}
-        </figcaption>
+      {captionHtml && (
+        <figcaption
+          className="ed-image__caption"
+          dangerouslySetInnerHTML={{ __html: captionHtml }}
+        />
       )}
     </figure>
   );
@@ -170,14 +205,14 @@ function ArticleList({
   const Tag = block.style === "ordered" ? "ol" : "ul";
   return (
     <Tag id={`block-${block.id}`}>
-      {block.items.map((item, i) => {
-        if (hasInlineHtml(item)) {
-          return (
-            <li key={i} dangerouslySetInnerHTML={{ __html: item }} />
-          );
-        }
-        return <li key={i}>{item}</li>;
-      })}
+      {block.items.map((item, i) => (
+        <li
+          key={i}
+          dangerouslySetInnerHTML={{
+            __html: marked.parseInline(item) as string,
+          }}
+        />
+      ))}
     </Tag>
   );
 }

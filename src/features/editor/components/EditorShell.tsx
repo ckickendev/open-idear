@@ -16,6 +16,7 @@ import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useContentMetrics } from "@/features/seo/hooks/useContentMetrics";
 import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView, ImageEnhancementReviewModal, useImageEnhancementReview, AIGenerationModal, OneClickPublisherModal, type PipelineData, type PublisherResponse, aiApi } from "@/features/ai";
 import { toEditorHtml } from "@/features/ai/utils/contentTransformer";
+import { mergeAiDraftWithExistingEditorImages } from "../utils/editorImagePreservation";
 import { LivePreviewSystem } from "@/features/preview";
 import { useTranslation } from "@/app/hook/useTranslation";
 import { useLanguageStore } from "@/store/useLanguage";
@@ -218,6 +219,7 @@ export default function EditorShell() {
   const [seriesPublic, setSeriesPublic] = useState("");
   const [categoryPublic, setCategoryPublic] = useState("");
   const [imagePublic, setImagePublic] = useState<string | null>(null);
+  const [backgroundPublic, setBackgroundPublic] = useState<string>("");
 
   // ─── Unified right-panel state ────────────────────────────────────────
   // Replaces separate booleans with a discriminated union.
@@ -349,13 +351,20 @@ export default function EditorShell() {
 
     const markdown = data.enhancedMarkdown || data.writerMarkdown || "";
     if (markdown && editor) {
-      const html = toEditorHtml(markdown, data.visualSuggestions || data.imageSuggestions);
+      const { html, markdown: mergedMarkdown, preservedCount } = mergeAiDraftWithExistingEditorImages(
+        markdown,
+        editor,
+        data.visualSuggestions || data.imageSuggestions
+      );
       editor.commands.setContent(html);
-      setGeneratedMarkdown(markdown);
+      setGeneratedMarkdown(mergedMarkdown);
       setGeneratedAiContext((prev) => ({
         ...prev,
         ...(data.aiContext || {}),
       }));
+      if (preservedCount > 0) {
+        toast.info(`Preserved ${preservedCount} existing image${preservedCount > 1 ? "s" : ""} in article`);
+      }
     }
     toast.success("1-Click Article pipeline generated and applied!");
     autoSave.markDirty();
@@ -463,38 +472,38 @@ export default function EditorShell() {
   const [generatedAiContext, setGeneratedAiContext] = useState<Record<string, unknown> | null>(null);
 
   const getCurrentArticleMarkdown = useCallback(() => {
+    if (editor && !editor.isEmpty) {
+      const html = editor.getHTML();
+      if (html && html.trim() && html !== "<p></p>") {
+        let md = html
+          .replace(/\r\n/g, "\n")
+          .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "\n\n# $1\n\n")
+          .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "\n\n## $1\n\n")
+          .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "\n\n### $1\n\n")
+          .replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, "\n\n#### $1\n\n")
+          .replace(/<h5[^>]*>([\s\S]*?)<\/h5>/gi, "\n\n##### $1\n\n")
+          .replace(/<h6[^>]*>([\s\S]*?)<\/h6>/gi, "\n\n###### $1\n\n")
+          .replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, "\n\n![$2]($1)\n\n")
+          .replace(/<img[^>]*alt="([^"]*)"[^>]*src="([^"]*)"[^>]*>/gi, "\n\n![$1]($2)\n\n")
+          .replace(/<img[^>]*src="([^"]*)"[^>]*>/gi, "\n\n![]($1)\n\n")
+          .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "* $1\n")
+          .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
+          .replace(/<br\s*\/?>/gi, "\n")
+          .replace(/<[^>]+>/g, "")
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&amp;/g, "&")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&nbsp;/g, " ")
+          .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
+          .replace(/\n{3,}/g, "\n\n");
+
+        return md.trim();
+      }
+    }
     if (generatedMarkdown && generatedMarkdown.trim()) {
       return generatedMarkdown;
-    }
-    if (editor) {
-      const html = editor.getHTML();
-      if (!html) return "";
-
-      let md = html
-        .replace(/\r\n/g, "\n")
-        .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "\n\n# $1\n\n")
-        .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "\n\n## $1\n\n")
-        .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "\n\n### $1\n\n")
-        .replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, "\n\n#### $1\n\n")
-        .replace(/<h5[^>]*>([\s\S]*?)<\/h5>/gi, "\n\n##### $1\n\n")
-        .replace(/<h6[^>]*>([\s\S]*?)<\/h6>/gi, "\n\n###### $1\n\n")
-        .replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, "\n\n![$2]($1)\n\n")
-        .replace(/<img[^>]*alt="([^"]*)"[^>]*src="([^"]*)"[^>]*>/gi, "\n\n![$1]($2)\n\n")
-        .replace(/<img[^>]*src="([^"]*)"[^>]*>/gi, "\n\n![]($1)\n\n")
-        .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "* $1\n")
-        .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
-        .replace(/<br\s*\/?>/gi, "\n")
-        .replace(/<[^>]+>/g, "")
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&nbsp;/g, " ")
-        .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
-        .replace(/\n{3,}/g, "\n\n");
-
-      return md.trim();
     }
     return "";
   }, [generatedMarkdown, editor]);
@@ -703,6 +712,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           if (editorLocale !== resolvedLocale) {
             setEditorLocale(resolvedLocale);
           }
+          useLanguageStore.getState().setLang(resolvedLocale);
           loadedLocaleRef.current = { id: targetPostId, locale: resolvedLocale };
 
           // Shared parent Post fields
@@ -715,6 +725,8 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           setImagePublic(
             typeof post.image === "object" ? post.image?.url || null : post.image || null
           );
+          const bgVal = post.background || post.hero?.background || post.translation?.background || post.translation?.hero?.background || "";
+          setBackgroundPublic(bgVal);
 
           // Update available locales status
           const translations: any[] = post.translations || [];
@@ -744,6 +756,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
             setTitle("");
             setDescriptionPublic("");
             setGeneratedMarkdown("");
+            setBackgroundPublic("");
             publishHook.setIsPublished(false);
             if (editor) {
               editor.commands.setContent("", { emitUpdate: false });
@@ -804,6 +817,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
 
         // 3. Switch locale state
         setEditorLocale(newLocale);
+        useLanguageStore.getState().setLang(newLocale);
 
         // 4. Update URL query params without full reload
         const currentParams = new URLSearchParams(window.location.search);
@@ -913,6 +927,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           setCategoryPublic("");
           setSeriesPublic("");
           setImagePublic(null);
+          setBackgroundPublic("");
           setLoadedPost(null);
           setIsNewTranslationDraft(false);
           setLocalesStatus({});
@@ -1424,10 +1439,11 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
     setImageInsertPosition(null);
   };
 
-  const handleImageUploadedPublic = (image: MediaAsset) => {
+  const handleImageUploadedPublic = (image: any) => {
     setShowImageUpload(false);
     setImageInsertPosition(null);
-    setImagePublic(image._id);
+    const imgVal = image?._id || image?.url || (typeof image === "string" ? image : null);
+    setImagePublic(imgVal);
   };
 
   // ─── Series ──────────────────────────────────────────────────────────
@@ -1452,6 +1468,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
       content: getHTML(),
       description: descriptionPublic,
       image: imagePublic,
+      background: backgroundPublic,
       series: seriesPublic,
       category: categoryPublic,
     });
@@ -1778,6 +1795,8 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
             onClose={handleClosePostList}
             activePostId={postId}
             onSelectPost={handleSelectPost}
+            locale={editorLocale}
+            currentTitle={title}
           />
 
           {/* Sticky Left Outline Navigation ("Xem nhanh") — only renders aside when headings exist */}
@@ -1805,6 +1824,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                   activePostId={postId}
                   onSelectPost={handleSelectPost}
                   onOpenSidebar={() => setPostListOpen(true)}
+                  locale={editorLocale}
                 />
               )}
 
@@ -2324,15 +2344,26 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           onCreateSeries={createNewSeriesHandler}
           description={descriptionPublic}
           onDescriptionChange={setDescriptionPublic}
+          currentImage={imagePublic}
           onCoverImageUploaded={handleImageUploadedPublic}
+          onRemoveCoverImage={() => setImagePublic(null)}
+          background={backgroundPublic}
+          onBackgroundChange={setBackgroundPublic}
           isPublishing={publishHook.isPublishing}
           initialTopic={title}
           onAutoFillAI={async (result) => {
             if (result.title) handleTitleChange(result.title);
             if (result.markdown && editor) {
-              const html = toEditorHtml(result.markdown, result.visualSuggestions || result.imageSuggestions);
+              const { html, markdown: mergedMarkdown, preservedCount } = mergeAiDraftWithExistingEditorImages(
+                result.markdown,
+                editor,
+                result.visualSuggestions || result.imageSuggestions
+              );
               editor.commands.setContent(html);
-              setGeneratedMarkdown(result.markdown);
+              setGeneratedMarkdown(mergedMarkdown);
+              if (preservedCount > 0) {
+                toast.info(`Preserved ${preservedCount} existing image${preservedCount > 1 ? "s" : ""} in article`);
+              }
             }
             if (result.description) setDescriptionPublic(result.description);
             autoSave.markDirty();

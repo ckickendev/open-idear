@@ -40,6 +40,10 @@ interface PostListPanelProps {
   activePostId?: string | null;
   /** Navigate to a post for editing (client-side) */
   onSelectPost: (postId: string | null) => void;
+  /** Active editing locale (defaults to current app language) */
+  locale?: "en" | "vi";
+  /** Current editor title for live reflection of active post */
+  currentTitle?: string;
 }
 
 // ─── Skeleton Loader ────────────────────────────────────────────────────────
@@ -133,8 +137,11 @@ export default function PostListPanel({
   onClose,
   activePostId,
   onSelectPost,
+  locale,
+  currentTitle,
 }: PostListPanelProps) {
-  const { t } = useTranslation();
+  const { t, lang: appLang } = useTranslation();
+  const currentLocale = (locale || appLang || "en") as "en" | "vi";
   const [allPosts, setAllPosts] = useState<PostListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -149,12 +156,12 @@ export default function PostListPanel({
   const fetchPosts = useCallback(async (force = false) => {
     const token = localStorage.getItem("access_token");
     if (!token) return;
-    if (inFlightRef.current) return;
+    if (inFlightRef.current && !force) return;
 
     inFlightRef.current = true;
     setIsLoading(true);
     try {
-      const res = await postApi.getPostsByAuthor();
+      const res = await postApi.getPostsByAuthor(currentLocale);
       if (res.success && res.data?.posts) {
         setAllPosts(res.data.posts);
       }
@@ -164,13 +171,13 @@ export default function PostListPanel({
       setIsLoading(false);
       inFlightRef.current = false;
     }
-  }, []);
+  }, [currentLocale]);
 
   useEffect(() => {
     if (isOpen) {
       fetchPosts();
     }
-  }, [isOpen, fetchPosts]);
+  }, [isOpen, fetchPosts, currentLocale]);
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -472,7 +479,9 @@ export default function PostListPanel({
                               : "text-[var(--color-editor-text)] group-hover:text-[var(--color-editor-accent)]"
                           }`}
                         >
-                          {item.title || "Untitled"}
+                          {(isActive && currentTitle && currentTitle.trim())
+                            ? currentTitle
+                            : item.title || "Untitled"}
                         </h4>
                         {/* Status badge */}
                         <span

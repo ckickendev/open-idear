@@ -5,6 +5,8 @@ import axios from "axios";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useLanguageStore } from "@/store/useLanguage";
 import { Flame, BookOpen, Trophy, GraduationCap, Star, ArrowRight } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -85,10 +87,11 @@ function PostSkeletons({ count = 4 }: { count?: number }) {
   );
 }
 
-function MiniPostCard({ post }: { post: SidebarPost }) {
+function MiniPostCard({ post, activeLocale }: { post: SidebarPost; activeLocale?: string }) {
+  const postHref = activeLocale === "vi" ? `/vi/post/${post.slug}` : `/post/${post.slug}`;
   return (
     <Link
-      href={`/post/${post.slug}`}
+      href={postHref}
       className="group flex gap-2.5 items-start hover:bg-accent/40 border border-transparent hover:border-border/30 rounded-xl p-1.5 -mx-1.5 transition-all duration-200"
     >
       {/* Thumbnail */}
@@ -208,6 +211,9 @@ function AffiliateCard() {
 export default function DiscoverySidebar() {
   const [data, setData] = useState<SidebarData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const pathname = usePathname();
+  const storeLang = useLanguageStore((state) => state.lang);
+  const activeLocale = pathname?.startsWith("/vi") ? "vi" : (storeLang || "en");
 
   useEffect(() => {
     let isMounted = true;
@@ -218,7 +224,7 @@ export default function DiscoverySidebar() {
         return;
       }
       try {
-        const res = await axios.get(`${rootApi}/post/getDiscoverySidebar`, { timeout: 4000 });
+        const res = await axios.get(`${rootApi}/post/getDiscoverySidebar?locale=${activeLocale}`, { timeout: 4000 });
         if (!isMounted) return;
         if (res.status === 200 && res.data?.success) {
           setData({
@@ -242,7 +248,7 @@ export default function DiscoverySidebar() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [activeLocale]);
 
   return (
     <aside className="hidden lg:block w-72 xl:w-80 flex-shrink-0">
@@ -250,39 +256,39 @@ export default function DiscoverySidebar() {
 
         {/* ─── 🔥 Trending ─────────────────────────────── */}
         <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-          <SectionHeader icon={<Flame size={16} className="text-orange-500" />} label="Trending" />
+          <SectionHeader icon={<Flame size={16} className="text-orange-500" />} label={activeLocale === "vi" ? "Thịnh hành" : "Trending"} />
           {isLoading ? (
             <PostSkeletons count={5} />
           ) : data?.trending && data.trending.length > 0 ? (
             <div className="space-y-1">
               {data.trending.map((post) => (
-                <MiniPostCard key={post._id} post={post} />
+                <MiniPostCard key={post._id} post={post} activeLocale={activeLocale} />
               ))}
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground">No trending posts yet.</p>
+            <p className="text-xs text-muted-foreground">{activeLocale === "vi" ? "Chưa có bài viết thịnh hành." : "No trending posts yet."}</p>
           )}
         </div>
 
         {/* ─── 📚 Latest Posts ─────────────────────────── */}
         <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-          <SectionHeader icon={<BookOpen size={16} className="text-blue-500" />} label="Latest Posts" />
+          <SectionHeader icon={<BookOpen size={16} className="text-blue-500" />} label={activeLocale === "vi" ? "Bài viết mới" : "Latest Posts"} />
           {isLoading ? (
             <PostSkeletons count={5} />
           ) : data?.latestPosts && data.latestPosts.length > 0 ? (
             <div className="space-y-1">
               {data.latestPosts.map((post) => (
-                <MiniPostCard key={post._id} post={post} />
+                <MiniPostCard key={post._id} post={post} activeLocale={activeLocale} />
               ))}
               <Link
-                href="/recently-post"
+                href={activeLocale === "vi" ? "/vi/recently-post" : "/recently-post"}
                 className="flex items-center gap-1 mt-2 text-[11px] font-semibold text-primary hover:underline"
               >
-                See all posts <ArrowRight size={11} />
+                {activeLocale === "vi" ? "Xem tất cả bài viết" : "See all posts"} <ArrowRight size={11} />
               </Link>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground">No posts yet.</p>
+            <p className="text-xs text-muted-foreground">{activeLocale === "vi" ? "Chưa có bài viết." : "No posts yet."}</p>
           )}
         </div>
 

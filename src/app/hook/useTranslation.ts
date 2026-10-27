@@ -10,7 +10,12 @@ const translations = {
 type Language = keyof typeof translations;
 
 export function useTranslation() {
-  const lang = (useLanguageStore((state) => state.lang) || "en") as Language;
+  const storeLang = useLanguageStore((state) => state.lang);
+  let detectedLocale: Language = (storeLang || "en") as Language;
+  if (typeof window !== "undefined" && window.location?.pathname?.startsWith("/vi")) {
+    detectedLocale = "vi";
+  }
+  const lang = detectedLocale;
 
   const t = (
     key: string,

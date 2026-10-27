@@ -8,14 +8,25 @@ import { PaginationComponent } from "./common/PaginationComponent";
 import Link from "next/link";
 import { useTranslation } from "@/app/hook/useTranslation";
 
+import { usePathname } from "next/navigation";
+import { useLanguageStore } from "@/store/useLanguage";
+
+interface PostDisplayPageElementProps {
+  data: any[];
+  totalPage: number;
+  locale?: "en" | "vi";
+}
+
 const PostDisplayPageElement = ({
   data,
   totalPage,
-}: {
-  data: any[];
-  totalPage: number;
-}) => {
-  const { t } = useTranslation();
+  locale,
+}: PostDisplayPageElementProps) => {
+  const { t, lang } = useTranslation();
+  const pathname = usePathname();
+  const storeLang = useLanguageStore((state) => state.lang);
+  const activeLocale = locale || (pathname?.startsWith("/vi") ? "vi" : (storeLang || lang || "en"));
+
   return (
     <div className="space-y-8 flex flex-col justify-between md:flex-row md:space-y-0 md:space-x-8">
       <div className="w-full md:w-4/5 space-y-4">
@@ -24,13 +35,15 @@ const PostDisplayPageElement = ({
             ? (typeof article.readtime === "string" ? parseInt(article.readtime, 10) : article.readtime)
             : Math.max(1, Math.ceil((article.text || "").split(/\s+/).length / 200)) || 5;
 
+          const articleHref = activeLocale === "vi" ? `/vi/post/${article?.slug}` : `/post/${article?.slug}`;
+
           return (
             <div
               key={idx}
               className="grid md:grid-cols-5 gap-y-4 md:gap-x-6 bg-background rounded-xl overflow-hidden shadow-sm hover:shadow-md border border-border/60 hover:border-border transition-all duration-300 group p-4"
             >
               <Link
-                href={`/post/${article?.slug}`}
+                href={articleHref}
                 className="md:col-span-2 relative aspect-[16/10] md:aspect-auto md:min-h-[160px] rounded-lg overflow-hidden bg-muted block"
               >
                 <Image
@@ -47,6 +60,7 @@ const PostDisplayPageElement = ({
                     className="text-xl font-bold text-foreground hover:text-blue-600 transition-colors hover:underline line-clamp-2 mb-2 block"
                     slug={article?.slug}
                     name={article?.title}
+                    locale={activeLocale}
                   />
                   {(article?.text || article?.description) && (
                     <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-4">

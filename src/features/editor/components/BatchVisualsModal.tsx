@@ -142,9 +142,9 @@ export function BatchVisualsModal({
   // Fallback local extractor when server classification is unavailable or offline
   const extractLocalMarkdownSections = (docMarkdown: string): SectionAnalysis[] => {
     const lines = docMarkdown.split(/\r?\n/);
-    const results: SectionAnalysis[] = [];
+    const rawSections: SectionAnalysis[] = [];
     for (const line of lines) {
-      const match = line.match(/^(#{2,3})\s+(.+)$/);
+      const match = line.match(/^(#{1,4})\s+(.+)$/);
       if (match) {
         const level = match[1].length;
         const heading = match[2].trim();
@@ -153,7 +153,7 @@ export function BatchVisualsModal({
         const isArchitecture = lower.includes("arch") || lower.includes("system") || lower.includes("overview") || lower.includes("design");
         const visualType = isProduct ? "product" : isArchitecture ? "diagram" : "illustration";
 
-        results.push({
+        rawSections.push({
           heading,
           level,
           content: "",
@@ -163,7 +163,7 @@ export function BatchVisualsModal({
             heading,
             visualType,
             confidence: 0.85,
-            recommendedAction: "search",
+            recommendedAction: isProduct ? "search" : "generate",
             reason: `Visual suggestion for "${heading}".`,
             searchQuery: heading,
             suggestedSearchQuery: heading,
@@ -171,6 +171,35 @@ export function BatchVisualsModal({
         });
       }
     }
+
+    // Filter out level-1 title if subheadings exist
+    const results = rawSections.filter((s, idx) => {
+      if (idx === 0 && s.level === 1 && rawSections.length > 1) {
+        return false;
+      }
+      return true;
+    });
+
+    // If document has content but no markdown headings, provide an Overview section
+    if (results.length === 0 && docMarkdown.trim().length > 0) {
+      results.push({
+        heading: "Overview",
+        level: 1,
+        content: docMarkdown.slice(0, 500),
+        isCompleted: false,
+        existingImageUrls: [],
+        recommendation: {
+          heading: "Overview",
+          visualType: "diagram",
+          confidence: 0.85,
+          recommendedAction: "search",
+          reason: "Visual suggestion for article overview.",
+          searchQuery: "technology overview",
+          suggestedSearchQuery: "technology overview",
+        },
+      });
+    }
+
     return results;
   };
 
@@ -716,6 +745,8 @@ export function BatchVisualsModal({
       if (anchorResult.success) {
         setCurrentMarkdown(anchorResult.updatedMarkdown);
         onApplyResult(anchorResult.updatedMarkdown);
+      } else if (tiptapSuccess) {
+        // Direct TipTap insertion succeeded even if markdown anchor string wasn't matched
       } else {
         toast.warning(
           anchorResult.reason || `Section heading "${sec.heading}" was not found in the editor.`
@@ -792,8 +823,9 @@ export function BatchVisualsModal({
           provider: candidate.provider || candidate.sourceProvider,
         };
 
+        let tiptapSuccess = false;
         if (editor) {
-          insertImageIntoTiptapAtAnchor(
+          tiptapSuccess = insertImageIntoTiptapAtAnchor(
             editor,
             sec.heading,
             finalUrl,
@@ -813,6 +845,8 @@ export function BatchVisualsModal({
         if (res.success) {
           workingMarkdown = res.updatedMarkdown;
           appliedCount++;
+        } else if (tiptapSuccess) {
+          appliedCount++;
         }
       } catch (e) {
         console.warn(`[BatchVisualsModal] Failed applying ${sec.heading}:`, e);
@@ -822,10 +856,15 @@ export function BatchVisualsModal({
     setIsApplyingAll(false);
 
     if (appliedCount > 0) {
-      const normalized = normalizeMarkdownHeadings(workingMarkdown.trim());
-      setCurrentMarkdown(normalized);
-      onApplyResult(normalized);
-      toast.success(`Successfully applied ${appliedCount} visuals to the article!`);
+      if (workingMarkdown !== currentMarkdown) {
+        const normalized = normalizeMarkdownHeadings(workingMarkdown.trim());
+        setCurrentMarkdown(normalized);
+        onApplyResult(normalized);
+      }
+      setSections((prev) =>
+        prev.map((s) => (s.selectedCandidate && !s.isDismissed ? { ...s, isApplied: true } : s))
+      );
+      toast.success(`Successfully applied ${appliedCount} visual${appliedCount > 1 ? "s" : ""} to the article!`);
       onClose();
     } else {
       toast.error("Could not find matching section anchors in the article document.");

@@ -1,4 +1,5 @@
 import { useTranslation } from "@/app/hook/useTranslation";
+import { usePathname } from "next/navigation";
 import Logo from "@/components/common/Logo";
 import { PostInterface } from "@/app/(marketing)/profile/[username]/page";
 import { calculateGapTime } from "@/common/datetime";
@@ -12,14 +13,17 @@ import Image from "next/image";
 import Link from "next/link";
 
 const MainFeature = ({ postData }: { postData: PostInterface }) => {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const pathname = usePathname();
+  const activeLocale = pathname?.startsWith("/vi") ? "vi" : (lang || "en");
+  const postUrl = activeLocale === "vi" ? `/vi/post/${postData?.slug}` : `/post/${postData?.slug}`;
   const minutesRead = postData?.readtime
     ? (typeof postData.readtime === "string" ? parseInt(postData.readtime, 10) : postData.readtime)
     : Math.max(1, Math.ceil((postData?.text || "").split(/\s+/).length / 200)) || 5;
 
   return (
     <div className="flex flex-col md:flex-row w-full lg:w-4/5 border border-border bg-card p-4 h-auto md:h-[400px] rounded-2xl hover:border-border/80 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 ease-in-out group cursor-pointer">
-      <div className="h-48 md:h-full w-full md:w-3/5 bg-muted rounded-xl overflow-hidden relative">
+      <Link href={postUrl} className="h-48 md:h-full w-full md:w-3/5 bg-muted rounded-xl overflow-hidden relative block">
         <div className="absolute top-2 right-2 p-1 rounded z-10">
           <Logo />
         </div>
@@ -30,7 +34,7 @@ const MainFeature = ({ postData }: { postData: PostInterface }) => {
           className="object-cover transition-transform duration-500 group-hover:scale-102"
           sizes="(max-width: 768px) 100vw, 60vw"
         />
-      </div>
+      </Link>
       <div className="p-4 md:py-6 md:px-8 w-full md:w-2/5 flex flex-col justify-center">
         <div className="flex items-center mb-3">
           <Logo />
@@ -47,9 +51,9 @@ const MainFeature = ({ postData }: { postData: PostInterface }) => {
           />
         </h2>
 
-        {postData?.text && (
+        {(postData?.description || postData?.text) && (
           <p className="text-xs md:text-sm text-muted-foreground line-clamp-3 leading-relaxed mb-5 font-normal">
-            {postData.text}
+            {postData.description || postData.text}
           </p>
         )}
 
@@ -62,9 +66,7 @@ const MainFeature = ({ postData }: { postData: PostInterface }) => {
           <span className="mx-1.5 text-muted-foreground/50">•</span>
           <span>
             {minutesRead}{" "}
-            {t("component.lastest_feature.minRead") !== "component.lastest_feature.minRead"
-              ? t("component.lastest_feature.minRead")
-              : "min read"}
+            {activeLocale === "vi" ? "phút đọc" : "min read"}
           </span>
         </div>
       </div>

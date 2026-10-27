@@ -41,6 +41,7 @@ interface RecentPostsSectionProps {
   activePostId?: string | null;
   onSelectPost: (postId: string | null) => void;
   onOpenSidebar: () => void;
+  locale?: "en" | "vi";
 }
 
 const STORAGE_KEY = "openidear_create_recent_posts_expanded";
@@ -49,8 +50,10 @@ export function RecentPostsSection({
   activePostId,
   onSelectPost,
   onOpenSidebar,
+  locale,
 }: RecentPostsSectionProps) {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const activeLocale = (locale || lang || "en") as "en" | "vi";
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -73,7 +76,7 @@ export function RecentPostsSection({
 
     setIsLoading(true);
     try {
-      const res = await postApi.getPostsByAuthor();
+      const res = await postApi.getPostsByAuthor(activeLocale);
       if (res?.data?.posts) {
         const list: PostItem[] = [...res.data.posts];
         list.sort((a, b) => {
@@ -89,11 +92,11 @@ export function RecentPostsSection({
       setIsLoading(false);
       setHasLoaded(true);
     }
-  }, []);
+  }, [activeLocale]);
 
   useEffect(() => {
     fetchRecentPosts();
-  }, [fetchRecentPosts]);
+  }, [fetchRecentPosts, activeLocale]);
 
   // If user opens a post, automatically collapse section to keep editor clean
   useEffect(() => {

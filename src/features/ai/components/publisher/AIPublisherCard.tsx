@@ -119,32 +119,74 @@ export const AIPublisherCard: React.FC<AIPublisherCardProps> = ({
       updateStepStatus("cover_image", "running");
       await new Promise((r) => setTimeout(r, 300));
 
-      // Step 5: Saving Draft
-      setProgressiveMsg("Saving draft...");
+      // Step 5: Validator
+      setProgressiveMsg("Auditing structure & quality...");
       updateStepStatus("cover_image", "completed");
+      updateStepStatus("validator", "running");
+      await new Promise((r) => setTimeout(r, 300));
+
+      // Step 6: Saving Draft
+      setProgressiveMsg("Auto-filling draft in editor...");
       updateStepStatus("validator", "completed");
       updateStepStatus("saving", "running");
 
-      // Execute backend One-Click API
-      const res = await publisherApi.oneClickPublish({
+      // Execute backend AI Publisher API
+      const response = await api.post("/ai/v1/publisher", {
         topic: topic.trim(),
         audience,
         tone: brandVoice?.tone || tone,
         length,
         ...(brandVoice ? { brandVoice } : {}),
-      } as any);
+      });
 
-      updateStepStatus("saving", "completed", `Draft: #${String(res.draftId).slice(-6)}`);
-      setProgressiveMsg("Complete!");
-      toast.success("Draft post created successfully! Redirecting to editor...");
+      if (!response.success) {
+        throw new Error(response.message || "AI Publisher failed to generate post.");
+      }
 
-      setTimeout(() => {
-        if (typeof window !== "undefined") {
-          window.location.href = `/create?id=${res.draftId}`;
-        } else {
-          router.push(`/create?id=${res.draftId}`);
-        }
-      }, 600);
+      const resData = (response.data as any)?.data || response.data;
+
+      const result: AIPublisherResult = {
+        title: resData.title || topic,
+        slug: resData.slug || "",
+        description: resData.description || resData.seo?.metaDescription || "",
+        category: resData.category || resData.seo?.category || "general",
+        tags: resData.tags || resData.seo?.tags || [],
+        blocks: resData.blocks || [],
+        coverImage: resData.coverImage || null,
+        markdown: resData.markdown || "",
+        validation: resData.validation,
+        imageSuggestions: resData.imageSuggestions,
+        visualSuggestions: resData.visualSuggestions,
+      };
+
+      if (onAutoFill) {
+        // Apply directly to active editor and retain all user-placed images
+        onAutoFill(result);
+        updateStepStatus("saving", "completed", "Draft applied!");
+        setProgressiveMsg("Complete!");
+        toast.success("1-Click AI Draft applied to editor and auto-saved with images preserved!");
+      } else {
+        // Fallback for standalone card usage outside the editor
+        const res = await publisherApi.oneClickPublish({
+          topic: topic.trim(),
+          audience,
+          tone: brandVoice?.tone || tone,
+          length,
+          ...(brandVoice ? { brandVoice } : {}),
+        } as any);
+
+        updateStepStatus("saving", "completed", `Draft: #${String(res.draftId).slice(-6)}`);
+        setProgressiveMsg("Complete!");
+        toast.success("Draft post created successfully! Redirecting to editor...");
+
+        setTimeout(() => {
+          if (typeof window !== "undefined") {
+            window.location.href = `/create?id=${res.draftId}`;
+          } else {
+            router.push(`/create?id=${res.draftId}`);
+          }
+        }, 600);
+      }
     } catch (err: any) {
       const msg = err?.message || "One-click publishing failed.";
       setErrorMessage(msg);

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ENV } from "@/api/const";
 import HotPost from "@/features/ideas/components/hot_post/HotPost";
 import CommentSection from "./CommentSection";
@@ -94,6 +94,11 @@ export default async function PostLists({
     notFound();
   }
 
+  // Canonical locale routing guard: if the post is in Vietnamese, redirect to canonical /vi/post/ URL
+  if (postData.activeLocale === "vi" && postData.alternateUrls?.vi) {
+    redirect(postData.alternateUrls.vi);
+  }
+
   // Build TOC items server-side from structured blocks.
   // Returns [] for html-v1 posts or posts with no headings.
   const tocItems = buildTableOfContents(postData.blocks ?? null);
@@ -134,23 +139,21 @@ export default async function PostLists({
       <EditorialLayout
         hasToc={hasToc}
         hero={
-          <div className="ed-hero">
-            {/* Hero Image */}
-            <div className="ed-hero__image-wrap">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={postData.image?.url || "/banner/openidear3.webp"}
-                alt={postData.title}
-                className="ed-hero__image"
-              />
-            </div>
-            {postData.image?.description && (
-              <p className="ed-hero__caption">
-                {postData.image.description}
-              </p>
-            )}
-
-            {/* Article Metadata Header */}
+          <div
+            className={`ed-hero ${postData.background ? "ed-hero--custom-bg rounded-2xl p-6 md:p-8 my-4" : ""}`}
+            style={
+              postData.background
+                ? postData.background.startsWith("http") || postData.background.startsWith("/")
+                  ? {
+                      backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.65)), url(${postData.background})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }
+                  : { background: postData.background }
+                : undefined
+            }
+          >
+            {/* Article Metadata Header with Eyebrow, Title, Author & Actions, and Framed Cover Image */}
             <ArticleMeta
               category={postData.category?.name}
               title={postData.title}
@@ -173,22 +176,26 @@ export default async function PostLists({
               updatedAt={postData.updatedAt}
               readingTimeMinutes={displayReadingTime}
               tags={postData.tags}
+              coverImage={{
+                url: postData.image?.url || "/banner/openidear3.webp",
+                description: postData.image?.description,
+              }}
+              versionAction={
+                <ArticleVersionAction
+                  slug={slug}
+                  postId={postData._id}
+                  currentVersion={postData.latestVersion || postData.currentVersionId?.version || "1.0"}
+                  currentContent={postData.content || postData.text || ""}
+                  authorId={postData.author?._id || postData.author}
+                  variant="badge"
+                />
+              }
+              actions={<PostSidebarActions postData={postData} variant="inline" />}
+              locale="en"
             />
 
-            {/* Version History Action Button */}
-            <div className="flex items-center gap-3 my-4">
-              <ArticleVersionAction
-                slug={slug}
-                postId={postData._id}
-                currentVersion={postData.latestVersion || postData.currentVersionId?.version || "1.0"}
-                currentContent={postData.content || postData.text || ""}
-                authorId={postData.author?._id || postData.author}
-                variant="button"
-              />
-            </div>
-
-            {/* Sidebar reaction actions */}
-            <PostSidebarActions postData={postData} />
+            {/* Desktop Floating Actions on scroll */}
+            <PostSidebarActions postData={postData} variant="floating" />
           </div>
         }
         toc={
@@ -238,7 +245,7 @@ export default async function PostLists({
         <HotPost />
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8 bg-background">
+      <div id="comments" className="max-w-4xl mx-auto px-4 py-8 bg-background">
         <CommentSection postId={postData._id} />
       </div>
     </>

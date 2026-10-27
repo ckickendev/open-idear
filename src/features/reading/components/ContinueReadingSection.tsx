@@ -14,8 +14,10 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { BookOpen, Clock, ArrowRight } from "lucide-react";
 import authenticationStore from "@/store/AuthenticationStore";
+import { useTranslation } from "@/app/hook/useTranslation";
 import { readingApi } from "../api/reading.api";
 import type { ContinueReadingItem } from "../types/reading.types";
 
@@ -23,6 +25,10 @@ export default function ContinueReadingSection() {
   const [items, setItems] = useState<ContinueReadingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const currentUser = authenticationStore((state) => state.currentUser);
+  const { lang } = useTranslation();
+  const pathname = usePathname();
+  const activeLocale = pathname?.startsWith("/vi") ? "vi" : (lang || "en");
+  const isVi = activeLocale === "vi";
 
   useEffect(() => {
     if (!currentUser?._id) {
@@ -33,7 +39,7 @@ export default function ContinueReadingSection() {
 
     let isMounted = true;
     readingApi
-      .getContinueReading(4)
+      .getContinueReading(4, activeLocale)
       .then((data) => {
         if (isMounted) {
           setItems(data);
@@ -51,7 +57,7 @@ export default function ContinueReadingSection() {
     return () => {
       isMounted = false;
     };
-  }, [currentUser?._id]);
+  }, [currentUser?._id, activeLocale]);
 
   if (!currentUser?._id || (!isLoading && items.length === 0)) {
     return null;
@@ -70,10 +76,10 @@ export default function ContinueReadingSection() {
               id="continue-reading-heading"
               className="text-lg font-bold text-zinc-900 dark:text-white"
             >
-              Continue Reading
+              {isVi ? "Tiếp tục đọc" : "Continue Reading"}
             </h2>
             <p className="text-xs text-zinc-600 dark:text-zinc-400">
-              Pick up right where you left off
+              {isVi ? "Tiếp tục bài viết bạn đang đọc dở" : "Pick up right where you left off"}
             </p>
           </div>
         </div>
@@ -94,7 +100,7 @@ export default function ContinueReadingSection() {
           {items.map((item) => (
             <Link
               key={item.id}
-              href={`/post/${item.slug}`}
+              href={item.locale === "vi" ? `/vi/post/${item.slug}` : `/post/${item.slug}`}
               className="group relative flex flex-col p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-md hover:border-indigo-500/50 dark:hover:border-indigo-500/40 transition-all duration-200 overflow-hidden"
             >
               <div className="flex gap-4 items-start">
@@ -130,7 +136,11 @@ export default function ContinueReadingSection() {
                   {/* Reading Time Meta */}
                   <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 mt-2">
                     <Clock size={12} />
-                    <span>{item.remainingMinutes} min remaining</span>
+                    <span>
+                      {isVi
+                        ? `còn khoảng ${item.remainingMinutes} phút`
+                        : `${item.remainingMinutes} min remaining`}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -139,10 +149,10 @@ export default function ContinueReadingSection() {
               <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
                 <div className="flex items-center justify-between text-xs mb-1.5">
                   <span className="font-medium text-zinc-600 dark:text-zinc-400">
-                    {item.progress}% completed
+                    {isVi ? `Đã đọc ${item.progress}%` : `${item.progress}% completed`}
                   </span>
                   <span className="inline-flex items-center gap-1 font-semibold text-indigo-600 dark:text-indigo-400 group-hover:translate-x-0.5 transition-transform">
-                    <span>Resume</span>
+                    <span>{isVi ? "Đọc tiếp" : "Resume"}</span>
                     <ArrowRight size={11} />
                   </span>
                 </div>
