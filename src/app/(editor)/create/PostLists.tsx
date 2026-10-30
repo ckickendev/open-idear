@@ -14,7 +14,9 @@ import {
   Loader2,
   PanelLeftClose,
   RotateCw,
+  Sparkles,
 } from "lucide-react";
+import Link from "next/link";
 import Logo from "@/components/common/Logo";
 import { postApi } from "@/features/ideas/api/post.api";
 import { toast } from "sonner";
@@ -345,17 +347,33 @@ export default function PostListPanel({
           </div>
         </div>
 
-        {/* Create new */}
-        <div className="px-4 py-3">
+        {/* Creation Actions */}
+        <div className="px-4 py-3 space-y-2">
+          {/* Create Blank Post */}
           <button
             onClick={handleCreateNew}
-            className="group relative flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-[var(--color-editor-accent)] hover:bg-[var(--color-editor-accent-hover)] text-white text-sm font-semibold transition-all duration-200 shadow-lg shadow-[var(--color-editor-accent)]/20 active:scale-[0.97] cursor-pointer overflow-hidden"
+            className="group relative flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-[var(--color-editor-accent)] hover:bg-[var(--color-editor-accent-hover)] text-white text-xs sm:text-sm font-semibold transition-all duration-200 shadow-lg shadow-[var(--color-editor-accent)]/20 active:scale-[0.97] cursor-pointer overflow-hidden"
           >
             {/* Shimmer overlay */}
             <span className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-transparent via-white/15 to-transparent animate-shimmer transition-opacity duration-300" />
             <BadgePlus size={16} className="relative z-10" />
             <span className="relative z-10">{t("editor.post_list.create_new")}</span>
           </button>
+
+          {/* Create with AI — Content Studio Navigation */}
+          <Link
+            href="/management/content-studio"
+            className="group relative flex items-center justify-between w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-violet-600/15 via-indigo-600/15 to-purple-600/15 hover:from-violet-600/25 hover:via-indigo-600/25 hover:to-purple-600/25 text-violet-700 dark:text-violet-300 border border-violet-500/30 hover:border-violet-500/50 text-xs font-semibold transition-all duration-200 shadow-xs active:scale-[0.97] cursor-pointer"
+            title="Open AI Content Studio to generate full articles from ideas & outlines"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles size={15} className="text-violet-500 animate-pulse" />
+              <span>{t("editor.post_list.create_with_ai", "AI Content Studio")}</span>
+            </div>
+            <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-md bg-violet-600 text-white shadow-2xs">
+              AI Writer
+            </span>
+          </Link>
         </div>
 
         {/* Search */}

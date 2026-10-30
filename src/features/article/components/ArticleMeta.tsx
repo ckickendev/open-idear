@@ -24,6 +24,7 @@
 // =============================================================================
 
 import React from "react";
+import Link from "next/link";
 import { Calendar, Clock } from "lucide-react";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -31,6 +32,8 @@ import { Calendar, Clock } from "lucide-react";
 export interface ArticleMetaAuthor {
   /** Display name shown beneath the avatar. */
   name: string;
+  /** Username for profile linking. */
+  username?: string;
   /** Absolute or relative URL to the author avatar image. */
   avatarUrl?: string;
   /** Job title / role shown below the name (e.g. "Software Engineer"). */
@@ -218,19 +221,22 @@ export default function ArticleMeta({
       {/* ── 4. Author Identity & Inline Actions Toolbar ──────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4 border-y border-border/50 mb-8">
         {author && (
-          <div className="flex items-center gap-3">
+          <Link
+            href={`/profile/${author.username || author.name}`}
+            className="flex items-center gap-3 group hover:opacity-90 transition-opacity cursor-pointer"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={author.avatarUrl ?? getInitialsAvatar(author.name)}
               alt={author.avatarUrl ? `${author.name}'s avatar` : ""}
               aria-hidden={!author.avatarUrl}
-              className="w-11 h-11 rounded-full object-cover ring-2 ring-border/60 shrink-0 shadow-xs"
+              className="w-11 h-11 rounded-full object-cover ring-2 ring-border/60 group-hover:ring-primary shrink-0 shadow-xs transition-all"
               width={44}
               height={44}
               loading="eager"
             />
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-foreground leading-snug">
+              <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
                 {author.name}
               </span>
               {author.role && (
@@ -239,7 +245,7 @@ export default function ArticleMeta({
                 </span>
               )}
             </div>
-          </div>
+          </Link>
         )}
 
         {actions && <div className="flex items-center flex-wrap gap-2">{actions}</div>}

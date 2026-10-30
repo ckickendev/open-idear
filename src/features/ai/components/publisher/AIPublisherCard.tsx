@@ -13,6 +13,7 @@ import { PresetChips } from "./PresetChips";
 import { PublisherConfigGrid } from "./PublisherConfigGrid";
 import { GenerateActions } from "./GenerateActions";
 import { GenerationProgress, type PipelineStep, type StepStatus } from "./GenerationProgress";
+import { aiVisualApi } from "@/features/ai-visual";
 
 export interface AIPublisherResult {
   title: string;
@@ -49,6 +50,7 @@ export const AIPublisherCard: React.FC<AIPublisherCardProps> = ({
   const [tone, setTone] = useState("informative");
   const [length, setLength] = useState("medium");
   const [brandVoice, setBrandVoice] = useState<BrandVoiceProfile | null>(null);
+  const [coverSource, setCoverSource] = useState<"internet" | "ai" | "none">("internet");
   const [isExpanded, setIsExpanded] = useState(true);
 
   // Execution states
@@ -145,6 +147,43 @@ export const AIPublisherCard: React.FC<AIPublisherCardProps> = ({
 
       const resData = (response.data as any)?.data || response.data;
 
+      // Step 4: Resolve Cover Image based on author's preference
+      let resolvedCoverImage = resData.coverImage || null;
+      if (coverSource === "internet") {
+        setProgressiveMsg("Finding high-resolution Unsplash photo...");
+        updateStepStatus("cover_image", "running", "Searching Unsplash...");
+        try {
+          const stockImages = await aiVisualApi.searchImages(
+            { query: topic.trim(), limit: 6, orientation: "landscape" },
+            6,
+            1
+          );
+          if (stockImages && stockImages.length > 0) {
+            const best = stockImages[0];
+            resolvedCoverImage = {
+              url: best.url,
+              alt: best.alt || best.title || `Cover photo for ${topic}`,
+              prompt: "",
+              width: best.width || 1200,
+              height: best.height || 630,
+              createdByAI: false,
+              source: best.sourceProvider || "unsplash",
+              author: best.author,
+              attributionUrl: best.attributionUrl,
+            };
+            updateStepStatus("cover_image", "completed", "Unsplash photo selected");
+          } else {
+            updateStepStatus("cover_image", "completed", "Asset ready");
+          }
+        } catch (stockErr) {
+          console.warn("[AIPublisherCard] Stock photo search error:", stockErr);
+          updateStepStatus("cover_image", "completed", "Asset ready");
+        }
+      } else if (coverSource === "none") {
+        resolvedCoverImage = null;
+        updateStepStatus("cover_image", "completed", "Skipped");
+      }
+
       const result: AIPublisherResult = {
         title: resData.title || topic,
         slug: resData.slug || "",
@@ -152,7 +191,7 @@ export const AIPublisherCard: React.FC<AIPublisherCardProps> = ({
         category: resData.category || resData.seo?.category || "general",
         tags: resData.tags || resData.seo?.tags || [],
         blocks: resData.blocks || [],
-        coverImage: resData.coverImage || null,
+        coverImage: resolvedCoverImage,
         markdown: resData.markdown || "",
         validation: resData.validation,
         imageSuggestions: resData.imageSuggestions,
@@ -241,13 +280,47 @@ export const AIPublisherCard: React.FC<AIPublisherCardProps> = ({
       updateStepStatus("seo", "completed", `Slug: /${resData.slug || "post"}`);
 
       // Step 4: Cover Image
-      updateStepStatus("cover_image", "running");
-      await new Promise((r) => setTimeout(r, 350));
-      updateStepStatus(
-        "cover_image",
-        "completed",
-        resData.coverImage?.url ? "Cover uploaded" : "Cover asset ready"
-      );
+      let resolvedCoverImage = resData.coverImage || null;
+      if (coverSource === "internet") {
+        updateStepStatus("cover_image", "running", "Searching Unsplash photo...");
+        try {
+          const stockImages = await aiVisualApi.searchImages(
+            { query: topic.trim(), limit: 6, orientation: "landscape" },
+            6,
+            1
+          );
+          if (stockImages && stockImages.length > 0) {
+            const best = stockImages[0];
+            resolvedCoverImage = {
+              url: best.url,
+              alt: best.alt || best.title || `Cover photo for ${topic}`,
+              prompt: "",
+              width: best.width || 1200,
+              height: best.height || 630,
+              createdByAI: false,
+              source: best.sourceProvider || "unsplash",
+              author: best.author,
+              attributionUrl: best.attributionUrl,
+            };
+            updateStepStatus("cover_image", "completed", "Unsplash photo selected");
+          } else {
+            updateStepStatus("cover_image", "completed", "Asset ready");
+          }
+        } catch {
+          updateStepStatus("cover_image", "completed", "Asset ready");
+        }
+      } else if (coverSource === "none") {
+        resolvedCoverImage = null;
+        updateStepStatus("cover_image", "completed", "Skipped");
+      } else {
+        updateStepStatus("cover_image", "running");
+        await new Promise((r) => setTimeout(r, 350));
+        updateStepStatus(
+          "cover_image",
+          "completed",
+          resData.coverImage?.url ? "Cover uploaded" : "Cover asset ready"
+        );
+      }
 
       // Step 5: Validator
       updateStepStatus("validator", "running");
@@ -266,7 +339,7 @@ export const AIPublisherCard: React.FC<AIPublisherCardProps> = ({
         category: resData.category || resData.seo?.category || "general",
         tags: resData.tags || resData.seo?.tags || [],
         blocks: resData.blocks || [],
-        coverImage: resData.coverImage || null,
+        coverImage: resolvedCoverImage,
         markdown: resData.markdown || "",
         validation: resData.validation,
         imageSuggestions: resData.imageSuggestions,
@@ -354,6 +427,8 @@ export const AIPublisherCard: React.FC<AIPublisherCardProps> = ({
             onLengthChange={setLength}
             brandVoice={brandVoice}
             onBrandVoiceChange={setBrandVoice}
+            coverSource={coverSource}
+            onCoverSourceChange={setCoverSource}
             disabled={isGenerating}
           />
 

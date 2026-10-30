@@ -29,6 +29,7 @@ interface ArticleWritingProgressProps {
   streamChunkText?: string;
   onCancel?: () => void;
   onRetry?: () => void;
+  onBackToOutline?: () => void;
 }
 
 export function ArticleWritingProgress({
@@ -37,6 +38,7 @@ export function ArticleWritingProgress({
   streamChunkText,
   onCancel,
   onRetry,
+  onBackToOutline,
 }: ArticleWritingProgressProps) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
@@ -135,30 +137,27 @@ export function ArticleWritingProgress({
               </p>
             </div>
           )}
+        </div>
 
-          {/* Error Actions */}
-          {hasError && (
-            <div className="pt-4 border-t border-border/60 flex items-center justify-between gap-4">
-              {onCancel && (
-                <button
-                  type="button"
-                  onClick={onCancel}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border border-border bg-background hover:bg-muted text-foreground transition-all"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  Return to Outline
-                </button>
-              )}
-              {onRetry && (
-                <button
-                  type="button"
-                  onClick={onRetry}
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:brightness-105 transition-all shadow-xs"
-                >
-                  Retry Stage
-                </button>
-              )}
-            </div>
+        {/* Navigation & Controls */}
+        <div className="p-4 px-8 border-t border-border/60 bg-muted/20 flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={onBackToOutline || onCancel}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border border-border bg-background hover:bg-muted text-foreground transition-all cursor-pointer shadow-xs"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-muted-foreground" />
+            <span>Return to Section 3: Outline</span>
+          </button>
+
+          {hasError && onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:brightness-105 transition-all shadow-xs cursor-pointer"
+            >
+              Retry Stage
+            </button>
           )}
         </div>
       </div>

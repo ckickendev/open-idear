@@ -40,10 +40,11 @@ interface ContentOutlineEditorProps {
   selectedIdeas: ContentIdea[];
   activeIdeaIndex: number;
   onSelectIdeaIndex: (index: number) => void;
-  outline: ContentOutline;
-  brief: ContentBrief;
+  outline: ContentOutline | null;
+  brief: ContentBrief | null;
   isGeneratingOutline: boolean;
   onRegenerateOutline: () => void;
+  onCreateCustomIdea?: (title: string, category?: string) => Promise<any>;
   onUpdateTitle: (title: string) => void;
   onUpdateIntroduction: (intro: string) => void;
   onUpdateConclusion: (conclusion: string) => void;
@@ -70,6 +71,7 @@ export function ContentOutlineEditor({
   brief,
   isGeneratingOutline,
   onRegenerateOutline,
+  onCreateCustomIdea,
   onUpdateTitle,
   onUpdateIntroduction,
   onUpdateConclusion,
@@ -89,13 +91,31 @@ export function ContentOutlineEditor({
 }: ContentOutlineEditorProps) {
   const currentIdea = selectedIdeas[activeIdeaIndex] || selectedIdeas[0];
   const [showFaq, setShowFaq] = useState(true);
+  const [showAddIdeaModal, setShowAddIdeaModal] = useState(false);
+  const [newIdeaTitle, setNewIdeaTitle] = useState("");
+  const [isSubmittingIdea, setIsSubmittingIdea] = useState(false);
 
-  if (!currentIdea || !outline) {
+  const handleCreateIdea = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newIdeaTitle.trim() || !onCreateCustomIdea) return;
+    setIsSubmittingIdea(true);
+    try {
+      await onCreateCustomIdea(newIdeaTitle.trim(), brief?.category);
+      setNewIdeaTitle("");
+      setShowAddIdeaModal(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmittingIdea(false);
+    }
+  };
+
+  if (!currentIdea) {
     return (
       <div className="flex flex-col items-center justify-center p-12 bg-card rounded-2xl border border-border/60">
         <Sparkles className="w-8 h-8 text-primary animate-pulse mb-3" />
         <p className="text-muted-foreground font-medium">
-          Loading outline specifications...
+          No idea selected. Please select or create an idea to continue.
         </p>
       </div>
     );
@@ -103,61 +123,145 @@ export function ContentOutlineEditor({
 
   return (
     <div className="space-y-6">
-      {/* ─── Multi-Idea Tabs (if more than 1 selected) ───────────────────── */}
-      {selectedIdeas.length > 1 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mr-1 shrink-0">
-            Selected Ideas ({selectedIdeas.length}):
-          </span>
-          {selectedIdeas.map((idea, idx) => {
-            const isActive = idx === activeIdeaIndex;
-            return (
-              <button
-                key={idea.id}
-                type="button"
-                onClick={() => onSelectIdeaIndex(idx)}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all shrink-0 border ${
+      {/* ─── Multi-Idea Tabs Strip (with Quick New Idea Creator) ──────────── */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mr-1 shrink-0">
+          Selected Ideas ({selectedIdeas.length}):
+        </span>
+        {selectedIdeas.map((idea, idx) => {
+          const isActive = idx === activeIdeaIndex;
+          return (
+            <button
+              key={idea.id}
+              type="button"
+              onClick={() => onSelectIdeaIndex(idx)}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all shrink-0 border cursor-pointer ${
+                isActive
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/25"
+                  : "bg-background text-muted-foreground border-border hover:bg-muted/70 hover:text-foreground"
+              }`}
+            >
+              <span
+                className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
                   isActive
-                    ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/25"
-                    : "bg-background text-muted-foreground border-border hover:bg-muted/70 hover:text-foreground"
+                    ? "bg-white/20 text-white"
+                    : "bg-muted text-muted-foreground"
                 }`}
               >
-                <span
-                  className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                    isActive
-                      ? "bg-white/20 text-white"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {idx + 1}
-                </span>
-                <span className="max-w-[200px] truncate">{idea.title}</span>
-              </button>
-            );
-          })}
+                {idx + 1}
+              </span>
+              <span className="max-w-[200px] truncate">{idea.title}</span>
+            </button>
+          );
+        })}
+
+        {/* Quick Add New Idea Button */}
+        <button
+          type="button"
+          onClick={() => setShowAddIdeaModal(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-dashed border-primary/40 hover:border-primary text-primary hover:bg-primary/5 transition-all shrink-0 cursor-pointer shadow-2xs"
+          title="Create a new article idea in Section 3 Outline"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>New Idea</span>
+        </button>
+      </div>
+
+      {/* ─── Inline Modal/Card: Create New Idea ───────────────────────────── */}
+      {showAddIdeaModal && (
+        <form
+          onSubmit={handleCreateIdea}
+          className="p-4 sm:p-5 rounded-2xl border border-primary/30 bg-primary/5 space-y-3 animate-in fade-in-50 duration-200"
+        >
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+              <Lightbulb className="w-3.5 h-3.5" />
+              Add New Article Idea to Outline
+            </h4>
+            <button
+              type="button"
+              onClick={() => setShowAddIdeaModal(false)}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Cancel
+            </button>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              autoFocus
+              value={newIdeaTitle}
+              onChange={(e) => setNewIdeaTitle(e.target.value)}
+              placeholder="e.g., Best DDR5 RAM Kits for Intel Core Ultra 200S..."
+              className="flex-1 px-3.5 py-2 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-xs"
+            />
+            <button
+              type="submit"
+              disabled={!newIdeaTitle.trim() || isSubmittingIdea}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:brightness-105 disabled:opacity-50 transition-all shrink-0 shadow-xs cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{isSubmittingIdea ? "Creating..." : "Create & Generate Outline"}</span>
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* ─── Outline Loading State (if outline not yet generated for this idea) */}
+      {!outline && (
+        <div className="bg-card rounded-2xl border border-border/70 shadow-sm overflow-hidden p-8 sm:p-12 text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto border border-primary/20">
+            <Sparkles className="w-6 h-6 animate-pulse" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold tracking-tight text-foreground">
+              {isGeneratingOutline ? "Generating Outline..." : "Outline not generated yet"}
+            </h2>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Ready to structure the content outline for{" "}
+              <span className="font-semibold text-foreground">
+                &ldquo;{currentIdea.title}&rdquo;
+              </span>
+              .
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onRegenerateOutline}
+            disabled={isGeneratingOutline}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:brightness-105 shadow-md shadow-primary/20 transition-all cursor-pointer disabled:opacity-60"
+          >
+            <RefreshCw
+              className={`w-3.5 h-3.5 ${isGeneratingOutline ? "animate-spin" : ""}`}
+            />
+            <span>{isGeneratingOutline ? "Generating Outline..." : "Generate Outline with AI"}</span>
+          </button>
         </div>
       )}
 
       {/* ─── Main Outline Card ───────────────────────────────────────────── */}
-      <div className="bg-card rounded-2xl border border-border/70 shadow-sm overflow-hidden transition-all">
-        {/* Header Banner */}
-        <div className="px-6 py-5 border-b border-border/60 bg-muted/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
-                <Layers className="w-3 h-3" />
-                Step 3: Content Outline
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Idea {activeIdeaIndex + 1} of {selectedIdeas.length}
-              </span>
-              <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground font-medium">
-                {brief.length}
-              </span>
-            </div>
-            <h2 className="text-xl font-bold tracking-tight text-foreground line-clamp-2">
-              {currentIdea.title}
-            </h2>
+      {outline && (
+        <div className="bg-card rounded-2xl border border-border/70 shadow-sm overflow-hidden transition-all">
+          {/* Header Banner */}
+          <div className="px-6 py-5 border-b border-border/60 bg-muted/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+                  <Layers className="w-3 h-3" />
+                  Step 3: Content Outline
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Idea {activeIdeaIndex + 1} of {selectedIdeas.length}
+                </span>
+                {brief?.length && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground font-medium">
+                    {brief.length}
+                  </span>
+                )}
+              </div>
+              <h2 className="text-xl font-bold tracking-tight text-foreground line-clamp-2">
+                {currentIdea.title}
+              </h2>
             {currentIdea.hook && (
               <p className="text-xs text-muted-foreground line-clamp-1 italic">
                 Hook: &ldquo;{currentIdea.hook}&rdquo;
@@ -480,27 +584,45 @@ export function ContentOutlineEditor({
         </div>
 
         {/* ─── Footer Action Bar ────────────────────────────────────────── */}
-        <div className="px-6 py-4 border-t border-border/60 bg-muted/20 flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-border/60 bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-3">
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border border-border bg-background hover:bg-muted/70 text-foreground transition-all shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border border-border bg-background hover:bg-muted/70 text-foreground transition-all shadow-xs cursor-pointer w-full sm:w-auto justify-center"
           >
             <ArrowLeft className="w-4 h-4 text-muted-foreground" />
             Back to Brief
           </button>
 
-          <button
-            type="button"
-            onClick={onGenerateArticle}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-blue-600 via-indigo-600 to-primary text-white hover:brightness-105 active:scale-[0.98] shadow-md shadow-primary/20 transition-all"
-          >
-            <Sparkles className="w-4 h-4" />
-            Generate Article
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+            {activeIdeaIndex < selectedIdeas.length - 1 && (
+              <button
+                type="button"
+                onClick={() => onSelectIdeaIndex(activeIdeaIndex + 1)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary transition-all shadow-xs cursor-pointer"
+              >
+                <span>Next Idea: {selectedIdeas[activeIdeaIndex + 1]?.title.slice(0, 20)}...</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onGenerateArticle}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-blue-600 via-indigo-600 to-primary text-white hover:brightness-105 active:scale-[0.98] shadow-md shadow-primary/20 transition-all cursor-pointer w-full sm:w-auto justify-center"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>
+                {selectedIdeas.length > 1
+                  ? `Generate Article (Idea ${activeIdeaIndex + 1}/${selectedIdeas.length})`
+                  : "Generate Article"}
+              </span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

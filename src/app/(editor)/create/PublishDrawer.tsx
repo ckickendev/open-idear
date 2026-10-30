@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
+import CoverImagePicker from "./CoverImagePicker";
 import { AIPublisherPanel, publisherApi, type AIPublisherResult, type CoverImageResult } from "@/features/ai";
 import { useTranslation } from "@/app/hook/useTranslation";
 
@@ -344,111 +345,36 @@ const PublishDrawer: React.FC<PublishDrawerProps> = ({
             expanded={expandedSections.coverImage}
             onToggle={() => toggleSection("coverImage")}
           >
-            <div className="space-y-3">
-              {effectiveCoverUrl && !showReplaceCover ? (
-                <div className="relative rounded-xl overflow-hidden border border-[var(--color-editor-border)] bg-[var(--color-editor-elevated)] group">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={effectiveCoverUrl}
-                    alt={aiCoverImage?.alt || "Article Cover"}
-                    className="w-full h-44 object-cover rounded-t-xl"
-                  />
-                  <div className="absolute top-2 left-2 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/20 text-[10px] font-bold text-white shadow-sm">
-                    {aiCoverImage?.url ? (
-                      <>
-                        <Sparkles className="w-3 h-3 text-purple-400" />
-                        {t("editor.publish_drawer.ai_generated")}
-                      </>
-                    ) : (
-                      <>
-                        <ImageIcon className="w-3 h-3 text-blue-400" />
-                        {t("editor.publish_drawer.current_cover") || "Current Cover"}
-                      </>
-                    )}
-                  </div>
-
-                  <div className="p-3 bg-[var(--color-editor-elevated)] border-t border-[var(--color-editor-border)] flex items-center justify-between gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowReplaceCover(true)}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-[var(--color-editor-surface)] hover:bg-[var(--color-editor-border)] text-[var(--color-editor-text)] border border-[var(--color-editor-border)] transition-colors cursor-pointer"
-                    >
-                      <Upload size={12} />
-                      {t("editor.publish_drawer.change_cover") || "Change Cover"}
-                    </button>
-
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={handleRegenerateCover}
-                        disabled={isRegeneratingCover}
-                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-purple-600 hover:bg-purple-500 text-white transition-colors cursor-pointer disabled:opacity-50"
-                        title={t("editor.publish_drawer.regenerate_cover")}
-                      >
-                        {isRegeneratingCover ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <Wand2 className="w-3 h-3 text-amber-300" />
-                        )}
-                        <span className="hidden sm:inline">{t("editor.publish_drawer.regenerate_cover")}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleRemoveCover}
-                        className="p-1.5 text-xs font-semibold rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/25 transition-colors cursor-pointer"
-                        title={t("editor.publish_drawer.remove_cover") || "Remove Cover"}
-                        aria-label="Remove Cover"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-xl overflow-hidden space-y-2">
-                  <ImageUpload
-                    onImageUploaded={(img) => {
-                      onCoverImageUploaded(img);
-                      setShowReplaceCover(false);
-                    }}
-                    onClose={() => setShowReplaceCover(false)}
-                    isTitleDisplay={false}
-                  />
-
-                  <div className="flex items-center justify-between gap-2 pt-1">
-                    {effectiveCoverUrl && showReplaceCover && (
-                      <button
-                        type="button"
-                        onClick={() => setShowReplaceCover(false)}
-                        className="text-xs text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] transition-colors cursor-pointer"
-                      >
-                        {t("editor.publish_drawer.cancel")}
-                      </button>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={handleRegenerateCover}
-                      disabled={isRegeneratingCover}
-                      className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
-                    >
-                      {isRegeneratingCover ? (
-                        <>
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          {t("editor.publish_drawer.generating_ai_cover")}
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-3 h-3 text-amber-300" />
-                          {t("editor.publish_drawer.generate_ai_cover")}
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <CoverImagePicker
+              currentCoverUrl={effectiveCoverUrl}
+              coverMetadata={{
+                source: (currentImage as any)?.source || aiCoverImage?.source,
+                author: (currentImage as any)?.author || aiCoverImage?.author,
+                attributionUrl: (currentImage as any)?.attributionUrl || aiCoverImage?.attributionUrl,
+                alt: (currentImage as any)?.alt || aiCoverImage?.alt,
+                createdByAI: aiCoverImage?.createdByAI,
+              }}
+              initialTopic={initialTopic}
+              onSelectCover={(cover) => {
+                const coverObj: CoverImageResult = {
+                  url: cover.url,
+                  alt: cover.alt || initialTopic || "Article Cover",
+                  prompt: "",
+                  width: 1200,
+                  height: 630,
+                  createdByAI: cover.createdByAI ?? false,
+                  source: cover.source,
+                  author: cover.author,
+                  attributionUrl: cover.attributionUrl,
+                };
+                setAiCoverImage(coverObj);
+                onCoverImageUploaded(coverObj);
+                setShowReplaceCover(false);
+              }}
+              onRemoveCover={handleRemoveCover}
+              onRegenerateAI={handleRegenerateCover}
+              isRegeneratingAI={isRegeneratingCover}
+            />
           </CollapsibleSection>
 
           {/* 3. Hero Background Section */}

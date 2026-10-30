@@ -101,7 +101,9 @@ export default function ContentStudioPage() {
     addFaqItem,
     updateFaqItem,
     deleteFaqItem,
+    createCustomIdea,
     backToBrief,
+    backToOutline,
     writingStages,
     streamChunkText,
     generateArticle,
@@ -378,7 +380,7 @@ export default function ContentStudioPage() {
             )}
 
             {/* Step 3: Content Outline Editor */}
-            {step === "outline" && currentIdea && currentBrief && currentOutline && (
+            {step === "outline" && currentIdea && (
               <ContentOutlineEditor
                 selectedIdeas={selectedIdeas}
                 activeIdeaIndex={activeIdeaIndex}
@@ -387,6 +389,7 @@ export default function ContentStudioPage() {
                 brief={currentBrief}
                 isGeneratingOutline={isGeneratingOutline}
                 onRegenerateOutline={regenerateOutline}
+                onCreateCustomIdea={createCustomIdea}
                 onUpdateTitle={updateOutlineTitle}
                 onUpdateIntroduction={updateOutlineIntroduction}
                 onUpdateConclusion={updateOutlineConclusion}
@@ -412,7 +415,8 @@ export default function ContentStudioPage() {
                 idea={currentIdea}
                 stages={writingStages}
                 streamChunkText={streamChunkText}
-                onCancel={backToBrief}
+                onCancel={backToOutline}
+                onBackToOutline={backToOutline}
                 onRetry={generateArticle}
               />
             )}

@@ -192,6 +192,9 @@ export default async function ViPostLists({
                         postData.author.name ||
                         postData.author.username ||
                         "Tác giả",
+                      username:
+                        postData.author.username ||
+                        postData.author.name,
                       avatarUrl:
                         postData.author.avatar ||
                         postData.author.avatarUrl,

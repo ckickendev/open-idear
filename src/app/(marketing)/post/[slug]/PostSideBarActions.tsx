@@ -4,15 +4,12 @@ import {
   Heart,
   MessageCircle,
   Share2,
-  User,
   Plus,
   Bookmark,
   Check,
 } from "lucide-react";
 import authenticationStore from "@/store/AuthenticationStore";
-import { getHeadersToken } from "@/lib/api/axios";
-import axios from "axios";
-import { REACT_APP_ROOT_BACKEND } from "@/features/auth/components/authentication";
+import { apiClient } from "@/lib/api/axios";
 import { toast } from "sonner";
 import Link from "next/link";
 import { ArticleVersionAction } from "@/features/article/versioning";
@@ -20,6 +17,7 @@ import { SaveToCollectionModal } from "@/features/collections";
 import { useTranslation } from "@/app/hook/useTranslation";
 
 export interface PostSidebarActionsProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   postData: any;
   variant?: "floating" | "inline" | "both";
 }
@@ -30,9 +28,27 @@ export default function PostSidebarActions({
 }: PostSidebarActionsProps) {
   const { t } = useTranslation();
   const currentUser = authenticationStore((state) => state.currentUser);
+  const setIsAuthenFromDisplay = authenticationStore((state) => state.setIsAuthenFromDisplay);
+
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isLiked, setIsLiked] = useState(() => {
+    if (currentUser?._id && Array.isArray(postData?.likes)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return postData.likes.some((id: any) =>
+        typeof id === "object" ? id?._id === currentUser._id : id === currentUser._id
+      );
+    }
+    return false;
+  });
+  const [isBookmarked, setIsBookmarked] = useState(() => {
+    if (currentUser?._id && Array.isArray(postData?.marked)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return postData.marked.some((id: any) =>
+        typeof id === "object" ? id?._id === currentUser._id : id === currentUser._id
+      );
+    }
+    return false;
+  });
   const [isFollowed, setIsFollowed] = useState(false);
   const [likeCount, setLikeCount] = useState(postData?.likes?.length || 0);
   const [commentCount, setCommentCount] = useState(postData?.comments?.length || 0);
@@ -41,13 +57,11 @@ export default function PostSidebarActions({
   const handleLike = async () => {
     if (!currentUser?._id) {
       toast.info(t("component.article.signInToLike", "Please sign in to like this post"));
+      setIsAuthenFromDisplay(true);
       return;
     }
     try {
-      const res = await axios.post(
-        `${REACT_APP_ROOT_BACKEND}/comments/voteLike/${postData._id}`,
-        { headers: getHeadersToken() },
-      );
+      const res = await apiClient.post(`/comments/voteLike/${postData._id}`);
 
       if (res.status !== 200) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -56,18 +70,21 @@ export default function PostSidebarActions({
       if (postLike) {
         setIsLiked(true);
         setLikeCount((prev: number) => prev + 1);
+        toast.success(t("component.article.postLiked", "Post liked!"));
       } else {
         setIsLiked(false);
         setLikeCount((prev: number) => Math.max(0, prev - 1));
+        toast.info(t("component.article.postUnliked", "Post unliked"));
       }
     } catch {
-      toast.error("Error when liking post");
+      toast.error(t("component.article.likeError", "Error when liking post"));
     }
   };
 
   const handleBookmark = () => {
     if (!currentUser?._id) {
       toast.info(t("component.article.signInToSave", "Please sign in to save articles to collections"));
+      setIsAuthenFromDisplay(true);
       return;
     }
     setIsSaveModalOpen(true);
@@ -76,13 +93,11 @@ export default function PostSidebarActions({
   const handleFollow = async () => {
     if (!currentUser?._id) {
       toast.info(t("component.article.signInToFollow", "Please sign in to follow authors"));
+      setIsAuthenFromDisplay(true);
       return;
     }
     try {
-      const res = await axios.patch(
-        `${REACT_APP_ROOT_BACKEND}/post/followUser?postId=${postData._id}`,
-        { headers: getHeadersToken() },
-      );
+      const res = await apiClient.patch(`/post/followUser?postId=${postData._id}`);
 
       if (res.status !== 200) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -95,7 +110,7 @@ export default function PostSidebarActions({
       }
       setIsFollowed(followed);
     } catch {
-      toast.error("Error when following author");
+      toast.error(t("component.article.followError", "Error when following author"));
     }
   };
 
@@ -108,17 +123,27 @@ export default function PostSidebarActions({
           url,
         });
         return;
-      } catch {
-        // User cancelled or share dismissed, fall back to clipboard copy
+      } catch (err: unknown) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((err as any)?.name === "AbortError") return;
       }
     }
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      try {
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(url);
-        toast.success(t("component.article.shareCopied", "Article link copied to clipboard!"));
-      } catch {
-        toast.info(url);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = url;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
       }
+      toast.success(t("component.article.shareCopied", "Article link copied to clipboard!"));
+    } catch {
+      toast.info(url);
     }
   };
 
@@ -128,16 +153,20 @@ export default function PostSidebarActions({
       document.getElementById("comment-section");
     if (el) {
       el.scrollIntoView({ behavior: "smooth" });
+      setTimeout(() => {
+        const textarea = el.querySelector("textarea");
+        if (textarea) {
+          (textarea as HTMLTextAreaElement).focus();
+        }
+      }, 400);
     }
   };
 
   useEffect(() => {
     const getStatus = async () => {
+      if (!currentUser?._id || !postData?._id) return;
       try {
-        const res = await axios.get(
-          `${REACT_APP_ROOT_BACKEND}/post/getSideInformation?postId=${postData._id}`,
-          { headers: getHeadersToken() },
-        );
+        const res = await apiClient.get(`/post/getSideInformation?postId=${postData._id}`);
 
         if (res.status === 200) {
           const { isLiked: liked, isBookmarked: marked, isFollowed: followed } = res.data;
@@ -146,14 +175,12 @@ export default function PostSidebarActions({
           setIsFollowed(Boolean(followed));
         }
       } catch {
-        // Silently continue if unauthenticated or offline
+        // Silently continue if offline or guest
       }
     };
 
-    if (postData?._id) {
-      getStatus();
-    }
-  }, [postData?._id]);
+    getStatus();
+  }, [currentUser?._id, postData?._id]);
 
   const handleScroll = useCallback(() => {
     const scrollY = window.scrollY;
@@ -179,7 +206,7 @@ export default function PostSidebarActions({
             ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-semibold"
             : "bg-muted/60 hover:bg-muted text-foreground/80 hover:text-foreground border border-border/60"
         }`}
-        title="Like article"
+        title={isLiked ? t("component.article.unlike", "Unlike article") : t("component.article.like", "Like article")}
       >
         <Heart size={14} className={isLiked ? "fill-rose-500 text-rose-500" : ""} />
         <span>{likeCount}</span>
@@ -194,10 +221,10 @@ export default function PostSidebarActions({
             ? "bg-primary/10 text-primary border border-primary/30 font-semibold"
             : "bg-muted/60 hover:bg-muted text-foreground/80 hover:text-foreground border border-border/60"
         }`}
-        title="Save to Collection"
+        title={isBookmarked ? t("component.article.saved", "Saved") : t("component.article.save", "Save to Collection")}
       >
         <Bookmark size={14} className={isBookmarked ? "fill-primary text-primary" : ""} />
-        <span>Save</span>
+        <span>{isBookmarked ? t("component.article.saved", "Saved") : t("component.article.save", "Save")}</span>
       </button>
 
       {/* Comments Button */}
@@ -205,7 +232,7 @@ export default function PostSidebarActions({
         type="button"
         onClick={handleCommentScroll}
         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/60 hover:bg-muted text-foreground/80 hover:text-foreground border border-border/60 transition-all duration-200 cursor-pointer shadow-xs"
-        title="Jump to Comments"
+        title={t("component.article.jumpToComments", "Jump to Comments")}
       >
         <MessageCircle size={14} />
         <span>{commentCount}</span>
@@ -239,7 +266,7 @@ export default function PostSidebarActions({
                 ? "bg-rose-500/15 text-rose-600 dark:text-rose-400"
                 : "hover:bg-muted text-muted-foreground hover:text-foreground"
             }`}
-            title="Like article"
+            title={isLiked ? t("component.article.unlike", "Unlike article") : t("component.article.like", "Like article")}
           >
             <Heart size={18} className={isLiked ? "fill-current" : ""} />
           </button>
@@ -269,7 +296,7 @@ export default function PostSidebarActions({
               className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white transition-transform hover:scale-110 cursor-pointer ${
                 isFollowed ? "bg-emerald-500 hover:bg-emerald-600" : "bg-primary hover:bg-primary/90"
               }`}
-              title={isFollowed ? "Unfollow" : "Follow"}
+              title={isFollowed ? t("component.article.unfollow", "Unfollow") : t("component.article.follow", "Follow")}
             >
               {isFollowed ? <Check size={10} /> : <Plus size={10} />}
             </button>
@@ -280,7 +307,7 @@ export default function PostSidebarActions({
         <button
           type="button"
           onClick={handleBookmark}
-          title="Save to Collection"
+          title={isBookmarked ? t("component.article.saved", "Saved") : t("component.article.save", "Save to Collection")}
           className={`p-2.5 rounded-full transition-all duration-200 hover:scale-110 cursor-pointer ${
             isBookmarked
               ? "bg-primary/15 text-primary"
@@ -296,7 +323,7 @@ export default function PostSidebarActions({
             type="button"
             onClick={handleCommentScroll}
             className="p-2.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-110 cursor-pointer"
-            title="Comments"
+            title={t("component.article.jumpToComments", "Jump to Comments")}
           >
             <MessageCircle size={18} />
           </button>
@@ -322,7 +349,7 @@ export default function PostSidebarActions({
           type="button"
           onClick={handleShare}
           className="p-2.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-110 cursor-pointer"
-          title="Share article"
+          title={t("component.article.share", "Share article")}
         >
           <Share2 size={18} />
         </button>

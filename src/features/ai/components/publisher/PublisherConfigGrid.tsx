@@ -10,6 +10,8 @@ import {
   Sparkles,
   X,
   ChevronDown,
+  Globe,
+  ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { brandVoiceApi, type BrandVoiceProfile } from "../../api/brandVoice.api";
@@ -23,6 +25,8 @@ export interface PublisherConfigGridProps {
   onLengthChange: (length: string) => void;
   brandVoice: BrandVoiceProfile | null;
   onBrandVoiceChange: (voice: BrandVoiceProfile | null) => void;
+  coverSource?: "internet" | "ai" | "none";
+  onCoverSourceChange?: (source: "internet" | "ai" | "none") => void;
   disabled?: boolean;
 }
 
@@ -99,6 +103,8 @@ export const PublisherConfigGrid: React.FC<PublisherConfigGridProps> = ({
   onLengthChange,
   brandVoice,
   onBrandVoiceChange,
+  coverSource = "internet",
+  onCoverSourceChange,
   disabled = false,
 }) => {
   const [profiles, setProfiles] = useState<BrandVoiceProfile[]>([]);
@@ -338,6 +344,47 @@ export const PublisherConfigGrid: React.FC<PublisherConfigGridProps> = ({
 
           <p className="text-[10px] text-muted-foreground leading-tight mt-2 truncate">
             {selectedLengthHelper}
+          </p>
+        </div>
+
+        {/* 5. Cover Image Source */}
+        <div className="p-3 rounded-[16px] bg-muted/20 dark:bg-zinc-900/40 border border-border/70 hover:border-border transition-colors flex flex-col justify-between sm:col-span-2">
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label
+                htmlFor="config-cover-source"
+                className="text-[11px] font-semibold text-foreground flex items-center gap-1.5"
+              >
+                <Globe className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Cover Image Source</span>
+              </label>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">
+                Recommended: Unsplash
+              </span>
+            </div>
+
+            <div className="relative">
+              <select
+                id="config-cover-source"
+                value={coverSource}
+                onChange={(e) => onCoverSourceChange?.(e.target.value as any)}
+                disabled={disabled}
+                className="w-full appearance-none bg-background border border-border/80 rounded-xl px-3 py-1.5 pr-8 text-xs font-medium text-foreground focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10 cursor-pointer disabled:cursor-not-allowed"
+              >
+                <option value="internet">🌐 Real Internet Photo (Unsplash & Stock) — High Quality</option>
+                <option value="ai">🎨 AI Generated Art (Pollinations Digital Illustration)</option>
+                <option value="none">🚫 None (Skip cover image during drafting)</option>
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-2.5 top-2.5 pointer-events-none" />
+            </div>
+          </div>
+
+          <p className="text-[10px] text-muted-foreground leading-tight mt-2 truncate">
+            {coverSource === "internet"
+              ? "Automatically selects authentic high-resolution photography from Unsplash."
+              : coverSource === "ai"
+              ? "Generates a synthetic digital artwork using AI."
+              : "Leaves cover image empty for manual upload later."}
           </p>
         </div>
       </div>

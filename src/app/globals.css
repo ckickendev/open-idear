@@ -343,3 +343,120 @@
     animation: slide-in-left 0.25s ease-out;
   }
 }
+
+/* ============================================================
+   SCROLLBAR ARCHITECTURE & UTILITIES (Universal & Theme-Aware)
+   ============================================================ */
+
+/* Global Slim Modern Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.65 0.02 270 / 30%) transparent;
+}
+
+.dark * {
+  scrollbar-color: oklch(0.40 0.02 270 / 35%) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.65 0.02 270 / 30%);
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.50 0.05 270 / 55%);
+  background-clip: padding-box;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: oklch(0.38 0.02 270 / 40%);
+  background-clip: padding-box;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.50 0.03 270 / 60%);
+  background-clip: padding-box;
+}
+
+@layer utilities {
+  /* Hide scrollbars completely while maintaining full scroll functionality */
+  .scrollbar-none,
+  .scrollbar-hide,
+  .no-scrollbar {
+    -ms-overflow-style: none !important; /* IE and Edge */
+    scrollbar-width: none !important; /* Firefox */
+  }
+
+  .scrollbar-none::-webkit-scrollbar,
+  .scrollbar-hide::-webkit-scrollbar,
+  .no-scrollbar::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari, Opera */
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  /* Explicit Thin / Custom Scrollbar utility */
+  .custom-scrollbar,
+  .scrollbar-thin {
+    scrollbar-width: thin !important;
+    scrollbar-color: oklch(0.65 0.02 270 / 35%) transparent !important;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar,
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+    display: block !important;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track,
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent !important;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb,
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: oklch(0.65 0.02 270 / 30%) !important;
+    border-radius: 9999px !important;
+    border: 1px solid transparent !important;
+    background-clip: padding-box !important;
+    transition: background-color 0.2s ease;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.50 0.05 270 / 55%) !important;
+    background-clip: padding-box !important;
+  }
+
+  .dark .custom-scrollbar,
+  .dark .scrollbar-thin {
+    scrollbar-color: oklch(0.38 0.02 270 / 40%) transparent !important;
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb,
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: oklch(0.38 0.02 270 / 40%) !important;
+    background-clip: padding-box !important;
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.50 0.03 270 / 60%) !important;
+    background-clip: padding-box !important;
+  }
+}
+

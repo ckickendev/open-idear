@@ -36,8 +36,9 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({
   children,
 }) => (
   <button
+    type="button"
     onClick={onClick}
-    className={`p-2 rounded-lg transition-all duration-200 cursor-pointer ${
+    className={`p-1.5 sm:p-2 rounded-lg transition-all duration-200 cursor-pointer shrink-0 ${
       isActive
         ? "bg-[var(--color-editor-accent)]/15 text-[var(--color-editor-accent)] shadow-[0_0_0_1px_var(--color-editor-accent)]/20"
         : "text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)]"
@@ -51,11 +52,11 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({
 );
 
 const Divider = () => (
-  <div className="w-px h-5 bg-gradient-to-b from-transparent via-[var(--color-editor-border)] to-transparent mx-1 flex-shrink-0" />
+  <div className="w-px h-5 bg-gradient-to-b from-transparent via-[var(--color-editor-border)] to-transparent mx-1 sm:mx-1.5 flex-shrink-0" />
 );
 
 const GroupLabel = ({ children }: { children: React.ReactNode }) => (
-  <span className="text-[8px] uppercase tracking-widest font-bold text-[var(--color-editor-muted)]/60 px-1 select-none hidden md:inline">
+  <span className="sr-only">
     {children}
   </span>
 );
@@ -67,7 +68,11 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor, onInsertProduct }) => {
 
   return (
     <div
-      className="w-fit max-w-full mx-auto flex items-center justify-center gap-0.5 sm:gap-1 px-3 sm:px-4 py-1.5 sm:py-2 editor-glass rounded-2xl shadow-sm mb-6 overflow-x-auto scrollbar-hide"
+      className="w-fit max-w-full mx-auto flex items-center justify-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 editor-glass rounded-2xl shadow-sm mb-6 overflow-x-auto scrollbar-none scrollbar-hide no-scrollbar overscroll-x-contain"
+      style={{
+        scrollbarWidth: "none",
+        msOverflowStyle: "none",
+      }}
       role="toolbar"
       aria-label="Formatting toolbar"
     >

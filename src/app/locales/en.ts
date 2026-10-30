@@ -103,6 +103,17 @@ const en = {
       "history": "History",
       "share": "Share",
       "shareCopied": "Article link copied to clipboard!",
+      "save": "Save",
+      "saved": "Saved",
+      "like": "Like article",
+      "unlike": "Unlike article",
+      "postLiked": "Post liked!",
+      "postUnliked": "Post unliked",
+      "likeError": "Error when liking post",
+      "follow": "Follow",
+      "unfollow": "Unfollow",
+      "followError": "Error when following author",
+      "jumpToComments": "Jump to Comments",
       "signInToLike": "Please sign in to like this post",
       "signInToSave": "Please sign in to save articles to collections",
       "signInToFollow": "Please sign in to follow authors",
@@ -229,6 +240,8 @@ const en = {
       "diagram": "Diagram",
       "seo": "SEO",
       "ai_usage": "AI Usage",
+      "ai_content_studio": "AI Studio",
+      "ai_content_studio_title": "Open AI Content Studio to generate complete articles from ideas",
       "generate_visuals": "Generate All Visuals",
       "all_visuals": "All Visuals",
       "ai_tools": "AI Tools",
@@ -241,7 +254,8 @@ const en = {
       "publish": "Publish",
       "publish_title": "Publish (⌘Enter)",
       "published_btn": "Published",
-      "already_published": "Already published"
+      "already_published": "Already published",
+      "edit_publish_info": "Published — Click to edit publish info"
     },
     "publish_drawer": {
       "title": "Publish",
@@ -369,6 +383,8 @@ const en = {
       "refresh_list": "Refresh post list",
       "collapse_sidebar": "Collapse sidebar (⌘\\)",
       "create_new": "Create New Post",
+      "create_with_ai": "AI Content Studio",
+      "create_with_ai_desc": "Generate complete article with AI",
       "search_placeholder": "Search posts...",
       "tab_all": "All",
       "tab_drafts": "Drafts",
@@ -429,6 +445,11 @@ const en = {
       "could_not_retrieve": "Could not retrieve the {source} version.",
       "no_content": "The {source} version has no content to translate yet.",
       "translated_success": "✨ {target} draft translated! Review content and save when ready."
+    },
+    "ai_banner": {
+      "headline": "Want AI to write this article for you?",
+      "description": "Use AI Content Studio to brainstorm ideas, create an outline, and generate a complete structured post.",
+      "button": "Launch AI Content Studio"
     }
   },
   "home": {

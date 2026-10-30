@@ -165,6 +165,9 @@ export default async function PostLists({
                         postData.author.name ||
                         postData.author.username ||
                         "Anonymous",
+                      username:
+                        postData.author.username ||
+                        postData.author.name,
                       avatarUrl:
                         postData.author.avatar ||
                         postData.author.avatarUrl,

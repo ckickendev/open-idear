@@ -98,6 +98,17 @@
       "history": "Lịch sử",
       "share": "Chia sẻ",
       "shareCopied": "Đã sao chép liên kết bài viết vào clipboard!",
+      "save": "Lưu",
+      "saved": "Đã lưu",
+      "like": "Thích bài viết",
+      "unlike": "Bỏ thích bài viết",
+      "postLiked": "Đã thích bài viết!",
+      "postUnliked": "Đã bỏ thích bài viết",
+      "likeError": "Lỗi khi thích bài viết",
+      "follow": "Theo dõi",
+      "unfollow": "Hủy theo dõi",
+      "followError": "Lỗi khi theo dõi tác giả",
+      "jumpToComments": "Đến phần bình luận",
       "signInToLike": "Vui lòng đăng nhập để thích bài viết",
       "signInToSave": "Vui lòng đăng nhập để lưu vào bộ sưu tập",
       "signInToFollow": "Vui lòng đăng nhập để theo dõi tác giả",
@@ -224,6 +235,8 @@
       "diagram": "Sơ đồ",
       "seo": "SEO",
       "ai_usage": "Mức dùng AI",
+      "ai_content_studio": "AI Studio",
+      "ai_content_studio_title": "Mở AI Content Studio để tạo bài viết hoàn chỉnh từ ý tưởng",
       "generate_visuals": "Tạo toàn bộ hình ảnh",
       "all_visuals": "Toàn bộ ảnh",
       "ai_tools": "Công cụ AI",
@@ -236,7 +249,8 @@
       "publish": "Xuất bản",
       "publish_title": "Xuất bản (⌘Enter)",
       "published_btn": "Đã xuất bản",
-      "already_published": "Đã xuất bản"
+      "already_published": "Đã xuất bản",
+      "edit_publish_info": "Đã xuất bản — Nhấn để chỉnh sửa thông tin"
     },
     "publish_drawer": {
       "title": "Xuất bản",
@@ -364,6 +378,8 @@
       "refresh_list": "Làm mới danh sách",
       "collapse_sidebar": "Thu gọn thanh bên (⌘\\)",
       "create_new": "Tạo bài viết mới",
+      "create_with_ai": "AI Content Studio",
+      "create_with_ai_desc": "Tạo bài viết hoàn chỉnh bằng AI",
       "search_placeholder": "Tìm kiếm bài viết...",
       "tab_all": "Tất cả",
       "tab_drafts": "Bản nháp",
@@ -424,6 +440,11 @@
       "could_not_retrieve": "Không thể lấy phiên bản {source}.",
       "no_content": "Phiên bản {source} chưa có nội dung để dịch.",
       "translated_success": "✨ Đã dịch bản nháp {target}! Xem lại nội dung và lưu khi sẵn sàng."
+    },
+    "ai_banner": {
+      "headline": "Muốn AI viết bài này cho bạn?",
+      "description": "Sử dụng AI Content Studio để tìm ý tưởng, tạo dàn ý và tự động viết toàn bộ bài viết.",
+      "button": "Mở AI Content Studio"
     }
   },
   "home": {

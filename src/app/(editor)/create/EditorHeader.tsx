@@ -290,6 +290,17 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             </button>
           )}
 
+          {/* AI Content Studio Full App Navigation */}
+          <Link
+            href="/management/content-studio"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-purple-600/20 via-violet-600/20 to-indigo-600/20 hover:from-purple-600/30 hover:via-violet-600/30 hover:to-indigo-600/30 text-purple-600 dark:text-purple-300 border border-purple-500/30 transition-all duration-200 cursor-pointer shadow-xs"
+            aria-label={t("editor.header.ai_content_studio", "AI Studio")}
+            title={t("editor.header.ai_content_studio_title", "Open AI Content Studio to generate complete articles from ideas")}
+          >
+            <Sparkles size={14} className="text-purple-500 animate-pulse" />
+            <span>{t("editor.header.ai_content_studio", "AI Studio")}</span>
+          </Link>
+
           {/* Separator within AI cluster */}
           <div className="w-px h-4 bg-[var(--color-editor-border)]/50 mx-0.5" />
 
@@ -436,6 +447,23 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
               <DropdownMenuLabel className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-editor-muted)]">
                 {t("editor.header.ai_tools", undefined, "AI Tools")}
               </DropdownMenuLabel>
+
+              {/* AI Content Studio Navigation */}
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/management/content-studio"
+                  className="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-semibold text-purple-600 dark:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 cursor-pointer transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <Sparkles size={14} className="text-purple-500 animate-pulse" />
+                    <span>{t("editor.header.ai_content_studio", "AI Content Studio")}</span>
+                  </span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-purple-600 text-white">
+                    NEW
+                  </span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="my-1 bg-[var(--color-editor-border)]" />
 
               {/* AI Planner */}
               <DropdownMenuItem

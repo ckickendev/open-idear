@@ -55,7 +55,7 @@ export const removeToken = () => {
   }
 };
 
-const apiClient = axios.create({
+export const apiClient = axios.create({
   baseURL: ENV.ROOT_API || "http://localhost:5001",
 });
 

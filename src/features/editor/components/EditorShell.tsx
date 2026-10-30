@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { toast } from "sonner";
 
 import "@/styles/editor.css";
@@ -678,20 +679,46 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
 
   // Sync post content into TipTap editor whenever editor becomes ready or loadedPost updates
   useEffect(() => {
-    if (editor && loadedPost) {
-      const key = `${loadedPost._id || loadedPost.title}::${editorLocale}`;
-      if (contentAppliedKeyRef.current !== key) {
-        const resolved = resolvePostEditorContent(loadedPost);
-        if (resolved.html) {
-          editor.commands.setContent(resolved.html, { emitUpdate: false });
-          contentAppliedKeyRef.current = key;
+    if (editor) {
+      if (loadedPost) {
+        const key = `${loadedPost._id || loadedPost.title}::${editorLocale}`;
+        if (contentAppliedKeyRef.current !== key) {
+          const resolved = resolvePostEditorContent(loadedPost);
+          if (resolved.html) {
+            editor.commands.setContent(resolved.html, { emitUpdate: false });
+            contentAppliedKeyRef.current = key;
+            try {
+              sessionStorage.removeItem("content_studio_draft");
+            } catch {}
+          }
+          if (resolved.markdown) {
+            setGeneratedMarkdown(resolved.markdown);
+          }
         }
-        if (resolved.markdown) {
-          setGeneratedMarkdown(resolved.markdown);
+      } else if (!searchParams.get("id")) {
+        // Immediate fallback: load studio draft from sessionStorage if editor mounted asynchronously
+        try {
+          const studioDraftRaw = sessionStorage.getItem("content_studio_draft");
+          if (studioDraftRaw) {
+            const draft = JSON.parse(studioDraftRaw);
+            if (draft.title) setTitle(draft.title);
+            if (draft.description) setDescriptionPublic(draft.description);
+            if (draft.category) setCategoryPublic(draft.category);
+            const resolved = resolvePostEditorContent(draft);
+            if (resolved.markdown) setGeneratedMarkdown(resolved.markdown);
+            setLoadedPost(draft);
+            if (resolved.html) {
+              editor.commands.setContent(resolved.html, { emitUpdate: false });
+              contentAppliedKeyRef.current = `${draft._id || draft.title}::${editorLocale}`;
+              sessionStorage.removeItem("content_studio_draft");
+            }
+          }
+        } catch (e) {
+          console.warn("[EditorShell] Fallback draft load error:", e);
         }
       }
     }
-  }, [editor, isReady, loadedPost, editorLocale]);
+  }, [editor, isReady, loadedPost, editorLocale, searchParams]);
 
   // ─── Locale-Aware Post Data Loader (Sprint 3) ────────────────────────
   const loadPostLocaleData = useCallback(
@@ -722,9 +749,16 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           setSeriesPublic(
             typeof post.series === "object" ? post.series?._id || "" : post.series || ""
           );
-          setImagePublic(
-            typeof post.image === "object" ? post.image?.url || null : post.image || null
-          );
+          let studioDraftImage: string | null = null;
+          try {
+            const raw = sessionStorage.getItem("content_studio_draft");
+            if (raw) studioDraftImage = JSON.parse(raw)?.image || null;
+          } catch {}
+          const imgVal =
+            (typeof post.image === "object" ? post.image?.url || null : post.image || null) ||
+            studioDraftImage ||
+            null;
+          setImagePublic(imgVal);
           const bgVal = post.background || post.hero?.background || post.translation?.background || post.translation?.hero?.background || "";
           setBackgroundPublic(bgVal);
 
@@ -764,18 +798,41 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
             contentAppliedKeyRef.current = `${targetPostId}::${resolvedLocale}`;
             autoSave.resetHash(`${resolvedLocale}::::`);
           } else {
-            setTitle(post.title || "");
-            setDescriptionPublic(post.description || "");
+            let studioDraft: any = null;
+            try {
+              const studioDraftRaw = sessionStorage.getItem("content_studio_draft");
+              if (studioDraftRaw) {
+                studioDraft = JSON.parse(studioDraftRaw);
+              }
+            } catch {}
+
+            const finalTitle = post.title || studioDraft?.title || "";
+            const finalDesc = post.description || studioDraft?.description || "";
+            const finalCat =
+              (typeof post.category === "object" ? post.category?._id : post.category) ||
+              studioDraft?.category ||
+              "";
+
+            setTitle(finalTitle);
+            setDescriptionPublic(finalDesc);
+            if (finalCat) setCategoryPublic(finalCat);
             publishHook.setIsPublished(!!post.published);
 
-            const resolved = resolvePostEditorContent(post);
+            let resolved = resolvePostEditorContent(post);
+            if ((!resolved.html || resolved.html.trim() === "") && studioDraft) {
+              resolved = resolvePostEditorContent(studioDraft);
+              post.content = studioDraft.content || post.content;
+              post.markdown = studioDraft.markdown || post.markdown;
+              post.blocks = studioDraft.blocks || post.blocks;
+            }
+
             setGeneratedMarkdown(resolved.markdown);
 
             if (editor) {
               editor.commands.setContent(resolved.html, { emitUpdate: false });
               contentAppliedKeyRef.current = `${targetPostId}::${resolvedLocale}`;
             }
-            autoSave.resetHash(`${resolvedLocale}::${post.title || ""}::${resolved.html}`);
+            autoSave.resetHash(`${resolvedLocale}::${finalTitle}::${resolved.html}`);
 
             try {
               sessionStorage.removeItem("content_studio_draft");
@@ -870,31 +927,22 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           }
         }
 
-        // Fetch categories + series only if not already loaded
-        const fetchTasks: Promise<any>[] = [];
+        // Fetch categories + series with Promise.allSettled so network errors never abort page/draft loading
         const needCategory = !categoriesLoadedRef.current;
         const needSeries = !seriesLoadedRef.current;
 
-        if (needCategory) fetchTasks.push(categoryApi.getCategories());
-        if (needSeries) fetchTasks.push(seriesApi.getSeriesByUser());
+        const results = await Promise.allSettled([
+          needCategory ? categoryApi.getCategories() : Promise.resolve(null),
+          needSeries ? seriesApi.getSeriesByUser() : Promise.resolve(null),
+        ]);
 
-        if (fetchTasks.length > 0) {
-          const results = await Promise.all(fetchTasks);
-          let idx = 0;
-          if (needCategory) {
-            const resCat = results[idx++];
-            if (resCat?.success) {
-              setCategories(resCat.data.categories);
-              categoriesLoadedRef.current = true;
-            }
-          }
-          if (needSeries) {
-            const resSer = results[idx++];
-            if (resSer?.success) {
-              setSeriesList(resSer.data.series);
-              seriesLoadedRef.current = true;
-            }
-          }
+        if (needCategory && results[0].status === "fulfilled" && results[0].value?.success) {
+          setCategories(results[0].value.data.categories);
+          categoriesLoadedRef.current = true;
+        }
+        if (needSeries && results[1].status === "fulfilled" && results[1].value?.success) {
+          setSeriesList(results[1].value.data.series);
+          seriesLoadedRef.current = true;
         }
 
         setPostId(currentPostId);
@@ -904,7 +952,6 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
             const studioDraftRaw = sessionStorage.getItem("content_studio_draft");
             if (studioDraftRaw) {
               const draft = JSON.parse(studioDraftRaw);
-              sessionStorage.removeItem("content_studio_draft");
               if (draft.title) setTitle(draft.title);
               if (draft.description) setDescriptionPublic(draft.description);
               if (draft.category) setCategoryPublic(draft.category);
@@ -912,8 +959,12 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
               if (resolved.markdown) setGeneratedMarkdown(resolved.markdown);
               setLoadedPost(draft);
               if (editor && resolved.html) {
+                const draftKey = `${draft._id || draft.title}::${localeParam || editorLocale}`;
                 editor.commands.setContent(resolved.html, { emitUpdate: false });
-                contentAppliedKeyRef.current = `draft::${draft.title}`;
+                contentAppliedKeyRef.current = draftKey;
+                try {
+                  sessionStorage.removeItem("content_studio_draft");
+                } catch {}
               }
               setPageLoading(false);
               return;
@@ -1826,6 +1877,32 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                   onOpenSidebar={() => setPostListOpen(true)}
                   locale={editorLocale}
                 />
+              )}
+
+              {/* AI Content Studio Quick Action Banner for Blank Posts */}
+              {mode !== "preview" && !postId && (!title || title.trim() === "") && (
+                <div className="mb-6 p-4 rounded-2xl border border-violet-500/25 bg-gradient-to-r from-violet-500/10 via-indigo-500/5 to-purple-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-[fade-in_0.3s_ease-out]">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/25">
+                      <Sparkles size={20} className="text-amber-300 animate-pulse" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-[var(--color-editor-text)]">
+                        {t("editor.ai_banner.headline", "Want AI to write this article for you?")}
+                      </h4>
+                      <p className="text-xs text-[var(--color-editor-muted)] mt-0.5">
+                        {t("editor.ai_banner.description", "Use AI Content Studio to brainstorm ideas, create an outline, and generate a complete structured post.")}
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/management/content-studio"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-md shadow-indigo-500/25 active:scale-95 transition-all cursor-pointer shrink-0"
+                  >
+                    <Sparkles size={14} className="text-amber-300" />
+                    <span>{t("editor.ai_banner.button", "Launch AI Content Studio")}</span>
+                  </Link>
+                </div>
               )}
 
               {/* Translation Creation Notice Banner (Sprint 3 & 4) */}
