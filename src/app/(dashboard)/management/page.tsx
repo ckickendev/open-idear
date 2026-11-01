@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   Menu,
   FileText,
@@ -132,21 +133,26 @@ const AdminDashboard = () => {
  `}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center gap-3 px-4 border-b border-border flex-shrink-0">
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-            <Logo size={20} className="text-white" />
+        <Link
+          href="/management"
+          className="h-16 flex items-center gap-3 px-4 border-b border-border flex-shrink-0 group hover:bg-muted/40 transition-colors cursor-pointer"
+          title="OpenIdear Management Panel"
+        >
+          <div className="w-9 h-9 flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+            <Logo size={34} className="w-8.5 h-8.5 object-contain drop-shadow-xs" />
           </div>
           {sidebarOpen && (
             <div className="min-w-0">
-              <h1 className="font-bold text-base text-foreground truncate">
-                OpenIdear
-              </h1>
-              <p className="text-[11px] text-muted-foreground font-medium">
+              <div className="flex items-center tracking-tight leading-none">
+                <span className="font-bold text-[17px] text-blue-600">Open</span>
+                <span className="font-bold text-[17px] text-foreground">Idear</span>
+              </div>
+              <p className="text-[10.5px] uppercase font-semibold text-muted-foreground/80 tracking-wider mt-1">
                 Admin Panel
               </p>
             </div>
           )}
-        </div>
+        </Link>
 
         {/* Navigation */}
         <nav className="flex-1 py-3 px-3 overflow-y-auto">

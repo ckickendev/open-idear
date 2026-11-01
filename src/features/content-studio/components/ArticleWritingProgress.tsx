@@ -30,6 +30,8 @@ interface ArticleWritingProgressProps {
   onCancel?: () => void;
   onRetry?: () => void;
   onBackToOutline?: () => void;
+  onBackToBrief?: () => void;
+  onBackToIdeas?: () => void;
 }
 
 export function ArticleWritingProgress({
@@ -39,6 +41,8 @@ export function ArticleWritingProgress({
   onCancel,
   onRetry,
   onBackToOutline,
+  onBackToBrief,
+  onBackToIdeas,
 }: ArticleWritingProgressProps) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
@@ -140,15 +144,40 @@ export function ArticleWritingProgress({
         </div>
 
         {/* Navigation & Controls */}
-        <div className="p-4 px-8 border-t border-border/60 bg-muted/20 flex items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={onBackToOutline || onCancel}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border border-border bg-background hover:bg-muted text-foreground transition-all cursor-pointer shadow-xs"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 text-muted-foreground" />
-            <span>Return to Section 3: Outline</span>
-          </button>
+        <div className="p-4 px-8 border-t border-border/60 bg-muted/20 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={onBackToOutline || onCancel}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border border-border bg-background hover:bg-muted text-foreground transition-all cursor-pointer shadow-xs"
+              title="Return to Step 3: Outline"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-muted-foreground" />
+              <span>Outline</span>
+            </button>
+
+            {onBackToBrief && (
+              <button
+                type="button"
+                onClick={onBackToBrief}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all cursor-pointer"
+                title="Return to Step 2: Content Brief"
+              >
+                <span>Brief</span>
+              </button>
+            )}
+
+            {onBackToIdeas && (
+              <button
+                type="button"
+                onClick={onBackToIdeas}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all cursor-pointer"
+                title="Return to Step 1: Ideas"
+              >
+                <span>Ideas</span>
+              </button>
+            )}
+          </div>
 
           {hasError && onRetry && (
             <button

@@ -14,9 +14,10 @@ import { useContentStudioStore } from "../store/contentStudioStore";
 
 interface ContentStudioHeaderProps {
   step?: ContentStudioStep;
+  onStepChange?: (step: ContentStudioStep) => void;
 }
 
-export function ContentStudioHeader({ step }: ContentStudioHeaderProps) {
+export function ContentStudioHeader({ step, onStepChange }: ContentStudioHeaderProps) {
   const store = useContentStudioStore();
   const currentStep = step || store.step;
 
@@ -26,7 +27,11 @@ export function ContentStudioHeader({ step }: ContentStudioHeaderProps) {
   const canGoToWriting = store.writingStages.some((s) => s.status !== "idle");
 
   const handleStepClick = (targetStep: ContentStudioStep) => {
-    store.setStep(targetStep);
+    if (onStepChange) {
+      onStepChange(targetStep);
+    } else {
+      store.setStep(targetStep);
+    }
   };
 
   return (
@@ -35,7 +40,7 @@ export function ContentStudioHeader({ step }: ContentStudioHeaderProps) {
       <div className="flex items-center justify-between">
         <nav
           aria-label="Breadcrumb"
-          className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium"
+          className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium flex-wrap"
         >
           <Link
             href="/management"
@@ -44,29 +49,98 @@ export function ContentStudioHeader({ step }: ContentStudioHeaderProps) {
             <LayoutDashboard size={13} />
             <span>Management</span>
           </Link>
-          <ChevronRight size={12} className="text-muted-foreground/60" />
+          <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
           <Link
             href="/management/content-studio"
-            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+            onClick={(e) => {
+              e.preventDefault();
+              handleStepClick("ideas");
+            }}
+            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            title="Return to AI Content Studio Ideas"
           >
             <Compass size={13} className="text-primary" />
             <span>Content Studio</span>
           </Link>
+
+          {currentStep === "ideas" && (
+            <>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <span className="text-foreground font-semibold">Ideas</span>
+            </>
+          )}
+
           {currentStep === "brief" && (
             <>
-              <ChevronRight size={12} className="text-muted-foreground/60" />
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <button
+                type="button"
+                onClick={() => handleStepClick("ideas")}
+                className="hover:text-foreground transition-colors cursor-pointer"
+                title="Return to Step 1: Ideas"
+              >
+                Ideas
+              </button>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
               <span className="text-foreground font-semibold">Content Brief</span>
             </>
           )}
+
           {currentStep === "outline" && (
             <>
-              <ChevronRight size={12} className="text-muted-foreground/60" />
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <button
+                type="button"
+                onClick={() => handleStepClick("ideas")}
+                className="hover:text-foreground transition-colors cursor-pointer"
+                title="Return to Step 1: Ideas"
+              >
+                Ideas
+              </button>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <button
+                type="button"
+                onClick={() => handleStepClick("brief")}
+                className="hover:text-foreground transition-colors cursor-pointer"
+                title="Return to Step 2: Content Brief"
+              >
+                Brief
+              </button>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
               <span className="text-foreground font-semibold">Content Outline</span>
             </>
           )}
+
           {currentStep === "writing" && (
             <>
-              <ChevronRight size={12} className="text-muted-foreground/60" />
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <button
+                type="button"
+                onClick={() => handleStepClick("ideas")}
+                className="hover:text-foreground transition-colors cursor-pointer"
+                title="Return to Step 1: Ideas"
+              >
+                Ideas
+              </button>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <button
+                type="button"
+                onClick={() => handleStepClick("brief")}
+                className="hover:text-foreground transition-colors cursor-pointer"
+                title="Return to Step 2: Content Brief"
+              >
+                Brief
+              </button>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <button
+                type="button"
+                onClick={() => handleStepClick("outline")}
+                className="hover:text-foreground transition-colors cursor-pointer"
+                title="Return to Step 3: Content Outline"
+              >
+                Outline
+              </button>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
               <span className="text-foreground font-semibold">Drafting Article</span>
             </>
           )}

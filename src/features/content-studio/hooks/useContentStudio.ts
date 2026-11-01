@@ -435,6 +435,9 @@ export function useContentStudio(): UseContentStudioReturn {
   }, [currentIdea, generateBriefForIdea]);
 
   const backToIdeas = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
     store.setStep("ideas");
   }, [store]);
 
@@ -508,6 +511,9 @@ export function useContentStudio(): UseContentStudioReturn {
   );
 
   const backToOutline = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
     store.setStep("outline");
   }, [store]);
 
@@ -519,6 +525,9 @@ export function useContentStudio(): UseContentStudioReturn {
   }, [currentIdea, currentBrief, generateOutlineForIdea]);
 
   const backToBrief = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
     store.setStep("brief");
   }, [store]);
 
@@ -770,6 +779,12 @@ Target Language: ${langLabel} (Write 100% of the article strictly in ${langLabel
         );
       }
 
+      // Check if user navigated away or cancelled
+      if (controller.signal.aborted) {
+        console.info("[useContentStudio] Article generation aborted by user.");
+        return;
+      }
+
       // Resilient Fallback: If streaming was aborted, network dropped, or returned insufficient text (< 150 chars),
       // assemble a comprehensive initial draft based on the user-approved outline so the editor is NEVER empty.
       if (!articleMarkdown || articleMarkdown.trim().length < 150) {
@@ -872,6 +887,24 @@ ${
         console.warn("[useContentStudio] Stock cover search fallback:", imgErr);
       }
 
+      // Ensure clean string tags array without bracket or quote artifacts
+      const rawKeywords =
+        currentIdea.keywords && currentIdea.keywords.length > 0
+          ? currentIdea.keywords
+          : ["technology"];
+      const sanitizedTags = Array.isArray(rawKeywords)
+        ? rawKeywords
+            .flatMap((k: any) =>
+              typeof k === "string"
+                ? k
+                    .replace(/^[\[\s'"]+|[\]\s'"]+$/g, "")
+                    .split(",")
+                    .map((s) => s.trim().replace(/^['"]+|['"]+$/g, ""))
+                : []
+            )
+            .filter(Boolean)
+        : ["technology"];
+
       try {
         const draftRes = await postApi.createPost({
           title: postTitle,
@@ -881,8 +914,8 @@ ${
           contentVersion: "blocks-v1",
           blocks: articleBlocks,
           description,
-          category: currentBrief.category,
-          tags: currentIdea.keywords || ["technology"],
+          category: currentBrief.category || "Technology",
+          tags: sanitizedTags.length > 0 ? sanitizedTags : ["technology"],
           image: resolvedCoverImage,
           published: false, // AI-generated content must NEVER automatically publish
           locale: determinedLocale,
@@ -931,6 +964,11 @@ ${
         "Article successfully compiled! Opening OpenIdear Editor for manual review."
       );
 
+      if (controller.signal.aborted) {
+        console.info("[useContentStudio] Generation aborted prior to editor navigation.");
+        return;
+      }
+
       // Navigate to Editor with generated draft loaded and matching locale
       if (createdPostId) {
         router.push(`/create?id=${createdPostId}&locale=${finalLocale}`);
@@ -938,6 +976,10 @@ ${
         router.push(`/create?locale=${finalLocale}`);
       }
     } catch (pipelineErr: unknown) {
+      if (abortControllerRef.current?.signal.aborted) {
+        console.info("[useContentStudio] Pipeline aborted by user navigation.");
+        return;
+      }
       const errorMsg =
         pipelineErr instanceof Error
           ? pipelineErr.message
@@ -956,9 +998,21 @@ ${
     router,
   ]);
 
+  const setStep = useCallback(
+    (targetStep: ContentStudioStep) => {
+      if (store.step === "writing" && targetStep !== "writing") {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+      }
+      store.setStep(targetStep);
+    },
+    [store]
+  );
+
   return {
     step: store.step,
-    setStep: store.setStep,
+    setStep,
 
     topic: store.topic,
     setTopic: store.setTopic,
