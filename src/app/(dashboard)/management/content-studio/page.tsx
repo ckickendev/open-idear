@@ -45,6 +45,7 @@ import {
   ArticleWritingProgress,
   ContentIntelligenceSection,
 } from "@/features/content-studio";
+import { AdminHeaderActions } from "@/components/admin/AdminHeaderActions";
 
 export default function ContentStudioPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -108,6 +109,9 @@ export default function ContentStudioPage() {
     writingStages,
     streamChunkText,
     generateArticle,
+    openInNewTab,
+    setOpenInNewTab,
+    completedArticle,
   } = useContentStudio();
 
   // Management Sidebar items conforming to OpenIdear dashboard navigation
@@ -268,28 +272,7 @@ export default function ContentStudioPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Notifications */}
-            <button
-              type="button"
-              className="relative p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Notifications"
-            >
-              <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-card" />
-            </button>
-
-            {/* User Profile */}
-            <div className="flex items-center gap-2 ml-1 pl-3 border-l border-border">
-              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                <User size={16} className="text-primary" />
-              </div>
-              <div className="hidden sm:flex items-center gap-1 text-sm font-medium text-foreground">
-                <span>Admin</span>
-                <ChevronDown size={14} className="text-muted-foreground" />
-              </div>
-            </div>
-          </div>
+          <AdminHeaderActions />
         </header>
 
         {/* Scrollable Body */}
@@ -426,6 +409,9 @@ export default function ContentStudioPage() {
                 idea={currentIdea}
                 stages={writingStages}
                 streamChunkText={streamChunkText}
+                completedArticle={completedArticle}
+                openInNewTab={openInNewTab}
+                onToggleOpenInNewTab={setOpenInNewTab}
                 onCancel={backToOutline}
                 onBackToOutline={backToOutline}
                 onBackToBrief={backToBrief}

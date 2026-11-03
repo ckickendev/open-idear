@@ -178,11 +178,17 @@ export const api = {
     config?: AxiosRequestConfig,
   ): Promise<ApiResponse<T>> => {
     try {
-      // Check if it's an internal API call (starts with /api/ inside Next.js)
-      const isInternalApi = url.startsWith("/api/");
+      // Check if it's an internal Next.js API route (/app/api/*)
+      const NEXT_INTERNAL_API_PREFIXES = [
+        "/api/generate",
+        "/api/image_upload",
+        "/api/ai/content-studio",
+        "/api/ai/media-metadata",
+      ];
+      const isInternalApi = NEXT_INTERNAL_API_PREFIXES.some((prefix) => url.startsWith(prefix));
       const requestUrl = isInternalApi
         ? url
-        : (apiClient.defaults.baseURL ? "" : "") + url;
+        : url;
       const instance = isInternalApi ? axios.create() : apiClient;
       if (isInternalApi && typeof window !== "undefined") {
         const headers = getHeadersToken();

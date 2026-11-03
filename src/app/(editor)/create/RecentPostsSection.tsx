@@ -156,6 +156,9 @@ export function RecentPostsSection({
                 className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[var(--color-editor-surface)] hover:bg-sky-500/10 text-[11px] text-[var(--color-editor-secondary)] hover:text-sky-500 border border-[var(--color-editor-border)] hover:border-sky-500/30 transition-all max-w-[280px] truncate cursor-pointer group"
                 title={`Resume: ${latestPost.title || t("editor.recent_posts.untitled")}`}
               >
+                <span className="text-[10px] font-semibold text-sky-500 uppercase tracking-wider shrink-0">
+                  {t("editor.recent_posts.resume_prefix", "Resume")}:
+                </span>
                 <span
                   className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                     latestPost.published ? "bg-emerald-500" : "bg-amber-500"

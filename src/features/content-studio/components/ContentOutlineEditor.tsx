@@ -29,6 +29,7 @@ import {
   FileText,
   Lightbulb,
   CheckCircle2,
+  ExternalLink,
 } from "lucide-react";
 import type {
   ContentIdea,
@@ -594,7 +595,12 @@ export function ContentOutlineEditor({
             Back to Brief
           </button>
 
-          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
+            <span className="text-[11px] text-muted-foreground hidden lg:inline-flex items-center gap-1.5 mr-1 select-none">
+              <ExternalLink className="w-3.5 h-3.5 text-primary" />
+              <span>Draft opens in new tab • topic stays preserved</span>
+            </span>
+
             {activeIdeaIndex < selectedIdeas.length - 1 && (
               <button
                 type="button"

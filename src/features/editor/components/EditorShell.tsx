@@ -381,6 +381,7 @@ export default function EditorShell() {
   const [improvedResult, setImprovedResult] = useState<any>(null);
   const [reviewResult, setReviewResult] = useState<any>(null);
   const [lastSelectedText, setLastSelectedText] = useState("");
+  const [savedSelectionRange, setSavedSelectionRange] = useState<{ from: number; to: number } | null>(null);
 
   // AI Image Modal States (Sprint 1, 2 & 3)
   const [isAiImageModalOpen, setIsAiImageModalOpen] = useState(false);
@@ -726,6 +727,11 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
       const seq = ++loadSeqRef.current;
       setPageLoading(true);
 
+      // If switching to a different post, clear published status so stale status is not displayed
+      if (loadedLocaleRef.current?.id !== targetPostId) {
+        publishHook.setIsPublished(false);
+      }
+
       try {
         const resPost = await postApi.getPostToEdit(targetPostId, targetLocale);
         if (seq !== loadSeqRef.current) {
@@ -982,7 +988,19 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           setLoadedPost(null);
           setIsNewTranslationDraft(false);
           setLocalesStatus({});
-          if (editor) setContent("");
+          setGeneratedMarkdown("");
+          setGeneratedAiContext(null);
+          publishHook.setIsPublished(false);
+          setActiveSidePanel(null);
+          aiPlanner.clear();
+          try {
+            localStorage.removeItem("ai_planner_last_outline");
+          } catch {}
+          if (editor) {
+            editor.commands.setContent("", { emitUpdate: false });
+            contentAppliedKeyRef.current = "";
+          }
+          autoSave.resetHash(`${editorLocale}::::`);
           setPageLoading(false);
           return;
         }
@@ -992,6 +1010,10 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           (localeParam && loadedLocaleRef.current?.locale !== localeParam) ||
           (!localeParam && !loadedLocaleRef.current)
         ) {
+          if (loadedLocaleRef.current?.id !== currentPostId) {
+            publishHook.setIsPublished(false);
+            contentAppliedKeyRef.current = "";
+          }
           await loadPostLocaleData(currentPostId, localeParam || undefined);
         }
       } catch (error) {
@@ -1105,15 +1127,22 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
 
   const handleImproveText = async () => {
     if (!editor) return;
-    const selected = editor.state.doc.textBetween(
-      editor.state.selection.from,
-      editor.state.selection.to
-    );
+    const currentSelected =
+      editor.state.selection.from !== editor.state.selection.to
+        ? editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to)
+        : "";
+    const selected = currentSelected || lastSelectedText;
     if (!selected) {
       toast.error("Please select some text first.");
       return;
     }
     setLastSelectedText(selected);
+    if (currentSelected && editor.state.selection.from !== editor.state.selection.to) {
+      setSavedSelectionRange({
+        from: editor.state.selection.from,
+        to: editor.state.selection.to,
+      });
+    }
     setBubbleView("loading");
     setLoadingText("Analyzing & rewriting...");
     try {
@@ -1122,7 +1151,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
         locale: editorLocale,
         context: {
           selectedText: selected,
-          instruction: improvePrompt,
+          instruction: improvePrompt?.trim() || "Improve clarity, grammar, and tone while preserving technical accuracy.",
           audience: categoryPublic || "Developers",
           tone: "professional",
           locale: editorLocale,
@@ -1157,7 +1186,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
         locale: editorLocale,
         context: {
           selectedText: selected || "",
-          additionalInstructions: examplePrompt,
+          additionalInstructions: examplePrompt?.trim() || "Provide a clean, practical, real-world example.",
           language: "typescript",
           locale: editorLocale,
           targetLanguage: editorLocale,
@@ -1526,6 +1555,12 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
 
     if (success) {
       setPublishDrawerOpen(false);
+      // Auto-hide and reset AI Planner side panel upon publish completion
+      setActiveSidePanel(null);
+      aiPlanner.clear();
+      try {
+        localStorage.removeItem("ai_planner_last_outline");
+      } catch {}
       setLocalesStatus((prev) => ({
         ...prev,
         [editorLocale]: { exists: true, published: true },
@@ -1577,12 +1612,38 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
   const handleSelectPost = useCallback(
     (selectedPostId: string | null) => {
       if (selectedPostId) {
+        if (selectedPostId === postId) return;
         router.push(`/create?id=${selectedPostId}`);
       } else {
+        // Immediate clean reset for new post creation
+        setTitle("");
+        setDescriptionPublic("");
+        setCategoryPublic("");
+        setSeriesPublic("");
+        setImagePublic(null);
+        setBackgroundPublic("");
+        setLoadedPost(null);
+        setIsNewTranslationDraft(false);
+        setLocalesStatus({});
+        setGeneratedMarkdown("");
+        setGeneratedAiContext(null);
+        publishHook.setIsPublished(false);
+        setActiveSidePanel(null);
+        aiPlanner.clear();
+        try {
+          localStorage.removeItem("ai_planner_last_outline");
+        } catch {}
+        if (editor) {
+          editor.commands.setContent("", { emitUpdate: false });
+          contentAppliedKeyRef.current = "";
+        }
+        autoSave.resetHash(`${editorLocale}::::`);
+        loadedLocaleRef.current = null;
+        setPostId(null);
         router.push(`/create`);
       }
     },
-    [router],
+    [router, postId, editor, publishHook, autoSave, editorLocale],
   );
 
   // ─── AI Writer Stream Integration ────────────────────────────────────
@@ -1798,7 +1859,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
         {/* Sticky header */}
         <EditorHeader
           isEditMode={!!postId}
-          isPublished={publishHook.isPublished}
+          isPublished={!!postId && publishHook.isPublished}
           previewMode={mode === "preview"}
           onTogglePreview={() =>
             setMode((prev) => (prev === "preview" ? "visual" : "preview"))
@@ -2017,7 +2078,8 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                         placement: "top-start",
                       }}
                       shouldShow={({ editor }) => {
-                        // Show menu if editor is active, and either a selection exists or cursor is placed
+                        // Keep visible if user is interacting with an AI Copilot action/preview
+                        if (bubbleView !== "icon") return true;
                         return editor.isFocused && mode === "visual";
                       }}
                     >
@@ -2026,7 +2088,16 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                         {bubbleView === "icon" && (
                           <button
                             type="button"
-                            onClick={() => setBubbleView("menu")}
+                            onClick={() => {
+                              if (editor && editor.state.selection.from !== editor.state.selection.to) {
+                                const txt = editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to);
+                                if (txt) {
+                                  setLastSelectedText(txt);
+                                  setSavedSelectionRange({ from: editor.state.selection.from, to: editor.state.selection.to });
+                                }
+                              }
+                              setBubbleView("menu");
+                            }}
                             className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white rounded-lg font-semibold shadow-md active:scale-95 transition-all cursor-pointer"
                           >
                             <Sparkles size={12} className="text-amber-300 animate-pulse" />
@@ -2058,6 +2129,13 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                             <button
                               type="button"
                               onClick={() => {
+                                if (editor && editor.state.selection.from !== editor.state.selection.to) {
+                                  const txt = editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to);
+                                  if (txt) {
+                                    setLastSelectedText(txt);
+                                    setSavedSelectionRange({ from: editor.state.selection.from, to: editor.state.selection.to });
+                                  }
+                                }
                                 setImprovePrompt("");
                                 setBubbleView("input-improve");
                               }}
@@ -2069,6 +2147,13 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                             <button
                               type="button"
                               onClick={() => {
+                                if (editor && editor.state.selection.from !== editor.state.selection.to) {
+                                  const txt = editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to);
+                                  if (txt) {
+                                    setLastSelectedText(txt);
+                                    setSavedSelectionRange({ from: editor.state.selection.from, to: editor.state.selection.to });
+                                  }
+                                }
                                 setExamplePrompt("");
                                 setBubbleView("input-example");
                               }}
@@ -2170,9 +2255,17 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                               <button
                                 type="button"
                                 onClick={() => {
-                                  if (editor) {
-                                    // replace selection
-                                    editor.chain().focus().insertContent(improvedResult.improvedText).run();
+                                  if (editor && improvedResult?.improvedText) {
+                                    if (savedSelectionRange && savedSelectionRange.from !== savedSelectionRange.to) {
+                                      editor
+                                        .chain()
+                                        .focus()
+                                        .setTextSelection(savedSelectionRange)
+                                        .insertContent(improvedResult.improvedText)
+                                        .run();
+                                    } else {
+                                      editor.chain().focus().insertContent(improvedResult.improvedText).run();
+                                    }
                                     toast.success("Selection replaced!");
                                   }
                                   setBubbleView("icon");
@@ -2339,6 +2432,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                 onStartWriting={handleStartWriting}
                 initialTopic={title}
                 language={editorLocale}
+                onClose={() => setActiveSidePanel(null)}
               />
             </aside>
           )}
@@ -2346,7 +2440,10 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           {/* AI Image Generator side drawer (right) */}
           {aiImageGenOpen && (
             <aside className="w-80 border-l border-[var(--color-editor-border)] bg-[var(--color-editor-bg)] h-full overflow-y-auto p-5 shrink-0 animate-[slide-left_0.2s_ease-out] z-30">
-              <AIImageGeneratorView onInsertImage={handleImageGenerated} />
+              <AIImageGeneratorView
+                onInsertImage={handleImageGenerated}
+                onClose={() => setActiveSidePanel(null)}
+              />
             </aside>
           )}
 
@@ -2363,6 +2460,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                 onCancel={() => {
                   setSourceAssetToEdit(null);
                   setSelectingSourceForEdit(false);
+                  setActiveSidePanel(null);
                 }}
               />
             </aside>
@@ -2374,6 +2472,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
               <AIDiagramView
                 editorContent={editor ? editor.getText() : ""}
                 onInsertDiagram={handleInsertDiagram}
+                onClose={() => setActiveSidePanel(null)}
               />
             </aside>
           )}
@@ -2385,6 +2484,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                 metrics={metrics}
                 title={title}
                 description={descriptionPublic}
+                onClose={() => setActiveSidePanel(null)}
               />
             </aside>
           )}
@@ -2411,7 +2511,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           onPublish={onPublishHandle}
           onUnpublish={handleUnpublish}
           activeLocale={editorLocale}
-          isPublished={publishHook.isPublished}
+          isPublished={!!postId && publishHook.isPublished}
           categories={categories}
           selectedCategory={categoryPublic}
           onCategoryChange={setCategoryPublic}

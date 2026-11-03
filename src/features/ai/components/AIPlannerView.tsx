@@ -20,6 +20,7 @@ interface AIPlannerViewProps {
   readonly onStartWriting: (instructions: string) => void;
   readonly initialTopic?: string;
   readonly language?: "en" | "vi";
+  readonly onClose?: () => void;
 }
 
 export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
@@ -35,6 +36,7 @@ export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
   onStartWriting,
   initialTopic = "",
   language = "en",
+  onClose,
 }) => {
   const { t } = useTranslation();
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
@@ -157,14 +159,29 @@ export const AIPlannerView: React.FC<AIPlannerViewProps> = ({
             {language === "vi" ? "🇻🇳 Tiếng Việt" : "🇺🇸 English"}
           </span>
         </div>
-        {(outline || error || isRunning || isWriting) && (
-          <button
-            onClick={clear}
-            className="text-xs text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] transition-colors cursor-pointer"
-          >
-            {t("editor.ai_planner.reset")}
-          </button>
-        )}
+        <div className="flex items-center gap-1.5">
+          {(outline || error || isRunning || isWriting) && (
+            <button
+              type="button"
+              onClick={clear}
+              className="text-xs text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] transition-colors cursor-pointer px-2 py-0.5 rounded hover:bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)]/60"
+              title={t("editor.ai_planner.reset")}
+            >
+              {t("editor.ai_planner.reset")}
+            </button>
+          )}
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1 rounded-lg text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer"
+              aria-label="Close AI Planner"
+              title="Close panel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {error && (

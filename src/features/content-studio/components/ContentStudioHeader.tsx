@@ -7,7 +7,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Sparkles, ChevronRight, LayoutDashboard, Compass, ArrowLeft } from "lucide-react";
+import { Sparkles, ChevronRight, LayoutDashboard, Compass, ArrowLeft, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ContentStudioStep } from "../store/contentStudioStore";
 import { useContentStudioStore } from "../store/contentStudioStore";
@@ -148,10 +148,14 @@ export function ContentStudioHeader({ step, onStepChange }: ContentStudioHeaderP
 
         <Link
           href="/create"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground bg-muted/60 hover:bg-muted border border-border/60 transition-colors shadow-2xs cursor-pointer"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground bg-muted/60 hover:bg-muted border border-border/60 transition-colors shadow-2xs cursor-pointer group"
+          title="Open Editor in a new tab (preserves current Content Studio workspace)"
         >
-          <ArrowLeft size={13} />
+          <ArrowLeft size={13} className="transition-transform group-hover:-translate-x-0.5" />
           <span>Editor</span>
+          <ExternalLink size={11} className="text-muted-foreground/60 ml-0.5" />
         </Link>
       </div>
 

@@ -110,11 +110,14 @@ export interface AIDiagramViewProps {
   editorContent: string;
   /** Triggered when the user inserts the diagram */
   onInsertDiagram: (mermaidCode: string, title: string) => void;
+  /** Callback to close the side panel */
+  onClose?: () => void;
 }
 
 export const AIDiagramView: React.FC<AIDiagramViewProps> = ({
   editorContent,
   onInsertDiagram,
+  onClose,
 }) => {
   const agent = useAIDiagram();
 
@@ -168,14 +171,27 @@ export const AIDiagramView: React.FC<AIDiagramViewProps> = ({
           </div>
           <h2 className="text-base font-semibold">AI Diagram Generator</h2>
         </div>
-        {agent.result && (
-          <button
-            onClick={agent.clear}
-            className="text-xs text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] transition-colors cursor-pointer"
-          >
-            New
-          </button>
-        )}
+        <div className="flex items-center gap-1.5">
+          {agent.result && (
+            <button
+              onClick={agent.clear}
+              className="text-xs text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] transition-colors cursor-pointer px-2 py-0.5 rounded hover:bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)]/60"
+            >
+              New
+            </button>
+          )}
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1 rounded-lg text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer"
+              aria-label="Close AI Diagram"
+              title="Close panel"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Error */}

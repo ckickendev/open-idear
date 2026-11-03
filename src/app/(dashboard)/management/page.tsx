@@ -39,6 +39,7 @@ import CategoryManagement from "@/features/shop/components/admin/CategoryManagem
 import OrderManagement from "@/features/shop/components/admin/OrderManagement";
 import CommerceAnalytics from "@/features/shop/components/admin/CommerceAnalytics";
 import { Package, Layers, ShoppingBag, BarChart3 } from "lucide-react";
+import { AdminHeaderActions } from "@/components/admin/AdminHeaderActions";
 
 interface MenuItem {
   id: string;
@@ -253,28 +254,9 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Notifications */}
-            <button
-              className="relative p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Notifications"
-            >
-              <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white" />
-            </button>
-
-            {/* User menu */}
-            <div className="flex items-center gap-2 ml-1 pl-3 border-l border-border">
-              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                <User size={16} className="text-primary" />
-              </div>
-              <button className="hidden sm:flex items-center gap-1 text-sm font-medium text-foreground hover:text-foreground/80 transition-colors">
-                <span>Admin</span>
-                <ChevronDown size={14} className="text-muted-foreground" />
-              </button>
-            </div>
-          </div>
+          <AdminHeaderActions onSelectTab={setActiveTab} />
         </header>
+
 
         {/* Content */}
         <main className="flex-1 p-4 lg:p-8 overflow-auto">

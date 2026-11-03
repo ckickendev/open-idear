@@ -18,6 +18,7 @@ import type {
   ContentIntelligence,
   WritingStageId,
   WritingStageStatus,
+  CompletedArticleInfo,
 } from "../types/contentStudio.types";
 
 export type ContentStudioStep = "ideas" | "brief" | "outline" | "writing";
@@ -137,6 +138,12 @@ interface ContentStudioState {
   setWritingStages: (stages: WritingStageStatus[]) => void;
   updateWritingStage: (id: WritingStageId, update: Partial<WritingStageStatus>) => void;
   resetWritingStages: () => void;
+
+  // New Tab / Window Mechanism & Completion
+  openInNewTab: boolean;
+  setOpenInNewTab: (openInNewTab: boolean) => void;
+  completedArticle: CompletedArticleInfo | null;
+  setCompletedArticle: (article: CompletedArticleInfo | null) => void;
 
   // System Categories (fetched from OpenIdear database)
   categories: string[];
@@ -513,6 +520,11 @@ export const useContentStudioStore = create<ContentStudioState>()(
     })),
   resetWritingStages: () => set({ writingStages: INITIAL_WRITING_STAGES }),
 
+  openInNewTab: true,
+  setOpenInNewTab: (openInNewTab) => set({ openInNewTab }),
+  completedArticle: null,
+  setCompletedArticle: (completedArticle) => set({ completedArticle }),
+
   categories: [],
   setCategories: (categories) => set({ categories }),
 
@@ -535,6 +547,7 @@ export const useContentStudioStore = create<ContentStudioState>()(
       isGeneratingOutline: false,
       outlineError: null,
       writingStages: INITIAL_WRITING_STAGES,
+      completedArticle: null,
       intelligence: null,
       isAnalyzingIntelligence: false,
     }),
@@ -554,6 +567,8 @@ export const useContentStudioStore = create<ContentStudioState>()(
         outlines: state.outlines,
         activeIdeaIndex: state.activeIdeaIndex,
         categories: state.categories,
+        openInNewTab: state.openInNewTab,
+        completedArticle: state.completedArticle,
       }),
     }
   )

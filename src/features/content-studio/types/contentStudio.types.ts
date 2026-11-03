@@ -302,3 +302,12 @@ export interface WritingStageStatus {
   error?: string;
 }
 
+export interface CompletedArticleInfo {
+  postId: string | null;
+  url: string;
+  title: string;
+  locale?: string;
+  completedAt: number;
+}
+
+

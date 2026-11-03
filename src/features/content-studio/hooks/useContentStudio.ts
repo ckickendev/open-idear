@@ -33,6 +33,7 @@ import type {
   ContentOutline,
   ContentIntelligence,
   WritingStageStatus,
+  CompletedArticleInfo,
 } from "../types/contentStudio.types";
 
 export interface UseContentStudioReturn {
@@ -127,6 +128,12 @@ export interface UseContentStudioReturn {
   writingStages: WritingStageStatus[];
   streamChunkText: string;
   generateArticle: () => Promise<void>;
+
+  // New Tab Navigation & State Preservation
+  openInNewTab: boolean;
+  setOpenInNewTab: (openInNewTab: boolean) => void;
+  completedArticle: CompletedArticleInfo | null;
+  openEditorInNewTab: (customUrl?: string) => void;
 }
 
 export function useContentStudio(): UseContentStudioReturn {
@@ -651,6 +658,7 @@ export function useContentStudio(): UseContentStudioReturn {
 
     store.setStep("writing");
     store.resetWritingStages();
+    store.setCompletedArticle(null);
     setStreamChunkText("");
 
     const controller = new AbortController();
@@ -960,20 +968,52 @@ ${
       store.updateWritingStage("editor", { status: "completed" });
       await new Promise((r) => setTimeout(r, 400));
 
-      toast.success(
-        "Article successfully compiled! Opening OpenIdear Editor for manual review."
-      );
+      const editorUrl = createdPostId
+        ? `/create?id=${createdPostId}&locale=${finalLocale}`
+        : `/create?locale=${finalLocale}`;
+
+      const completedInfo: CompletedArticleInfo = {
+        postId: createdPostId,
+        url: editorUrl,
+        title: postTitle,
+        locale: finalLocale,
+        completedAt: Date.now(),
+      };
+      store.setCompletedArticle(completedInfo);
 
       if (controller.signal.aborted) {
         console.info("[useContentStudio] Generation aborted prior to editor navigation.");
         return;
       }
 
-      // Navigate to Editor with generated draft loaded and matching locale
-      if (createdPostId) {
-        router.push(`/create?id=${createdPostId}&locale=${finalLocale}`);
+      // Mechanism to open in new tab instead of current page
+      if (store.openInNewTab) {
+        let openedTab = false;
+        try {
+          const newWin = window.open(editorUrl, "_blank", "noopener,noreferrer");
+          if (newWin && !newWin.closed && typeof newWin.closed !== "undefined") {
+            openedTab = true;
+          }
+        } catch (popupErr) {
+          console.warn("[useContentStudio] window.open failed/blocked:", popupErr);
+        }
+
+        if (openedTab) {
+          toast.success(
+            "Article draft opened in a new tab! Topic & generated ideas preserved in Content Studio.",
+            { duration: 6000 }
+          );
+        } else {
+          toast.success(
+            "Article successfully compiled! Click 'Open in Editor (New Tab)' to review.",
+            { duration: 6000 }
+          );
+        }
       } else {
-        router.push(`/create?locale=${finalLocale}`);
+        toast.success(
+          "Article successfully compiled! Opening OpenIdear Editor for manual review."
+        );
+        router.push(editorUrl);
       }
     } catch (pipelineErr: unknown) {
       if (abortControllerRef.current?.signal.aborted) {
@@ -1090,5 +1130,18 @@ ${
     writingStages: store.writingStages,
     streamChunkText,
     generateArticle,
+
+    openInNewTab: store.openInNewTab,
+    setOpenInNewTab: store.setOpenInNewTab,
+    completedArticle: store.completedArticle,
+    openEditorInNewTab: (customUrl?: string) => {
+      const target = customUrl || store.completedArticle?.url || "/create";
+      try {
+        window.open(target, "_blank", "noopener,noreferrer");
+      } catch (err) {
+        console.warn("[useContentStudio] openEditorInNewTab fallback:", err);
+        router.push(target);
+      }
+    },
   };
 }

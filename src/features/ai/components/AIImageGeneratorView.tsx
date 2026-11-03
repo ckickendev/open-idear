@@ -154,10 +154,12 @@ function ImagePreviewOverlay({ url, onClose }: { url: string; onClose: () => voi
 
 export interface AIImageGeneratorViewProps {
   onInsertImage?: (asset: MediaAsset) => void;
+  onClose?: () => void;
 }
 
 export const AIImageGeneratorView: React.FC<AIImageGeneratorViewProps> = ({
   onInsertImage,
+  onClose,
 }) => {
   const generator = useAIImageGenerator();
 
@@ -198,21 +200,36 @@ export const AIImageGeneratorView: React.FC<AIImageGeneratorViewProps> = ({
             <h2 className="text-base font-semibold">AI Image Generator</h2>
           </div>
 
-          {/* Provider badge */}
-          {generator.lastUsedProviderId && (
-            <span className="text-[10px] text-[var(--color-editor-secondary)] px-2 py-0.5 rounded-full border border-[var(--color-editor-border)]">
-              {generator.providers.find(p => p.id === generator.lastUsedProviderId)?.displayName ?? generator.lastUsedProviderId}
-            </span>
-          )}
+          <div className="flex items-center gap-1.5">
+            {/* Provider badge */}
+            {generator.lastUsedProviderId && (
+              <span className="text-[10px] text-[var(--color-editor-secondary)] px-2 py-0.5 rounded-full border border-[var(--color-editor-border)]">
+                {generator.providers.find(p => p.id === generator.lastUsedProviderId)?.displayName ?? generator.lastUsedProviderId}
+              </span>
+            )}
 
-          {generator.generatedAssets.length > 0 && (
-            <button
-              onClick={generator.clear}
-              className="text-xs text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] transition-colors cursor-pointer"
-            >
-              New
-            </button>
-          )}
+            {generator.generatedAssets.length > 0 && (
+              <button
+                type="button"
+                onClick={generator.clear}
+                className="text-xs text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] transition-colors cursor-pointer px-2 py-0.5 rounded hover:bg-[var(--color-editor-elevated)] border border-[var(--color-editor-border)]/60"
+              >
+                New
+              </button>
+            )}
+
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1 rounded-lg text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer"
+                aria-label="Close AI Image Generator"
+                title="Close panel"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Error */}

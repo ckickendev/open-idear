@@ -35,8 +35,8 @@ export default function Banner() {
 
       try {
         const [postsResult, coursesResult] = await Promise.allSettled([
-          axios.get(`${rootApi}/post/getAllPosts?limit=1`, { timeout: 4000 }),
-          axios.get(`${rootApi}/course?limit=1`, { timeout: 4000 }),
+          axios.get(`${rootApi}/post/getAllPosts?limit=1`, { timeout: 10000 }),
+          axios.get(`${rootApi}/course?limit=1`, { timeout: 10000 }),
         ]);
 
         if (!isMounted) return;

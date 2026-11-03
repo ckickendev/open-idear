@@ -131,6 +131,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   const { t } = useTranslation();
   const canSave = hasTitle;
   const canPublish = isEditMode;
+  const isEffectivelyPublished = isEditMode && isPublished;
 
   const activeAiToolsCount = [
     aiPlannerOpen,
@@ -261,15 +262,15 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         {/* Draft / Published badge */}
         <div
           className={`hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider transition-colors duration-200 shrink-0 ${
-            isPublished
+            isEffectivelyPublished
               ? "bg-[var(--color-editor-success)]/12 text-[var(--color-editor-success)]"
               : "bg-[var(--color-editor-warning)]/12 text-[var(--color-editor-warning)]"
           }`}
         >
           <span
-            className={`w-1.5 h-1.5 rounded-full ${isPublished ? "bg-[var(--color-editor-success)]" : "bg-[var(--color-editor-warning)] animate-pulse"}`}
+            className={`w-1.5 h-1.5 rounded-full ${isEffectivelyPublished ? "bg-[var(--color-editor-success)]" : "bg-[var(--color-editor-warning)] animate-pulse"}`}
           />
-          {isPublished ? t("editor.header.published") : t("editor.header.draft")}
+          {isEffectivelyPublished ? t("editor.header.published") : t("editor.header.draft")}
         </div>
       </div>
 
@@ -629,23 +630,23 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
           <button
             onClick={onPublish}
             className={`group relative flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer overflow-hidden shrink-0 ${
-              !isPublished
+              !isEffectivelyPublished
                 ? "bg-[var(--color-editor-accent)] hover:bg-[var(--color-editor-accent-hover)] text-white shadow-lg shadow-[var(--color-editor-accent)]/25 hover:shadow-[var(--color-editor-accent-hover)]/30 active:scale-[0.97]"
                 : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30 active:scale-[0.97] shadow-xs"
             }`}
-            aria-label={isPublished ? t("editor.header.published_btn") : t("editor.header.publish")}
-            title={isPublished ? (t("editor.header.edit_publish_info") || "Published — Click to edit publish info") : t("editor.header.publish_title")}
+            aria-label={isEffectivelyPublished ? t("editor.header.published_btn") : t("editor.header.publish")}
+            title={isEffectivelyPublished ? (t("editor.header.edit_publish_info") || "Published — Click to edit publish info") : t("editor.header.publish_title")}
           >
             {/* Shimmer overlay on hover when not published */}
-            {!isPublished && (
+            {!isEffectivelyPublished && (
               <span className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer transition-opacity duration-300" />
             )}
-            {isPublished ? (
+            {isEffectivelyPublished ? (
               <CheckCircle2 size={14} className="relative z-10 shrink-0 text-emerald-500" />
             ) : (
               <Send size={14} className="relative z-10 shrink-0" />
             )}
-            <span className="relative z-10">{isPublished ? t("editor.header.published_btn") : t("editor.header.publish")}</span>
+            <span className="relative z-10">{isEffectivelyPublished ? t("editor.header.published_btn") : t("editor.header.publish")}</span>
           </button>
         </div>      </div>
     </header>

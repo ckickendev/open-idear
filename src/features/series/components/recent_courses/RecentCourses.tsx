@@ -17,6 +17,7 @@ import {
   Users,
 } from "lucide-react";
 import { CourseCardSkeleton } from "@/components/ui/Skeletons";
+import { getCachedFeed, setCachedFeed } from "@/lib/cache/feedCache";
 
 type Course = {
   _id: string;
@@ -69,17 +70,29 @@ const RecentCourses: React.FC = () => {
         setIsLoading(false);
         return;
       }
+
+      // Check cache for instant load
+      const cached = getCachedFeed<Course[]>("open_idear_feed_recent_courses");
+      if (cached && cached.length > 0) {
+        setCourses(cached);
+        setIsLoading(false);
+      }
+
       try {
-        setIsLoading(true);
         const res = await axios.get(
           `${rootApi}/course?limit=10&sort=-createdAt`,
-          { timeout: 4000 }
+          { timeout: 10000 }
         );
         if (!isMounted) return;
+        let fetchedCourses: Course[] = [];
         if (res.status === 200 && res.data?.data) {
-          setCourses(res.data.data);
+          fetchedCourses = res.data.data;
         } else if (res.status === 200 && res.data?.courses) {
-          setCourses(res.data.courses);
+          fetchedCourses = res.data.courses;
+        }
+        if (fetchedCourses.length > 0) {
+          setCourses(fetchedCourses);
+          setCachedFeed("open_idear_feed_recent_courses", fetchedCourses);
         }
       } catch (error) {
         console.warn("Could not fetch recent courses:", error);
