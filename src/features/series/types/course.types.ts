@@ -54,6 +54,7 @@ export interface BunnyPlaybackConfigResponse {
   thumbnailUrl?: string;
   embedUrl?: string;
   hlsUrl?: string;
+  streamUrl?: string;
   expires?: number;
   isTokenized?: boolean;
 }

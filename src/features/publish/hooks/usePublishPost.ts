@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type {
   UsePublishPostOptions,
   UsePublishPostReturn,
@@ -23,6 +23,11 @@ export function usePublishPost(
   const [isPublishing, setIsPublishing] = useState(false);
   const [isPublished, setIsPublished] = useState(initialPublished);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  // Keep isPublished in sync when options change (e.g. switching posts or creating new post)
+  useEffect(() => {
+    setIsPublished(initialPublished);
+  }, [initialPublished, postId]);
 
   // ─── Validation ───────────────────────────────────────────────────────
 
@@ -65,6 +70,7 @@ export function usePublishPost(
             locale: targetLocale,
             description: config.description,
             image: config.image,
+            background: config.background,
             series: config.series,
             category: config.category,
           },

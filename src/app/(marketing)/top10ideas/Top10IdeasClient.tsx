@@ -5,6 +5,8 @@ import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
+import { usePathname } from "next/navigation";
+import { useLanguageStore } from "@/store/useLanguage";
 import {
   ThumbsUp,
   MessageSquare,
@@ -51,6 +53,7 @@ interface TopPost {
   relativeScore: number;
   likesCount: number;
   commentsCount: number;
+  locale?: string;
 }
 interface Period {
   month: number;
@@ -189,7 +192,7 @@ const HeroCard = ({ post }: { post: TopPost }) => (
 
         {/* Title */}
         <div>
-          <Link href={`/post/${post.slug}`}>
+          <Link href={post.locale === "vi" ? `/vi/post/${post.slug}` : `/post/${post.slug}`}>
             <h2 className="text-2xl md:text-3xl font-black leading-tight text-card-foreground group-hover:text-primary transition-colors duration-200 mb-4 line-clamp-3">
               {post.title}
             </h2>
@@ -243,7 +246,7 @@ const HeroCard = ({ post }: { post: TopPost }) => (
         </div>
 
         <Link
-          href={`/post/${post.slug}`}
+          href={post.locale === "vi" ? `/vi/post/${post.slug}` : `/post/${post.slug}`}
           className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:gap-3 transition-all"
         >
           Read full idea <ChevronRight size={16} />
@@ -280,7 +283,7 @@ const FeaturedCard = ({ post }: { post: TopPost }) => (
 
     {/* Content */}
     <div className="flex flex-col flex-1 p-5">
-      <Link href={`/post/${post.slug}`}>
+      <Link href={post.locale === "vi" ? `/vi/post/${post.slug}` : `/post/${post.slug}`}>
         <h3 className="font-bold text-base leading-snug text-card-foreground group-hover:text-primary transition-colors line-clamp-3 mb-3">
           {post.title}
         </h3>
@@ -375,7 +378,7 @@ const ListRow = ({ post, index }: { post: TopPost; index: number }) => {
               </span>
             )}
           </div>
-          <Link href={`/post/${post.slug}`}>
+          <Link href={post.locale === "vi" ? `/vi/post/${post.slug}` : `/post/${post.slug}`}>
             <h3 className="font-semibold text-sm leading-snug text-card-foreground group-hover:text-primary transition-colors line-clamp-2 mb-1">
               {post.title}
             </h3>
@@ -432,11 +435,17 @@ const Top10IdeasClient = () => {
   const [period, setPeriod] = useState<Period | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const pathname = usePathname();
+  const storeLang = useLanguageStore((state) => state.lang);
+  const activeLocale = pathname?.startsWith("/vi") ? "vi" : (storeLang || "en");
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       try {
-        const res = await axios.get(`${ENV.ROOT_API}/post/getTop10IdeasMonth`);
+        setLoading(true);
+        const res = await axios.get(`${ENV.ROOT_API}/post/getTop10IdeasMonth?locale=${activeLocale}`);
+        if (!isMounted) return;
         if (res.data.success) {
           setPosts(res.data.posts || []);
           setPeriod(res.data.period || null);
@@ -445,11 +454,14 @@ const Top10IdeasClient = () => {
         console.error("Error fetching top10 ideas:", err);
         setError("Failed to load top ideas. Please try again later.");
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchData();
-  }, []);
+    return () => {
+      isMounted = false;
+    };
+  }, [activeLocale]);
 
   if (loading) return <LoadingSkeleton />;
 
@@ -476,10 +488,10 @@ const Top10IdeasClient = () => {
           Be the first to share an idea this month!
         </p>
         <Link
-          href="/recently-post"
+          href={activeLocale === "vi" ? "/vi/recently-post" : "/recently-post"}
           className="mt-2 inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors"
         >
-          Browse ideas
+          {activeLocale === "vi" ? "Xem bài viết" : "Browse ideas"}
         </Link>
       </div>
     );
@@ -498,13 +510,13 @@ const Top10IdeasClient = () => {
             <TrendingUp size={20} className="text-primary" />
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-                Monthly Leaderboard
+                {activeLocale === "vi" ? "Bảng xếp hạng tháng" : "Monthly Leaderboard"}
               </p>
               <h2 className="text-xl font-black text-foreground">{period.label}</h2>
             </div>
           </div>
           <span className="text-xs text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
-            {posts.length} ideas ranked
+            {posts.length} {activeLocale === "vi" ? "ý tưởng xếp hạng" : "ideas ranked"}
           </span>
         </div>
       )}
@@ -515,7 +527,7 @@ const Top10IdeasClient = () => {
       {/* #2–#4 Featured Grid */}
       {featured.length > 0 && (
         <>
-          <SectionDivider label="Rising Stars" />
+          <SectionDivider label={activeLocale === "vi" ? "Đang nổi bật" : "Rising Stars"} />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featured.map((post) => (
               <FeaturedCard key={post._id} post={post} />
@@ -527,7 +539,7 @@ const Top10IdeasClient = () => {
       {/* #5–#10 Ranked List */}
       {ranked.length > 0 && (
         <>
-          <SectionDivider label="Also Trending" />
+          <SectionDivider label={activeLocale === "vi" ? "Xu hướng khác" : "Also Trending"} />
           <div className="space-y-3">
             {ranked.map((post, idx) => (
               <ListRow key={post._id} post={post} index={idx} />
@@ -539,16 +551,18 @@ const Top10IdeasClient = () => {
       {/* Footer CTA */}
       <div className="mt-16 rounded-2xl bg-gradient-to-br from-primary/10 via-transparent to-violet-500/10 border border-border p-8 text-center">
         <h3 className="text-xl font-black text-foreground mb-2">
-          Want to make the list next month?
+          {activeLocale === "vi" ? "Bạn muốn góp mặt vào tháng tới?" : "Want to make the list next month?"}
         </h3>
         <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
-          Share your best ideas, engage with the community, and earn your spot in the top 10.
+          {activeLocale === "vi"
+            ? "Chia sẻ các ý tưởng giá trị, thảo luận cùng cộng đồng và ghi danh vào Top 10."
+            : "Share your best ideas, engage with the community, and earn your spot in the top 10."}
         </p>
         <Link
-          href="/recently-post"
+          href={activeLocale === "vi" ? "/vi/recently-post" : "/recently-post"}
           className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold text-sm hover:bg-primary/90 transition-colors shadow-md hover:shadow-lg"
         >
-          Explore all ideas <ChevronRight size={16} />
+          {activeLocale === "vi" ? "Khám phá tất cả ý tưởng" : "Explore all ideas"} <ChevronRight size={16} />
         </Link>
       </div>
     </div>

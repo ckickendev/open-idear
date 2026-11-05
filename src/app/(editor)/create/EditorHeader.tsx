@@ -19,6 +19,7 @@ import {
   FileText,
   Loader2,
   ChevronDown,
+  CheckCircle2,
 } from "lucide-react";
 import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
 import Link from "next/link";
@@ -129,7 +130,8 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
 }) => {
   const { t } = useTranslation();
   const canSave = hasTitle;
-  const canPublish = isEditMode && !isPublished;
+  const canPublish = isEditMode;
+  const isEffectivelyPublished = isEditMode && isPublished;
 
   const activeAiToolsCount = [
     aiPlannerOpen,
@@ -260,15 +262,15 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         {/* Draft / Published badge */}
         <div
           className={`hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider transition-colors duration-200 shrink-0 ${
-            isPublished
+            isEffectivelyPublished
               ? "bg-[var(--color-editor-success)]/12 text-[var(--color-editor-success)]"
               : "bg-[var(--color-editor-warning)]/12 text-[var(--color-editor-warning)]"
           }`}
         >
           <span
-            className={`w-1.5 h-1.5 rounded-full ${isPublished ? "bg-[var(--color-editor-success)]" : "bg-[var(--color-editor-warning)] animate-pulse"}`}
+            className={`w-1.5 h-1.5 rounded-full ${isEffectivelyPublished ? "bg-[var(--color-editor-success)]" : "bg-[var(--color-editor-warning)] animate-pulse"}`}
           />
-          {isPublished ? t("editor.header.published") : t("editor.header.draft")}
+          {isEffectivelyPublished ? t("editor.header.published") : t("editor.header.draft")}
         </div>
       </div>
 
@@ -288,6 +290,17 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
               <span>{t("editor.header.one_click_ai")}</span>
             </button>
           )}
+
+          {/* AI Content Studio Full App Navigation */}
+          <Link
+            href="/management/content-studio"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-purple-600/20 via-violet-600/20 to-indigo-600/20 hover:from-purple-600/30 hover:via-violet-600/30 hover:to-indigo-600/30 text-purple-600 dark:text-purple-300 border border-purple-500/30 transition-all duration-200 cursor-pointer shadow-xs"
+            aria-label={t("editor.header.ai_content_studio", "AI Studio")}
+            title={t("editor.header.ai_content_studio_title", "Open AI Content Studio to generate complete articles from ideas")}
+          >
+            <Sparkles size={14} className="text-purple-500 animate-pulse" />
+            <span>{t("editor.header.ai_content_studio", "AI Studio")}</span>
+          </Link>
 
           {/* Separator within AI cluster */}
           <div className="w-px h-4 bg-[var(--color-editor-border)]/50 mx-0.5" />
@@ -435,6 +448,23 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
               <DropdownMenuLabel className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-editor-muted)]">
                 {t("editor.header.ai_tools", undefined, "AI Tools")}
               </DropdownMenuLabel>
+
+              {/* AI Content Studio Navigation */}
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/management/content-studio"
+                  className="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-semibold text-purple-600 dark:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 cursor-pointer transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <Sparkles size={14} className="text-purple-500 animate-pulse" />
+                    <span>{t("editor.header.ai_content_studio", "AI Content Studio")}</span>
+                  </span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-purple-600 text-white">
+                    NEW
+                  </span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="my-1 bg-[var(--color-editor-border)]" />
 
               {/* AI Planner */}
               <DropdownMenuItem
@@ -596,24 +626,27 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             <span className="hidden sm:inline">{t("editor.header.save")}</span>
           </button>
 
-          {/* Publish button */}
+          {/* Publish / Edit Publish Info button */}
           <button
             onClick={onPublish}
-            disabled={isPublished}
             className={`group relative flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer overflow-hidden shrink-0 ${
-              !isPublished
+              !isEffectivelyPublished
                 ? "bg-[var(--color-editor-accent)] hover:bg-[var(--color-editor-accent-hover)] text-white shadow-lg shadow-[var(--color-editor-accent)]/25 hover:shadow-[var(--color-editor-accent-hover)]/30 active:scale-[0.97]"
-                : "bg-[var(--color-editor-elevated)] text-[var(--color-editor-muted)] cursor-not-allowed"
+                : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30 active:scale-[0.97] shadow-xs"
             }`}
-            aria-label={isPublished ? t("editor.header.already_published") : t("editor.header.publish")}
-            title={isPublished ? t("editor.header.already_published") : t("editor.header.publish_title")}
+            aria-label={isEffectivelyPublished ? t("editor.header.published_btn") : t("editor.header.publish")}
+            title={isEffectivelyPublished ? (t("editor.header.edit_publish_info") || "Published — Click to edit publish info") : t("editor.header.publish_title")}
           >
-            {/* Shimmer overlay on hover */}
-            {!isPublished && (
+            {/* Shimmer overlay on hover when not published */}
+            {!isEffectivelyPublished && (
               <span className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer transition-opacity duration-300" />
             )}
-            <Send size={14} className="relative z-10 shrink-0" />
-            <span className="relative z-10">{isPublished ? t("editor.header.published_btn") : t("editor.header.publish")}</span>
+            {isEffectivelyPublished ? (
+              <CheckCircle2 size={14} className="relative z-10 shrink-0 text-emerald-500" />
+            ) : (
+              <Send size={14} className="relative z-10 shrink-0" />
+            )}
+            <span className="relative z-10">{isEffectivelyPublished ? t("editor.header.published_btn") : t("editor.header.publish")}</span>
           </button>
         </div>      </div>
     </header>

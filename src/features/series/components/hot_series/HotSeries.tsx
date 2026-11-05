@@ -7,6 +7,7 @@ import Image from "next/image";
 import axios from "axios";
 import { SeriesInterface } from "@/interfaces/Interface";
 import { SeriesCardSkeleton } from "@/components/ui/Skeletons";
+import { getCachedFeed, setCachedFeed } from "@/lib/cache/feedCache";
 
 const HotSeries: React.FC = () => {
   const [series, setSeries] = React.useState<SeriesInterface[]>([]);
@@ -21,15 +22,23 @@ const HotSeries: React.FC = () => {
         setIsLoading(false);
         return;
       }
+
+      // Check cache for instant render
+      const cached = getCachedFeed<SeriesInterface[]>("open_idear_feed_hot_series");
+      if (cached && cached.length > 0) {
+        setSeries(cached);
+        setIsLoading(false);
+      }
+
       try {
-        setIsLoading(true);
         const res = await axios.get(
           `${rootApi}/series/getHotSeries`,
-          { timeout: 4000 }
+          { timeout: 10000 }
         );
         if (!isMounted) return;
-        if (res.status === 200) {
-          setSeries(res.data?.series || []);
+        if (res.status === 200 && Array.isArray(res.data?.series)) {
+          setSeries(res.data.series);
+          setCachedFeed("open_idear_feed_hot_series", res.data.series);
         }
       } catch (error) {
         console.warn("Could not fetch hot series:", error);
@@ -57,6 +66,10 @@ const HotSeries: React.FC = () => {
       scrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
     }
   };
+
+  if (!isLoading && series.length === 0) {
+    return null;
+  }
 
   return (
     <section className="max-w-full py-8">

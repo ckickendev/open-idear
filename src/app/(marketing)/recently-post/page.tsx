@@ -3,14 +3,41 @@ import RecentlyPost from "./RecentlyPost";
 import HotSeries from "@/features/series/components/hot_series/HotSeries";
 import DiscoverySidebar from "@/components/DiscoverySidebar";
 import { SearchResultSkeleton } from "@/components/ui/Skeletons";
+import ArticleLocaleSync from "@/components/ArticleLocaleSync";
+import { Metadata } from "next";
+import { getSiteUrl } from "@/features/seo/metadata/buildPostMetadata";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = getSiteUrl();
+  return {
+    title: "Recently Posted — OpenIdear",
+    description: "New ideas shared by our community. Explore the latest innovations and insights in English.",
+    alternates: {
+      canonical: `${siteUrl}/recently-post`,
+      languages: {
+        en: `${siteUrl}/recently-post`,
+        vi: `${siteUrl}/vi/recently-post`,
+        "x-default": `${siteUrl}/recently-post`,
+      },
+    },
+    openGraph: {
+      title: "Recently Posted — OpenIdear",
+      description: "New ideas shared by our community.",
+      url: `${siteUrl}/recently-post`,
+      locale: "en_US",
+      alternateLocale: ["vi_VN"],
+    },
+  };
+}
 
 export default async function MainPage() {
   return (
     <div className="min-h-screen bg-background">
+      <ArticleLocaleSync activeLocale="en" />
       {/* Hero Section */}
       <div
         className="relative h-100 bg-cover bg-center"
-        style={{ backgroundImage: `url(banner/recently-post-banner.jpg)` }}
+        style={{ backgroundImage: `url(/banner/recently-post-banner.jpg)` }}
       >
         <div className="absolute inset-0 bg-black/30 dark:bg-black/60 transition-colors duration-300" />
         <div className="relative max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">

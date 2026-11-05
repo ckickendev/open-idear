@@ -45,12 +45,14 @@ import {
   ArticleWritingProgress,
   ContentIntelligenceSection,
 } from "@/features/content-studio";
+import { AdminHeaderActions } from "@/components/admin/AdminHeaderActions";
 
 export default function ContentStudioPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const {
     step,
+    setStep,
     topic,
     setTopic,
     language,
@@ -101,10 +103,15 @@ export default function ContentStudioPage() {
     addFaqItem,
     updateFaqItem,
     deleteFaqItem,
+    createCustomIdea,
     backToBrief,
+    backToOutline,
     writingStages,
     streamChunkText,
     generateArticle,
+    openInNewTab,
+    setOpenInNewTab,
+    completedArticle,
   } = useContentStudio();
 
   // Management Sidebar items conforming to OpenIdear dashboard navigation
@@ -144,21 +151,26 @@ export default function ContentStudioPage() {
         `}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center gap-3 px-4 border-b border-border flex-shrink-0">
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-            <Logo size={20} className="text-white" />
+        <Link
+          href="/management"
+          className="h-16 flex items-center gap-3 px-4 border-b border-border flex-shrink-0 group hover:bg-muted/40 transition-colors cursor-pointer"
+          title="OpenIdear Management Panel"
+        >
+          <div className="w-9 h-9 flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+            <Logo size={34} className="w-8.5 h-8.5 object-contain drop-shadow-xs" />
           </div>
           {sidebarOpen && (
             <div className="min-w-0">
-              <h1 className="font-bold text-base text-foreground truncate">
-                OpenIdear
-              </h1>
-              <p className="text-[11px] text-muted-foreground font-medium">
+              <div className="flex items-center tracking-tight leading-none">
+                <span className="font-bold text-[17px] text-blue-600">Open</span>
+                <span className="font-bold text-[17px] text-foreground">Idear</span>
+              </div>
+              <p className="text-[10.5px] uppercase font-semibold text-muted-foreground/80 tracking-wider mt-1">
                 Admin Panel
               </p>
             </div>
           )}
-        </div>
+        </Link>
 
         {/* Navigation */}
         <nav className="flex-1 py-3 px-3 overflow-y-auto">
@@ -169,6 +181,11 @@ export default function ContentStudioPage() {
                 <Link
                   key={item.id}
                   href={item.href}
+                  onClick={() => {
+                    if (item.id === "content-studio") {
+                      setStep("ideas");
+                    }
+                  }}
                   className={`
                     w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left
                     transition-all duration-150 text-[13.5px] font-medium
@@ -255,35 +272,14 @@ export default function ContentStudioPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Notifications */}
-            <button
-              type="button"
-              className="relative p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Notifications"
-            >
-              <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-card" />
-            </button>
-
-            {/* User Profile */}
-            <div className="flex items-center gap-2 ml-1 pl-3 border-l border-border">
-              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                <User size={16} className="text-primary" />
-              </div>
-              <div className="hidden sm:flex items-center gap-1 text-sm font-medium text-foreground">
-                <span>Admin</span>
-                <ChevronDown size={14} className="text-muted-foreground" />
-              </div>
-            </div>
-          </div>
+          <AdminHeaderActions />
         </header>
 
         {/* Scrollable Body */}
         <main className="flex-1 p-4 lg:p-8 overflow-y-auto space-y-7">
           <div className="max-w-6xl mx-auto space-y-7">
             {/* Page Header */}
-            <ContentStudioHeader step={step} />
+            <ContentStudioHeader step={step} onStepChange={setStep} />
 
             {/* User Governance Banner: Explicit Human-in-the-Loop Control */}
             <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border border-border/70 bg-card/60 text-xs text-muted-foreground shadow-2xs">
@@ -378,7 +374,7 @@ export default function ContentStudioPage() {
             )}
 
             {/* Step 3: Content Outline Editor */}
-            {step === "outline" && currentIdea && currentBrief && currentOutline && (
+            {step === "outline" && currentIdea && (
               <ContentOutlineEditor
                 selectedIdeas={selectedIdeas}
                 activeIdeaIndex={activeIdeaIndex}
@@ -387,6 +383,7 @@ export default function ContentStudioPage() {
                 brief={currentBrief}
                 isGeneratingOutline={isGeneratingOutline}
                 onRegenerateOutline={regenerateOutline}
+                onCreateCustomIdea={createCustomIdea}
                 onUpdateTitle={updateOutlineTitle}
                 onUpdateIntroduction={updateOutlineIntroduction}
                 onUpdateConclusion={updateOutlineConclusion}
@@ -412,7 +409,13 @@ export default function ContentStudioPage() {
                 idea={currentIdea}
                 stages={writingStages}
                 streamChunkText={streamChunkText}
-                onCancel={backToBrief}
+                completedArticle={completedArticle}
+                openInNewTab={openInNewTab}
+                onToggleOpenInNewTab={setOpenInNewTab}
+                onCancel={backToOutline}
+                onBackToOutline={backToOutline}
+                onBackToBrief={backToBrief}
+                onBackToIdeas={backToIdeas}
                 onRetry={generateArticle}
               />
             )}

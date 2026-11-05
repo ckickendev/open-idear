@@ -9,6 +9,7 @@
 // =============================================================================
 
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type {
   ContentGoal,
   ContentIdea,
@@ -17,6 +18,7 @@ import type {
   ContentIntelligence,
   WritingStageId,
   WritingStageStatus,
+  CompletedArticleInfo,
 } from "../types/contentStudio.types";
 
 export type ContentStudioStep = "ideas" | "brief" | "outline" | "writing";
@@ -67,6 +69,7 @@ interface ContentStudioState {
   // Step 1: Results & Selections
   ideas: ContentIdea[];
   setIdeas: (ideas: ContentIdea[]) => void;
+  addCustomIdea: (idea: ContentIdea) => void;
   selectedIdeaIds: string[];
   toggleSelectIdea: (id: string) => void;
   selectAllIdeas: () => void;
@@ -136,6 +139,12 @@ interface ContentStudioState {
   updateWritingStage: (id: WritingStageId, update: Partial<WritingStageStatus>) => void;
   resetWritingStages: () => void;
 
+  // New Tab / Window Mechanism & Completion
+  openInNewTab: boolean;
+  setOpenInNewTab: (openInNewTab: boolean) => void;
+  completedArticle: CompletedArticleInfo | null;
+  setCompletedArticle: (article: CompletedArticleInfo | null) => void;
+
   // System Categories (fetched from OpenIdear database)
   categories: string[];
   setCategories: (categories: string[]) => void;
@@ -144,33 +153,45 @@ interface ContentStudioState {
   resetStudio: () => void;
 }
 
-export const useContentStudioStore = create<ContentStudioState>((set, get) => ({
-  step: "ideas",
-  setStep: (step) => set({ step }),
+export const useContentStudioStore = create<ContentStudioState>()(
+  persist(
+    (set, get) => ({
+      step: "ideas",
+      setStep: (step) => set({ step }),
 
-  topic: "",
-  setTopic: (topic) => set({ topic }),
-  language: "en",
-  setLanguage: (language) => set({ language }),
-  contentGoal: "seo",
-  setContentGoal: (contentGoal) => set({ contentGoal }),
-  numberOfIdeas: 10,
-  setNumberOfIdeas: (numberOfIdeas) => set({ numberOfIdeas }),
+      topic: "",
+      setTopic: (topic) => set({ topic }),
+      language: "en",
+      setLanguage: (language) => set({ language }),
+      contentGoal: "seo",
+      setContentGoal: (contentGoal) => set({ contentGoal }),
+      numberOfIdeas: 10,
+      setNumberOfIdeas: (numberOfIdeas) => set({ numberOfIdeas }),
 
-  ideas: [],
-  setIdeas: (ideas) => set({ ideas }),
-  selectedIdeaIds: [],
-  toggleSelectIdea: (id) =>
-    set((state) => ({
-      selectedIdeaIds: state.selectedIdeaIds.includes(id)
-        ? state.selectedIdeaIds.filter((item) => item !== id)
-        : [...state.selectedIdeaIds, id],
-    })),
-  selectAllIdeas: () =>
-    set((state) => ({
-      selectedIdeaIds: state.ideas.map((i) => i.id),
-    })),
-  deselectAllIdeas: () => set({ selectedIdeaIds: [] }),
+      ideas: [],
+      setIdeas: (ideas) => set({ ideas }),
+      addCustomIdea: (idea) =>
+        set((state) => ({
+          ideas: [idea, ...state.ideas],
+          selectedIdeaIds: state.selectedIdeaIds.includes(idea.id)
+            ? state.selectedIdeaIds
+            : [...state.selectedIdeaIds, idea.id],
+          activeIdeaIndex: state.selectedIdeaIds.includes(idea.id)
+            ? state.activeIdeaIndex
+            : state.selectedIdeaIds.length,
+        })),
+      selectedIdeaIds: [],
+      toggleSelectIdea: (id) =>
+        set((state) => ({
+          selectedIdeaIds: state.selectedIdeaIds.includes(id)
+            ? state.selectedIdeaIds.filter((item) => item !== id)
+            : [...state.selectedIdeaIds, id],
+        })),
+      selectAllIdeas: () =>
+        set((state) => ({
+          selectedIdeaIds: state.ideas.map((i) => i.id),
+        })),
+      deselectAllIdeas: () => set({ selectedIdeaIds: [] }),
   setSelectedIdeaIds: (selectedIdeaIds) => set({ selectedIdeaIds }),
 
   isGeneratingIdeas: false,
@@ -499,6 +520,11 @@ export const useContentStudioStore = create<ContentStudioState>((set, get) => ({
     })),
   resetWritingStages: () => set({ writingStages: INITIAL_WRITING_STAGES }),
 
+  openInNewTab: true,
+  setOpenInNewTab: (openInNewTab) => set({ openInNewTab }),
+  completedArticle: null,
+  setCompletedArticle: (completedArticle) => set({ completedArticle }),
+
   categories: [],
   setCategories: (categories) => set({ categories }),
 
@@ -521,7 +547,30 @@ export const useContentStudioStore = create<ContentStudioState>((set, get) => ({
       isGeneratingOutline: false,
       outlineError: null,
       writingStages: INITIAL_WRITING_STAGES,
+      completedArticle: null,
       intelligence: null,
       isAnalyzingIntelligence: false,
     }),
-}));
+  }),
+  {
+    name: "openidear_content_studio_store",
+      storage: createJSONStorage(() => sessionStorage),
+      partialize: (state) => ({
+        step: state.step,
+        topic: state.topic,
+        language: state.language,
+        contentGoal: state.contentGoal,
+        numberOfIdeas: state.numberOfIdeas,
+        ideas: state.ideas,
+        selectedIdeaIds: state.selectedIdeaIds,
+        briefs: state.briefs,
+        outlines: state.outlines,
+        activeIdeaIndex: state.activeIdeaIndex,
+        categories: state.categories,
+        openInNewTab: state.openInNewTab,
+        completedArticle: state.completedArticle,
+      }),
+    }
+  )
+);
+

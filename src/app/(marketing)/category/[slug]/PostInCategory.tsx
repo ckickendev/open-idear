@@ -9,8 +9,9 @@ import {
 import { PaginationComponent } from "@/components/common/PaginationComponent";
 import axios from "axios";
 import { Menu } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useLanguageStore } from "@/store/useLanguage";
 
 const PostInCategory = ({
   allCategory,
@@ -65,26 +66,35 @@ const PostInCategory = ({
 
   const [data, setData] = useState<any[]>([]);
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const storeLang = useLanguageStore((state) => state.lang);
+  const activeLocale = pathname?.startsWith("/vi") ? "vi" : (storeLang || "en");
   const currentPage = Number(searchParams.get("page")) || 1;
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       try {
         const res = await axios.get(
-          `${ENV.ROOT_API}/category/getPostsByCategorySlug/${slug}/${currentPage}`,
+          `${ENV.ROOT_API}/category/getPostsByCategorySlug/${slug}/${currentPage}?locale=${activeLocale}`,
         );
-        setData(res.data.posts);
+        if (!isMounted) return;
+        setData(res.data.posts || []);
       } catch (error) {
         console.error("Error fetching posts:", error);
-        throw new Error(`Failed to fetch posts for category slug: ${slug}`);
       }
     };
     fetchData();
-  }, [currentPage]);
+    return () => {
+      isMounted = false;
+    };
+  }, [currentPage, activeLocale, slug]);
 
   return (
     <div className="max-w-7xl mx-auto px-4">
-      <h2 className="text-3xl font-bold text-center mb-10">ON CATEGORY</h2>
+      <h2 className="text-3xl font-bold text-center mb-10">
+        {activeLocale === "vi" ? "CHUYÊN MỤC" : "ON CATEGORY"}
+      </h2>
       <div className="space-y-8 flex flex-col justify-between md:flex-row md:space-y-0 md:space-x-8">
         <div className="w-4/5 space-y-4">
           {data.map((article, idx) => (
@@ -94,7 +104,10 @@ const PostInCategory = ({
                 "grid md:grid-cols-5 gap-y-4 bg-background rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow"
               }
             >
-              <a href={`/post/${article.slug}`} className={"md:col-span-2"}>
+              <a
+                href={activeLocale === "vi" ? `/vi/post/${article.slug}` : `/post/${article.slug}`}
+                className={"md:col-span-2"}
+              >
                 <img
                   src={article?.image?.url || "/default-post-image.jpg"}
                   alt={article?.image?.description || article.title}
@@ -113,6 +126,7 @@ const PostInCategory = ({
                   }
                   slug={article?.slug}
                   name={article?.title}
+                  locale={activeLocale}
                 />
                 <p className="text-muted-foreground line-clamp-2">
                   {article?.description}

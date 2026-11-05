@@ -31,6 +31,7 @@ import {
   FileText,
   Link2,
   TrendingUp,
+  X,
 } from "lucide-react";
 import type { ContentMetrics } from "@/features/seo/types/seo.types";
 import { useTranslation } from "@/app/hook/useTranslation";
@@ -51,6 +52,7 @@ interface SEOScoreSidebarProps {
   metrics: ContentMetrics;
   title: string;
   description: string;
+  onClose?: () => void;
 }
 
 // ─── Score calculation ────────────────────────────────────────────────────────
@@ -327,6 +329,7 @@ export const SEOScoreSidebar: React.FC<SEOScoreSidebarProps> = ({
   metrics,
   title,
   description,
+  onClose,
 }) => {
   const { t } = useTranslation();
   const { checks, score } = useMemo(
@@ -340,12 +343,25 @@ export const SEOScoreSidebar: React.FC<SEOScoreSidebarProps> = ({
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center gap-2 px-5 py-4 border-b border-[var(--color-editor-border)] shrink-0">
-        <TrendingUp size={16} className="text-[var(--color-editor-accent)] shrink-0" />
-        <div>
-          <h2 className="text-sm font-bold text-[var(--color-editor-text)]">{t("editor.seo_sidebar.title")}</h2>
-          <p className="text-[10px] text-[var(--color-editor-muted)]">{t("editor.seo_sidebar.subtitle")}</p>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-editor-border)] shrink-0">
+        <div className="flex items-center gap-2">
+          <TrendingUp size={16} className="text-[var(--color-editor-accent)] shrink-0" />
+          <div>
+            <h2 className="text-sm font-bold text-[var(--color-editor-text)]">{t("editor.seo_sidebar.title")}</h2>
+            <p className="text-[10px] text-[var(--color-editor-muted)]">{t("editor.seo_sidebar.subtitle")}</p>
+          </div>
         </div>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 rounded-lg text-[var(--color-editor-secondary)] hover:text-[var(--color-editor-text)] hover:bg-[var(--color-editor-elevated)] transition-colors cursor-pointer"
+            aria-label="Close SEO Sidebar"
+            title="Close panel"
+          >
+            <X size={16} />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 px-4 pb-6 overflow-y-auto">

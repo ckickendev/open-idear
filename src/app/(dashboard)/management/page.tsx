@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   Menu,
   FileText,
@@ -38,6 +39,7 @@ import CategoryManagement from "@/features/shop/components/admin/CategoryManagem
 import OrderManagement from "@/features/shop/components/admin/OrderManagement";
 import CommerceAnalytics from "@/features/shop/components/admin/CommerceAnalytics";
 import { Package, Layers, ShoppingBag, BarChart3 } from "lucide-react";
+import { AdminHeaderActions } from "@/components/admin/AdminHeaderActions";
 
 interface MenuItem {
   id: string;
@@ -132,21 +134,26 @@ const AdminDashboard = () => {
  `}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center gap-3 px-4 border-b border-border flex-shrink-0">
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-            <Logo size={20} className="text-white" />
+        <Link
+          href="/management"
+          className="h-16 flex items-center gap-3 px-4 border-b border-border flex-shrink-0 group hover:bg-muted/40 transition-colors cursor-pointer"
+          title="OpenIdear Management Panel"
+        >
+          <div className="w-9 h-9 flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+            <Logo size={34} className="w-8.5 h-8.5 object-contain drop-shadow-xs" />
           </div>
           {sidebarOpen && (
             <div className="min-w-0">
-              <h1 className="font-bold text-base text-foreground truncate">
-                OpenIdear
-              </h1>
-              <p className="text-[11px] text-muted-foreground font-medium">
+              <div className="flex items-center tracking-tight leading-none">
+                <span className="font-bold text-[17px] text-blue-600">Open</span>
+                <span className="font-bold text-[17px] text-foreground">Idear</span>
+              </div>
+              <p className="text-[10.5px] uppercase font-semibold text-muted-foreground/80 tracking-wider mt-1">
                 Admin Panel
               </p>
             </div>
           )}
-        </div>
+        </Link>
 
         {/* Navigation */}
         <nav className="flex-1 py-3 px-3 overflow-y-auto">
@@ -247,28 +254,9 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Notifications */}
-            <button
-              className="relative p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Notifications"
-            >
-              <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white" />
-            </button>
-
-            {/* User menu */}
-            <div className="flex items-center gap-2 ml-1 pl-3 border-l border-border">
-              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                <User size={16} className="text-primary" />
-              </div>
-              <button className="hidden sm:flex items-center gap-1 text-sm font-medium text-foreground hover:text-foreground/80 transition-colors">
-                <span>Admin</span>
-                <ChevronDown size={14} className="text-muted-foreground" />
-              </button>
-            </div>
-          </div>
+          <AdminHeaderActions onSelectTab={setActiveTab} />
         </header>
+
 
         {/* Content */}
         <main className="flex-1 p-4 lg:p-8 overflow-auto">

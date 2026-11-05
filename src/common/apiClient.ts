@@ -6,13 +6,16 @@ const apiClient = axios.create({
   baseURL: ENV.ROOT_API,
 });
 
-// Request interceptor to attach token automatically
+// Request interceptor to attach token and locale automatically
 apiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
       const headers = getHeadersToken();
       if (headers.Authorization) {
         config.headers.Authorization = headers.Authorization;
+      }
+      if (!config.headers["x-locale"] && headers["x-locale"]) {
+        config.headers["x-locale"] = headers["x-locale"];
       }
     }
     return config;

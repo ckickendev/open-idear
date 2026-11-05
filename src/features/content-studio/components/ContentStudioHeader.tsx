@@ -7,56 +7,157 @@
 
 import React from "react";
 import Link from "next/link";
-import { Sparkles, ChevronRight, LayoutDashboard, Compass } from "lucide-react";
+import { Sparkles, ChevronRight, LayoutDashboard, Compass, ArrowLeft, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ContentStudioStep } from "../store/contentStudioStore";
+import { useContentStudioStore } from "../store/contentStudioStore";
 
 interface ContentStudioHeaderProps {
   step?: ContentStudioStep;
+  onStepChange?: (step: ContentStudioStep) => void;
 }
 
-export function ContentStudioHeader({ step = "ideas" }: ContentStudioHeaderProps) {
+export function ContentStudioHeader({ step, onStepChange }: ContentStudioHeaderProps) {
+  const store = useContentStudioStore();
+  const currentStep = step || store.step;
+
+  const canGoToIdeas = true;
+  const canGoToBrief = store.selectedIdeaIds.length > 0;
+  const canGoToOutline = store.selectedIdeaIds.length > 0;
+  const canGoToWriting = store.writingStages.some((s) => s.status !== "idle");
+
+  const handleStepClick = (targetStep: ContentStudioStep) => {
+    if (onStepChange) {
+      onStepChange(targetStep);
+    } else {
+      store.setStep(targetStep);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      {/* Breadcrumbs */}
-      <nav
-        aria-label="Breadcrumb"
-        className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium"
-      >
-        <Link
-          href="/management"
-          className="flex items-center gap-1 hover:text-foreground transition-colors"
+      {/* Breadcrumbs & Direct Return to Editor */}
+      <div className="flex items-center justify-between">
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium flex-wrap"
         >
-          <LayoutDashboard size={13} />
-          <span>Management</span>
-        </Link>
-        <ChevronRight size={12} className="text-muted-foreground/60" />
+          <Link
+            href="/management"
+            className="flex items-center gap-1 hover:text-foreground transition-colors"
+          >
+            <LayoutDashboard size={13} />
+            <span>Management</span>
+          </Link>
+          <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+          <Link
+            href="/management/content-studio"
+            onClick={(e) => {
+              e.preventDefault();
+              handleStepClick("ideas");
+            }}
+            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            title="Return to AI Content Studio Ideas"
+          >
+            <Compass size={13} className="text-primary" />
+            <span>Content Studio</span>
+          </Link>
+
+          {currentStep === "ideas" && (
+            <>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <span className="text-foreground font-semibold">Ideas</span>
+            </>
+          )}
+
+          {currentStep === "brief" && (
+            <>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <button
+                type="button"
+                onClick={() => handleStepClick("ideas")}
+                className="hover:text-foreground transition-colors cursor-pointer"
+                title="Return to Step 1: Ideas"
+              >
+                Ideas
+              </button>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <span className="text-foreground font-semibold">Content Brief</span>
+            </>
+          )}
+
+          {currentStep === "outline" && (
+            <>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <button
+                type="button"
+                onClick={() => handleStepClick("ideas")}
+                className="hover:text-foreground transition-colors cursor-pointer"
+                title="Return to Step 1: Ideas"
+              >
+                Ideas
+              </button>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <button
+                type="button"
+                onClick={() => handleStepClick("brief")}
+                className="hover:text-foreground transition-colors cursor-pointer"
+                title="Return to Step 2: Content Brief"
+              >
+                Brief
+              </button>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <span className="text-foreground font-semibold">Content Outline</span>
+            </>
+          )}
+
+          {currentStep === "writing" && (
+            <>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <button
+                type="button"
+                onClick={() => handleStepClick("ideas")}
+                className="hover:text-foreground transition-colors cursor-pointer"
+                title="Return to Step 1: Ideas"
+              >
+                Ideas
+              </button>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <button
+                type="button"
+                onClick={() => handleStepClick("brief")}
+                className="hover:text-foreground transition-colors cursor-pointer"
+                title="Return to Step 2: Content Brief"
+              >
+                Brief
+              </button>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <button
+                type="button"
+                onClick={() => handleStepClick("outline")}
+                className="hover:text-foreground transition-colors cursor-pointer"
+                title="Return to Step 3: Content Outline"
+              >
+                Outline
+              </button>
+              <ChevronRight size={12} className="text-muted-foreground/60 shrink-0" />
+              <span className="text-foreground font-semibold">Drafting Article</span>
+            </>
+          )}
+        </nav>
+
         <Link
-          href="/management/content-studio"
-          className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+          href="/create"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground bg-muted/60 hover:bg-muted border border-border/60 transition-colors shadow-2xs cursor-pointer group"
+          title="Open Editor in a new tab (preserves current Content Studio workspace)"
         >
-          <Compass size={13} className="text-primary" />
-          <span>Content Studio</span>
+          <ArrowLeft size={13} className="transition-transform group-hover:-translate-x-0.5" />
+          <span>Editor</span>
+          <ExternalLink size={11} className="text-muted-foreground/60 ml-0.5" />
         </Link>
-        {step === "brief" && (
-          <>
-            <ChevronRight size={12} className="text-muted-foreground/60" />
-            <span className="text-foreground font-semibold">Content Brief</span>
-          </>
-        )}
-        {step === "outline" && (
-          <>
-            <ChevronRight size={12} className="text-muted-foreground/60" />
-            <span className="text-foreground font-semibold">Content Outline</span>
-          </>
-        )}
-        {step === "writing" && (
-          <>
-            <ChevronRight size={12} className="text-muted-foreground/60" />
-            <span className="text-foreground font-semibold">Drafting Article</span>
-          </>
-        )}
-      </nav>
+      </div>
 
       {/* Hero Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/60">
@@ -74,55 +175,63 @@ export function ContentStudioHeader({ step = "ideas" }: ContentStudioHeaderProps
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">
-            {step === "brief"
+            {currentStep === "brief"
               ? "Review and customize AI specifications for your content brief."
-              : step === "outline"
+              : currentStep === "outline"
               ? "Refine article structure, headings, key points, and SEO FAQs."
-              : step === "writing"
+              : currentStep === "writing"
               ? "Drafting comprehensive long-form article with structured blocks-v1."
               : "Turn an idea into a complete content plan with AI."}
           </p>
         </div>
 
         {/* Workflow Pipeline Stepper */}
-        <div className="hidden lg:flex items-center gap-2 bg-card border border-border/80 rounded-xl px-3.5 py-2 shadow-xs">
+        <div className="hidden lg:flex items-center gap-1.5 bg-card border border-border/80 rounded-xl p-1.5 shadow-xs">
           {/* Step 1: Ideas */}
-          <div
-            className={`flex items-center gap-1.5 text-xs font-semibold ${
-              step === "ideas"
-                ? "text-primary"
-                : "text-foreground"
+          <button
+            type="button"
+            onClick={() => handleStepClick("ideas")}
+            disabled={!canGoToIdeas}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+              currentStep === "ideas"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
             }`}
+            title="Step 1: Ideas Generation & Exploration"
           >
             <span
               className={`w-5 h-5 rounded-full text-[11px] flex items-center justify-center font-bold ${
-                step === "ideas"
-                  ? "bg-primary text-primary-foreground"
+                currentStep === "ideas"
+                  ? "bg-primary text-primary-foreground shadow-xs"
                   : "bg-primary/20 text-primary"
               }`}
             >
               1
             </span>
             <span>Ideas</span>
-          </div>
+          </button>
 
-          <ChevronRight size={13} className="text-muted-foreground/40" />
+          <ChevronRight size={13} className="text-muted-foreground/40 shrink-0" />
 
           {/* Step 2: Brief */}
-          <div
-            className={`flex items-center gap-1.5 text-xs ${
-              step === "brief"
-                ? "font-semibold text-primary"
-                : step === "outline" || step === "writing"
-                ? "font-medium text-foreground"
-                : "font-medium text-muted-foreground/80"
+          <button
+            type="button"
+            onClick={() => handleStepClick("brief")}
+            disabled={!canGoToBrief}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+              currentStep === "brief"
+                ? "bg-primary/10 text-primary"
+                : canGoToBrief
+                ? "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                : "text-muted-foreground/60"
             }`}
+            title="Step 2: Editorial Brief Configuration"
           >
             <span
               className={`w-5 h-5 rounded-full text-[11px] flex items-center justify-center font-bold ${
-                step === "brief"
+                currentStep === "brief"
                   ? "bg-primary text-primary-foreground shadow-xs"
-                  : step === "outline" || step === "writing"
+                  : canGoToBrief
                   ? "bg-primary/20 text-primary"
                   : "bg-muted text-muted-foreground"
               }`}
@@ -130,25 +239,29 @@ export function ContentStudioHeader({ step = "ideas" }: ContentStudioHeaderProps
               2
             </span>
             <span>Brief</span>
-          </div>
+          </button>
 
-          <ChevronRight size={13} className="text-muted-foreground/40" />
+          <ChevronRight size={13} className="text-muted-foreground/40 shrink-0" />
 
           {/* Step 3: Outline */}
-          <div
-            className={`flex items-center gap-1.5 text-xs ${
-              step === "outline"
-                ? "font-semibold text-primary"
-                : step === "writing"
-                ? "font-medium text-foreground"
-                : "font-medium text-muted-foreground/80"
+          <button
+            type="button"
+            onClick={() => handleStepClick("outline")}
+            disabled={!canGoToOutline}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+              currentStep === "outline"
+                ? "bg-primary/10 text-primary"
+                : canGoToOutline
+                ? "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                : "text-muted-foreground/60"
             }`}
+            title="Step 3: Content Structure & Outline"
           >
             <span
               className={`w-5 h-5 rounded-full text-[11px] flex items-center justify-center font-bold ${
-                step === "outline"
+                currentStep === "outline"
                   ? "bg-primary text-primary-foreground shadow-xs"
-                  : step === "writing"
+                  : canGoToOutline
                   ? "bg-primary/20 text-primary"
                   : "bg-muted text-muted-foreground"
               }`}
@@ -156,21 +269,27 @@ export function ContentStudioHeader({ step = "ideas" }: ContentStudioHeaderProps
               3
             </span>
             <span>Outline</span>
-          </div>
+          </button>
 
-          <ChevronRight size={13} className="text-muted-foreground/40" />
+          <ChevronRight size={13} className="text-muted-foreground/40 shrink-0" />
 
           {/* Step 4: Article */}
-          <div
-            className={`flex items-center gap-1.5 text-xs ${
-              step === "writing"
-                ? "font-semibold text-primary"
-                : "font-medium text-muted-foreground/80"
+          <button
+            type="button"
+            onClick={() => handleStepClick("writing")}
+            disabled={!canGoToWriting}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+              currentStep === "writing"
+                ? "bg-primary/10 text-primary"
+                : canGoToWriting
+                ? "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                : "text-muted-foreground/60"
             }`}
+            title="Step 4: Long-form Article Generation"
           >
             <span
               className={`w-5 h-5 rounded-full text-[11px] flex items-center justify-center font-bold ${
-                step === "writing"
+                currentStep === "writing"
                   ? "bg-primary text-primary-foreground shadow-xs"
                   : "bg-muted text-muted-foreground"
               }`}
@@ -178,7 +297,7 @@ export function ContentStudioHeader({ step = "ideas" }: ContentStudioHeaderProps
               4
             </span>
             <span>Article</span>
-          </div>
+          </button>
         </div>
       </div>
     </div>

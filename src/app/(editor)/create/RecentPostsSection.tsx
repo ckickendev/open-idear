@@ -41,6 +41,7 @@ interface RecentPostsSectionProps {
   activePostId?: string | null;
   onSelectPost: (postId: string | null) => void;
   onOpenSidebar: () => void;
+  locale?: "en" | "vi";
 }
 
 const STORAGE_KEY = "openidear_create_recent_posts_expanded";
@@ -49,8 +50,10 @@ export function RecentPostsSection({
   activePostId,
   onSelectPost,
   onOpenSidebar,
+  locale,
 }: RecentPostsSectionProps) {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const activeLocale = (locale || lang || "en") as "en" | "vi";
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -73,7 +76,7 @@ export function RecentPostsSection({
 
     setIsLoading(true);
     try {
-      const res = await postApi.getPostsByAuthor();
+      const res = await postApi.getPostsByAuthor(activeLocale);
       if (res?.data?.posts) {
         const list: PostItem[] = [...res.data.posts];
         list.sort((a, b) => {
@@ -89,11 +92,11 @@ export function RecentPostsSection({
       setIsLoading(false);
       setHasLoaded(true);
     }
-  }, []);
+  }, [activeLocale]);
 
   useEffect(() => {
     fetchRecentPosts();
-  }, [fetchRecentPosts]);
+  }, [fetchRecentPosts, activeLocale]);
 
   // If user opens a post, automatically collapse section to keep editor clean
   useEffect(() => {
@@ -153,6 +156,9 @@ export function RecentPostsSection({
                 className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[var(--color-editor-surface)] hover:bg-sky-500/10 text-[11px] text-[var(--color-editor-secondary)] hover:text-sky-500 border border-[var(--color-editor-border)] hover:border-sky-500/30 transition-all max-w-[280px] truncate cursor-pointer group"
                 title={`Resume: ${latestPost.title || t("editor.recent_posts.untitled")}`}
               >
+                <span className="text-[10px] font-semibold text-sky-500 uppercase tracking-wider shrink-0">
+                  {t("editor.recent_posts.resume_prefix", "Resume")}:
+                </span>
                 <span
                   className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                     latestPost.published ? "bg-emerald-500" : "bg-amber-500"

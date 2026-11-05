@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { History, GitCommit, Sparkles, Clock } from "lucide-react";
 import authenticationStore from "@/store/AuthenticationStore";
 import { VersionHistoryDrawer } from "./VersionHistoryDrawer";
+import { useTranslation } from "@/app/hook/useTranslation";
 
 interface ArticleVersionActionProps {
   readonly slug: string;
@@ -34,6 +35,7 @@ export const ArticleVersionAction: React.FC<ArticleVersionActionProps> = ({
   authorId,
   variant = "badge",
 }) => {
+  const { t } = useTranslation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const router = useRouter();
   const currentUser = authenticationStore((state) => state.currentUser);
@@ -77,7 +79,7 @@ export const ArticleVersionAction: React.FC<ArticleVersionActionProps> = ({
           title="Open article version history"
         >
           <History size={13} className="text-primary" />
-          <span>History</span>
+          <span>{t("component.article.history", "History")}</span>
           <span className="ml-1 px-1.5 py-0.2 rounded font-mono text-[10px] bg-background text-muted-foreground border border-border/60">
             v{currentVersion}
           </span>
@@ -93,7 +95,7 @@ export const ArticleVersionAction: React.FC<ArticleVersionActionProps> = ({
           <GitCommit size={13} className="text-primary" />
           <span className="font-mono font-semibold text-primary">v{currentVersion}</span>
           <span className="text-muted-foreground/60 text-[10px]">·</span>
-          <span className="text-[11px] text-muted-foreground hover:underline">History</span>
+          <span className="text-[11px] text-muted-foreground hover:underline">{t("component.article.history", "History")}</span>
         </button>
       )}
 

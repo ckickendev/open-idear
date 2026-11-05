@@ -46,7 +46,9 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { AlignLeft } from "lucide-react";
 import type { TableOfContentsItem } from "../utils/buildTableOfContents";
+import { useTranslation } from "@/app/hook/useTranslation";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -96,6 +98,7 @@ export default function TableOfContents({
   items,
   variant = "desktop",
 }: TableOfContentsProps) {
+  const { t } = useTranslation();
   const [activeId, setActiveId] = useState<string>("");
   const detailsRef = useRef<HTMLDetailsElement>(null);
 
@@ -208,24 +211,24 @@ export default function TableOfContents({
   // ── TOC item list (shared by both variants) ───────────────────────────────
 
   const tocList = (
-    <ol className="ed-toc__list" aria-label="Sections in this article">
+    <ol className="ed-toc__list space-y-1" aria-label="Sections in this article">
       {items.map((item) => {
         const isActive = item.id === activeId;
         const isH3 = item.level === 3;
-
-        let linkClass = "ed-toc__link";
-        if (isH3) linkClass += " ed-toc__link--h3";
-        if (isActive) linkClass += " ed-toc__link--active";
 
         return (
           <li key={item.id} className="ed-toc__item">
             <a
               href={`#${item.id}`}
-              className={linkClass}
+              className={`group flex items-start text-xs py-1.5 px-2.5 rounded-lg transition-all duration-200 leading-snug ${
+                isActive
+                  ? "bg-primary/10 text-primary font-semibold border-l-2 border-primary pl-2 shadow-xs"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              } ${isH3 ? "ml-3 text-[11px] opacity-90" : ""}`}
               onClick={(e) => handleClick(e, item.id)}
               aria-current={isActive ? "true" : undefined}
             >
-              {item.text}
+              <span className="line-clamp-2">{item.text}</span>
             </a>
           </li>
         );
@@ -237,10 +240,19 @@ export default function TableOfContents({
 
   if (variant === "desktop") {
     return (
-      <nav className="ed-toc" aria-label="Table of contents">
-        <span className="ed-toc__label" aria-hidden="true">
-          Table of Contents
-        </span>
+      <nav
+        className="ed-toc bg-card/60 backdrop-blur-md rounded-2xl border border-border/50 p-4 shadow-xs"
+        aria-label="Table of contents"
+      >
+        <div className="flex items-center justify-between pb-3 mb-3 border-b border-border/40">
+          <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <AlignLeft className="w-3.5 h-3.5 text-primary" />
+            {t("component.article.toc", "Table of Contents")}
+          </span>
+          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+            {items.length}
+          </span>
+        </div>
         {tocList}
       </nav>
     );
@@ -249,12 +261,21 @@ export default function TableOfContents({
   // ── Mobile variant — <details> accordion ─────────────────────────────────
 
   return (
-    <details ref={detailsRef} className="ed-toc-accordion">
-      <summary className="ed-toc-accordion__trigger">
-        <span>Table of Contents</span>
+    <details
+      ref={detailsRef}
+      className="ed-toc-accordion bg-card/60 backdrop-blur-md border border-border/50 rounded-xl overflow-hidden shadow-xs mb-6"
+    >
+      <summary className="ed-toc-accordion__trigger flex items-center justify-between p-3.5 cursor-pointer select-none">
+        <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground">
+          <AlignLeft className="w-3.5 h-3.5 text-primary" />
+          {t("component.article.toc", "Table of Contents")}
+          <span className="text-[11px] font-normal text-muted-foreground">
+            ({items.length})
+          </span>
+        </span>
         {/* Chevron icon — CSS handles rotation via details[open] */}
         <svg
-          className="ed-toc-accordion__chevron"
+          className="ed-toc-accordion__chevron text-muted-foreground"
           width="16"
           height="16"
           viewBox="0 0 24 24"
@@ -266,7 +287,7 @@ export default function TableOfContents({
           <path d="M6 9l6 6 6-6" />
         </svg>
       </summary>
-      <div className="ed-toc-accordion__body">
+      <div className="ed-toc-accordion__body p-3 border-t border-border/40 bg-muted/20">
         <nav aria-label="Table of contents">{tocList}</nav>
       </div>
     </details>

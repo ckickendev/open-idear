@@ -583,6 +583,7 @@ const WatchPage = () => {
                       knownDuration={currentLesson.media?.duration}
                       completionThreshold={0.9}
                       autoplay={true}
+                      onGoToNext={goToNext}
                       onTimeUpdate={(currentTime: number) => {
                         setCurrentTime(currentTime);
                       }}

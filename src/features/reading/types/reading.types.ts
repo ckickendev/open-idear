@@ -18,6 +18,7 @@ export interface ContinueReadingItem {
   articleId: string;
   slug: string;
   title: string;
+  locale?: string;
   description?: string;
   thumbnail: string | null;
   author?: {

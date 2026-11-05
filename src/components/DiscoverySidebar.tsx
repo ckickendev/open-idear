@@ -4,8 +4,15 @@ import { ENV } from "@/api/const";
 import axios from "axios";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { Flame, BookOpen, Trophy, GraduationCap, Star, ArrowRight } from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { usePathname } from "next/navigation";
+import { useLanguageStore } from "@/store/useLanguage";
+import { Flame, BookOpen, Trophy, GraduationCap, Star, ArrowRight, RefreshCw } from "lucide-react";
+import { getCachedFeed, setCachedFeed } from "@/lib/cache/feedCache";
+import {
+  FeedConnectionState,
+  FeedConnectionStatus,
+} from "@/components/common/FeedConnectionState";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,11 +80,14 @@ function PostSkeletons({ count = 4 }: { count?: number }) {
   return (
     <div className="space-y-3">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex gap-2.5 animate-pulse">
-          <div className="w-10 h-10 rounded-lg bg-muted flex-shrink-0" />
+        <div
+          key={i}
+          className="flex gap-2.5 relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-gradient-to-r before:from-transparent before:via-foreground/5 dark:before:via-white/5 before:to-transparent"
+        >
+          <div className="w-10 h-10 rounded-lg bg-muted/70 flex-shrink-0 animate-pulse" />
           <div className="flex-1 space-y-1.5">
-            <div className="h-3 bg-muted rounded w-11/12" />
-            <div className="h-2.5 bg-muted rounded w-2/3" />
+            <div className="h-3 bg-muted/80 rounded w-11/12 animate-pulse" />
+            <div className="h-2.5 bg-muted/60 rounded w-2/3 animate-pulse" />
           </div>
         </div>
       ))}
@@ -85,10 +95,11 @@ function PostSkeletons({ count = 4 }: { count?: number }) {
   );
 }
 
-function MiniPostCard({ post }: { post: SidebarPost }) {
+function MiniPostCard({ post, activeLocale }: { post: SidebarPost; activeLocale?: string }) {
+  const postHref = activeLocale === "vi" ? `/vi/post/${post.slug}` : `/post/${post.slug}`;
   return (
     <Link
-      href={`/post/${post.slug}`}
+      href={postHref}
       className="group flex gap-2.5 items-start hover:bg-accent/40 border border-transparent hover:border-border/30 rounded-xl p-1.5 -mx-1.5 transition-all duration-200"
     >
       {/* Thumbnail */}
@@ -208,41 +219,103 @@ function AffiliateCard() {
 export default function DiscoverySidebar() {
   const [data, setData] = useState<SidebarData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [sidebarStatus, setSidebarStatus] = useState<FeedConnectionStatus>("connecting");
+  const pathname = usePathname();
+  const storeLang = useLanguageStore((state) => state.lang);
+  const activeLocale = pathname?.startsWith("/vi") ? "vi" : (storeLang || "en");
+  const isVi = activeLocale === "vi";
+
+  const cacheKey = `open_idear_feed_sidebar_${activeLocale}`;
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    let isMounted = true;
-    const fetchSidebar = async () => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const fetchSidebar = useCallback(
+    async (isManualRetry = false) => {
       const rootApi = ENV?.ROOT_API;
       if (!rootApi) {
         setIsLoading(false);
         return;
       }
+
+      if (isManualRetry) {
+        setIsRetrying(true);
+      }
+
+      // Check cache for instant load
+      const cached = getCachedFeed<SidebarData>(cacheKey);
+      if (cached && !isManualRetry) {
+        setData(cached);
+        setIsLoading(false);
+      } else if (!cached) {
+        setIsLoading(true);
+      }
+
+      const executeRequest = async (attempt = 1): Promise<any> => {
+        try {
+          return await axios.get(
+            `${rootApi}/post/getDiscoverySidebar?locale=${activeLocale}`,
+            { timeout: 10000 }
+          );
+        } catch (err: any) {
+          const isTimeoutOrNetwork =
+            err?.code === "ECONNABORTED" ||
+            err?.message?.includes("timeout") ||
+            !err?.response;
+
+          // Transparent 1x retry
+          if (attempt === 1 && isTimeoutOrNetwork) {
+            await new Promise((res) => setTimeout(res, 1200));
+            return executeRequest(2);
+          }
+          throw err;
+        }
+      };
+
       try {
-        const res = await axios.get(`${rootApi}/post/getDiscoverySidebar`, { timeout: 4000 });
-        if (!isMounted) return;
+        const res = await executeRequest();
+        if (!isMountedRef.current) return;
+
         if (res.status === 200 && res.data?.success) {
-          setData({
+          const sidebarPayload: SidebarData = {
             trending: res.data.trending || [],
             latestPosts: res.data.latestPosts || [],
             popularSeries: res.data.popularSeries || [],
             featuredCourses: res.data.featuredCourses || [],
-          });
+          };
+          setData(sidebarPayload);
+          setSidebarStatus("empty");
+          setCachedFeed<SidebarData>(cacheKey, sidebarPayload);
         }
-      } catch (err) {
-        console.warn("Failed to fetch discovery sidebar:", err);
+      } catch (err: any) {
+        if (!isMountedRef.current) return;
+        console.warn("Failed to fetch discovery sidebar:", err?.message || err);
+
+        const isTimeout =
+          err?.code === "ECONNABORTED" ||
+          err?.message?.includes("timeout") ||
+          err?.code === "ERR_NETWORK";
+
+        setSidebarStatus(isTimeout ? "timeout" : "error");
       } finally {
-        if (isMounted) {
+        if (isMountedRef.current) {
           setIsLoading(false);
+          setIsRetrying(false);
         }
       }
-    };
+    },
+    [activeLocale, cacheKey]
+  );
 
+  useEffect(() => {
     fetchSidebar();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  }, [fetchSidebar]);
 
   return (
     <aside className="hidden lg:block w-72 xl:w-80 flex-shrink-0">
@@ -250,46 +323,76 @@ export default function DiscoverySidebar() {
 
         {/* ─── 🔥 Trending ─────────────────────────────── */}
         <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-          <SectionHeader icon={<Flame size={16} className="text-orange-500" />} label="Trending" />
-          {isLoading ? (
+          <SectionHeader
+            icon={<Flame size={16} className="text-orange-500" />}
+            label={isVi ? "Thịnh hành" : "Trending"}
+          />
+          {isLoading && !data ? (
             <PostSkeletons count={5} />
           ) : data?.trending && data.trending.length > 0 ? (
             <div className="space-y-1">
               {data.trending.map((post) => (
-                <MiniPostCard key={post._id} post={post} />
+                <MiniPostCard key={post._id} post={post} activeLocale={activeLocale} />
               ))}
             </div>
+          ) : !data ? (
+            <FeedConnectionState
+              compact={true}
+              status={sidebarStatus}
+              onRetry={() => fetchSidebar(true)}
+              isRetrying={isRetrying}
+              activeLocale={activeLocale}
+            />
           ) : (
-            <p className="text-xs text-muted-foreground">No trending posts yet.</p>
+            <p className="text-xs text-muted-foreground">
+              {isVi ? "Chưa có bài viết thịnh hành." : "No trending posts yet."}
+            </p>
           )}
         </div>
 
         {/* ─── 📚 Latest Posts ─────────────────────────── */}
         <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-          <SectionHeader icon={<BookOpen size={16} className="text-blue-500" />} label="Latest Posts" />
-          {isLoading ? (
+          <SectionHeader
+            icon={<BookOpen size={16} className="text-blue-500" />}
+            label={isVi ? "Bài viết mới" : "Latest Posts"}
+          />
+          {isLoading && !data ? (
             <PostSkeletons count={5} />
           ) : data?.latestPosts && data.latestPosts.length > 0 ? (
             <div className="space-y-1">
               {data.latestPosts.map((post) => (
-                <MiniPostCard key={post._id} post={post} />
+                <MiniPostCard key={post._id} post={post} activeLocale={activeLocale} />
               ))}
               <Link
-                href="/recently-post"
+                href={activeLocale === "vi" ? "/vi/recently-post" : "/recently-post"}
                 className="flex items-center gap-1 mt-2 text-[11px] font-semibold text-primary hover:underline"
               >
-                See all posts <ArrowRight size={11} />
+                {activeLocale === "vi" ? "Xem tất cả bài viết" : "See all posts"}{" "}
+                <ArrowRight size={11} />
               </Link>
             </div>
+          ) : !data ? (
+            <FeedConnectionState
+              compact={true}
+              status={sidebarStatus}
+              onRetry={() => fetchSidebar(true)}
+              isRetrying={isRetrying}
+              activeLocale={activeLocale}
+            />
           ) : (
-            <p className="text-xs text-muted-foreground">No posts yet.</p>
+            <p className="text-xs text-muted-foreground">
+              {isVi ? "Chưa có bài viết." : "No posts yet."}
+            </p>
           )}
         </div>
 
         {/* ─── 🏆 Popular Series ───────────────────────── */}
         <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-          <SectionHeader icon={<Trophy size={16} className="text-purple-500" />} label="Popular Series" />
-          {isLoading ? (
+          <SectionHeader
+            icon={<Trophy size={16} className="text-purple-500" />}
+            label="Popular Series"
+          />
+          {isLoading && !data ? (
             <PostSkeletons count={4} />
           ) : data?.popularSeries && data.popularSeries.length > 0 ? (
             <div className="space-y-1">
@@ -297,6 +400,14 @@ export default function DiscoverySidebar() {
                 <MiniSeriesCard key={series._id} series={series} />
               ))}
             </div>
+          ) : !data ? (
+            <FeedConnectionState
+              compact={true}
+              status={sidebarStatus}
+              onRetry={() => fetchSidebar(true)}
+              isRetrying={isRetrying}
+              activeLocale={activeLocale}
+            />
           ) : (
             <p className="text-xs text-muted-foreground">No series yet.</p>
           )}
@@ -307,8 +418,11 @@ export default function DiscoverySidebar() {
 
         {/* ─── 🎓 Courses ──────────────────────────────── */}
         <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-          <SectionHeader icon={<GraduationCap size={16} className="text-emerald-500" />} label="Courses" />
-          {isLoading ? (
+          <SectionHeader
+            icon={<GraduationCap size={16} className="text-emerald-500" />}
+            label="Courses"
+          />
+          {isLoading && !data ? (
             <PostSkeletons count={3} />
           ) : data?.featuredCourses && data.featuredCourses.length > 0 ? (
             <div className="space-y-1">
@@ -322,6 +436,14 @@ export default function DiscoverySidebar() {
                 Browse all courses <ArrowRight size={11} />
               </Link>
             </div>
+          ) : !data ? (
+            <FeedConnectionState
+              compact={true}
+              status={sidebarStatus}
+              onRetry={() => fetchSidebar(true)}
+              isRetrying={isRetrying}
+              activeLocale={activeLocale}
+            />
           ) : (
             <p className="text-xs text-muted-foreground">No courses available yet.</p>
           )}

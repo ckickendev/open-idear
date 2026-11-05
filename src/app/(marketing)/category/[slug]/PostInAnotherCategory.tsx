@@ -4,6 +4,9 @@ import { ENV } from "@/api/const";
 import axios from "axios";
 import { useEffect, useState } from "react";
 
+import { usePathname } from "next/navigation";
+import { useLanguageStore } from "@/store/useLanguage";
+
 const PostInAnotherCategory = ({ slug }: { slug: string }) => {
   const moreArticles = [
     {
@@ -34,33 +37,41 @@ const PostInAnotherCategory = ({ slug }: { slug: string }) => {
   ];
 
   const [data, setData] = useState<any[]>([]);
+  const pathname = usePathname();
+  const storeLang = useLanguageStore((state) => state.lang);
+  const activeLocale = pathname?.startsWith("/vi") ? "vi" : (storeLang || "en");
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       try {
         const res = await axios.get(
-          `${ENV.ROOT_API}/category/getPostsInAnotherCategorySlug/${slug}/4`,
+          `${ENV.ROOT_API}/category/getPostsInAnotherCategorySlug/${slug}/4?locale=${activeLocale}`,
         );
-        console.log("Fetched posts another data:", res.data);
-        setData(res.data.posts);
+        if (!isMounted) return;
+        setData(res.data.posts || []);
       } catch (error) {
         console.error("Error fetching posts:", error);
-        throw new Error(`Failed to fetch posts for category slug: ${slug}`);
       }
     };
     fetchData();
-  }, []);
+    return () => {
+      isMounted = false;
+    };
+  }, [slug, activeLocale]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
-      <h2 className="text-3xl font-bold mb-8">ANOTHER</h2>
+      <h2 className="text-3xl font-bold mb-8">
+        {activeLocale === "vi" ? "BÀI VIẾT KHÁC" : "ANOTHER"}
+      </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {data.map((article, idx) => (
           <a
             key={idx}
             className="group cursor-pointer"
-            href={`/post/${article.slug}`}
+            href={activeLocale === "vi" ? `/vi/post/${article.slug}` : `/post/${article.slug}`}
           >
             <div className="relative overflow-hidden rounded-lg mb-3">
               <img

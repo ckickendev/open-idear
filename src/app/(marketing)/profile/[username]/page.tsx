@@ -16,6 +16,7 @@ export interface PostInterface {
   slug?: string;
   content?: string;
   text?: string;
+  description?: string;
   author: any;
   category: {
     name: string;

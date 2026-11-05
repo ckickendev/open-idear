@@ -4,6 +4,7 @@ import { ENV } from "@/api/const";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import authenticationStore from "@/store/AuthenticationStore";
 
 /**
  * Dashboard layout — admin panel with sidebar navigation.
@@ -48,8 +49,12 @@ export default function DashboardLayout({
 
         const user = res.data?.userInfo;
         if (user && Number(user.role) === 1) {
+          authenticationStore.getState().setCurrentUser(user);
           setAuthorized(true);
         } else if (isDev) {
+          if (user) {
+            authenticationStore.getState().setCurrentUser(user);
+          }
           setAuthorized(true);
         } else {
           router.replace("/403");

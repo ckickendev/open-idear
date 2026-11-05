@@ -37,6 +37,9 @@ export interface CoverImageResult {
   width: number;
   height: number;
   createdByAI: boolean;
+  source?: string;
+  author?: string;
+  attributionUrl?: string;
 }
 
 export interface PublisherResponse {
@@ -95,7 +98,7 @@ export const publisherApi = {
   /**
    * Regenerates AI Cover Image for an article topic.
    */
-  regenerateCoverImage: async (payload: { title: string; keywords?: string[]; customPrompt?: string }): Promise<CoverImageResult> => {
+  regenerateCoverImage: async (payload: { title: string; keywords?: string[]; customPrompt?: string; source?: "internet" | "ai" }): Promise<CoverImageResult> => {
     const res = await api.post<{ status: string; data: CoverImageResult }>("/ai/v1/publisher/cover-image", payload);
     if (!res.success) {
       throw new Error(res.message ?? "Failed to regenerate cover image");

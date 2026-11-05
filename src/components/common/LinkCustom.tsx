@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useLanguageStore } from "@/store/useLanguage";
 
 export const CategoryLinkCustom = ({ className, slug, name }: any) => {
   return (
@@ -22,9 +26,14 @@ export const SeriesLinkCustom = ({ className, slug, name }: any) => {
   );
 };
 
-export const PostLinkCustom = ({ className, slug, name }: any) => {
+export const PostLinkCustom = ({ className, slug, name, locale }: any) => {
+  const pathname = usePathname();
+  const storeLang = useLanguageStore((state) => state.lang);
+  const activeLocale = locale || (pathname?.startsWith("/vi") ? "vi" : (storeLang || "en"));
+  const href = activeLocale === "vi" ? `/vi/post/${slug}` : `/post/${slug}`;
+
   return (
-    <Link href={`/post/${slug}`} className={`block hover:underline`}>
+    <Link href={href} className={`block hover:underline`}>
       <h4 className={className}>{name}</h4>
     </Link>
   );

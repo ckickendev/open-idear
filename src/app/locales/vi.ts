@@ -71,7 +71,51 @@ const vi = {
       "contact": "Liên hệ",
       "ava": "CHÚNG TÔI CŨNG CÓ MẶT TRÊN",
       "hotcourse": "Khóa học nổi bật",
-      "hottoppic": "Chủ đề nổi bật"
+      "hottoppic": "Chủ đề nổi bật",
+      "copyright": "© {year} OpenIdear. Tất cả quyền được bảo lưu."
+    },
+    "comment": {
+      "sortBy": "Sắp xếp theo:",
+      "top": "Nổi bật",
+      "newest": "Mới nhất",
+      "placeholder": "Viết bình luận...",
+      "charLimit": "{current}/{max} ký tự",
+      "post": "Đăng bình luận",
+      "submitting": "Đang gửi...",
+      "reply": "Trả lời",
+      "report": "Báo cáo",
+      "replyPlaceholder": "Viết câu trả lời của bạn...",
+      "send": "Gửi",
+      "cancel": "Hủy",
+      "viewMoreReplies": "Xem thêm {count} câu trả lời",
+      "loadMore": "Tải thêm bình luận",
+      "loading": "Đang tải...",
+      "edited": "(đã chỉnh sửa)"
+    },
+    "article": {
+      "toc": "Mục lục",
+      "minRead": "phút đọc",
+      "history": "Lịch sử",
+      "share": "Chia sẻ",
+      "shareCopied": "Đã sao chép liên kết bài viết vào clipboard!",
+      "save": "Lưu",
+      "saved": "Đã lưu",
+      "like": "Thích bài viết",
+      "unlike": "Bỏ thích bài viết",
+      "postLiked": "Đã thích bài viết!",
+      "postUnliked": "Đã bỏ thích bài viết",
+      "likeError": "Lỗi khi thích bài viết",
+      "follow": "Theo dõi",
+      "unfollow": "Hủy theo dõi",
+      "followError": "Lỗi khi theo dõi tác giả",
+      "jumpToComments": "Đến phần bình luận",
+      "signInToLike": "Vui lòng đăng nhập để thích bài viết",
+      "signInToSave": "Vui lòng đăng nhập để lưu vào bộ sưu tập",
+      "signInToFollow": "Vui lòng đăng nhập để theo dõi tác giả",
+      "authorFollowed": "Đã theo dõi tác giả thành công",
+      "authorUnfollowed": "Đã hủy theo dõi tác giả",
+      "relatedTopics": "Chủ đề liên quan",
+      "noRelatedTopics": "Không có chủ đề liên quan."
     },
     "lastest_feature": {
       "last": "Post gần đây",
@@ -191,6 +235,8 @@ const vi = {
       "diagram": "Sơ đồ",
       "seo": "SEO",
       "ai_usage": "Mức dùng AI",
+      "ai_content_studio": "AI Studio",
+      "ai_content_studio_title": "Mở AI Content Studio để tạo bài viết hoàn chỉnh từ ý tưởng",
       "generate_visuals": "Tạo toàn bộ hình ảnh",
       "all_visuals": "Toàn bộ ảnh",
       "ai_tools": "Công cụ AI",
@@ -203,7 +249,8 @@ const vi = {
       "publish": "Xuất bản",
       "publish_title": "Xuất bản (⌘Enter)",
       "published_btn": "Đã xuất bản",
-      "already_published": "Đã xuất bản"
+      "already_published": "Đã xuất bản",
+      "edit_publish_info": "Đã xuất bản — Nhấn để chỉnh sửa thông tin"
     },
     "publish_drawer": {
       "title": "Xuất bản",
@@ -239,7 +286,18 @@ const vi = {
       "update_action": "Cập nhật ({locale})",
       "publish_action": "Xuất bản ({locale})",
       "cover_success": "Ảnh bìa AI đã được tạo và tải lên Cloudinary!",
-      "cover_error": "Không thể tạo lại ảnh bìa AI."
+      "cover_error": "Không thể tạo lại ảnh bìa AI.",
+      "background_title": "Hình nền bài viết",
+      "background_subtitle": "Ảnh nền hoặc kiểu nền",
+      "background_placeholder": "Dán URL hình ảnh (https://...) hoặc mã gradient CSS...",
+      "background_presets": "Mẫu có sẵn",
+      "background_upload_btn": "Tải lên ảnh nền",
+      "background_clear_btn": "Xóa hình nền",
+      "change_cover": "Thay đổi ảnh bìa",
+      "remove_cover": "Xóa ảnh bìa",
+      "current_cover": "Ảnh bìa hiện tại",
+      "click_to_edit_publish": "Đã xuất bản — Bấm để chỉnh sửa thông tin xuất bản",
+      "live_post_hint": "Bài viết đã xuất bản: Thay đổi mô tả, hình ảnh hoặc ảnh nền sẽ được cập nhật ngay lập tức."
     },
     "seo_sidebar": {
       "title": "Điểm SEO",
@@ -320,6 +378,8 @@ const vi = {
       "refresh_list": "Làm mới danh sách",
       "collapse_sidebar": "Thu gọn thanh bên (⌘\\)",
       "create_new": "Tạo bài viết mới",
+      "create_with_ai": "AI Content Studio",
+      "create_with_ai_desc": "Tạo bài viết hoàn chỉnh bằng AI",
       "search_placeholder": "Tìm kiếm bài viết...",
       "tab_all": "Tất cả",
       "tab_drafts": "Bản nháp",
@@ -380,6 +440,11 @@ const vi = {
       "could_not_retrieve": "Không thể lấy phiên bản {source}.",
       "no_content": "Phiên bản {source} chưa có nội dung để dịch.",
       "translated_success": "✨ Đã dịch bản nháp {target}! Xem lại nội dung và lưu khi sẵn sàng."
+    },
+    "ai_banner": {
+      "headline": "Muốn AI viết bài này cho bạn?",
+      "description": "Sử dụng AI Content Studio để tìm ý tưởng, tạo dàn ý và tự động viết toàn bộ bài viết.",
+      "button": "Mở AI Content Studio"
     }
   },
   "home": {

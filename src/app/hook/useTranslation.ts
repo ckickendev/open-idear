@@ -9,8 +9,15 @@ const translations = {
 
 type Language = keyof typeof translations;
 
+const warnedMissingKeys = new Set<string>();
+
 export function useTranslation() {
-  const lang = (useLanguageStore((state) => state.lang) || "en") as Language;
+  const storeLang = useLanguageStore((state) => state.lang);
+  let detectedLocale: Language = (storeLang || "en") as Language;
+  if (typeof window !== "undefined" && window.location?.pathname?.startsWith("/vi")) {
+    detectedLocale = "vi";
+  }
+  const lang = detectedLocale;
 
   const t = (
     key: string,
@@ -60,7 +67,11 @@ export function useTranslation() {
 
     if (value === undefined) {
       if (process.env.NODE_ENV === "development") {
-        console.warn(`[i18n] Missing translation key "${key}" for locale "${lang}".`);
+        const warnIdentifier = `${lang}:${key}`;
+        if (!warnedMissingKeys.has(warnIdentifier)) {
+          warnedMissingKeys.add(warnIdentifier);
+          console.warn(`[i18n] Missing translation key "${key}" for locale "${lang}".`);
+        }
       }
       return fallback !== undefined ? fallback : key;
     }

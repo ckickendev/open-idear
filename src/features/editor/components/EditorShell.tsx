@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { toast } from "sonner";
 
 import "@/styles/editor.css";
@@ -16,6 +17,7 @@ import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useContentMetrics } from "@/features/seo/hooks/useContentMetrics";
 import { useAIPlanner, AIPlannerView, AIImageGeneratorView, AIImageEditorView, AIDiagramView, ImageEnhancementReviewModal, useImageEnhancementReview, AIGenerationModal, OneClickPublisherModal, type PipelineData, type PublisherResponse, aiApi } from "@/features/ai";
 import { toEditorHtml } from "@/features/ai/utils/contentTransformer";
+import { mergeAiDraftWithExistingEditorImages } from "../utils/editorImagePreservation";
 import { LivePreviewSystem } from "@/features/preview";
 import { useTranslation } from "@/app/hook/useTranslation";
 import { useLanguageStore } from "@/store/useLanguage";
@@ -218,6 +220,7 @@ export default function EditorShell() {
   const [seriesPublic, setSeriesPublic] = useState("");
   const [categoryPublic, setCategoryPublic] = useState("");
   const [imagePublic, setImagePublic] = useState<string | null>(null);
+  const [backgroundPublic, setBackgroundPublic] = useState<string>("");
 
   // ─── Unified right-panel state ────────────────────────────────────────
   // Replaces separate booleans with a discriminated union.
@@ -349,13 +352,20 @@ export default function EditorShell() {
 
     const markdown = data.enhancedMarkdown || data.writerMarkdown || "";
     if (markdown && editor) {
-      const html = toEditorHtml(markdown, data.visualSuggestions || data.imageSuggestions);
+      const { html, markdown: mergedMarkdown, preservedCount } = mergeAiDraftWithExistingEditorImages(
+        markdown,
+        editor,
+        data.visualSuggestions || data.imageSuggestions
+      );
       editor.commands.setContent(html);
-      setGeneratedMarkdown(markdown);
+      setGeneratedMarkdown(mergedMarkdown);
       setGeneratedAiContext((prev) => ({
         ...prev,
         ...(data.aiContext || {}),
       }));
+      if (preservedCount > 0) {
+        toast.info(`Preserved ${preservedCount} existing image${preservedCount > 1 ? "s" : ""} in article`);
+      }
     }
     toast.success("1-Click Article pipeline generated and applied!");
     autoSave.markDirty();
@@ -371,6 +381,7 @@ export default function EditorShell() {
   const [improvedResult, setImprovedResult] = useState<any>(null);
   const [reviewResult, setReviewResult] = useState<any>(null);
   const [lastSelectedText, setLastSelectedText] = useState("");
+  const [savedSelectionRange, setSavedSelectionRange] = useState<{ from: number; to: number } | null>(null);
 
   // AI Image Modal States (Sprint 1, 2 & 3)
   const [isAiImageModalOpen, setIsAiImageModalOpen] = useState(false);
@@ -463,38 +474,38 @@ export default function EditorShell() {
   const [generatedAiContext, setGeneratedAiContext] = useState<Record<string, unknown> | null>(null);
 
   const getCurrentArticleMarkdown = useCallback(() => {
+    if (editor && !editor.isEmpty) {
+      const html = editor.getHTML();
+      if (html && html.trim() && html !== "<p></p>") {
+        let md = html
+          .replace(/\r\n/g, "\n")
+          .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "\n\n# $1\n\n")
+          .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "\n\n## $1\n\n")
+          .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "\n\n### $1\n\n")
+          .replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, "\n\n#### $1\n\n")
+          .replace(/<h5[^>]*>([\s\S]*?)<\/h5>/gi, "\n\n##### $1\n\n")
+          .replace(/<h6[^>]*>([\s\S]*?)<\/h6>/gi, "\n\n###### $1\n\n")
+          .replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, "\n\n![$2]($1)\n\n")
+          .replace(/<img[^>]*alt="([^"]*)"[^>]*src="([^"]*)"[^>]*>/gi, "\n\n![$1]($2)\n\n")
+          .replace(/<img[^>]*src="([^"]*)"[^>]*>/gi, "\n\n![]($1)\n\n")
+          .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "* $1\n")
+          .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
+          .replace(/<br\s*\/?>/gi, "\n")
+          .replace(/<[^>]+>/g, "")
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&amp;/g, "&")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&nbsp;/g, " ")
+          .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
+          .replace(/\n{3,}/g, "\n\n");
+
+        return md.trim();
+      }
+    }
     if (generatedMarkdown && generatedMarkdown.trim()) {
       return generatedMarkdown;
-    }
-    if (editor) {
-      const html = editor.getHTML();
-      if (!html) return "";
-
-      let md = html
-        .replace(/\r\n/g, "\n")
-        .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "\n\n# $1\n\n")
-        .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "\n\n## $1\n\n")
-        .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "\n\n### $1\n\n")
-        .replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, "\n\n#### $1\n\n")
-        .replace(/<h5[^>]*>([\s\S]*?)<\/h5>/gi, "\n\n##### $1\n\n")
-        .replace(/<h6[^>]*>([\s\S]*?)<\/h6>/gi, "\n\n###### $1\n\n")
-        .replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, "\n\n![$2]($1)\n\n")
-        .replace(/<img[^>]*alt="([^"]*)"[^>]*src="([^"]*)"[^>]*>/gi, "\n\n![$1]($2)\n\n")
-        .replace(/<img[^>]*src="([^"]*)"[^>]*>/gi, "\n\n![]($1)\n\n")
-        .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "* $1\n")
-        .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
-        .replace(/<br\s*\/?>/gi, "\n")
-        .replace(/<[^>]+>/g, "")
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&nbsp;/g, " ")
-        .replace(/([^\n])\s*(#{1,6}\s+[^\n]+)/g, "$1\n\n$2")
-        .replace(/\n{3,}/g, "\n\n");
-
-      return md.trim();
     }
     return "";
   }, [generatedMarkdown, editor]);
@@ -669,26 +680,57 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
 
   // Sync post content into TipTap editor whenever editor becomes ready or loadedPost updates
   useEffect(() => {
-    if (editor && loadedPost) {
-      const key = `${loadedPost._id || loadedPost.title}::${editorLocale}`;
-      if (contentAppliedKeyRef.current !== key) {
-        const resolved = resolvePostEditorContent(loadedPost);
-        if (resolved.html) {
-          editor.commands.setContent(resolved.html, { emitUpdate: false });
-          contentAppliedKeyRef.current = key;
+    if (editor) {
+      if (loadedPost) {
+        const key = `${loadedPost._id || loadedPost.title}::${editorLocale}`;
+        if (contentAppliedKeyRef.current !== key) {
+          const resolved = resolvePostEditorContent(loadedPost);
+          if (resolved.html) {
+            editor.commands.setContent(resolved.html, { emitUpdate: false });
+            contentAppliedKeyRef.current = key;
+            try {
+              sessionStorage.removeItem("content_studio_draft");
+            } catch {}
+          }
+          if (resolved.markdown) {
+            setGeneratedMarkdown(resolved.markdown);
+          }
         }
-        if (resolved.markdown) {
-          setGeneratedMarkdown(resolved.markdown);
+      } else if (!searchParams.get("id")) {
+        // Immediate fallback: load studio draft from sessionStorage if editor mounted asynchronously
+        try {
+          const studioDraftRaw = sessionStorage.getItem("content_studio_draft");
+          if (studioDraftRaw) {
+            const draft = JSON.parse(studioDraftRaw);
+            if (draft.title) setTitle(draft.title);
+            if (draft.description) setDescriptionPublic(draft.description);
+            if (draft.category) setCategoryPublic(draft.category);
+            const resolved = resolvePostEditorContent(draft);
+            if (resolved.markdown) setGeneratedMarkdown(resolved.markdown);
+            setLoadedPost(draft);
+            if (resolved.html) {
+              editor.commands.setContent(resolved.html, { emitUpdate: false });
+              contentAppliedKeyRef.current = `${draft._id || draft.title}::${editorLocale}`;
+              sessionStorage.removeItem("content_studio_draft");
+            }
+          }
+        } catch (e) {
+          console.warn("[EditorShell] Fallback draft load error:", e);
         }
       }
     }
-  }, [editor, isReady, loadedPost, editorLocale]);
+  }, [editor, isReady, loadedPost, editorLocale, searchParams]);
 
   // ─── Locale-Aware Post Data Loader (Sprint 3) ────────────────────────
   const loadPostLocaleData = useCallback(
     async (targetPostId: string, targetLocale?: "en" | "vi") => {
       const seq = ++loadSeqRef.current;
       setPageLoading(true);
+
+      // If switching to a different post, clear published status so stale status is not displayed
+      if (loadedLocaleRef.current?.id !== targetPostId) {
+        publishHook.setIsPublished(false);
+      }
 
       try {
         const resPost = await postApi.getPostToEdit(targetPostId, targetLocale);
@@ -703,6 +745,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           if (editorLocale !== resolvedLocale) {
             setEditorLocale(resolvedLocale);
           }
+          useLanguageStore.getState().setLang(resolvedLocale);
           loadedLocaleRef.current = { id: targetPostId, locale: resolvedLocale };
 
           // Shared parent Post fields
@@ -712,9 +755,18 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           setSeriesPublic(
             typeof post.series === "object" ? post.series?._id || "" : post.series || ""
           );
-          setImagePublic(
-            typeof post.image === "object" ? post.image?.url || null : post.image || null
-          );
+          let studioDraftImage: string | null = null;
+          try {
+            const raw = sessionStorage.getItem("content_studio_draft");
+            if (raw) studioDraftImage = JSON.parse(raw)?.image || null;
+          } catch {}
+          const imgVal =
+            (typeof post.image === "object" ? post.image?.url || null : post.image || null) ||
+            studioDraftImage ||
+            null;
+          setImagePublic(imgVal);
+          const bgVal = post.background || post.hero?.background || post.translation?.background || post.translation?.hero?.background || "";
+          setBackgroundPublic(bgVal);
 
           // Update available locales status
           const translations: any[] = post.translations || [];
@@ -744,6 +796,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
             setTitle("");
             setDescriptionPublic("");
             setGeneratedMarkdown("");
+            setBackgroundPublic("");
             publishHook.setIsPublished(false);
             if (editor) {
               editor.commands.setContent("", { emitUpdate: false });
@@ -751,18 +804,41 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
             contentAppliedKeyRef.current = `${targetPostId}::${resolvedLocale}`;
             autoSave.resetHash(`${resolvedLocale}::::`);
           } else {
-            setTitle(post.title || "");
-            setDescriptionPublic(post.description || "");
+            let studioDraft: any = null;
+            try {
+              const studioDraftRaw = sessionStorage.getItem("content_studio_draft");
+              if (studioDraftRaw) {
+                studioDraft = JSON.parse(studioDraftRaw);
+              }
+            } catch {}
+
+            const finalTitle = post.title || studioDraft?.title || "";
+            const finalDesc = post.description || studioDraft?.description || "";
+            const finalCat =
+              (typeof post.category === "object" ? post.category?._id : post.category) ||
+              studioDraft?.category ||
+              "";
+
+            setTitle(finalTitle);
+            setDescriptionPublic(finalDesc);
+            if (finalCat) setCategoryPublic(finalCat);
             publishHook.setIsPublished(!!post.published);
 
-            const resolved = resolvePostEditorContent(post);
+            let resolved = resolvePostEditorContent(post);
+            if ((!resolved.html || resolved.html.trim() === "") && studioDraft) {
+              resolved = resolvePostEditorContent(studioDraft);
+              post.content = studioDraft.content || post.content;
+              post.markdown = studioDraft.markdown || post.markdown;
+              post.blocks = studioDraft.blocks || post.blocks;
+            }
+
             setGeneratedMarkdown(resolved.markdown);
 
             if (editor) {
               editor.commands.setContent(resolved.html, { emitUpdate: false });
               contentAppliedKeyRef.current = `${targetPostId}::${resolvedLocale}`;
             }
-            autoSave.resetHash(`${resolvedLocale}::${post.title || ""}::${resolved.html}`);
+            autoSave.resetHash(`${resolvedLocale}::${finalTitle}::${resolved.html}`);
 
             try {
               sessionStorage.removeItem("content_studio_draft");
@@ -804,6 +880,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
 
         // 3. Switch locale state
         setEditorLocale(newLocale);
+        useLanguageStore.getState().setLang(newLocale);
 
         // 4. Update URL query params without full reload
         const currentParams = new URLSearchParams(window.location.search);
@@ -856,31 +933,22 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           }
         }
 
-        // Fetch categories + series only if not already loaded
-        const fetchTasks: Promise<any>[] = [];
+        // Fetch categories + series with Promise.allSettled so network errors never abort page/draft loading
         const needCategory = !categoriesLoadedRef.current;
         const needSeries = !seriesLoadedRef.current;
 
-        if (needCategory) fetchTasks.push(categoryApi.getCategories());
-        if (needSeries) fetchTasks.push(seriesApi.getSeriesByUser());
+        const results = await Promise.allSettled([
+          needCategory ? categoryApi.getCategories() : Promise.resolve(null),
+          needSeries ? seriesApi.getSeriesByUser() : Promise.resolve(null),
+        ]);
 
-        if (fetchTasks.length > 0) {
-          const results = await Promise.all(fetchTasks);
-          let idx = 0;
-          if (needCategory) {
-            const resCat = results[idx++];
-            if (resCat?.success) {
-              setCategories(resCat.data.categories);
-              categoriesLoadedRef.current = true;
-            }
-          }
-          if (needSeries) {
-            const resSer = results[idx++];
-            if (resSer?.success) {
-              setSeriesList(resSer.data.series);
-              seriesLoadedRef.current = true;
-            }
-          }
+        if (needCategory && results[0].status === "fulfilled" && results[0].value?.success) {
+          setCategories(results[0].value.data.categories);
+          categoriesLoadedRef.current = true;
+        }
+        if (needSeries && results[1].status === "fulfilled" && results[1].value?.success) {
+          setSeriesList(results[1].value.data.series);
+          seriesLoadedRef.current = true;
         }
 
         setPostId(currentPostId);
@@ -890,7 +958,6 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
             const studioDraftRaw = sessionStorage.getItem("content_studio_draft");
             if (studioDraftRaw) {
               const draft = JSON.parse(studioDraftRaw);
-              sessionStorage.removeItem("content_studio_draft");
               if (draft.title) setTitle(draft.title);
               if (draft.description) setDescriptionPublic(draft.description);
               if (draft.category) setCategoryPublic(draft.category);
@@ -898,8 +965,12 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
               if (resolved.markdown) setGeneratedMarkdown(resolved.markdown);
               setLoadedPost(draft);
               if (editor && resolved.html) {
+                const draftKey = `${draft._id || draft.title}::${localeParam || editorLocale}`;
                 editor.commands.setContent(resolved.html, { emitUpdate: false });
-                contentAppliedKeyRef.current = `draft::${draft.title}`;
+                contentAppliedKeyRef.current = draftKey;
+                try {
+                  sessionStorage.removeItem("content_studio_draft");
+                } catch {}
               }
               setPageLoading(false);
               return;
@@ -913,10 +984,23 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           setCategoryPublic("");
           setSeriesPublic("");
           setImagePublic(null);
+          setBackgroundPublic("");
           setLoadedPost(null);
           setIsNewTranslationDraft(false);
           setLocalesStatus({});
-          if (editor) setContent("");
+          setGeneratedMarkdown("");
+          setGeneratedAiContext(null);
+          publishHook.setIsPublished(false);
+          setActiveSidePanel(null);
+          aiPlanner.clear();
+          try {
+            localStorage.removeItem("ai_planner_last_outline");
+          } catch {}
+          if (editor) {
+            editor.commands.setContent("", { emitUpdate: false });
+            contentAppliedKeyRef.current = "";
+          }
+          autoSave.resetHash(`${editorLocale}::::`);
           setPageLoading(false);
           return;
         }
@@ -926,6 +1010,10 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           (localeParam && loadedLocaleRef.current?.locale !== localeParam) ||
           (!localeParam && !loadedLocaleRef.current)
         ) {
+          if (loadedLocaleRef.current?.id !== currentPostId) {
+            publishHook.setIsPublished(false);
+            contentAppliedKeyRef.current = "";
+          }
           await loadPostLocaleData(currentPostId, localeParam || undefined);
         }
       } catch (error) {
@@ -1039,15 +1127,22 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
 
   const handleImproveText = async () => {
     if (!editor) return;
-    const selected = editor.state.doc.textBetween(
-      editor.state.selection.from,
-      editor.state.selection.to
-    );
+    const currentSelected =
+      editor.state.selection.from !== editor.state.selection.to
+        ? editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to)
+        : "";
+    const selected = currentSelected || lastSelectedText;
     if (!selected) {
       toast.error("Please select some text first.");
       return;
     }
     setLastSelectedText(selected);
+    if (currentSelected && editor.state.selection.from !== editor.state.selection.to) {
+      setSavedSelectionRange({
+        from: editor.state.selection.from,
+        to: editor.state.selection.to,
+      });
+    }
     setBubbleView("loading");
     setLoadingText("Analyzing & rewriting...");
     try {
@@ -1056,7 +1151,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
         locale: editorLocale,
         context: {
           selectedText: selected,
-          instruction: improvePrompt,
+          instruction: improvePrompt?.trim() || "Improve clarity, grammar, and tone while preserving technical accuracy.",
           audience: categoryPublic || "Developers",
           tone: "professional",
           locale: editorLocale,
@@ -1091,7 +1186,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
         locale: editorLocale,
         context: {
           selectedText: selected || "",
-          additionalInstructions: examplePrompt,
+          additionalInstructions: examplePrompt?.trim() || "Provide a clean, practical, real-world example.",
           language: "typescript",
           locale: editorLocale,
           targetLanguage: editorLocale,
@@ -1424,10 +1519,11 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
     setImageInsertPosition(null);
   };
 
-  const handleImageUploadedPublic = (image: MediaAsset) => {
+  const handleImageUploadedPublic = (image: any) => {
     setShowImageUpload(false);
     setImageInsertPosition(null);
-    setImagePublic(image._id);
+    const imgVal = image?._id || image?.url || (typeof image === "string" ? image : null);
+    setImagePublic(imgVal);
   };
 
   // ─── Series ──────────────────────────────────────────────────────────
@@ -1452,12 +1548,19 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
       content: getHTML(),
       description: descriptionPublic,
       image: imagePublic,
+      background: backgroundPublic,
       series: seriesPublic,
       category: categoryPublic,
     });
 
     if (success) {
       setPublishDrawerOpen(false);
+      // Auto-hide and reset AI Planner side panel upon publish completion
+      setActiveSidePanel(null);
+      aiPlanner.clear();
+      try {
+        localStorage.removeItem("ai_planner_last_outline");
+      } catch {}
       setLocalesStatus((prev) => ({
         ...prev,
         [editorLocale]: { exists: true, published: true },
@@ -1509,12 +1612,38 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
   const handleSelectPost = useCallback(
     (selectedPostId: string | null) => {
       if (selectedPostId) {
+        if (selectedPostId === postId) return;
         router.push(`/create?id=${selectedPostId}`);
       } else {
+        // Immediate clean reset for new post creation
+        setTitle("");
+        setDescriptionPublic("");
+        setCategoryPublic("");
+        setSeriesPublic("");
+        setImagePublic(null);
+        setBackgroundPublic("");
+        setLoadedPost(null);
+        setIsNewTranslationDraft(false);
+        setLocalesStatus({});
+        setGeneratedMarkdown("");
+        setGeneratedAiContext(null);
+        publishHook.setIsPublished(false);
+        setActiveSidePanel(null);
+        aiPlanner.clear();
+        try {
+          localStorage.removeItem("ai_planner_last_outline");
+        } catch {}
+        if (editor) {
+          editor.commands.setContent("", { emitUpdate: false });
+          contentAppliedKeyRef.current = "";
+        }
+        autoSave.resetHash(`${editorLocale}::::`);
+        loadedLocaleRef.current = null;
+        setPostId(null);
         router.push(`/create`);
       }
     },
-    [router],
+    [router, postId, editor, publishHook, autoSave, editorLocale],
   );
 
   // ─── AI Writer Stream Integration ────────────────────────────────────
@@ -1730,7 +1859,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
         {/* Sticky header */}
         <EditorHeader
           isEditMode={!!postId}
-          isPublished={publishHook.isPublished}
+          isPublished={!!postId && publishHook.isPublished}
           previewMode={mode === "preview"}
           onTogglePreview={() =>
             setMode((prev) => (prev === "preview" ? "visual" : "preview"))
@@ -1778,6 +1907,8 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
             onClose={handleClosePostList}
             activePostId={postId}
             onSelectPost={handleSelectPost}
+            locale={editorLocale}
+            currentTitle={title}
           />
 
           {/* Sticky Left Outline Navigation ("Xem nhanh") — only renders aside when headings exist */}
@@ -1805,7 +1936,34 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                   activePostId={postId}
                   onSelectPost={handleSelectPost}
                   onOpenSidebar={() => setPostListOpen(true)}
+                  locale={editorLocale}
                 />
+              )}
+
+              {/* AI Content Studio Quick Action Banner for Blank Posts */}
+              {mode !== "preview" && !postId && (!title || title.trim() === "") && (
+                <div className="mb-6 p-4 rounded-2xl border border-violet-500/25 bg-gradient-to-r from-violet-500/10 via-indigo-500/5 to-purple-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-[fade-in_0.3s_ease-out]">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/25">
+                      <Sparkles size={20} className="text-amber-300 animate-pulse" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-[var(--color-editor-text)]">
+                        {t("editor.ai_banner.headline", "Want AI to write this article for you?")}
+                      </h4>
+                      <p className="text-xs text-[var(--color-editor-muted)] mt-0.5">
+                        {t("editor.ai_banner.description", "Use AI Content Studio to brainstorm ideas, create an outline, and generate a complete structured post.")}
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/management/content-studio"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-md shadow-indigo-500/25 active:scale-95 transition-all cursor-pointer shrink-0"
+                  >
+                    <Sparkles size={14} className="text-amber-300" />
+                    <span>{t("editor.ai_banner.button", "Launch AI Content Studio")}</span>
+                  </Link>
+                </div>
               )}
 
               {/* Translation Creation Notice Banner (Sprint 3 & 4) */}
@@ -1920,7 +2078,8 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                         placement: "top-start",
                       }}
                       shouldShow={({ editor }) => {
-                        // Show menu if editor is active, and either a selection exists or cursor is placed
+                        // Keep visible if user is interacting with an AI Copilot action/preview
+                        if (bubbleView !== "icon") return true;
                         return editor.isFocused && mode === "visual";
                       }}
                     >
@@ -1929,7 +2088,16 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                         {bubbleView === "icon" && (
                           <button
                             type="button"
-                            onClick={() => setBubbleView("menu")}
+                            onClick={() => {
+                              if (editor && editor.state.selection.from !== editor.state.selection.to) {
+                                const txt = editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to);
+                                if (txt) {
+                                  setLastSelectedText(txt);
+                                  setSavedSelectionRange({ from: editor.state.selection.from, to: editor.state.selection.to });
+                                }
+                              }
+                              setBubbleView("menu");
+                            }}
                             className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white rounded-lg font-semibold shadow-md active:scale-95 transition-all cursor-pointer"
                           >
                             <Sparkles size={12} className="text-amber-300 animate-pulse" />
@@ -1961,6 +2129,13 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                             <button
                               type="button"
                               onClick={() => {
+                                if (editor && editor.state.selection.from !== editor.state.selection.to) {
+                                  const txt = editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to);
+                                  if (txt) {
+                                    setLastSelectedText(txt);
+                                    setSavedSelectionRange({ from: editor.state.selection.from, to: editor.state.selection.to });
+                                  }
+                                }
                                 setImprovePrompt("");
                                 setBubbleView("input-improve");
                               }}
@@ -1972,6 +2147,13 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                             <button
                               type="button"
                               onClick={() => {
+                                if (editor && editor.state.selection.from !== editor.state.selection.to) {
+                                  const txt = editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to);
+                                  if (txt) {
+                                    setLastSelectedText(txt);
+                                    setSavedSelectionRange({ from: editor.state.selection.from, to: editor.state.selection.to });
+                                  }
+                                }
                                 setExamplePrompt("");
                                 setBubbleView("input-example");
                               }}
@@ -2073,9 +2255,17 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                               <button
                                 type="button"
                                 onClick={() => {
-                                  if (editor) {
-                                    // replace selection
-                                    editor.chain().focus().insertContent(improvedResult.improvedText).run();
+                                  if (editor && improvedResult?.improvedText) {
+                                    if (savedSelectionRange && savedSelectionRange.from !== savedSelectionRange.to) {
+                                      editor
+                                        .chain()
+                                        .focus()
+                                        .setTextSelection(savedSelectionRange)
+                                        .insertContent(improvedResult.improvedText)
+                                        .run();
+                                    } else {
+                                      editor.chain().focus().insertContent(improvedResult.improvedText).run();
+                                    }
                                     toast.success("Selection replaced!");
                                   }
                                   setBubbleView("icon");
@@ -2242,6 +2432,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                 onStartWriting={handleStartWriting}
                 initialTopic={title}
                 language={editorLocale}
+                onClose={() => setActiveSidePanel(null)}
               />
             </aside>
           )}
@@ -2249,7 +2440,10 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           {/* AI Image Generator side drawer (right) */}
           {aiImageGenOpen && (
             <aside className="w-80 border-l border-[var(--color-editor-border)] bg-[var(--color-editor-bg)] h-full overflow-y-auto p-5 shrink-0 animate-[slide-left_0.2s_ease-out] z-30">
-              <AIImageGeneratorView onInsertImage={handleImageGenerated} />
+              <AIImageGeneratorView
+                onInsertImage={handleImageGenerated}
+                onClose={() => setActiveSidePanel(null)}
+              />
             </aside>
           )}
 
@@ -2266,6 +2460,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                 onCancel={() => {
                   setSourceAssetToEdit(null);
                   setSelectingSourceForEdit(false);
+                  setActiveSidePanel(null);
                 }}
               />
             </aside>
@@ -2277,6 +2472,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
               <AIDiagramView
                 editorContent={editor ? editor.getText() : ""}
                 onInsertDiagram={handleInsertDiagram}
+                onClose={() => setActiveSidePanel(null)}
               />
             </aside>
           )}
@@ -2288,6 +2484,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                 metrics={metrics}
                 title={title}
                 description={descriptionPublic}
+                onClose={() => setActiveSidePanel(null)}
               />
             </aside>
           )}
@@ -2314,7 +2511,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           onPublish={onPublishHandle}
           onUnpublish={handleUnpublish}
           activeLocale={editorLocale}
-          isPublished={publishHook.isPublished}
+          isPublished={!!postId && publishHook.isPublished}
           categories={categories}
           selectedCategory={categoryPublic}
           onCategoryChange={setCategoryPublic}
@@ -2324,15 +2521,26 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           onCreateSeries={createNewSeriesHandler}
           description={descriptionPublic}
           onDescriptionChange={setDescriptionPublic}
+          currentImage={imagePublic}
           onCoverImageUploaded={handleImageUploadedPublic}
+          onRemoveCoverImage={() => setImagePublic(null)}
+          background={backgroundPublic}
+          onBackgroundChange={setBackgroundPublic}
           isPublishing={publishHook.isPublishing}
           initialTopic={title}
           onAutoFillAI={async (result) => {
             if (result.title) handleTitleChange(result.title);
             if (result.markdown && editor) {
-              const html = toEditorHtml(result.markdown, result.visualSuggestions || result.imageSuggestions);
+              const { html, markdown: mergedMarkdown, preservedCount } = mergeAiDraftWithExistingEditorImages(
+                result.markdown,
+                editor,
+                result.visualSuggestions || result.imageSuggestions
+              );
               editor.commands.setContent(html);
-              setGeneratedMarkdown(result.markdown);
+              setGeneratedMarkdown(mergedMarkdown);
+              if (preservedCount > 0) {
+                toast.info(`Preserved ${preservedCount} existing image${preservedCount > 1 ? "s" : ""} in article`);
+              }
             }
             if (result.description) setDescriptionPublic(result.description);
             autoSave.markDirty();

@@ -20,6 +20,7 @@ import { aiApi, type PlannerResponse } from "@/features/ai/api/ai.api";
 import { postApi } from "@/features/ideas/api/post.api";
 import { categoryApi } from "@/features/categories/api/category.api";
 import { toEditorHtml } from "@/features/ai/utils/contentTransformer";
+import { aiVisualApi } from "@/features/ai-visual";
 import { useLanguageStore } from "@/store/useLanguage";
 import {
   useContentStudioStore,
@@ -32,6 +33,7 @@ import type {
   ContentOutline,
   ContentIntelligence,
   WritingStageStatus,
+  CompletedArticleInfo,
 } from "../types/contentStudio.types";
 
 export interface UseContentStudioReturn {
@@ -118,12 +120,20 @@ export interface UseContentStudioReturn {
   addFaqItem: () => void;
   updateFaqItem: (faqIndex: number, question: string, answerDirection: string) => void;
   deleteFaqItem: (faqIndex: number) => void;
+  createCustomIdea: (title: string, category?: string) => Promise<ContentIdea | null>;
   backToBrief: () => void;
+  backToOutline: () => void;
 
   // Step 4: Article Writing State & Action
   writingStages: WritingStageStatus[];
   streamChunkText: string;
   generateArticle: () => Promise<void>;
+
+  // New Tab Navigation & State Preservation
+  openInNewTab: boolean;
+  setOpenInNewTab: (openInNewTab: boolean) => void;
+  completedArticle: CompletedArticleInfo | null;
+  openEditorInNewTab: (customUrl?: string) => void;
 }
 
 export function useContentStudio(): UseContentStudioReturn {
@@ -345,56 +355,6 @@ export function useContentStudio(): UseContentStudioReturn {
     await generateBriefForIdea(firstIdea, false);
   }, [selectedIdeas, store, generateBriefForIdea]);
 
-  const setActiveIdeaIndex = useCallback(
-    async (index: number) => {
-      if (index < 0 || index >= selectedIdeas.length) return;
-      store.setActiveIdeaIndex(index);
-
-      const idea = selectedIdeas[index];
-      if (idea) {
-        if (!store.briefs[idea.id]) {
-          store.setBrief(idea.id, {
-            targetAudience: idea.targetAudience
-              ? [idea.targetAudience]
-              : ["Beginner PC builders"],
-            tone: "Practical",
-            length: "Medium — 1,500–2,500 words",
-            category: idea.category || "PC Hardware",
-            objective:
-              idea.searchIntent === "commercial"
-                ? "Help users make a purchase decision"
-                : "Explain",
-          });
-          await generateBriefForIdea(idea, false);
-        }
-        if (store.step === "outline" && !store.outlines[idea.id] && store.briefs[idea.id]) {
-          await generateOutlineForIdea(idea, store.briefs[idea.id]);
-        }
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedIdeas, store, generateBriefForIdea]
-  );
-
-  const updateCurrentBriefField = useCallback(
-    <K extends keyof ContentBrief>(field: K, value: ContentBrief[K]) => {
-      if (!currentIdea) return;
-      store.updateBriefField(currentIdea.id, field, value);
-    },
-    [currentIdea, store]
-  );
-
-  const regenerateBriefSuggestions = useCallback(async () => {
-    if (!currentIdea) return;
-    toast.info("Regenerating AI brief specifications...");
-    await generateBriefForIdea(currentIdea, true);
-    toast.success("Brief suggestions updated!");
-  }, [currentIdea, generateBriefForIdea]);
-
-  const backToIdeas = useCallback(() => {
-    store.setStep("ideas");
-  }, [store]);
-
   // ─── STEP 3: Outline Generation ───────────────────────────────────────────
 
   const generateOutlineForIdea = useCallback(
@@ -434,18 +394,135 @@ export function useContentStudio(): UseContentStudioReturn {
     [store]
   );
 
+  const setActiveIdeaIndex = useCallback(
+    async (index: number) => {
+      if (index < 0 || index >= selectedIdeas.length) return;
+      store.setActiveIdeaIndex(index);
+
+      const idea = selectedIdeas[index];
+      if (idea) {
+        let brief = store.briefs[idea.id];
+        if (!brief) {
+          brief = {
+            targetAudience: idea.targetAudience
+              ? [idea.targetAudience]
+              : ["Beginner PC builders"],
+            tone: "Practical",
+            length: "Medium — 1,500–2,500 words",
+            category: idea.category || "PC Hardware",
+            objective:
+              idea.searchIntent === "commercial"
+                ? "Help users make a purchase decision"
+                : "Explain",
+          };
+          store.setBrief(idea.id, brief);
+          await generateBriefForIdea(idea, false);
+        }
+        if (store.step === "outline" && !store.outlines[idea.id]) {
+          await generateOutlineForIdea(idea, store.briefs[idea.id] || brief);
+        }
+      }
+    },
+    [selectedIdeas, store, generateBriefForIdea, generateOutlineForIdea]
+  );
+
+  const updateCurrentBriefField = useCallback(
+    <K extends keyof ContentBrief>(field: K, value: ContentBrief[K]) => {
+      if (!currentIdea) return;
+      store.updateBriefField(currentIdea.id, field, value);
+    },
+    [currentIdea, store]
+  );
+
+  const regenerateBriefSuggestions = useCallback(async () => {
+    if (!currentIdea) return;
+    toast.info("Regenerating AI brief specifications...");
+    await generateBriefForIdea(currentIdea, true);
+    toast.success("Brief suggestions updated!");
+  }, [currentIdea, generateBriefForIdea]);
+
+  const backToIdeas = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    store.setStep("ideas");
+  }, [store]);
+
   const proceedToOutline = useCallback(async () => {
-    if (!currentIdea || !currentBrief) {
-      toast.error("Please configure the brief before generating the outline.");
+    if (!currentIdea) {
+      toast.error("Please select an idea before generating the outline.");
       return;
     }
 
     store.setStep("outline");
 
-    if (!store.outlines[currentIdea.id]) {
-      await generateOutlineForIdea(currentIdea, currentBrief);
+    const brief = store.briefs[currentIdea.id] || currentBrief;
+    if (brief && !store.outlines[currentIdea.id]) {
+      await generateOutlineForIdea(currentIdea, brief);
     }
-  }, [currentIdea, currentBrief, store, generateOutlineForIdea]);
+
+    // Auto-generate outlines for other selected ideas in parallel/background so switching tabs is instant
+    selectedIdeas.forEach(async (otherIdea) => {
+      if (otherIdea.id !== currentIdea.id && !store.outlines[otherIdea.id]) {
+        const otherBrief = store.briefs[otherIdea.id] || {
+          targetAudience: otherIdea.targetAudience ? [otherIdea.targetAudience] : ["Beginner PC builders"],
+          tone: "Practical",
+          length: "Medium — 1,500–2,500 words",
+          category: otherIdea.category || "PC Hardware",
+          objective: otherIdea.searchIntent === "commercial" ? "Help users make a purchase decision" : "Explain",
+        };
+        await generateOutlineForIdea(otherIdea, otherBrief);
+      }
+    });
+  }, [currentIdea, currentBrief, selectedIdeas, store, generateOutlineForIdea]);
+
+  const createCustomIdea = useCallback(
+    async (title: string, category?: string) => {
+      const trimmed = title.trim();
+      if (!trimmed) return null;
+
+      const newIdea: ContentIdea = {
+        id: `custom_idea_${Date.now()}`,
+        title: trimmed,
+        hook: `Key insights and practical overview for ${trimmed}`,
+        contentType: "guide",
+        category: category || store.topic || "PC Hardware",
+        targetAudience: "Enthusiasts & Builders",
+        difficulty: "intermediate",
+        searchIntent: "informational",
+        keywords: trimmed.toLowerCase().split(/\s+/).filter((w) => w.length > 2),
+      };
+
+      store.addCustomIdea(newIdea);
+
+      const defaultBrief: ContentBrief = {
+        targetAudience: ["Enthusiasts & Builders"],
+        tone: "Practical",
+        length: "Medium — 1,500–2,500 words",
+        category: newIdea.category,
+        objective: "Explain",
+      };
+      store.setBrief(newIdea.id, defaultBrief);
+
+      toast.success(`Created idea: "${trimmed}"`);
+
+      if (store.step === "outline") {
+        await generateOutlineForIdea(newIdea, defaultBrief);
+      } else if (store.step === "brief") {
+        await generateBriefForIdea(newIdea, false);
+      }
+
+      return newIdea;
+    },
+    [store, generateOutlineForIdea, generateBriefForIdea]
+  );
+
+  const backToOutline = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    store.setStep("outline");
+  }, [store]);
 
   const regenerateOutline = useCallback(async () => {
     if (!currentIdea || !currentBrief) return;
@@ -455,6 +532,9 @@ export function useContentStudio(): UseContentStudioReturn {
   }, [currentIdea, currentBrief, generateOutlineForIdea]);
 
   const backToBrief = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
     store.setStep("brief");
   }, [store]);
 
@@ -578,6 +658,7 @@ export function useContentStudio(): UseContentStudioReturn {
 
     store.setStep("writing");
     store.resetWritingStages();
+    store.setCompletedArticle(null);
     setStreamChunkText("");
 
     const controller = new AbortController();
@@ -683,12 +764,19 @@ Target Language: ${langLabel} (Write 100% of the article strictly in ${langLabel
 
             try {
               const parsed = JSON.parse(dataStr);
+              if (parsed.error) {
+                console.warn("[useContentStudio] SSE stream reported error:", parsed.error);
+                throw new Error(parsed.error);
+              }
               if (parsed.chunk) {
                 articleMarkdown += parsed.chunk;
                 setStreamChunkText((prev) => (prev + parsed.chunk).slice(-400));
               }
-            } catch {
-              // Ignore partial parse
+            } catch (pErr: any) {
+              if (pErr?.message && !pErr.message.includes("JSON")) {
+                throw pErr;
+              }
+              // Ignore partial JSON parse
             }
           }
         }
@@ -697,8 +785,23 @@ Target Language: ${langLabel} (Write 100% of the article strictly in ${langLabel
           "[useContentStudio] Writer stream fallback to direct generation:",
           streamErr
         );
+      }
 
-        // Fallback: Assemble rich initial markdown draft based on user-approved outline
+      // Check if user navigated away or cancelled
+      if (controller.signal.aborted) {
+        console.info("[useContentStudio] Article generation aborted by user.");
+        return;
+      }
+
+      // Resilient Fallback: If streaming was aborted, network dropped, or returned insufficient text (< 150 chars),
+      // assemble a comprehensive initial draft based on the user-approved outline so the editor is NEVER empty.
+      if (!articleMarkdown || articleMarkdown.trim().length < 150) {
+        console.info(
+          "[useContentStudio] Assembling robust outline-based draft fallback (locale: " +
+            store.language +
+            ")"
+        );
+        const isVi = store.language === "vi";
         articleMarkdown = `
 # ${plannerPlan.title}
 
@@ -710,22 +813,29 @@ ${currentOutline.sections
 
 ${sec.purpose}
 
-${sec.keyPoints.map((pt) => `* **${pt}**: Practical insights and technical guidelines.`).join("\n")}
+${sec.keyPoints
+  .map(
+    (pt) =>
+      `* **${pt}**: ${
+        isVi
+          ? "Phân tích kỹ thuật chuyên sâu và hướng dẫn ứng dụng thực tế."
+          : "Practical insights, benchmarks, and actionable technical recommendations."
+      }`
+  )
+  .join("\n")}
 `
   )
   .join("\n\n")}
 
-## Conclusion
+## ${isVi ? "Kết luận" : "Conclusion"}
 
 ${currentOutline.conclusion}
 
 ${
   currentOutline.faq && currentOutline.faq.length > 0
-    ? `## Frequently Asked Questions\n\n` +
+    ? `## ${isVi ? "Câu hỏi thường gặp" : "Frequently Asked Questions"}\n\n` +
       currentOutline.faq
-        .map(
-          (faq) => `### ${faq.question}\n\n${faq.answerDirection}\n`
-        )
+        .map((faq) => `### ${faq.question}\n\n${faq.answerDirection}\n`)
         .join("\n")
     : ""
 }
@@ -767,9 +877,41 @@ ${
 
       // Determine content locale directly from author's chosen language
       const determinedLocale: "en" | "vi" = store.language;
-
       let createdPostId: string | null = null;
       let finalLocale: "en" | "vi" = determinedLocale;
+
+      // Find authentic high-resolution photography on Unsplash for cover
+      let resolvedCoverImage: string | null = null;
+      try {
+        const stockPhotos = await aiVisualApi.searchImages(
+          { query: postTitle, limit: 4, orientation: "landscape" },
+          4,
+          1
+        );
+        if (stockPhotos && stockPhotos.length > 0) {
+          resolvedCoverImage = stockPhotos[0].url;
+        }
+      } catch (imgErr) {
+        console.warn("[useContentStudio] Stock cover search fallback:", imgErr);
+      }
+
+      // Ensure clean string tags array without bracket or quote artifacts
+      const rawKeywords =
+        currentIdea.keywords && currentIdea.keywords.length > 0
+          ? currentIdea.keywords
+          : ["technology"];
+      const sanitizedTags = Array.isArray(rawKeywords)
+        ? rawKeywords
+            .flatMap((k: any) =>
+              typeof k === "string"
+                ? k
+                    .replace(/^[\[\s'"]+|[\]\s'"]+$/g, "")
+                    .split(",")
+                    .map((s) => s.trim().replace(/^['"]+|['"]+$/g, ""))
+                : []
+            )
+            .filter(Boolean)
+        : ["technology"];
 
       try {
         const draftRes = await postApi.createPost({
@@ -780,8 +922,9 @@ ${
           contentVersion: "blocks-v1",
           blocks: articleBlocks,
           description,
-          category: currentBrief.category,
-          tags: currentIdea.keywords || ["technology"],
+          category: currentBrief.category || "Technology",
+          tags: sanitizedTags.length > 0 ? sanitizedTags : ["technology"],
+          image: resolvedCoverImage,
           published: false, // AI-generated content must NEVER automatically publish
           locale: determinedLocale,
         });
@@ -808,6 +951,7 @@ ${
         category: currentBrief.category,
         blocks: articleBlocks,
         contentVersion: "blocks-v1",
+        image: resolvedCoverImage,
         published: false,
         locale: finalLocale,
       };
@@ -824,17 +968,58 @@ ${
       store.updateWritingStage("editor", { status: "completed" });
       await new Promise((r) => setTimeout(r, 400));
 
-      toast.success(
-        "Article successfully compiled! Opening OpenIdear Editor for manual review."
-      );
+      const editorUrl = createdPostId
+        ? `/create?id=${createdPostId}&locale=${finalLocale}`
+        : `/create?locale=${finalLocale}`;
 
-      // Navigate to Editor with generated draft loaded and matching locale
-      if (createdPostId) {
-        router.push(`/create?id=${createdPostId}&locale=${finalLocale}`);
+      const completedInfo: CompletedArticleInfo = {
+        postId: createdPostId,
+        url: editorUrl,
+        title: postTitle,
+        locale: finalLocale,
+        completedAt: Date.now(),
+      };
+      store.setCompletedArticle(completedInfo);
+
+      if (controller.signal.aborted) {
+        console.info("[useContentStudio] Generation aborted prior to editor navigation.");
+        return;
+      }
+
+      // Mechanism to open in new tab instead of current page
+      if (store.openInNewTab) {
+        let openedTab = false;
+        try {
+          const newWin = window.open(editorUrl, "_blank", "noopener,noreferrer");
+          if (newWin && !newWin.closed && typeof newWin.closed !== "undefined") {
+            openedTab = true;
+          }
+        } catch (popupErr) {
+          console.warn("[useContentStudio] window.open failed/blocked:", popupErr);
+        }
+
+        if (openedTab) {
+          toast.success(
+            "Article draft opened in a new tab! Topic & generated ideas preserved in Content Studio.",
+            { duration: 6000 }
+          );
+        } else {
+          toast.success(
+            "Article successfully compiled! Click 'Open in Editor (New Tab)' to review.",
+            { duration: 6000 }
+          );
+        }
       } else {
-        router.push(`/create?locale=${finalLocale}`);
+        toast.success(
+          "Article successfully compiled! Opening OpenIdear Editor for manual review."
+        );
+        router.push(editorUrl);
       }
     } catch (pipelineErr: unknown) {
+      if (abortControllerRef.current?.signal.aborted) {
+        console.info("[useContentStudio] Pipeline aborted by user navigation.");
+        return;
+      }
       const errorMsg =
         pipelineErr instanceof Error
           ? pipelineErr.message
@@ -853,9 +1038,21 @@ ${
     router,
   ]);
 
+  const setStep = useCallback(
+    (targetStep: ContentStudioStep) => {
+      if (store.step === "writing" && targetStep !== "writing") {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+      }
+      store.setStep(targetStep);
+    },
+    [store]
+  );
+
   return {
     step: store.step,
-    setStep: store.setStep,
+    setStep,
 
     topic: store.topic,
     setTopic: store.setTopic,
@@ -926,10 +1123,25 @@ ${
     addFaqItem,
     updateFaqItem,
     deleteFaqItem,
+    createCustomIdea,
     backToBrief,
+    backToOutline,
 
     writingStages: store.writingStages,
     streamChunkText,
     generateArticle,
+
+    openInNewTab: store.openInNewTab,
+    setOpenInNewTab: store.setOpenInNewTab,
+    completedArticle: store.completedArticle,
+    openEditorInNewTab: (customUrl?: string) => {
+      const target = customUrl || store.completedArticle?.url || "/create";
+      try {
+        window.open(target, "_blank", "noopener,noreferrer");
+      } catch (err) {
+        console.warn("[useContentStudio] openEditorInNewTab fallback:", err);
+        router.push(target);
+      }
+    },
   };
 }
