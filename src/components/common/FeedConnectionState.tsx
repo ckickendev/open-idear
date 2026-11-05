@@ -236,4 +236,98 @@ export const FeedCachedNotice: React.FC<FeedCachedNoticeProps> = ({
   );
 };
 
+// ─── Floating Live Status Cue for Skeletons ──────────────────────────────────
+export interface FeedFloatingStatusProps {
+  status: FeedConnectionStatus;
+  onRetry?: () => void | Promise<void>;
+  isRetrying?: boolean;
+  activeLocale?: string;
+  className?: string;
+}
+
+export const FeedFloatingStatus: React.FC<FeedFloatingStatusProps> = ({
+  status,
+  onRetry,
+  isRetrying = false,
+  activeLocale = "en",
+  className = "",
+}) => {
+  const isVi = activeLocale === "vi";
+  const [countdown, setCountdown] = React.useState(5);
+
+  React.useEffect(() => {
+    if (status === "empty") return;
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          if (onRetry && !isRetrying) {
+            onRetry();
+          }
+          return 5;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [status, onRetry, isRetrying]);
+
+  if (status === "empty") return null;
+
+  const isTimeout = status === "timeout" || status === "connecting";
+
+  return (
+    <div className={`my-4 flex items-center justify-center ${className}`}>
+      <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-card/90 dark:bg-card/95 backdrop-blur-md border border-border/70 shadow-lg shadow-primary/5 transition-all">
+        {/* Pulsing indicator */}
+        <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
+          <span
+            className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+              isTimeout ? "bg-amber-500" : "bg-rose-500"
+            }`}
+          />
+          <span
+            className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+              isTimeout ? "bg-amber-500" : "bg-rose-500"
+            }`}
+          />
+        </span>
+
+        {/* Informative text */}
+        <span className="text-xs font-medium text-foreground tracking-tight">
+          {isRetrying
+            ? isVi
+              ? "Đang kết nối lại máy chủ..."
+              : "Reconnecting to feed..."
+            : isTimeout
+            ? isVi
+              ? `Máy chủ đang khởi động · Tự động thử lại sau ${countdown}s`
+              : `Server waking up (cold start) · Auto-retrying in ${countdown}s`
+            : isVi
+            ? `Chưa kết nối được máy chủ · Thử lại sau ${countdown}s`
+            : `Syncing latest feed · Retrying in ${countdown}s`}
+        </span>
+
+        {/* Retry button */}
+        {onRetry && (
+          <button
+            type="button"
+            onClick={() => onRetry()}
+            disabled={isRetrying}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-all cursor-pointer disabled:opacity-50"
+          >
+            <RefreshCw
+              size={11}
+              className={isRetrying ? "animate-spin text-primary" : ""}
+            />
+            <span>{isRetrying ? (isVi ? "Đang thử..." : "Connecting...") : (isVi ? "Thử ngay" : "Retry Now")}</span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default FeedConnectionState;
+

@@ -7,12 +7,14 @@ import { usePathname } from "next/navigation";
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
+import { Flame, ChevronRight } from "lucide-react";
 import { UserLinkCustom } from "@/components/common/LinkCustom";
 import { PostCardSkeleton, FeedLoadingCue } from "@/components/ui/Skeletons";
 import { getCachedFeed, setCachedFeed } from "@/lib/cache/feedCache";
 import {
   FeedConnectionState,
   FeedCachedNotice,
+  FeedFloatingStatus,
   FeedConnectionStatus,
 } from "@/components/common/FeedConnectionState";
 
@@ -143,8 +145,11 @@ const HotPost: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-border/40">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-border/40">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+            <Flame size={15} className="text-orange-500" />
+          </div>
           <h2 className="font-bold text-lg text-foreground tracking-tight">
             {t("component.hotPost.title")}
           </h2>
@@ -158,30 +163,14 @@ const HotPost: React.FC = () => {
         </div>
         <Link
           href={"/top10ideas"}
-          className="inline-flex items-center text-muted-foreground hover:text-foreground text-xs font-semibold cursor-pointer transition-colors"
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground bg-accent/30 hover:bg-accent/60 border border-border/40 transition-all cursor-pointer group"
         >
-          {t("component.hotPost.moreDes")}
+          <span>{t("component.hotPost.moreDes")}</span>
+          <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
         </Link>
       </div>
 
-      {isLoading && articles.length === 0 ? (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 4 }).map((_, idx) => (
-              <PostCardSkeleton key={idx} />
-            ))}
-          </div>
-          <FeedLoadingCue activeLocale={activeLocale} />
-        </>
-      ) : articles.length === 0 ? (
-        /* Graceful degraded / reconnecting UI instead of blank box */
-        <FeedConnectionState
-          status={feedStatus}
-          onRetry={() => fetchHotPost(true)}
-          isRetrying={isRetrying}
-          activeLocale={activeLocale}
-        />
-      ) : (
+      {articles.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {articles.slice(0, 4).map((article) => {
             const minutesRead = article.readtime
@@ -239,6 +228,25 @@ const HotPost: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      ) : feedStatus === "empty" && !isLoading ? (
+        <FeedConnectionState
+          status="empty"
+          activeLocale={activeLocale}
+        />
+      ) : (
+        <div className="relative">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <PostCardSkeleton key={idx} />
+            ))}
+          </div>
+          <FeedFloatingStatus
+            status={feedStatus}
+            isRetrying={isRetrying}
+            onRetry={() => fetchHotPost(true)}
+            activeLocale={activeLocale}
+          />
         </div>
       )}
     </div>

@@ -20,6 +20,7 @@ import { getCachedFeed, setCachedFeed } from "@/lib/cache/feedCache";
 import {
   FeedConnectionState,
   FeedCachedNotice,
+  FeedFloatingStatus,
   FeedConnectionStatus,
 } from "@/components/common/FeedConnectionState";
 
@@ -250,30 +251,7 @@ const LastestFeature = () => {
         </div>
 
         {/* Content area */}
-        {isLocalLoading && allPosts.length === 0 ? (
-          <>
-            <div className="flex flex-col lg:flex-row gap-6 mb-6">
-              <MainFeatureSkeleton />
-              <div className="w-full lg:w-1/5">
-                <PostCardSkeleton />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-              {Array.from({ length: 6 }).map((_, idx) => (
-                <PostCardSkeleton key={idx} />
-              ))}
-            </div>
-            <FeedLoadingCue activeLocale={activeLocale} />
-          </>
-        ) : allPosts.length === 0 ? (
-          /* Graceful degraded / reconnecting UI instead of demoralizing blank box */
-          <FeedConnectionState
-            status={feedStatus}
-            onRetry={() => fetchRecentlyData(true)}
-            isRetrying={isRetrying}
-            activeLocale={activeLocale}
-          />
-        ) : (
+        {allPosts.length > 0 ? (
           <>
             <div className="flex flex-col lg:flex-row gap-6 mb-6">
               {allPosts[0] && <MainFeature postData={allPosts[0]} />}
@@ -292,6 +270,35 @@ const LastestFeature = () => {
               </div>
             )}
           </>
+        ) : feedStatus === "empty" && !isLocalLoading ? (
+          /* Legitimate empty state (0 posts in database) */
+          <FeedConnectionState
+            status="empty"
+            onRetry={() => fetchRecentlyData(true)}
+            isRetrying={isRetrying}
+            activeLocale={activeLocale}
+          />
+        ) : (
+          /* Active Shimmer Skeletons with floating live status while connecting, cold-starting, or revalidating */
+          <div className="relative">
+            <div className="flex flex-col lg:flex-row gap-6 mb-6">
+              <MainFeatureSkeleton />
+              <div className="w-full lg:w-1/5">
+                <PostCardSkeleton />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <PostCardSkeleton key={idx} />
+              ))}
+            </div>
+            <FeedFloatingStatus
+              status={feedStatus}
+              isRetrying={isRetrying}
+              onRetry={() => fetchRecentlyData(true)}
+              activeLocale={activeLocale}
+            />
+          </div>
         )}
       </div>
     </>
