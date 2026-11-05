@@ -17,6 +17,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import convertDate from "@/common/datetime";
+import { getPostImageUrl } from "@/lib/utils/postImage";
 
 /* ── Types ───────────────────────────────────────────── */
 interface Author {
@@ -149,7 +150,7 @@ const HeroCard = ({ post }: { post: TopPost }) => (
       {/* Image side */}
       <div className="relative min-h-[260px] md:min-h-full overflow-hidden">
         <Image
-          src={post.image?.url || "/banner/banner_standard.png"}
+          src={getPostImageUrl(post)}
           alt={post.image?.description || post.title}
           fill
           className="object-cover group-hover:scale-105 transition-transform duration-700"
@@ -262,7 +263,7 @@ const FeaturedCard = ({ post }: { post: TopPost }) => (
     {/* Image */}
     <div className="relative h-48 overflow-hidden">
       <Image
-        src={post.image?.url || "/banner/banner_standard.png"}
+        src={getPostImageUrl(post)}
         alt={post.image?.description || post.title}
         fill
         className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -355,7 +356,7 @@ const ListRow = ({ post, index }: { post: TopPost; index: number }) => {
         {/* Thumbnail */}
         <div className="relative w-20 h-14 rounded-lg overflow-hidden flex-shrink-0">
           <Image
-            src={post.image?.url || "/banner/banner_standard.png"}
+            src={getPostImageUrl(post)}
             alt={post.title}
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-300"

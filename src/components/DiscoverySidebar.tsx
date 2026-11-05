@@ -13,6 +13,7 @@ import {
   FeedConnectionState,
   FeedConnectionStatus,
 } from "@/components/common/FeedConnectionState";
+import { getPostImageUrl } from "@/lib/utils/postImage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -24,6 +25,8 @@ interface SidebarPost {
   createdAt: string;
   author?: { name?: string; username?: string; avatar?: string };
   image?: { url?: string };
+  hero?: { image?: { src?: string; alt?: string } };
+  background?: string;
 }
 
 interface SidebarSeries {
@@ -97,18 +100,22 @@ function PostSkeletons({ count = 4 }: { count?: number }) {
 
 function MiniPostCard({ post, activeLocale }: { post: SidebarPost; activeLocale?: string }) {
   const postHref = activeLocale === "vi" ? `/vi/post/${post.slug}` : `/post/${post.slug}`;
+  const imageUrl = getPostImageUrl(post);
+
   return (
     <Link
       href={postHref}
       className="group flex gap-2.5 items-start hover:bg-accent/40 border border-transparent hover:border-border/30 rounded-xl p-1.5 -mx-1.5 transition-all duration-200"
     >
       {/* Thumbnail */}
-      <div className="relative w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
-        {post.image?.url ? (
-          <Image src={post.image.url} alt={post.title} fill className="object-cover" sizes="44px" />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#161B22] to-[#242B38]" />
-        )}
+      <div className="relative w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-muted border border-border/40">
+        <Image
+          src={imageUrl}
+          alt={post.title}
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-300"
+          sizes="44px"
+        />
       </div>
 
       {/* Text */}

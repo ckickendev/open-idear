@@ -17,6 +17,7 @@ import {
   FeedFloatingStatus,
   FeedConnectionStatus,
 } from "@/components/common/FeedConnectionState";
+import { getPostImageUrl } from "@/lib/utils/postImage";
 
 interface Post {
   _id: number;
@@ -192,7 +193,7 @@ const HotPost: React.FC = () => {
                   className="block relative aspect-[16/10] w-full bg-muted rounded-lg overflow-hidden mb-3"
                 >
                   <Image
-                    src={article.image?.url || "/banner/banner_standard.png"}
+                    src={getPostImageUrl(article)}
                     alt={article.title}
                     fill
                     sizes="(max-width: 768px) 100vw, 25vw"
