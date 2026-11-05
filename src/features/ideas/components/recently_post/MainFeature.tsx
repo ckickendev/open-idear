@@ -12,6 +12,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
+import { getPostImageUrl } from "@/lib/utils/postImage";
+
 const MainFeature = ({ postData }: { postData: PostInterface }) => {
   const { t, lang } = useTranslation();
   const pathname = usePathname();
@@ -21,6 +23,8 @@ const MainFeature = ({ postData }: { postData: PostInterface }) => {
     ? (typeof postData.readtime === "string" ? parseInt(postData.readtime, 10) : postData.readtime)
     : Math.max(1, Math.ceil((postData?.text || "").split(/\s+/).length / 200)) || 5;
 
+  const imageUrl = getPostImageUrl(postData);
+
   return (
     <div className="flex flex-col md:flex-row w-full lg:w-4/5 border border-border bg-card p-4 h-auto md:h-[400px] rounded-2xl hover:border-border/80 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 ease-in-out group cursor-pointer">
       <Link href={postUrl} className="h-48 md:h-full w-full md:w-3/5 bg-muted rounded-xl overflow-hidden relative block">
@@ -28,7 +32,7 @@ const MainFeature = ({ postData }: { postData: PostInterface }) => {
           <Logo />
         </div>
         <Image
-          src={postData?.image?.url || "/banner/banner_standard.png"}
+          src={imageUrl}
           alt={postData?.title || "Main feature image"}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-102"

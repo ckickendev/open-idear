@@ -8,6 +8,8 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
+import { getPostImageUrl } from "@/lib/utils/postImage";
+
 const ArticleRightSide = ({ postData }: { postData: PostInterface }) => {
   const { t, lang } = useTranslation();
   const pathname = usePathname();
@@ -17,6 +19,8 @@ const ArticleRightSide = ({ postData }: { postData: PostInterface }) => {
     ? (typeof postData.readtime === "string" ? parseInt(postData.readtime, 10) : postData.readtime)
     : Math.max(1, Math.ceil((postData.text || "").split(/\s+/).length / 200)) || 5;
 
+  const imageUrl = getPostImageUrl(postData);
+
   return (
     <div className="col-span-1 h-full flex flex-col bg-card border border-border/50 hover:border-border rounded-xl p-3.5 sm:p-4 hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/5 transition-all duration-300 ease-in-out group cursor-pointer">
       <div className="flex-1">
@@ -25,7 +29,7 @@ const ArticleRightSide = ({ postData }: { postData: PostInterface }) => {
           className="block relative aspect-[16/10] bg-muted rounded-lg overflow-hidden mb-3"
         >
           <Image
-            src={postData?.image?.url || "/banner/banner_standard.png"}
+            src={imageUrl}
             alt={postData?.title || "Article image"}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
