@@ -308,6 +308,7 @@ export interface CompletedArticleInfo {
   title: string;
   locale?: string;
   completedAt: number;
+  draft?: any;
 }
 
 

@@ -348,6 +348,7 @@
       "articles_count": "{count} {unit}",
       "article_single": "bài viết",
       "article_plural": "bài viết",
+      "resume_prefix": "Tiếp tục",
       "editing": "Đang sửa: “{title}”",
       "refresh": "Làm mới bài viết",
       "view_all_sidebar": "Xem tất cả trong thanh bên",

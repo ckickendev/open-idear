@@ -18,7 +18,7 @@
 //    fully preserved in the studio so users can immediately write more articles.
 // =============================================================================
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Sparkles,
   Loader2,
@@ -67,6 +67,29 @@ export function ArticleWritingProgress({
   const hasError = stages.some((s) => s.status === "error");
   const isAllCompleted =
     stages.length > 0 && stages.every((s) => s.status === "completed");
+
+  // Guarantee that the draft in sessionStorage or completedArticle is also in localStorage
+  // so new tabs opened via target="_blank" or window.open can load it reliably
+  const syncDraftToLocalStorage = useCallback(() => {
+    try {
+      if (completedArticle?.draft) {
+        localStorage.setItem("content_studio_draft", JSON.stringify(completedArticle.draft));
+      } else {
+        const sessionDraft = sessionStorage.getItem("content_studio_draft");
+        if (sessionDraft) {
+          localStorage.setItem("content_studio_draft", sessionDraft);
+        }
+      }
+    } catch (e) {
+      console.warn("[ArticleWritingProgress] sync to localStorage warning:", e);
+    }
+  }, [completedArticle]);
+
+  useEffect(() => {
+    if (isAllCompleted) {
+      syncDraftToLocalStorage();
+    }
+  }, [isAllCompleted, syncDraftToLocalStorage]);
 
   useEffect(() => {
     if (isAllCompleted || hasError) return;
@@ -147,6 +170,7 @@ export function ArticleWritingProgress({
                   href={editorUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={syncDraftToLocalStorage}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:brightness-105 active:scale-[0.98] transition-all shadow-md shadow-primary/25 cursor-pointer"
                 >
                   <span>Open in Editor (New Tab)</span>
@@ -317,6 +341,7 @@ export function ArticleWritingProgress({
               href={editorUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={syncDraftToLocalStorage}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:brightness-105 transition-all shadow-xs cursor-pointer"
             >
               <span>Open Editor</span>

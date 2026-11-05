@@ -630,6 +630,25 @@ function convertBlocksToHtml(blocks: any[]): string {
     .join("\n");
 }
 
+function getStudioDraftRaw(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return sessionStorage.getItem("content_studio_draft") || localStorage.getItem("content_studio_draft");
+  } catch {
+    return null;
+  }
+}
+
+function clearStudioDraft(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem("content_studio_draft");
+  } catch {}
+  try {
+    localStorage.removeItem("content_studio_draft");
+  } catch {}
+}
+
 function resolvePostEditorContent(post: any): { html: string; markdown: string } {
   if (!post) return { html: "", markdown: "" };
 
@@ -688,18 +707,16 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           if (resolved.html) {
             editor.commands.setContent(resolved.html, { emitUpdate: false });
             contentAppliedKeyRef.current = key;
-            try {
-              sessionStorage.removeItem("content_studio_draft");
-            } catch {}
+            clearStudioDraft();
           }
           if (resolved.markdown) {
             setGeneratedMarkdown(resolved.markdown);
           }
         }
       } else if (!searchParams.get("id")) {
-        // Immediate fallback: load studio draft from sessionStorage if editor mounted asynchronously
+        // Immediate fallback: load studio draft from storage if editor mounted asynchronously
         try {
-          const studioDraftRaw = sessionStorage.getItem("content_studio_draft");
+          const studioDraftRaw = getStudioDraftRaw();
           if (studioDraftRaw) {
             const draft = JSON.parse(studioDraftRaw);
             if (draft.title) setTitle(draft.title);
@@ -711,7 +728,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
             if (resolved.html) {
               editor.commands.setContent(resolved.html, { emitUpdate: false });
               contentAppliedKeyRef.current = `${draft._id || draft.title}::${editorLocale}`;
-              sessionStorage.removeItem("content_studio_draft");
+              clearStudioDraft();
             }
           }
         } catch (e) {
@@ -757,7 +774,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           );
           let studioDraftImage: string | null = null;
           try {
-            const raw = sessionStorage.getItem("content_studio_draft");
+            const raw = getStudioDraftRaw();
             if (raw) studioDraftImage = JSON.parse(raw)?.image || null;
           } catch {}
           const imgVal =
@@ -806,7 +823,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
           } else {
             let studioDraft: any = null;
             try {
-              const studioDraftRaw = sessionStorage.getItem("content_studio_draft");
+              const studioDraftRaw = getStudioDraftRaw();
               if (studioDraftRaw) {
                 studioDraft = JSON.parse(studioDraftRaw);
               }
@@ -840,9 +857,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
             }
             autoSave.resetHash(`${resolvedLocale}::${finalTitle}::${resolved.html}`);
 
-            try {
-              sessionStorage.removeItem("content_studio_draft");
-            } catch {}
+            clearStudioDraft();
           }
 
           setLoadedPost(post);
@@ -955,7 +970,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
         if (!currentPostId) {
           loadedLocaleRef.current = null;
           try {
-            const studioDraftRaw = sessionStorage.getItem("content_studio_draft");
+            const studioDraftRaw = getStudioDraftRaw();
             if (studioDraftRaw) {
               const draft = JSON.parse(studioDraftRaw);
               if (draft.title) setTitle(draft.title);
@@ -968,9 +983,7 @@ function resolvePostEditorContent(post: any): { html: string; markdown: string }
                 const draftKey = `${draft._id || draft.title}::${localeParam || editorLocale}`;
                 editor.commands.setContent(resolved.html, { emitUpdate: false });
                 contentAppliedKeyRef.current = draftKey;
-                try {
-                  sessionStorage.removeItem("content_studio_draft");
-                } catch {}
+                clearStudioDraft();
               }
               setPageLoading(false);
               return;

@@ -353,6 +353,7 @@ const en = {
       "articles_count": "{count} {unit}",
       "article_single": "article",
       "article_plural": "articles",
+      "resume_prefix": "Resume",
       "editing": "Editing: “{title}”",
       "refresh": "Refresh posts",
       "view_all_sidebar": "View All in Sidebar",

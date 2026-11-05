@@ -957,12 +957,11 @@ ${
       };
 
       try {
-        sessionStorage.setItem(
-          "content_studio_draft",
-          JSON.stringify(draftPayload)
-        );
+        const payloadStr = JSON.stringify(draftPayload);
+        sessionStorage.setItem("content_studio_draft", payloadStr);
+        localStorage.setItem("content_studio_draft", payloadStr);
       } catch (sessionErr) {
-        console.warn("[useContentStudio] sessionStorage write warning:", sessionErr);
+        console.warn("[useContentStudio] storage write warning:", sessionErr);
       }
 
       store.updateWritingStage("editor", { status: "completed" });
@@ -978,6 +977,7 @@ ${
         title: postTitle,
         locale: finalLocale,
         completedAt: Date.now(),
+        draft: draftPayload,
       };
       store.setCompletedArticle(completedInfo);
 
