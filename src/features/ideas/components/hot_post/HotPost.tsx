@@ -19,7 +19,7 @@ import {
 } from "@/components/common/FeedConnectionState";
 import { getPostImageUrl } from "@/lib/utils/postImage";
 
-interface Post {
+export interface Post {
   _id: number;
   title: string;
   image: any;
@@ -32,14 +32,20 @@ interface Post {
   description?: string;
 }
 
-const HotPost: React.FC = () => {
+export interface HotPostProps {
+  initialArticles?: Post[];
+}
+
+const HotPost: React.FC<HotPostProps> = ({ initialArticles }) => {
   const { t, lang } = useTranslation();
   const pathname = usePathname();
   const activeLocale = pathname?.startsWith("/vi") ? "vi" : (lang || "en");
-  const [articles, setArticles] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [articles, setArticles] = useState<Post[]>(initialArticles || []);
+  const [isLoading, setIsLoading] = useState(!initialArticles || initialArticles.length === 0);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [feedStatus, setFeedStatus] = useState<FeedConnectionStatus>("connecting");
+  const [feedStatus, setFeedStatus] = useState<FeedConnectionStatus>(
+    initialArticles && initialArticles.length > 0 ? "empty" : "connecting"
+  );
   const [isCached, setIsCached] = useState(false);
   const [hasRevalidationError, setHasRevalidationError] = useState(false);
 
@@ -75,13 +81,16 @@ const HotPost: React.FC = () => {
 
       const executeRequest = async (attempt = 1): Promise<any> => {
         try {
-          return await axios.get(
+          const res = await fetch(
             `${rootApi}/post/getHotPostsWeek?limit=10&page=1&locale=${activeLocale}`,
-            { timeout: 10000 }
+            { signal: AbortSignal.timeout(10000) }
           );
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          return { data, status: res.status };
         } catch (err: any) {
           const isTimeoutOrNetwork =
-            err?.code === "ECONNABORTED" ||
+            err?.name === "TimeoutError" ||
             err?.message?.includes("timeout") ||
             !err?.response;
 
@@ -141,8 +150,11 @@ const HotPost: React.FC = () => {
   );
 
   useEffect(() => {
+    if (initialArticles && initialArticles.length > 0) {
+      return;
+    }
     fetchHotPost();
-  }, [fetchHotPost]);
+  }, [fetchHotPost, initialArticles]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">

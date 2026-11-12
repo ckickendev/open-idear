@@ -9,19 +9,23 @@ import { SeriesInterface } from "@/interfaces/Interface";
 import { SeriesCardSkeleton } from "@/components/ui/Skeletons";
 import { getCachedFeed, setCachedFeed } from "@/lib/cache/feedCache";
 
-const HotSeries: React.FC = () => {
-  const [series, setSeries] = React.useState<SeriesInterface[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+export interface HotSeriesProps {
+  initialSeries?: SeriesInterface[];
+}
+
+const HotSeries: React.FC<HotSeriesProps> = ({ initialSeries }) => {
+  const [series, setSeries] = React.useState<SeriesInterface[]>(initialSeries || []);
+  const [isLoading, setIsLoading] = React.useState(!initialSeries || initialSeries.length === 0);
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
+    if (initialSeries && initialSeries.length > 0) {
+      return;
+    }
+
     let isMounted = true;
     const fetchSeriesData = async () => {
-      const rootApi = ENV?.ROOT_API;
-      if (!rootApi) {
-        setIsLoading(false);
-        return;
-      }
+      const rootApi = ENV?.ROOT_API || "https://open-trash-tech-be.onrender.com/api";
 
       // Check cache for instant render
       const cached = getCachedFeed<SeriesInterface[]>("open_idear_feed_hot_series");
@@ -31,14 +35,16 @@ const HotSeries: React.FC = () => {
       }
 
       try {
-        const res = await axios.get(
+        const res = await fetch(
           `${rootApi}/series/getHotSeries`,
-          { timeout: 10000 }
+          { signal: AbortSignal.timeout(10000) }
         );
         if (!isMounted) return;
-        if (res.status === 200 && Array.isArray(res.data?.series)) {
-          setSeries(res.data.series);
-          setCachedFeed("open_idear_feed_hot_series", res.data.series);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        if (Array.isArray(json?.series)) {
+          setSeries(json.series);
+          setCachedFeed("open_idear_feed_hot_series", json.series);
         }
       } catch (error) {
         console.warn("Could not fetch hot series:", error);
@@ -53,7 +59,7 @@ const HotSeries: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [initialSeries]);
 
   const scrollLeft = () => {
     if (scrollRef.current) {

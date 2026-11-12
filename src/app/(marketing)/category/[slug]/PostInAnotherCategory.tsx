@@ -1,13 +1,17 @@
 "use client";
 
 import { ENV } from "@/api/const";
-import axios from "axios";
 import { useEffect, useState } from "react";
 
 import { usePathname } from "next/navigation";
 import { useLanguageStore } from "@/store/useLanguage";
 
-const PostInAnotherCategory = ({ slug }: { slug: string }) => {
+interface PostInAnotherCategoryProps {
+  slug: string;
+  initialPosts?: any[];
+}
+
+const PostInAnotherCategory = ({ slug, initialPosts }: PostInAnotherCategoryProps) => {
   const moreArticles = [
     {
       category: "ENVIRONMENT",
@@ -36,20 +40,28 @@ const PostInAnotherCategory = ({ slug }: { slug: string }) => {
     },
   ];
 
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<any[]>(initialPosts || []);
   const pathname = usePathname();
   const storeLang = useLanguageStore((state) => state.lang);
   const activeLocale = pathname?.startsWith("/vi") ? "vi" : (storeLang || "en");
 
   useEffect(() => {
+    if (initialPosts && initialPosts.length > 0 && data.length > 0) {
+      return;
+    }
+
     let isMounted = true;
     const fetchData = async () => {
       try {
-        const res = await axios.get(
-          `${ENV.ROOT_API}/category/getPostsInAnotherCategorySlug/${slug}/4?locale=${activeLocale}`,
+        const root = (ENV.ROOT_API || "https://open-trash-tech-be.onrender.com/api").replace(/\/$/, "");
+        const res = await fetch(
+          `${root}/category/getPostsInAnotherCategorySlug/${slug}/4?locale=${activeLocale}`,
+          { signal: AbortSignal.timeout(8000) }
         );
+        if (!res.ok) return;
+        const json = await res.json();
         if (!isMounted) return;
-        setData(res.data.posts || []);
+        setData(json.posts || []);
       } catch (error) {
         console.error("Error fetching posts:", error);
       }
@@ -58,7 +70,7 @@ const PostInAnotherCategory = ({ slug }: { slug: string }) => {
     return () => {
       isMounted = false;
     };
-  }, [slug, activeLocale]);
+  }, [slug, activeLocale, initialPosts]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">

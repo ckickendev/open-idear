@@ -221,13 +221,19 @@ function AffiliateCard() {
   );
 }
 
+export interface DiscoverySidebarProps {
+  initialData?: SidebarData;
+}
+
 // ─── Main Component ────────────────────────────────────────────────────────────
 
-export default function DiscoverySidebar() {
-  const [data, setData] = useState<SidebarData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export default function DiscoverySidebar({ initialData }: DiscoverySidebarProps = {}) {
+  const [data, setData] = useState<SidebarData | null>(initialData || null);
+  const [isLoading, setIsLoading] = useState(!initialData);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [sidebarStatus, setSidebarStatus] = useState<FeedConnectionStatus>("connecting");
+  const [sidebarStatus, setSidebarStatus] = useState<FeedConnectionStatus>(
+    initialData ? "empty" : "connecting"
+  );
   const pathname = usePathname();
   const storeLang = useLanguageStore((state) => state.lang);
   const activeLocale = pathname?.startsWith("/vi") ? "vi" : (storeLang || "en");
@@ -266,13 +272,16 @@ export default function DiscoverySidebar() {
 
       const executeRequest = async (attempt = 1): Promise<any> => {
         try {
-          return await axios.get(
+          const res = await fetch(
             `${rootApi}/post/getDiscoverySidebar?locale=${activeLocale}`,
-            { timeout: 10000 }
+            { signal: AbortSignal.timeout(10000) }
           );
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          return { data, status: res.status };
         } catch (err: any) {
           const isTimeoutOrNetwork =
-            err?.code === "ECONNABORTED" ||
+            err?.name === "TimeoutError" ||
             err?.message?.includes("timeout") ||
             !err?.response;
 
@@ -321,8 +330,11 @@ export default function DiscoverySidebar() {
   );
 
   useEffect(() => {
+    if (initialData) {
+      return;
+    }
     fetchSidebar();
-  }, [fetchSidebar]);
+  }, [fetchSidebar, initialData]);
 
   return (
     <aside className="hidden lg:block w-72 xl:w-80 flex-shrink-0">

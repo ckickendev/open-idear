@@ -50,10 +50,14 @@ const formatDuration = (totalDuration?: number) => {
     : `${Math.ceil(totalDuration / 60)}m`;
 };
 
-const RecentCourses: React.FC = () => {
+export interface RecentCoursesProps {
+  initialCourses?: Course[];
+}
+
+const RecentCourses: React.FC<RecentCoursesProps> = ({ initialCourses }) => {
   const { t } = useTranslation();
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [courses, setCourses] = useState<Course[]>(initialCourses || []);
+  const [isLoading, setIsLoading] = useState(!initialCourses || initialCourses.length === 0);
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
@@ -63,13 +67,13 @@ const RecentCourses: React.FC = () => {
   const GAP = 20;
 
   useEffect(() => {
+    if (initialCourses && initialCourses.length > 0) {
+      return;
+    }
+
     let isMounted = true;
     const fetchCourses = async () => {
-      const rootApi = ENV?.ROOT_API;
-      if (!rootApi) {
-        setIsLoading(false);
-        return;
-      }
+      const rootApi = ENV?.ROOT_API || "https://open-trash-tech-be.onrender.com/api";
 
       // Check cache for instant load
       const cached = getCachedFeed<Course[]>("open_idear_feed_recent_courses");
@@ -79,16 +83,18 @@ const RecentCourses: React.FC = () => {
       }
 
       try {
-        const res = await axios.get(
+        const res = await fetch(
           `${rootApi}/course?limit=10&sort=-createdAt`,
-          { timeout: 10000 }
+          { signal: AbortSignal.timeout(10000) }
         );
         if (!isMounted) return;
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
         let fetchedCourses: Course[] = [];
-        if (res.status === 200 && res.data?.data) {
-          fetchedCourses = res.data.data;
-        } else if (res.status === 200 && res.data?.courses) {
-          fetchedCourses = res.data.courses;
+        if (json?.data && Array.isArray(json.data)) {
+          fetchedCourses = json.data;
+        } else if (json?.courses && Array.isArray(json.courses)) {
+          fetchedCourses = json.courses;
         }
         if (fetchedCourses.length > 0) {
           setCourses(fetchedCourses);
@@ -107,7 +113,7 @@ const RecentCourses: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [initialCourses]);
 
   // Auto-scroll carousel
   const scrollToIndex = useCallback((index: number) => {

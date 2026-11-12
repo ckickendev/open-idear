@@ -24,23 +24,33 @@ import {
   FeedConnectionStatus,
 } from "@/components/common/FeedConnectionState";
 
-interface RecentlyPayload {
+export interface RecentlyPayload {
   categories: any[];
   posts: PostInterface[];
 }
 
-const LastestFeature = () => {
+export interface LastestFeatureProps {
+  initialData?: RecentlyPayload;
+}
+
+const LastestFeature: React.FC<LastestFeatureProps> = ({ initialData }) => {
   const { t, lang } = useTranslation();
   const pathname = usePathname();
   const activeLocale = pathname?.startsWith("/vi") ? "vi" : (lang || "en");
   const [selectFeature, setSelectFeature] = useState(0);
-  const [allCategory, setAllCategory] = useState<any[]>([
-    { name: "All", slug: "all" },
-  ]);
-  const [allPosts, setAllPosts] = useState<PostInterface[]>([]);
-  const [isLocalLoading, setIsLocalLoading] = useState(true);
+  const [allCategory, setAllCategory] = useState<any[]>(
+    initialData?.categories && initialData.categories.length > 0
+      ? [{ name: "All", slug: "all" }, ...initialData.categories]
+      : [{ name: "All", slug: "all" }]
+  );
+  const [allPosts, setAllPosts] = useState<PostInterface[]>(initialData?.posts || []);
+  const [isLocalLoading, setIsLocalLoading] = useState(
+    !initialData || !initialData.posts || initialData.posts.length === 0
+  );
   const [isRetrying, setIsRetrying] = useState(false);
-  const [feedStatus, setFeedStatus] = useState<FeedConnectionStatus>("connecting");
+  const [feedStatus, setFeedStatus] = useState<FeedConnectionStatus>(
+    initialData && initialData.posts && initialData.posts.length > 0 ? "empty" : "connecting"
+  );
   const [isCached, setIsCached] = useState(false);
   const [hasRevalidationError, setHasRevalidationError] = useState(false);
 
@@ -79,13 +89,16 @@ const LastestFeature = () => {
 
       const executeRequest = async (attempt = 1): Promise<any> => {
         try {
-          return await axios.get(
+          const res = await fetch(
             `${rootApi}/post/getRecentlyData?locale=${activeLocale}`,
-            { timeout: 10000 }
+            { signal: AbortSignal.timeout(10000) }
           );
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          return { data, status: res.status };
         } catch (err: any) {
           const isTimeoutOrNetwork =
-            err?.code === "ECONNABORTED" ||
+            err?.name === "TimeoutError" ||
             err?.message?.includes("timeout") ||
             !err?.response;
 
@@ -158,8 +171,11 @@ const LastestFeature = () => {
   );
 
   useEffect(() => {
+    if (initialData && initialData.posts && initialData.posts.length > 0) {
+      return;
+    }
     fetchRecentlyData();
-  }, [fetchRecentlyData]);
+  }, [fetchRecentlyData, initialData]);
 
   const onSelectFeature = async (index: number) => {
     setSelectFeature(index);

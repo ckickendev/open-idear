@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  # ─────────────────────────────────────────────────────────────────────────────
+  #  Cloudflare Zero Trust Tunnel Daemon
+  #  Outbound encrypted WireGuard/QUIC connection to Cloudflare edge.
+  #  No public IP, no open router ports, bypasses CGNAT.
+  # ─────────────────────────────────────────────────────────────────────────────
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: openidear_cloudflared
+    restart: always
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    command: tunnel run
+    networks:
+      - openidear_net
+    depends_on:
+      - backend-api
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  #  OpenIdear Backend API Container
+  # ─────────────────────────────────────────────────────────────────────────────
+  backend-api:
+    image: node:20-alpine
+    container_name: openidear_backend
+    restart: always
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    environment:
+      - NODE_ENV=production
+      - PORT=5001
+      - DATABASE_URL=${DATABASE_URL}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      - NEXT_PUBLIC_APP_URL=https://openidear.com
+    command: sh -c "npm install --production && node dist/server.js"
+    networks:
+      - openidear_net
+    expose:
+      - "5001"
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+
+networks:
+  openidear_net:
+    driver: bridge

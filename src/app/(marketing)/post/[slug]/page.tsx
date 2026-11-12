@@ -17,26 +17,51 @@ import { buildTableOfContents } from "@/features/article/utils/buildTableOfConte
 import { calculateReadingTime } from "@/features/article/utils/calculateReadingTime";
 import { ReadingTrackerWrapper } from "@/features/reading";
 import { buildPostMetadata, getPostStructuredData, JsonLd } from "@/features/seo";
+import { serverFetch } from "@/lib/api/serverFetch";
 import "@/styles/editorial.css";
+
+// ─── Route Segment Config ───────────────────────────────────────────────────
+// Fallback to on-demand generation for articles outside the top 100
+export const dynamicParams = true;
+
+// ─── Pre-render Top 100 Articles at Build Time ───────────────────────────────
+
+export async function generateStaticParams() {
+  try {
+    const { data } = await serverFetch<any>(
+      "/post/getHotPostsWeek?limit=100&page=1&locale=en",
+      {
+        tags: ["posts"],
+        revalidate: 86400,
+        timeoutMs: 5000, // 5s build-time timeout to avoid hanging if backend is cold
+      }
+    );
+
+    const posts = data?.posts || (Array.isArray(data) ? data : []);
+    if (!Array.isArray(posts)) return [];
+
+    return posts
+      .filter((p: any) => Boolean(p.slug))
+      .map((p: any) => ({ slug: p.slug }));
+  } catch (err) {
+    console.warn("[generateStaticParams:post] Backend unavailable during build. Falling back to on-demand generation:", err);
+    return [];
+  }
+}
 
 // ─── Post Fetcher ────────────────────────────────────────────────────────────
 
 async function getPost(slug: string) {
-  try {
-    const res = await fetch(`${ENV.ROOT_API}/post/getPostBySlug/${slug}?locale=en`, {
-      next: { revalidate: 3600 },
-    });
-
-    if (!res.ok) {
-      return null;
+  const { data } = await serverFetch<{ post: any }>(
+    `/post/getPostBySlug/${slug}?locale=en`,
+    {
+      tags: ["posts", `post-${slug}`],
+      revalidate: 3600,
+      timeoutMs: 8000,
     }
+  );
 
-    const data = await res.json();
-    return data.post;
-  } catch (error) {
-    console.error("Error fetching post for metadata/render:", error);
-    return null;
-  }
+  return data?.post || null;
 }
 
 // ─── Server-Side Metadata Generator ──────────────────────────────────────────
@@ -69,22 +94,15 @@ export default async function PostLists({
   const { slug } = await params;
 
   const getRandomTopic = async () => {
-    try {
-      const res = await fetch(
-        `${ENV.ROOT_API}/category/getRandomTopic?limit=5&page=1`,
-        {
-          next: { revalidate: 3600 }, // Cache for 1 hour
-        },
-      );
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+    const { data } = await serverFetch<{ topic: any[] }>(
+      "/category/getRandomTopic?limit=5&page=1",
+      {
+        tags: ["categories", "topics"],
+        revalidate: 3600,
+        timeoutMs: 8000,
       }
-      const data = await res.json();
-
-      return data.topic;
-    } catch (error) {
-      console.error("Error fetching random topic:", error);
-    }
+    );
+    return data?.topic || [];
   };
 
   const postData = await getPost(slug);

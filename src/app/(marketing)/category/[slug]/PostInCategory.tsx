@@ -7,21 +7,24 @@ import {
   PostLinkCustom,
 } from "@/components/common/LinkCustom";
 import { PaginationComponent } from "@/components/common/PaginationComponent";
-import axios from "axios";
 import { Menu } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useLanguageStore } from "@/store/useLanguage";
 
+interface PostInCategoryProps {
+  allCategory: any[];
+  slug: string;
+  totalPage: number;
+  initialPosts?: any[];
+}
+
 const PostInCategory = ({
   allCategory,
   slug,
   totalPage,
-}: {
-  allCategory: any[];
-  slug: string;
-  totalPage: number;
-}) => {
+  initialPosts,
+}: PostInCategoryProps) => {
   const ArticleCard = ({
     image,
     title,
@@ -64,7 +67,7 @@ const PostInCategory = ({
     );
   };
 
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<any[]>(initialPosts || []);
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const storeLang = useLanguageStore((state) => state.lang);
@@ -72,14 +75,23 @@ const PostInCategory = ({
   const currentPage = Number(searchParams.get("page")) || 1;
 
   useEffect(() => {
+    // If we have initialPosts and are on page 1, skip client fetch
+    if (currentPage === 1 && initialPosts && initialPosts.length > 0 && data.length > 0) {
+      return;
+    }
+
     let isMounted = true;
     const fetchData = async () => {
       try {
-        const res = await axios.get(
-          `${ENV.ROOT_API}/category/getPostsByCategorySlug/${slug}/${currentPage}?locale=${activeLocale}`,
+        const root = (ENV.ROOT_API || "https://open-trash-tech-be.onrender.com/api").replace(/\/$/, "");
+        const res = await fetch(
+          `${root}/category/getPostsByCategorySlug/${slug}/${currentPage}?locale=${activeLocale}`,
+          { signal: AbortSignal.timeout(8000) }
         );
+        if (!res.ok) return;
+        const json = await res.json();
         if (!isMounted) return;
-        setData(res.data.posts || []);
+        setData(json.posts || []);
       } catch (error) {
         console.error("Error fetching posts:", error);
       }
@@ -88,7 +100,7 @@ const PostInCategory = ({
     return () => {
       isMounted = false;
     };
-  }, [currentPage, activeLocale, slug]);
+  }, [currentPage, activeLocale, slug, initialPosts]);
 
   return (
     <div className="max-w-7xl mx-auto px-4">

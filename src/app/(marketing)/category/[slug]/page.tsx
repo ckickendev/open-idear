@@ -1,75 +1,151 @@
-import { ENV } from "@/api/const";
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { Suspense } from "react";
-import axios from "axios";
+import { serverFetch } from "@/lib/api/serverFetch";
 import PostInCategory from "./PostInCategory";
 import PostInAnotherCategory from "./PostInAnotherCategory";
 
-export default async function CategoryList({
-  params,
-}: {
+interface CategoryPageProps {
   params: Promise<{ slug: string }>;
-}) {
+}
+
+// ─── Route Segment Config ───────────────────────────────────────────────────
+// Fallback to on-demand generation for newly created categories
+export const dynamicParams = true;
+
+// ─── Pre-render Categories at Build Time ─────────────────────────────────────
+
+export async function generateStaticParams() {
+  try {
+    const { data } = await serverFetch<{ categories: Array<{ slug: string }> }>(
+      "/category",
+      {
+        tags: ["categories"],
+        revalidate: 86400,
+        timeoutMs: 5000, // 5s build-time timeout
+      }
+    );
+
+    if (!data?.categories || !Array.isArray(data.categories)) {
+      return [];
+    }
+
+    return data.categories
+      .filter((cat) => Boolean(cat.slug))
+      .map((cat) => ({ slug: cat.slug }));
+  } catch (err) {
+    console.warn("[generateStaticParams:category] Fallback to on-demand generation:", err);
+    return [];
+  }
+}
+
+// ─── Dynamic Metadata ────────────────────────────────────────────────────────
+
+export async function generateMetadata({
+  params,
+}: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
-  console.log(
-    `${ENV.ROOT_API}/category/getCategoryBySlug/${slug}`,
+  const { data } = await serverFetch<{ category: any }>(
+    `/category/getCategoryBySlug/${slug}`,
+    {
+      tags: ["categories", `category-${slug}`],
+      revalidate: 3600,
+      timeoutMs: 8000,
+    }
   );
 
-  const getCategory = async (slug: string) => {
-    try {
-      // Using native fetch with Next.js optimizations
-      const res = await axios.get(
-        `${ENV.ROOT_API}/category/getCategoryBySlug/${slug}`,
-      );
-      const bgImg = `${process.env.NEXT_PUBLIC_APP_URL}/background/category/${res.data.category._id}.png`;
-      return { ...res.data, bgImg };
-    } catch (error) {
-      console.error("Error fetching category:", error);
-      throw new Error(`Failed to fetch category with slug: ${slug}`);
-    }
+  if (!data?.category) {
+    return {
+      title: "Category Not Found | OpenIdear",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const { name, description } = data.category;
+  return {
+    title: `${name} | OpenIdear Categories`,
+    description: description || `Browse all articles, insights, and guides in ${name} on OpenIdear.`,
+    openGraph: {
+      title: `${name} | OpenIdear`,
+      description: description || `Browse all articles in ${name}.`,
+    },
   };
+}
 
-  const getAllCategory = async () => {
-    try {
-      const res = await fetch(
-        `${ENV.ROOT_API}/category`,
-        {
-          next: { revalidate: 3600 },
-        },
-      );
+// ─── Category Page (Server Component) ────────────────────────────────────────
 
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
+export default async function CategoryList({ params }: CategoryPageProps) {
+  const { slug } = await params;
 
-      const data = await res.json();
-      return data.categories;
-    } catch (error) {
-      console.error("Error fetching all categories:", error);
-      throw new Error("Failed to fetch all categories");
-    }
-  };
+  // Concurrently fetch Category metadata, Categories list, and initial posts
+  const [categoryResult, allCategoriesResult, initialPostsResult, anotherCategoryResult] =
+    await Promise.allSettled([
+      serverFetch<{ category: any }>(`/category/getCategoryBySlug/${slug}`, {
+        tags: ["categories", `category-${slug}`],
+        revalidate: 3600,
+        timeoutMs: 8000,
+      }),
+      serverFetch<{ categories: any[] }>("/category", {
+        tags: ["categories"],
+        revalidate: 86400,
+        timeoutMs: 8000,
+      }),
+      serverFetch<{ posts: any[] }>(`/category/getPostsByCategorySlug/${slug}/1?locale=en`, {
+        tags: [`category-${slug}`, "posts"],
+        revalidate: 3600,
+        timeoutMs: 8000,
+      }),
+      serverFetch<{ posts: any[] }>(`/category/getPostsInAnotherCategorySlug/${slug}/4?locale=en`, {
+        tags: [`category-${slug}`, "posts"],
+        revalidate: 3600,
+        timeoutMs: 8000,
+      }),
+    ]);
 
-  const categoryData = await getCategory(slug);
-  const allCategory = await getAllCategory();
+  const categoryPayload =
+    categoryResult.status === "fulfilled" ? categoryResult.value.data : null;
+
+  if (!categoryPayload || !categoryPayload.category) {
+    notFound();
+  }
+
+  const allCategories =
+    allCategoriesResult.status === "fulfilled" && allCategoriesResult.value.data?.categories
+      ? allCategoriesResult.value.data.categories
+      : [];
+
+  const initialPosts =
+    initialPostsResult.status === "fulfilled" && initialPostsResult.value.data?.posts
+      ? initialPostsResult.value.data.posts
+      : [];
+
+  const anotherPosts =
+    anotherCategoryResult.status === "fulfilled" && anotherCategoryResult.value.data?.posts
+      ? anotherCategoryResult.value.data.posts
+      : [];
+
+  const category = categoryPayload.category;
+  const bgImg = `${process.env.NEXT_PUBLIC_APP_URL || ""}/background/category/${category._id}.png`;
 
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div
         className="relative h-96 bg-cover bg-center"
-        style={{ backgroundImage: `url(${categoryData?.bgImg})` }}
+        style={{ backgroundImage: `url(${bgImg})` }}
       >
-        <div className="absolute inset-0 bg-background/30" />
+        <div className="absolute inset-0 bg-background/30 backdrop-blur-[2px]" />
         <div className="relative max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
-            {categoryData?.category?.name}
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 drop-shadow">
+            {category.name}
           </h1>
-          <p className="text-white text-lg max-w-2xl">
-            {categoryData?.category?.description}
+          <p className="text-white text-lg max-w-2xl drop-shadow-sm">
+            {category.description}
           </p>
         </div>
       </div>
-      {/* Climate Change Section */}
+
+      {/* Main Category Posts Section */}
       <div className="bg-muted/30 py-12">
         <Suspense
           fallback={
@@ -79,13 +155,16 @@ export default async function CategoryList({
           }
         >
           <PostInCategory
-            allCategory={allCategory}
+            allCategory={allCategories}
             slug={slug}
-            totalPage={Math.ceil(categoryData?.category?.countData / 6)}
+            totalPage={Math.max(1, Math.ceil((category.countData || initialPosts.length) / 6))}
+            initialPosts={initialPosts}
           />
         </Suspense>
       </div>
-      <PostInAnotherCategory slug={slug} />
+
+      {/* Cross-Category Recommendations */}
+      <PostInAnotherCategory slug={slug} initialPosts={anotherPosts} />
     </div>
   );
 }
